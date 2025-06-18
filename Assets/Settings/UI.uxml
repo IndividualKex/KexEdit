@@ -1,0 +1,27 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Settings/Style.uss?fileID=7433441132597879392&amp;guid=94440dcfedf38714d804431824c4eea3&amp;type=3#Style" />
+    <ui:VisualElement name="Container" style="flex-grow: 1; position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
+        <ui:VisualElement name="Top" style="height: 24px; background-color: rgb(64, 64, 64);" />
+        <ui:VisualElement name="Center" style="flex-grow: 1; flex-direction: row-reverse;">
+            <ui:VisualElement name="GameView" focusable="true" style="flex-grow: 1; border-left-color: rgb(38, 38, 38); border-right-color: rgb(38, 38, 38); border-top-color: rgb(38, 38, 38); border-bottom-color: rgb(38, 38, 38); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px;" />
+            <ui:VisualElement name="TopLeftPanel" class="panel" style="width: 640px; border-right-width: 1px; border-left-color: rgb(38, 38, 38); border-right-color: rgb(38, 38, 38); border-top-color: rgb(38, 38, 38); border-bottom-color: rgb(38, 38, 38); border-top-width: 1px; border-bottom-width: 1px; border-left-width: 1px;">
+                <ui:VisualElement name="Header" class="header" style="color: rgb(26, 26, 26);">
+                    <ui:Label text="Node Editor" name="Title" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; font-size: 12px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="Content" class="content" style="flex-grow: 1;">
+                    <KexEdit.UI.NodeGraph.NodeGraphView />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="Bottom" style="flex-grow: 0; height: 340px;">
+            <ui:VisualElement name="BottomPanel" class="panel" style="flex-grow: 1; position: absolute; left: 0; bottom: 0; right: 0; top: 0; border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px; border-left-color: rgb(38, 38, 38); border-right-color: rgb(38, 38, 38); border-top-color: rgb(38, 38, 38); border-bottom-color: rgb(38, 38, 38);">
+                <ui:VisualElement name="Header" class="header" style="color: rgb(26, 26, 26);">
+                    <ui:Label text="Timeline" name="Title" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; font-size: 12px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="Content" class="content" style="flex-grow: 1;">
+                    <KexEdit.UI.Timeline.Timeline />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

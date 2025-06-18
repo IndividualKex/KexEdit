@@ -1,0 +1,160 @@
+#pragma kernel VisualizationKernel
+#pragma kernel DuplicationKernel
+#pragma kernel ExtrusionKernel
+#pragma kernel DuplicationGizmoKernel
+#pragma kernel ExtrusionGizmoKernel
+
+struct Point {
+    float3 Position;
+    float3 Direction;
+    float3 Normal;
+    float Velocity;
+    float Distance;
+    float Time;
+};
+
+StructuredBuffer<Point> _Points;
+float _Count;
+
+RWStructuredBuffer<float4> _VisualizationData;
+float _Selected;
+
+RWStructuredBuffer<float4x4> _Matrices;
+RWStructuredBuffer<uint> _DuplicationVisualizationIndices;
+float _Step;
+
+StructuredBuffer<float3> _CrossSectionVertices;
+StructuredBuffer<float3> _CrossSectionNormals;
+StructuredBuffer<uint> _CrossSectionTriangulation;
+RWStructuredBuffer<float3> _ExtrusionVertices;
+RWStructuredBuffer<float3> _ExtrusionNormals;
+RWStructuredBuffer<uint> _ExtrusionIndices;
+RWStructuredBuffer<uint> _ExtrusionVisualizationIndices;
+float _CrossSectionVerticesLength;
+float _CrossSectionTriangulationLength;
+
+RWStructuredBuffer<float3> _DuplicationGizmoVertices;
+float _DuplicationGizmoStartHeart;
+float _DuplicationGizmoEndHeart;
+
+RWStructuredBuffer<float3> _ExtrusionGizmoVertices;
+float _ExtrusionGizmoHeart;
+
+float4x4 LookRotationMatrix(float3 forward, float3 up) {
+    forward = normalize(forward);
+    float3 right = normalize(cross(up, forward));
+    up = normalize(cross(forward, right));
+    
+    float4x4 result = float4x4(
+        float4(right.x, up.x, forward.x, 0),
+        float4(right.y, up.y, forward.y, 0),
+        float4(right.z, up.z, forward.z, 0),
+        float4(0, 0, 0, 1)
+    );
+    
+    return result;
+}
+
+float4x4 TRS(float3 pos, float4x4 rot) {
+    float4x4 result = rot;
+    result._m03_m13_m23 = pos;
+    return result;
+}
+
+[numthreads(64, 1, 1)]
+void VisualizationKernel(uint3 id : SV_DispatchThreadID) {
+    uint idx = id.x;
+    uint count = (uint)_Count;
+    if (idx >= count) return;
+
+    Point p = _Points[idx];
+
+    _VisualizationData[idx] = float4(p.Velocity, 0, 0, _Selected);
+}
+
+[numthreads(64, 1, 1)]
+void DuplicationKernel(uint3 id : SV_DispatchThreadID) {
+    uint idx = id.x;
+    uint count = (uint)_Count;
+    if (idx >= count || (idx % (uint)_Step) != 0) return;
+
+    Point p = _Points[idx];
+
+    float4x4 rotation = LookRotationMatrix(p.Direction, p.Normal);
+    float4x4 trs = TRS(p.Position, rotation);
+
+    uint matrixIndex = (uint)(idx / _Step);
+    _Matrices[matrixIndex] = trs;
+    _DuplicationVisualizationIndices[matrixIndex] = idx;
+}
+
+[numthreads(64, 1, 1)]
+void ExtrusionKernel(uint3 id : SV_DispatchThreadID) {
+    uint idx = id.x;
+    uint count = (uint)_Count;
+    if (idx >= count) return;
+
+    Point p = _Points[idx];
+
+    float4x4 rotation = LookRotationMatrix(p.Direction, p.Normal);
+    float4x4 trs = TRS(p.Position, rotation);
+
+    uint N = _CrossSectionVerticesLength / 2;
+    uint M = _CrossSectionTriangulationLength;
+
+    uint vertexOffset = idx * N;
+    uint indexOffset = idx * M;
+
+    for (uint i = 0; i < N; i++) {
+        float3 crossPos = _CrossSectionVertices[i];
+        float3 crossNormal = _CrossSectionNormals[i];
+
+        float3 pos = mul(trs, float4(crossPos, 1)).xyz;
+        float3 normal = mul(trs, float4(crossNormal, 0)).xyz;
+
+        _ExtrusionVertices[vertexOffset + i] = pos;
+        _ExtrusionNormals[vertexOffset + i] = normal;
+        _ExtrusionVisualizationIndices[vertexOffset + i] = idx;
+    }
+
+    bool isValid = length(p.Direction) > 0.001 && length(p.Normal) > 0.001;
+    if (isValid && idx < count - 1) {
+        for (uint j = 0; j < M; j++) {
+            uint index = _CrossSectionTriangulation[j];
+            _ExtrusionIndices[indexOffset + j] = index + vertexOffset;
+        }
+    }
+    else {
+        for (uint j = 0; j < M; j++) {
+            _ExtrusionIndices[indexOffset + j] = 0;
+        }
+    }
+}
+
+[numthreads(64, 1, 1)]
+void DuplicationGizmoKernel(uint3 id : SV_DispatchThreadID) {
+    uint idx = id.x;
+    uint count = (uint)_Count;
+    if (idx >= count) return;
+
+    Point p = _Points[idx];
+
+    float3 p1 = p.Position + p.Normal * _DuplicationGizmoStartHeart;
+    float3 p2 = p.Position + p.Normal * _DuplicationGizmoEndHeart;
+
+    _DuplicationGizmoVertices[idx * 2] = p1;
+    _DuplicationGizmoVertices[idx * 2 + 1] = p2;
+}
+
+[numthreads(64, 1, 1)]
+void ExtrusionGizmoKernel(uint3 id : SV_DispatchThreadID) {
+    uint idx = id.x;
+    uint count = (uint)_Count;
+    if (idx >= count) return;
+    
+    Point p = _Points[idx];
+
+    float3 pos = p.Position + p.Normal * _ExtrusionGizmoHeart;
+
+    _ExtrusionGizmoVertices[idx] = pos;
+}

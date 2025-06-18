@@ -1,0 +1,27 @@
+{
+    "name": "KexEdit",
+    "rootNamespace": "",
+    "references": [
+        "GUID:734d92eba21c94caba915361bd5ac177",
+        "GUID:e0cd26848372d4e5c891c569017e11f1",
+        "GUID:d8b63aba1907145bea998dd612889d6b",
+        "GUID:a5baed0c9693541a5bd947d336ec7659",
+        "GUID:8819f35a0fc84499b990e90a4ca1911f",
+        "GUID:7a450cf7ca9694b5a8bfa3fd83ec635a",
+        "GUID:2665a8d13d1b3f18800f46e256720795",
+        "GUID:4307f53044263cf4b835bd812fc161a4",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:63afb046c8423dd448ae7aba042ea63d",
+        "GUID:2bafac87e7f4b9b418d9448d219b01ab",
+        "GUID:d5c2eb040be0a1442beb0b0beb3aac6b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

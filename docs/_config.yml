@@ -1,0 +1,57 @@
+title: KexEdit Documentation
+description: Official documentation for KexEdit - Advanced FVD roller coaster editor
+
+# GitHub Pages configuration
+remote_theme: jekyll/minima@v2.5.0
+plugins:
+    - jekyll-remote-theme
+
+# Site settings
+url: "https://individualkex.github.io"
+baseurl: "/KexEdit"
+
+# Navigation
+header_pages:
+    - getting-started.md
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+kramdown:
+    input: GFM
+    syntax_highlighter: rouge
+
+# Collections for organized content
+collections:
+    user-guide:
+        output: true
+        permalink: /:collection/:name/
+    tutorials:
+        output: true
+        permalink: /:collection/:name/
+    reference:
+        output: true
+        permalink: /:collection/:name/
+
+# Exclude files from processing
+exclude:
+    - Gemfile
+    - Gemfile.lock
+    - node_modules
+    - vendor
+    - .bundle
+    - .sass-cache
+    - .jekyll-cache
+    - .jekyll-metadata
+
+# Social links
+github_username: IndividualKex
+discord_invite: https://discord.gg/eEY75Nqk3C
+
+# SEO
+lang: en-US
+
+# GitHub repository info
+github:
+    repository_url: https://github.com/IndividualKex/KexEdit
+    repository_name: KexEdit

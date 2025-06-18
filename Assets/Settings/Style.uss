@@ -1,0 +1,131 @@
+:root {
+}
+
+Label {
+    color: rgb(191, 191, 191);
+    font-size: 11px;
+}
+
+Button {
+    color: rgb(191, 191, 191);
+    font-size: 11px;
+}
+
+.unity-base-field {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+}
+
+.unity-base-field__input {
+    border-top-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-left-width: 1px;
+    color: rgb(51, 51, 51);
+    padding-top: 1px;
+    padding-right: 2px;
+    padding-bottom: 0;
+    padding-left: 2px;
+    margin-right: 0;
+    margin-left: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    background-color: rgb(51, 51, 51);
+    --unity-cursor-color: rgb(190, 190, 190);
+    border-left-color: rgb(38, 38, 38);
+    border-right-color: rgb(38, 38, 38);
+    border-top-color: rgb(38, 38, 38);
+    border-bottom-color: rgb(38, 38, 38);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+
+.unity-text-element {
+    color: rgb(191, 191, 191);
+    font-size: 11px;
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    padding-top: 0;
+    padding-right: 2px;
+    padding-bottom: 0;
+    padding-left: 2px;
+}
+
+.unity-base-field__input:hover {
+    border-left-color: rgb(102, 102, 102);
+    border-right-color: rgb(102, 102, 102);
+    border-top-color: rgb(102, 102, 102);
+    border-bottom-color: rgb(102, 102, 102);
+}
+
+.unity-base-field:focus .unity-base-field__input {
+    border-left-color: rgb(51, 128, 230);
+    border-right-color: rgb(51, 128, 230);
+    border-top-color: rgb(51, 128, 230);
+    border-bottom-color: rgb(51, 128, 230);
+}
+
+.unity-base-field__input {
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+}
+
+.unity-toggle__checkmark {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+    width: 14px;
+    height: 14px;
+    background-color: rgb(51, 51, 51);
+    -unity-background-image-tint-color: rgb(191, 191, 191);
+}
+
+.panel {
+    flex-direction: column;
+}
+
+.header {
+    justify-content: center;
+    align-content: center;
+    height: 28px;
+    padding-left: 8px;
+    flex-grow: 0;
+    background-color: rgb(38, 38, 38);
+}
+
+.content {
+    flex-grow: 1;
+}
+
+.header Label {
+    color: rgb(178, 178, 178);
+}

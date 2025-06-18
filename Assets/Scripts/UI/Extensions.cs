@@ -1,0 +1,396 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UIElements;
+using static KexEdit.UI.Constants;
+
+namespace KexEdit.UI {
+    public static class Extensions {
+        private static readonly Dictionary<NodeType, string> s_NodeNames = new() {
+            { NodeType.ForceSection, "Force Section" },
+            { NodeType.GeometricSection, "Geometric Section" },
+            { NodeType.CurvedSection, "Curved Section" },
+            { NodeType.CopyPathSection, "Copy Path Section" },
+            { NodeType.Anchor, "Anchor" },
+            { NodeType.Bridge, "Bridge" },
+            { NodeType.Reverse, "Reverse" },
+            { NodeType.ReversePath, "Reverse Path" },
+        };
+
+        private static readonly Dictionary<PortType, string> s_InputPortNames = new() {
+            { PortType.Anchor, "Input" },
+            { PortType.Path, "Path" },
+            { PortType.Duration, "Duration" },
+            { PortType.Position, "Position" },
+            { PortType.Roll, "Roll" },
+            { PortType.Pitch, "Pitch" },
+            { PortType.Yaw, "Yaw" },
+            { PortType.Velocity, "Velocity" },
+            { PortType.Heart, "Heart" },
+            { PortType.Friction, "Friction" },
+            { PortType.Resistance, "Resistance" },
+            { PortType.Radius, "Radius" },
+            { PortType.Arc, "Arc" },
+            { PortType.Axis, "Axis" },
+            { PortType.LeadIn, "Lead In" },
+            { PortType.LeadOut, "Lead Out" },
+        };
+
+        private static readonly Dictionary<PortType, string> s_OutputPortNames = new() {
+            { PortType.Anchor, "Output" },
+            { PortType.Path, "Path" },
+            { PortType.Duration, "Duration" },
+            { PortType.Position, "Position" },
+            { PortType.Roll, "Roll" },
+            { PortType.Pitch, "Pitch" },
+            { PortType.Yaw, "Yaw" },
+            { PortType.Velocity, "Velocity" },
+            { PortType.Heart, "Heart" },
+            { PortType.Friction, "Friction" },
+            { PortType.Resistance, "Resistance" },
+            { PortType.Radius, "Radius" },
+            { PortType.Arc, "Arc" },
+            { PortType.Axis, "Axis" },
+            { PortType.LeadIn, "Lead In" },
+            { PortType.LeadOut, "Lead Out" },
+        };
+
+        private static readonly bool s_IsMacOS = SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX;
+
+        private static readonly Dictionary<string, string> s_PlatformShortcuts = s_IsMacOS ? new() {
+            ["Ctrl+N"] = "Cmd+N",
+            ["Ctrl+O"] = "Cmd+O",
+            ["Ctrl+S"] = "Cmd+S",
+            ["Ctrl+Z"] = "Cmd+Z",
+            ["Ctrl+Y"] = "Cmd+Y",
+            ["Ctrl+X"] = "Cmd+X",
+            ["Ctrl+C"] = "Cmd+C",
+            ["Ctrl+V"] = "Cmd+V",
+            ["Ctrl+A"] = "Cmd+A",
+            ["Ctrl+H"] = "Cmd+H",
+            ["Ctrl++"] = "Cmd++",
+            ["Ctrl+-"] = "Cmd+-",
+            ["Alt+A"] = "Option+A",
+            ["Alt + Mouse Drag"] = "Option + Mouse Drag",
+            ["Alt + Right Mouse Drag"] = "Option + Right Mouse Drag"
+        } : null;
+
+        public static string ToPlatformShortcut(this string shortcut) {
+            return s_PlatformShortcuts?.TryGetValue(shortcut, out var platformShortcut) == true
+                ? platformShortcut
+                : shortcut;
+        }
+
+        public static void AddPlatformItem(this ContextMenu menu, string text, Action action, string shortcut, bool enabled = true, bool isChecked = false) {
+            menu.AddItem(text, action, shortcut.ToPlatformShortcut(), enabled: enabled, isChecked: isChecked);
+        }
+
+        public static string GetDisplayName(this NodeType nodeType) {
+            return s_NodeNames[nodeType];
+        }
+
+        public static string GetDisplayName(this PortType portType, bool isInput, int index = 0) {
+            if (portType == PortType.Anchor && isInput && index == 1) {
+                return "Target";
+            }
+            return isInput ? s_InputPortNames[portType] : s_OutputPortNames[portType];
+        }
+
+        public static UnitsType GetUnits(this PropertyType propertyType, DurationType durationType) {
+            return propertyType switch {
+                PropertyType.FixedVelocity => UnitsType.MetersPerSecond,
+                PropertyType.RollSpeed => durationType == DurationType.Time ? UnitsType.RadiansPerSecond : UnitsType.RadiansPerMeter,
+                PropertyType.NormalForce => UnitsType.Gs,
+                PropertyType.LateralForce => UnitsType.Gs,
+                PropertyType.PitchSpeed => durationType == DurationType.Time ? UnitsType.RadiansPerSecond : UnitsType.RadiansPerMeter,
+                PropertyType.YawSpeed => durationType == DurationType.Time ? UnitsType.RadiansPerSecond : UnitsType.RadiansPerMeter,
+                PropertyType.Heart => UnitsType.Meters,
+                PropertyType.Friction => UnitsType.None,
+                PropertyType.Resistance => UnitsType.OneOverMicrometers,
+                _ => UnitsType.None
+            };
+        }
+
+        public static string ToDisplayString(this UnitsType unitsType) {
+            return unitsType switch {
+                UnitsType.None => "",
+                UnitsType.Meters => s_UnitsMeters,
+                UnitsType.Radians => s_UnitsRadians,
+                UnitsType.Seconds => s_UnitsSeconds,
+                UnitsType.MetersPerSecond => s_UnitsMetersPerSecond,
+                UnitsType.RadiansPerSecond => s_UnitsRadiansPerSecond,
+                UnitsType.RadiansPerMeter => s_UnitsRadiansPerMeter,
+                UnitsType.Gs => s_UnitsGs,
+                UnitsType.OneOverMicrometers => s_UnitsOneOverMicrometers,
+                _ => throw new System.ArgumentOutOfRangeException(nameof(unitsType), unitsType, "Unknown UnitsType")
+            };
+        }
+
+        public static bool IsWithinElement(this VisualElement current, VisualElement element) {
+            if (current == null) return false;
+            while (current != null) {
+                if (current == element) {
+                    return true;
+                }
+                current = current.parent;
+            }
+            return false;
+        }
+
+        public static void ShowContextMenu(
+            this VisualElement element,
+            Vector2 position,
+            Action<ContextMenu> configureMenu
+        ) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+
+            Vector2 worldPos = element.LocalToWorld(position);
+            Vector2 rootLocalPos = root.WorldToLocal(worldPos);
+
+            var menu = new ContextMenu();
+            configureMenu(menu);
+
+            var tempContainer = new VisualElement();
+            tempContainer.style.position = Position.Absolute;
+            tempContainer.style.left = -10000f;
+            tempContainer.style.top = -10000f;
+            tempContainer.Add(menu);
+            root.Add(tempContainer);
+
+            bool repositioned = false;
+            void OnGeometryChanged(GeometryChangedEvent evt) {
+                if (!repositioned && menu.resolvedStyle.width > 0 && menu.resolvedStyle.height > 0) {
+                    repositioned = true;
+                    menu.UnregisterCallback<GeometryChangedEvent>(OnGeometryChanged);
+
+                    var menuSize = new Vector2(menu.resolvedStyle.width, menu.resolvedStyle.height);
+                    Vector2 adjustedPos = ContextMenu.CalculateMenuPosition(root, rootLocalPos, menuSize);
+
+                    if (tempContainer.parent == root) {
+                        tempContainer.Remove(menu);
+                        root.Remove(tempContainer);
+                    }
+
+                    menu.style.left = adjustedPos.x;
+                    menu.style.top = adjustedPos.y;
+                    root.Add(menu);
+                }
+            }
+            menu.RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
+
+            void OnMouseDown(MouseDownEvent evt) {
+                bool inMenu = IsMouseInMenuHierarchy(evt.target as VisualElement, menu);
+
+                if (!inMenu && menu.parent != null) {
+                    if (menu.userData is MenuBar menuBar) {
+                        menuBar.ClearActiveItem();
+                    }
+
+                    if (menu.parent == root) {
+                        root.Remove(menu);
+                    }
+                    root.UnregisterCallback((EventCallback<MouseDownEvent>)OnMouseDown, TrickleDown.TrickleDown);
+                }
+            }
+            root.RegisterCallback((EventCallback<MouseDownEvent>)OnMouseDown, TrickleDown.TrickleDown);
+        }
+
+        public static void ShowConfirmationDialog(
+            this VisualElement element,
+            string message,
+            string confirmText,
+            string cancelText,
+            Action onConfirm,
+            Action onCancel = null
+        ) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+
+            var dialog = new VisualElement {
+                style = {
+                    position = Position.Absolute,
+                    left = 0,
+                    right = 0,
+                    top = 0,
+                    bottom = 0,
+                    backgroundColor = new Color(0, 0, 0, 0.5f),
+                    alignItems = Align.Center,
+                    justifyContent = Justify.Center,
+                }
+            };
+
+            var panel = new VisualElement {
+                style = {
+                    backgroundColor = s_BackgroundColor,
+                    borderTopLeftRadius = 3f,
+                    borderTopRightRadius = 3f,
+                    borderBottomLeftRadius = 3f,
+                    borderBottomRightRadius = 3f,
+                    borderTopWidth = 1f,
+                    borderRightWidth = 1f,
+                    borderBottomWidth = 1f,
+                    borderLeftWidth = 1f,
+                    borderTopColor = s_BorderColor,
+                    borderRightColor = s_BorderColor,
+                    borderBottomColor = s_BorderColor,
+                    borderLeftColor = s_BorderColor,
+                    paddingTop = 16f,
+                    paddingRight = 16f,
+                    paddingBottom = 16f,
+                    paddingLeft = 16f,
+                }
+            };
+
+            var messageLabel = new Label(message) {
+                style = {
+                    whiteSpace = WhiteSpace.Normal,
+                    unityTextAlign = TextAnchor.MiddleCenter,
+                    color = s_TextColor,
+                    fontSize = 14,
+                }
+            };
+            panel.Add(messageLabel);
+
+            var buttonContainer = new VisualElement {
+                style = {
+                    flexDirection = FlexDirection.Row,
+                    justifyContent = Justify.Center,
+                    marginTop = 16f,
+                }
+            };
+            panel.Add(buttonContainer);
+
+            var confirmButton = new Label(confirmText) {
+                style = {
+                    marginRight = 8f,
+                    paddingTop = 8f,
+                    paddingRight = 8f,
+                    paddingBottom = 8f,
+                    paddingLeft = 8f,
+                    backgroundColor = s_BackgroundColor,
+                    color = s_TextColor,
+                    unityTextAlign = TextAnchor.MiddleCenter
+                }
+            };
+
+            var cancelButton = new Label(cancelText) {
+                style = {
+                    paddingTop = 8f,
+                    paddingRight = 8f,
+                    paddingBottom = 8f,
+                    paddingLeft = 8f,
+                    backgroundColor = s_BackgroundColor,
+                    color = s_TextColor,
+                    unityTextAlign = TextAnchor.MiddleCenter
+                }
+            };
+
+            confirmButton.RegisterCallback<MouseEnterEvent>(_ => confirmButton.style.backgroundColor = s_HoverColor);
+            confirmButton.RegisterCallback<MouseLeaveEvent>(_ => confirmButton.style.backgroundColor = s_BackgroundColor);
+            cancelButton.RegisterCallback<MouseEnterEvent>(_ => cancelButton.style.backgroundColor = s_HoverColor);
+            cancelButton.RegisterCallback<MouseLeaveEvent>(_ => cancelButton.style.backgroundColor = s_BackgroundColor);
+
+            confirmButton.RegisterCallback<MouseDownEvent>(_ => {
+                root.Remove(dialog);
+                onConfirm?.Invoke();
+            });
+
+            cancelButton.RegisterCallback<MouseDownEvent>(_ => {
+                root.Remove(dialog);
+                onCancel?.Invoke();
+            });
+
+            buttonContainer.Add(confirmButton);
+            buttonContainer.Add(cancelButton);
+
+            dialog.Add(panel);
+
+            panel.style.opacity = 0f;
+            panel.style.transitionProperty = new List<StylePropertyName> { "opacity" };
+            panel.style.transitionDuration = new List<TimeValue> { new(100, TimeUnit.Millisecond) };
+            panel.style.transitionTimingFunction = new List<EasingFunction> { EasingMode.EaseOutCubic };
+
+            root.Add(dialog);
+
+            panel.schedule.Execute(() => panel.style.opacity = 1f);
+
+            dialog.RegisterCallback<MouseDownEvent>(evt => {
+                if (evt.target == dialog) {
+                    root.Remove(dialog);
+                    onCancel?.Invoke();
+                    evt.StopPropagation();
+                }
+            });
+
+            dialog.RegisterCallback<KeyDownEvent>(evt => {
+                if (evt.keyCode == KeyCode.Escape) {
+                    root.Remove(dialog);
+                    onCancel?.Invoke();
+                    evt.StopPropagation();
+                }
+            });
+
+            dialog.focusable = true;
+            dialog.Focus();
+        }
+
+        public static UnsavedChangesDialog ShowUnsavedChangesDialog(
+            this VisualElement element,
+            Action onSave,
+            Action onDontSave
+        ) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new UnsavedChangesDialog(onSave, onDontSave, KexTime.Unpause);
+            root.Add(dialog);
+            return dialog;
+        }
+
+        public static ExportDialog ShowExportDialog(this VisualElement element, Action<float> onExport) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new ExportDialog(onExport, KexTime.Unpause);
+            root.Add(dialog);
+            return dialog;
+        }
+
+        public static ControlsDialog ShowControlsDialog(this VisualElement element) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new ControlsDialog(KexTime.Unpause);
+            root.Add(dialog);
+            return dialog;
+        }
+
+        public static AboutDialog ShowAboutDialog(this VisualElement element) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new AboutDialog(KexTime.Unpause);
+            root.Add(dialog);
+            return dialog;
+        }
+
+        public static OptimizerDialog ShowOptimizerDialog(this VisualElement element, OptimizerData optimizerData) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new OptimizerDialog(KexTime.Unpause, optimizerData);
+            root.Add(dialog);
+            return dialog;
+        }
+
+        public static bool IsMouseInMenuHierarchy(VisualElement target, ContextMenu rootMenu) {
+            VisualElement current = target;
+            while (current != null) {
+                if (current == rootMenu) {
+                    return true;
+                }
+
+                if (current is ContextMenu) {
+                    return true;
+                }
+
+                current = current.parent;
+            }
+            return false;
+        }
+    }
+}
