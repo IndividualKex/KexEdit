@@ -363,7 +363,7 @@ namespace KexEdit {
             PointData defaultPoint = default;
             return type switch {
                 PropertyType.RollSpeed => 0f,
-                PropertyType.NormalForce => 0f,
+                PropertyType.NormalForce => 1f,
                 PropertyType.LateralForce => 0f,
                 PropertyType.PitchSpeed => 0f,
                 PropertyType.YawSpeed => 0f,
