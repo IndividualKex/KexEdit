@@ -13,6 +13,7 @@ namespace KexEdit.UI.Timeline {
         private Dictionary<uint, float> _startValues = new();
         private Vector2 _startMousePosition;
         private Vector2 _mousePosition;
+        private Vector2 _lastMouseDownPosition;
         private ValueBounds _startBounds;
         private ValueBounds _dragBounds;
         private KeyframeData _bezierKeyframe;
@@ -54,6 +55,7 @@ namespace KexEdit.UI.Timeline {
             RegisterCallback<MouseDownEvent>(OnMouseDown);
             RegisterCallback<MouseMoveEvent>(OnMouseMove);
             RegisterCallback<MouseUpEvent>(OnMouseUp);
+            RegisterCallback<ClickEvent>(OnClick);
         }
 
         public void Draw() {
@@ -93,6 +95,7 @@ namespace KexEdit.UI.Timeline {
             if (!_data.Active) return;
 
             Focus();
+            _lastMouseDownPosition = evt.localMousePosition;
 
             bool hasKeyframe = TryGetKeyframeAtPosition(
                 _data.ValueBounds,
@@ -201,6 +204,21 @@ namespace KexEdit.UI.Timeline {
                 BoxSelect(rect);
                 _boxSelecting = false;
                 this.ReleaseMouse();
+            }
+        }
+
+        private void OnClick(ClickEvent evt) {
+            if (!_data.Active) return;
+
+            if (evt.clickCount == 2) {
+                bool hasKeyframe = TryGetKeyframeAtPosition(_data.ValueBounds, _lastMouseDownPosition, out KeyframeData keyframe);
+                if (hasKeyframe) {
+                    var e = this.GetPooled<KeyframeDoubleClickEvent>();
+                    e.Keyframe = keyframe;
+                    e.MousePosition = _lastMouseDownPosition;
+                    this.Send(e);
+                    evt.StopPropagation();
+                }
             }
         }
 

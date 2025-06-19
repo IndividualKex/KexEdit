@@ -92,9 +92,9 @@ namespace KexEdit {
                     PointData curr = prev;
 
                     // Assign target constraints values
-                    curr.RollSpeed = section.RollSpeedKeyframes.Evaluate(t, section.Anchor);
-                    curr.NormalForce = section.NormalForceKeyframes.Evaluate(t, section.Anchor);
-                    curr.LateralForce = section.LateralForceKeyframes.Evaluate(t, section.Anchor);
+                    curr.RollSpeed = section.RollSpeedKeyframes.Evaluate(t);
+                    curr.NormalForce = section.NormalForceKeyframes.Evaluate(t);
+                    curr.LateralForce = section.LateralForceKeyframes.Evaluate(t);
 
                     UpdateForcePoint(section, ref curr, ref prev);
                     section.Points.Add(curr);
@@ -139,9 +139,9 @@ namespace KexEdit {
 
                     PointData curr = prev;
 
-                    curr.RollSpeed = section.RollSpeedKeyframes.Evaluate(d, section.Anchor);
-                    curr.NormalForce = section.NormalForceKeyframes.Evaluate(d, section.Anchor);
-                    curr.LateralForce = section.LateralForceKeyframes.Evaluate(d, section.Anchor);
+                    curr.RollSpeed = section.RollSpeedKeyframes.Evaluate(d);
+                    curr.NormalForce = section.NormalForceKeyframes.Evaluate(d);
+                    curr.LateralForce = section.LateralForceKeyframes.Evaluate(d);
 
                     UpdateForcePoint(section, ref curr, ref prev);
                     section.Points.Add(curr);

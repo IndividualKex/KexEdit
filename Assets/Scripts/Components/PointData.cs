@@ -29,7 +29,7 @@ namespace KexEdit {
         public int Facing;
 
         public static PointData Create(float velocity = 10f) {
-            return Create(float3.zero, velocity);
+            return Create(new float3(0f, 3f, 0f), velocity);
         }
 
         public static PointData Create(float3 position, float velocity = 10f) {

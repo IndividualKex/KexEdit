@@ -79,6 +79,11 @@ namespace KexEdit.UI.Timeline {
         public bool ShiftKey;
     }
 
+    public class KeyframeDoubleClickEvent : TimelineEvent<KeyframeDoubleClickEvent> {
+        public KeyframeData Keyframe;
+        public Vector2 MousePosition;
+    }
+
     public class ViewClickEvent : TimelineEvent<ViewClickEvent> {
         public Vector2 MousePosition;
         public bool ShiftKey;
