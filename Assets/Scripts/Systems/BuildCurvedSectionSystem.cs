@@ -130,7 +130,7 @@ namespace KexEdit {
                     }
 
                     angle += deltaAngle;
-                    curr.RollSpeed = section.RollSpeedKeyframes.Evaluate(angle, section.Anchor);
+                    curr.RollSpeed = section.RollSpeedKeyframes.Evaluate(angle);
 
                     UpdateCurvedPoint(section, ref curr, prev, deltaAngle);
                     section.Points.Add(curr);
