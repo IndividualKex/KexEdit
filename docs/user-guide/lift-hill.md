@@ -1,5 +1,3 @@
-# Lift Hill
-
 Create a simple chain lift hill with curved sections and a straight geometric section.
 
 ![Lift Hill Node Setup](../images/lift-hill.png)

@@ -1,5 +1,3 @@
-## User Guide
-
 ### Getting Started
 
 -   **[Quick Start](getting-started.md)** - Download and install

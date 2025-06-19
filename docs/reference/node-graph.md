@@ -1,5 +1,3 @@
-# Node Graph Reference
-
 Visual node-based interface for building track layouts, similar to Unity Shader Graph or Blender nodes.
 
 ![Node Graph Overview](../images/node-graph.png)

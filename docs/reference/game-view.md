@@ -1,5 +1,3 @@
-# Game View Reference
-
 Real-time 3D preview with two camera modes: Orbit for overview navigation and Fly for free movement.
 
 ![Game View Overview](../images/game-view.png)

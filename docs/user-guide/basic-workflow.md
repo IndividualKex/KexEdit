@@ -1,5 +1,3 @@
-# Basic Workflow
-
 Create your first track with connected sections and test the ride.
 
 ![Basic Node Graph](../images/basic-workflow.png)

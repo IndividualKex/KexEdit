@@ -1,5 +1,3 @@
-# Shuttle Coasters
-
 Create realistic shuttle coasters with rollbacks using modular path manipulation nodes.
 
 ![Shuttle Coaster Example](../images/shuttle.png)

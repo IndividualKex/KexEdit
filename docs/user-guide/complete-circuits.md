@@ -1,5 +1,3 @@
-# Complete Circuits
-
 Use Bridge nodes to connect track ends and create closed loop coasters.
 
 ![Bridge Node Example](../images/bridge.png)

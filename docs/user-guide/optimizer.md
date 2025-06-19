@@ -1,5 +1,3 @@
-# Optimizer
-
 Use gradient descent optimization to achieve precise roll, pitch, or yaw values.
 
 <video width="100%" controls>

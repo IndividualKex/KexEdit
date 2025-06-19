@@ -1,5 +1,3 @@
-# Controlling Properties
-
 Use timeline properties to create dynamic track elements like launches and hills.
 
 ![Launch and Hill](../images/controlling-properties.png)

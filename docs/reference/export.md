@@ -1,5 +1,3 @@
-# Export Reference
-
 Export systems for saving projects and sharing with other platforms.
 
 ## KEX Format

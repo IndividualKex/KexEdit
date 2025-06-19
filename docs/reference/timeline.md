@@ -1,5 +1,3 @@
-# Timeline Reference
-
 Animation system for controlling track properties over time or distance.
 
 ![Timeline Overview](../images/timeline.png)
