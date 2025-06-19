@@ -33,7 +33,7 @@ Add a vertical spike that the cart doesn't follow but affects the track shape.
 ### Create Spike Section
 
 1. **Add Geometric Section** - Connect to end of main track
-2. **Set Fixed Velocity** - Prevents cart from following this path
+2. **Set Fixed Velocity** - Necessary for non-zero velocity
 3. **Extend Duration** - Controls spike length
 4. **Lower Priority** - Set to -1 so cart ignores this branch
 

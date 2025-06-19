@@ -47,7 +47,7 @@ _Note: Property values automatically carry forward between connected sections. F
 
 ---
 
-**Next**: [Advanced Techniques - Optimizer](optimizer.md)
+**Next**: [Getting Started - Lift Hill](lift-hill.md)
 
 ---
 
