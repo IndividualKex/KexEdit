@@ -23,8 +23,7 @@ Build the main inclined section with consistent speed and pitch.
 
 1. **Connect Geometric Section** - Drag from curved section output to new **Geometric Section**
 2. **Maintain Speed** - Add **Fixed Velocity** property (inherits previous `3 m/s` value)
-3. **Straighten Section** - Add **Pitch Speed** keyframe set to `0 rad/s`
-4. **Extend Duration** - Increase section length to desired lift hill height
+3. **Extend Duration** - Increase section length to desired lift hill height
 
 ### Top Curve Transition
 

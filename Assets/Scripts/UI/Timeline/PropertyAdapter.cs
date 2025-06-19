@@ -136,7 +136,7 @@ namespace KexEdit.UI.Timeline {
         public override string DisplayName => "Roll Speed";
 
         public override float EvaluateAt(Entity entity, float time, Anchor anchor) =>
-            EntityManager.GetBuffer<RollSpeedKeyframe>(entity).Evaluate(time, anchor);
+            EntityManager.GetBuffer<RollSpeedKeyframe>(entity).Evaluate(time);
 
         protected override Keyframe GetData(RollSpeedKeyframe element) => element.Value;
         protected override RollSpeedKeyframe CreateElement(Keyframe keyframe) => keyframe;
@@ -147,7 +147,7 @@ namespace KexEdit.UI.Timeline {
         public override string DisplayName => "Normal Force";
 
         public override float EvaluateAt(Entity entity, float time, Anchor anchor) =>
-            EntityManager.GetBuffer<NormalForceKeyframe>(entity).Evaluate(time, anchor);
+            EntityManager.GetBuffer<NormalForceKeyframe>(entity).Evaluate(time);
 
         protected override Keyframe GetData(NormalForceKeyframe element) => element.Value;
         protected override NormalForceKeyframe CreateElement(Keyframe keyframe) => keyframe;
@@ -158,7 +158,7 @@ namespace KexEdit.UI.Timeline {
         public override string DisplayName => "Lateral Force";
 
         public override float EvaluateAt(Entity entity, float time, Anchor anchor) =>
-            EntityManager.GetBuffer<LateralForceKeyframe>(entity).Evaluate(time, anchor);
+            EntityManager.GetBuffer<LateralForceKeyframe>(entity).Evaluate(time);
 
         protected override Keyframe GetData(LateralForceKeyframe element) => element.Value;
         protected override LateralForceKeyframe CreateElement(Keyframe keyframe) => keyframe;
@@ -169,7 +169,7 @@ namespace KexEdit.UI.Timeline {
         public override string DisplayName => "Pitch Speed";
 
         public override float EvaluateAt(Entity entity, float time, Anchor anchor) =>
-            EntityManager.GetBuffer<PitchSpeedKeyframe>(entity).Evaluate(time, anchor);
+            EntityManager.GetBuffer<PitchSpeedKeyframe>(entity).Evaluate(time);
 
         protected override Keyframe GetData(PitchSpeedKeyframe element) => element.Value;
         protected override PitchSpeedKeyframe CreateElement(Keyframe keyframe) => keyframe;
@@ -180,7 +180,7 @@ namespace KexEdit.UI.Timeline {
         public override string DisplayName => "Yaw Speed";
 
         public override float EvaluateAt(Entity entity, float time, Anchor anchor) =>
-            EntityManager.GetBuffer<YawSpeedKeyframe>(entity).Evaluate(time, anchor);
+            EntityManager.GetBuffer<YawSpeedKeyframe>(entity).Evaluate(time);
 
         protected override Keyframe GetData(YawSpeedKeyframe element) => element.Value;
         protected override YawSpeedKeyframe CreateElement(Keyframe keyframe) => keyframe;
