@@ -197,8 +197,8 @@ namespace KexEdit {
             return 3f * u * u * (p1 - p0) + 6f * u * t * (p2 - p1) + 3f * t * t * (p3 - p2);
         }
 
-        public static float Evaluate(this DynamicBuffer<RollSpeedKeyframe> keyframes, float t, in PointData anchor) {
-            float defaultValue = PropertyType.RollSpeed.Default(t, anchor);
+        public static float Evaluate(this DynamicBuffer<RollSpeedKeyframe> keyframes, float t) {
+            float defaultValue = PropertyType.RollSpeed.Default(t);
             if (keyframes.Length == 0) return defaultValue;
             if (t <= keyframes[0].Value.Time) return keyframes[0].Value.Value;
 
@@ -215,8 +215,8 @@ namespace KexEdit {
             return EvaluateKeyframes(start, end, segmentT);
         }
 
-        public static float Evaluate(this DynamicBuffer<NormalForceKeyframe> keyframes, float t, in PointData anchor) {
-            float defaultValue = PropertyType.NormalForce.Default(t, anchor);
+        public static float Evaluate(this DynamicBuffer<NormalForceKeyframe> keyframes, float t) {
+            float defaultValue = PropertyType.NormalForce.Default(t);
             if (keyframes.Length == 0) return defaultValue;
             if (t <= keyframes[0].Value.Time) return keyframes[0].Value.Value;
 
@@ -233,8 +233,8 @@ namespace KexEdit {
             return EvaluateKeyframes(start, end, segmentT);
         }
 
-        public static float Evaluate(this DynamicBuffer<LateralForceKeyframe> keyframes, float t, in PointData anchor) {
-            float defaultValue = PropertyType.LateralForce.Default(t, anchor);
+        public static float Evaluate(this DynamicBuffer<LateralForceKeyframe> keyframes, float t) {
+            float defaultValue = PropertyType.LateralForce.Default(t);
             if (keyframes.Length == 0) return defaultValue;
             if (t <= keyframes[0].Value.Time) return keyframes[0].Value.Value;
 
@@ -251,8 +251,8 @@ namespace KexEdit {
             return EvaluateKeyframes(start, end, segmentT);
         }
 
-        public static float Evaluate(this DynamicBuffer<PitchSpeedKeyframe> keyframes, float t, in PointData anchor) {
-            float defaultValue = PropertyType.PitchSpeed.Default(t, anchor);
+        public static float Evaluate(this DynamicBuffer<PitchSpeedKeyframe> keyframes, float t) {
+            float defaultValue = PropertyType.PitchSpeed.Default(t);
             if (keyframes.Length == 0) return defaultValue;
             if (t <= keyframes[0].Value.Time) return keyframes[0].Value.Value;
 
@@ -269,8 +269,8 @@ namespace KexEdit {
             return EvaluateKeyframes(start, end, segmentT);
         }
 
-        public static float Evaluate(this DynamicBuffer<YawSpeedKeyframe> keyframes, float t, in PointData anchor) {
-            float defaultValue = PropertyType.YawSpeed.Default(t, anchor);
+        public static float Evaluate(this DynamicBuffer<YawSpeedKeyframe> keyframes, float t) {
+            float defaultValue = PropertyType.YawSpeed.Default(t);
             if (keyframes.Length == 0) return defaultValue;
             if (t <= keyframes[0].Value.Time) return keyframes[0].Value.Value;
 
@@ -288,7 +288,7 @@ namespace KexEdit {
         }
 
         public static float Evaluate(this DynamicBuffer<FixedVelocityKeyframe> keyframes, float t, in PointData anchor) {
-            float defaultValue = PropertyType.FixedVelocity.Default(t, anchor);
+            float defaultValue = PropertyType.FixedVelocity.Previous(t, anchor);
             if (keyframes.Length == 0) return defaultValue;
             if (t <= keyframes[0].Value.Time) return keyframes[0].Value.Value;
 
@@ -306,7 +306,7 @@ namespace KexEdit {
         }
 
         public static float Evaluate(this DynamicBuffer<HeartKeyframe> keyframes, float t, in PointData anchor) {
-            float defaultValue = PropertyType.Heart.Default(t, anchor);
+            float defaultValue = PropertyType.Heart.Previous(t, anchor);
             if (keyframes.Length == 0) return defaultValue;
             if (t <= keyframes[0].Value.Time) return keyframes[0].Value.Value;
 
@@ -324,7 +324,7 @@ namespace KexEdit {
         }
 
         public static float Evaluate(this DynamicBuffer<FrictionKeyframe> keyframes, float t, in PointData anchor) {
-            float defaultValue = PropertyType.Friction.Default(t, anchor);
+            float defaultValue = PropertyType.Friction.Previous(t, anchor);
             if (keyframes.Length == 0) return defaultValue;
             if (t <= keyframes[0].Value.Time) return keyframes[0].Value.Value;
 
@@ -342,7 +342,7 @@ namespace KexEdit {
         }
 
         public static float Evaluate(this DynamicBuffer<ResistanceKeyframe> keyframes, float t, in PointData anchor) {
-            float defaultValue = PropertyType.Resistance.Default(t, anchor);
+            float defaultValue = PropertyType.Resistance.Previous(t, anchor);
             if (keyframes.Length == 0) return defaultValue;
             if (t <= keyframes[0].Value.Time) return keyframes[0].Value.Value;
 
@@ -359,7 +359,23 @@ namespace KexEdit {
             return EvaluateKeyframes(start, end, segmentT);
         }
 
-        public static float Default(this PropertyType type, float t, PointData anchor) {
+        public static float Default(this PropertyType type, float t) {
+            PointData defaultPoint = default;
+            return type switch {
+                PropertyType.RollSpeed => 0f,
+                PropertyType.NormalForce => 0f,
+                PropertyType.LateralForce => 0f,
+                PropertyType.PitchSpeed => 0f,
+                PropertyType.YawSpeed => 0f,
+                PropertyType.FixedVelocity => defaultPoint.Velocity,
+                PropertyType.Heart => defaultPoint.Heart,
+                PropertyType.Friction => defaultPoint.Friction,
+                PropertyType.Resistance => defaultPoint.Resistance,
+                _ => throw new System.Exception($"Invalid property type: {type}")
+            };
+        }
+
+        public static float Previous(this PropertyType type, float t, PointData anchor) {
             return type switch {
                 PropertyType.RollSpeed => anchor.RollSpeed,
                 PropertyType.NormalForce => anchor.NormalForce,

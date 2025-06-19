@@ -377,6 +377,58 @@ namespace KexEdit.UI {
             return dialog;
         }
 
+        public static FloatField ShowFloatFieldEditor(
+            this VisualElement element,
+            Vector2 position,
+            float initialValue,
+            Action<float> onSave,
+            Action onCancel = null
+        ) {
+            var floatField = new FloatField {
+                value = initialValue,
+                style = {
+                    position = Position.Absolute,
+                    left = position.x,
+                    top = position.y,
+                    width = 60f,
+                }
+            };
+
+            element.Add(floatField);
+            floatField.Focus();
+
+            void CloseEditor() {
+                floatField.parent?.Remove(floatField);
+            }
+
+            void SaveValue() {
+                onSave?.Invoke(floatField.value);
+                CloseEditor();
+            }
+
+            void CancelEdit() {
+                onCancel?.Invoke();
+                CloseEditor();
+            }
+
+            floatField.RegisterCallback<KeyDownEvent>(evt => {
+                if (evt.keyCode == UnityEngine.KeyCode.Return || evt.keyCode == UnityEngine.KeyCode.KeypadEnter) {
+                    SaveValue();
+                    evt.StopPropagation();
+                }
+                else if (evt.keyCode == UnityEngine.KeyCode.Escape) {
+                    CancelEdit();
+                    evt.StopPropagation();
+                }
+            });
+
+            floatField.RegisterCallback<BlurEvent>(_ => {
+                SaveValue();
+            });
+
+            return floatField;
+        }
+
         public static bool IsMouseInMenuHierarchy(VisualElement target, ContextMenu rootMenu) {
             VisualElement current = target;
             while (current != null) {
