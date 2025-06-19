@@ -8,6 +8,9 @@ using Unity.Mathematics;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial class GridSystem : SystemBase {
+        public static GridSystem Instance { get; private set; }
+
+        private GameObject _groundPlane;
         private Material _gridMaterial;
         private GraphicsBuffer _vertexBuffer;
         private GraphicsBuffer _indexBuffer;
@@ -19,24 +22,21 @@ namespace KexEdit.UI {
         private bool _showGrid = true;
         private int _gridSize = 250;
         private float _gridSpacing = 10f;
-        private Color _gridColor = new(0.5f, 0.5f, 0.5f, 0.1f);
+        private Color _gridColor = new(1f, 1f, 1f, 0.05f);
 
-        public static GridSystem Instance { get; private set; }
-
-        public bool ShowGrid {
-            get => _showGrid;
-            set => _showGrid = value;
-        }
+        public bool ShowGrid => _showGrid;
 
         public GridSystem() {
             Instance = this;
         }
 
         protected override void OnStartRunning() {
+            _groundPlane = GameObject.Find("GroundPlane");
             _bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
             _camera = UnityEngine.Camera.main;
             CreateGridMaterial();
             GenerateGridMesh();
+            _groundPlane.SetActive(_showGrid);
         }
 
         protected override void OnStopRunning() {
@@ -57,6 +57,7 @@ namespace KexEdit.UI {
                 0f,
                 Mathf.Round(cameraPos.z / _gridSpacing) * _gridSpacing
             );
+            _groundPlane.transform.position = gridCenter;
 
             if (Vector3.Distance(gridCenter, _lastGridCenter) > _gridSpacing * 0.5f) {
                 _lastGridCenter = gridCenter;
@@ -137,6 +138,7 @@ namespace KexEdit.UI {
 
         public void ToggleGrid() {
             _showGrid = !_showGrid;
+            _groundPlane.SetActive(_showGrid);
         }
 
         public void SetGridSettings(int size, float spacing, Color color) {

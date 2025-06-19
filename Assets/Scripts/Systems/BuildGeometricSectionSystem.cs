@@ -91,9 +91,9 @@ namespace KexEdit {
 
                     PointData curr = prev;
 
-                    float rollSpeed = section.RollSpeedKeyframes.Evaluate(t, section.Anchor);
-                    float pitchChangeRate = section.PitchSpeedKeyframes.Evaluate(t, section.Anchor);
-                    float yawChangeRate = section.YawSpeedKeyframes.Evaluate(t, section.Anchor);
+                    float rollSpeed = section.RollSpeedKeyframes.Evaluate(t);
+                    float pitchChangeRate = section.PitchSpeedKeyframes.Evaluate(t);
+                    float yawChangeRate = section.YawSpeedKeyframes.Evaluate(t);
 
                     curr.RollSpeed = rollSpeed;
 
@@ -143,9 +143,9 @@ namespace KexEdit {
                     prev.Friction = section.FrictionKeyframes.Evaluate(d, section.Anchor);
                     prev.Resistance = section.ResistanceKeyframes.Evaluate(d, section.Anchor);
 
-                    float rollSpeed = section.RollSpeedKeyframes.Evaluate(d, section.Anchor);
-                    float pitchChangeRate = section.PitchSpeedKeyframes.Evaluate(d, section.Anchor);
-                    float yawChangeRate = section.YawSpeedKeyframes.Evaluate(d, section.Anchor);
+                    float rollSpeed = section.RollSpeedKeyframes.Evaluate(d);
+                    float pitchChangeRate = section.PitchSpeedKeyframes.Evaluate(d);
+                    float yawChangeRate = section.YawSpeedKeyframes.Evaluate(d);
 
                     PointData curr = prev;
                     curr.RollSpeed = rollSpeed;

@@ -70,6 +70,7 @@ namespace KexEdit.UI.Timeline {
             _timeline.RegisterCallback<PropertyRightClickEvent>(OnPropertyRightClick);
             _timeline.RegisterCallback<RemovePropertyClickEvent>(OnRemovePropertyClick);
             _timeline.RegisterCallback<KeyframeClickEvent>(OnKeyframeClick);
+            _timeline.RegisterCallback<KeyframeDoubleClickEvent>(OnKeyframeDoubleClick);
             _timeline.RegisterCallback<ViewClickEvent>(OnViewClick);
             _timeline.RegisterCallback<ViewRightClickEvent>(OnViewRightClick);
             _timeline.RegisterCallback<SetKeyframeEvent>(OnSetKeyframe);
@@ -799,6 +800,23 @@ namespace KexEdit.UI.Timeline {
             }
         }
 
+        private void OnKeyframeDoubleClick(KeyframeDoubleClickEvent evt) {
+            ShowKeyframeValueEditor(evt.Keyframe, evt.MousePosition);
+        }
+
+        private void ShowKeyframeValueEditor(KeyframeData keyframe, UnityEngine.Vector2 position) {
+            _timeline.View.ShowFloatFieldEditor(
+                position,
+                keyframe.Value.Value,
+                newValue => {
+                    Undo.Record();
+                    var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
+                    adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithValue(newValue));
+                    MarkTrackDirty();
+                }
+            );
+        }
+
         private void OnViewClick(ViewClickEvent evt) {
             if (!evt.ShiftKey) {
                 DeselectAllKeyframes();
@@ -818,6 +836,11 @@ namespace KexEdit.UI.Timeline {
                 bool canCopy = NavigationMenuSystem.CanCopy;
 
                 if (hasSelection && !hasMultiSelection) {
+                    menu.AddItem("Edit", () => {
+                        var selectedKeyframe = GetSelectedKeyframe();
+                        ShowKeyframeValueEditor(selectedKeyframe, evt.MousePosition);
+                    });
+                    menu.AddSeparator();
                     menu.AddSubmenu("Optimize", submenu => {
                         submenu.AddItem("Roll", () => {
                             Undo.Record();
@@ -832,9 +855,15 @@ namespace KexEdit.UI.Timeline {
                             Optimize(TargetValueType.Yaw);
                         });
                     });
-                    menu.AddItem("Reset", () => {
-                        Undo.Record();
-                        ResetKeyframe();
+                    menu.AddSubmenu("Reset", submenu => {
+                        submenu.AddItem("To Default", () => {
+                            Undo.Record();
+                            ResetKeyframe();
+                        });
+                        submenu.AddItem("To Previous", () => {
+                            Undo.Record();
+                            ResetKeyframeToPrevious();
+                        });
                     });
                     menu.AddSeparator();
                 }
@@ -958,11 +987,19 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void ResetKeyframe() {
-            PointData anchor = SystemAPI.GetComponent<Anchor>(_data.Entity);
             var keyframe = GetSelectedKeyframe();
-            float defaultValue = keyframe.Type.Default(_data.Time, anchor);
+            float defaultValue = keyframe.Type.Default(_data.Time);
             var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
             adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithValue(defaultValue));
+            MarkTrackDirty();
+        }
+
+        private void ResetKeyframeToPrevious() {
+            PointData anchor = SystemAPI.GetComponent<Anchor>(_data.Entity);
+            var keyframe = GetSelectedKeyframe();
+            var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
+            float previousValue = keyframe.Type.Previous(_data.Time, anchor);
+            adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithValue(previousValue));
             MarkTrackDirty();
         }
 

@@ -44,16 +44,17 @@ When a node with controllable properties is selected, the Timeline displays:
 
 ## Keyframe Editing
 
-| Input           | Action       | Notes                     |
-| --------------- | ------------ | ------------------------- |
-| `I`             | Insert       | Add keyframe at playhead  |
-| `Left Click`    | Select       | Select keyframe           |
-| `Shift + Click` | Multi-Select | Add to selection          |
-| `Drag`          | Move         | Reposition keyframe       |
-| `Delete`        | Remove       | Delete selected keyframes |
-| `Ctrl+C/V`      | Copy/Paste   | Duplicate keyframes       |
-| `Box Select`    | Multi-Select | Drag to select multiple   |
-| `Right Click`   | Context Menu | Change interpolation type |
+| Input           | Action       | Notes                                     |
+| --------------- | ------------ | ----------------------------------------- |
+| `I`             | Insert       | Add keyframe at playhead                  |
+| `Left Click`    | Select       | Select keyframe                           |
+| `Double Click`  | Edit         | Edit keyframe value                       |
+| `Shift + Click` | Multi-Select | Add to selection                          |
+| `Drag`          | Move         | Reposition keyframe                       |
+| `Delete`        | Remove       | Delete selected keyframes                 |
+| `Ctrl+C/V`      | Copy/Paste   | Duplicate keyframes                       |
+| `Box Select`    | Multi-Select | Drag to select multiple                   |
+| `Right Click`   | Context Menu | Optimize, change interpolation type, etc. |
 
 ## Animation Properties
 

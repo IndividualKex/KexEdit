@@ -8,6 +8,8 @@ namespace KexEdit.UI.Timeline {
         private VisualElement _divider;
         private TimelineView _view;
 
+        public TimelineView View => _view;
+
         public Timeline() {
             style.position = Position.Absolute;
             style.flexDirection = FlexDirection.RowReverse;
