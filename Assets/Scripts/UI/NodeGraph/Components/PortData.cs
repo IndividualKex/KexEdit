@@ -8,17 +8,19 @@ namespace KexEdit.UI.NodeGraph {
         public Entity Node;
         public PointData Value;
         public PortState InteractionState;
+        public UnitsData Units;
         public bool IsConnected;
 
         public bool Hovered => InteractionState.HasFlag(PortState.Hovered);
         public bool Dragging => InteractionState.HasFlag(PortState.Dragging);
         public bool Connected => InteractionState.HasFlag(PortState.Connected);
 
-        public static PortData Create(Entity entity, Port port, Entity node) {
+        public static PortData Create(Entity entity, Port port, Entity node, UnitsType units) {
             return new PortData {
                 Entity = entity,
                 Port = port,
                 Node = node,
+                Units = new UnitsData(units),
             };
         }
 

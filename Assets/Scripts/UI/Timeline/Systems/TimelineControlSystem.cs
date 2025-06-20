@@ -169,6 +169,7 @@ namespace KexEdit.UI.Timeline {
                 propertyData.Visible = IsPropertyVisible(property);
                 propertyData.HasActiveKeyframe = FindKeyframe(property, _data.Time, out _);
                 propertyData.Selected = IsPropertySelected(property);
+                propertyData.DrawReadOnly &= !propertyData.Visible && !propertyData.Selected;
                 propertyData.Value = EvaluateAt(property, _data.Time);
                 propertyData.Units = property.GetUnits(_data.DurationType);
                 _data.DrawAnyReadOnly |= propertyData.DrawReadOnly;
@@ -336,7 +337,7 @@ namespace KexEdit.UI.Timeline {
                         }
                     }
                 }
-                else if (propertyData.DrawReadOnly && !propertyData.Visible) {
+                else if (propertyData.DrawReadOnly) {
                     for (int i = 1; i < propertyData.Values.Length; i++) {
                         hasAnyKeyframes = true;
                         tempMin = math.min(tempMin, propertyData.Values[i]);

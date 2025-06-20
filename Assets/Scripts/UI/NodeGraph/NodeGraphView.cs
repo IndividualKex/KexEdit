@@ -280,7 +280,7 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void OnDrawGrid(MeshGenerationContext ctx) {
-            if (!PreferencesSystem.NodeGridSnapping) return;
+            if (!Preferences.NodeGridSnapping) return;
 
             var painter = ctx.painter2D;
             Rect rect = contentRect;
@@ -428,7 +428,7 @@ namespace KexEdit.UI.NodeGraph {
                 }
             }
 
-            if (PreferencesSystem.NodeGridSnapping) {
+            if (Preferences.NodeGridSnapping) {
                 float gridSize = NODE_GRID_SIZE;
                 float2 gridSnappedPosition = new(
                     Mathf.Round(desiredPosition.x / gridSize) * gridSize - 2f,

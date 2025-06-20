@@ -78,12 +78,12 @@ namespace KexEdit.UI.Timeline {
             TimelineDrawUtils.DrawPlayhead(painter, _data, contentRect);
 
             foreach (var (type, propertyData) in _data.Properties) {
-                if (!propertyData.Selected) {
-                    if (propertyData.DrawReadOnly) {
-                        painter.DrawCurvesReadOnly(_data, bounds, propertyData, contentRect);
-                    }
+                if (propertyData.DrawReadOnly) {
+                    painter.DrawCurvesReadOnly(_data, bounds, propertyData, contentRect);
                     continue;
                 }
+
+                if (!propertyData.Selected) continue;
 
                 painter.DrawCurves(_data, bounds, propertyData, contentRect);
                 painter.DrawKeyframes(_data, bounds, propertyData, contentRect);

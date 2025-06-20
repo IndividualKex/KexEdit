@@ -6,7 +6,7 @@ namespace KexEdit.UI.NodeGraph {
     public class ThumbFloatField : VisualElement {
         private static readonly string[] s_DisplayNames = new string[] { "X", "Y", "Z" };
 
-        private FloatField _field;
+        private LocalizedFloatField _field;
         private Label _label;
 
         private PortData _data;
@@ -47,7 +47,7 @@ namespace KexEdit.UI.NodeGraph {
             };
             dummy.Add(_label);
 
-            _field = new FloatField {
+            _field = new LocalizedFloatField(data.Units) {
                 formatString = "0.###",
                 isDelayed = true,
                 style = {
@@ -79,13 +79,13 @@ namespace KexEdit.UI.NodeGraph {
                     2 => value.Energy,
                     _ => throw new System.NotImplementedException(),
                 });
-            _field.SetBinding("value", binding);
+            _field.SetBinding("Value", binding);
             _field.RegisterValueChangedCallback<float>(OnFieldValueChanged);
         }
 
         private void OnMouseDown(MouseDownEvent evt) {
             _startPosition = evt.mousePosition.x;
-            _startValue = _field.value;
+            _startValue = _field.Value;
             _dragging = true;
             _moved = false;
             _label.CaptureMouse();
