@@ -220,10 +220,14 @@ namespace KexEdit.UI.Timeline {
                 new StyleEnum<DisplayStyle>(value ? DisplayStyle.Flex : DisplayStyle.None));
             SetBinding("style.display", displayBinding);
 
-            _valueField.SetBinding("value", new DataBinding {
+            var valueBinding = new DataBinding {
                 dataSourcePath = new PropertyPath(nameof(PropertyData.Value)),
                 bindingMode = BindingMode.ToTarget
+            };
+            valueBinding.sourceToUiConverters.AddConverter((ref float value) => {
+                return _data.Units.ValueToDisplay(value);
             });
+            _valueField.SetBinding("value", valueBinding);
 
             var unitBinding = new DataBinding {
                 dataSourcePath = new PropertyPath(nameof(PropertyData.Units)),
@@ -239,7 +243,7 @@ namespace KexEdit.UI.Timeline {
                 _undoRecorded = false;
                 ((VisualElement)evt.target).CaptureMouse();
                 _prevX = evt.mousePosition.x;
-                _rawValue = _valueField.value;
+                _rawValue = _data.Units.DisplayToValue(_valueField.value);
                 evt.StopPropagation();
             }
         }
@@ -248,18 +252,20 @@ namespace KexEdit.UI.Timeline {
             if (!_dragging) return;
 
             float deltaX = evt.mousePosition.x - _prevX;
+            deltaX = _data.Units.DisplayToValue(deltaX);
             _prevX = evt.mousePosition.x;
 
             _rawValue += deltaX * _sensitivity;
 
             float roundedValue = math.round(_rawValue * 1e3f) / 1e3f;
 
-            if (roundedValue != _valueField.value) {
+            if (roundedValue != _data.Value) {
                 if (!_undoRecorded) {
                     Undo.Record();
                     _undoRecorded = true;
                 }
-                _valueField.SetValueWithoutNotify(roundedValue);
+                float displayValue = _data.Units.ValueToDisplay(roundedValue);
+                _valueField.SetValueWithoutNotify(displayValue);
                 var e = this.GetPooled<SetKeyframeEvent>();
                 e.Type = _data.Type;
                 e.Value = roundedValue;
@@ -296,10 +302,13 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void OnValueChanged(ChangeEvent<float> evt) {
-            if (evt.newValue == _data.Value) return;
+            float newValue = _data.Units.DisplayToValue(evt.newValue);
+
+            if (newValue == _data.Value) return;
+            Undo.Record();
             var e = this.GetPooled<SetKeyframeEvent>();
             e.Type = _data.Type;
-            e.Value = evt.newValue;
+            e.Value = newValue;
             this.Send(e);
         }
 
@@ -309,8 +318,9 @@ namespace KexEdit.UI.Timeline {
             float newValue = _valueField.value + delta;
 
             float roundedValue = math.round(newValue * 1e3f) / 1e3f;
+            float internalValue = _data.Units.DisplayToValue(roundedValue);
 
-            if (roundedValue != _valueField.value) {
+            if (internalValue != _data.Value) {
                 float currentTime = Time.realtimeSinceStartup;
                 if (currentTime - _lastScrollTime > 0.5f) {
                     Undo.Record();
@@ -320,7 +330,7 @@ namespace KexEdit.UI.Timeline {
                 _valueField.SetValueWithoutNotify(roundedValue);
                 var e = this.GetPooled<SetKeyframeEvent>();
                 e.Type = _data.Type;
-                e.Value = roundedValue;
+                e.Value = internalValue;
                 this.Send(e);
             }
 

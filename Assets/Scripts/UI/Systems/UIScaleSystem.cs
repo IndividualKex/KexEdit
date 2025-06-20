@@ -18,7 +18,7 @@ namespace KexEdit.UI {
 
         protected override void OnStartRunning() {
             _uiDocument = UIService.Instance.UIDocument;
-            _currentScale = PreferencesSystem.UIScale;
+            _currentScale = Preferences.UIScale;
             ApplyScale();
         }
 
@@ -33,12 +33,12 @@ namespace KexEdit.UI {
         }
 
         public void ResetZoom() {
-            SetScale(PreferencesSystem.GetDefaultUIScale());
+            SetScale(Preferences.GetDefaultUIScale());
         }
 
         private void SetScale(float scale) {
             _currentScale = Mathf.Clamp(scale, 0.5f, 3f);
-            PreferencesSystem.UIScale = _currentScale;
+            Preferences.UIScale = _currentScale;
             ApplyScale();
         }
 

@@ -2,23 +2,16 @@ using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
-using System.IO;
-using KexEdit.UI.Serialization;
 using KexEdit.UI.Timeline;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial class NavigationMenuSystem : SystemBase {
-        private static IEditableHandler _activeHandler;
-        private static bool _menuInteractionActive;
-
         private VisualElement _root;
         private Timeline.Timeline _timeline;
         private Label _titleLabel;
 
-        private string _currentFilePath;
         private bool _initialized;
-        private bool _hasUnsavedChanges;
 
         protected override void OnStartRunning() {
             if (_initialized) return;
@@ -52,19 +45,20 @@ namespace KexEdit.UI {
                 };
                 menuContainer.Add(_titleLabel);
 
-                Undo.Recorded += () => {
-                    _hasUnsavedChanges = true;
-                    UpdateTitle();
-                };
+                ProjectOperations.FilePathChanged += _ => UpdateTitle();
+                ProjectOperations.UnsavedChangesChanged += _ => UpdateTitle();
 
                 Application.wantsToQuit += HandleApplicationWantsToQuit;
 
+                UpdateTitle();
                 _initialized = true;
             }
         }
 
         protected override void OnDestroy() {
             Application.wantsToQuit -= HandleApplicationWantsToQuit;
+            ProjectOperations.FilePathChanged -= _ => UpdateTitle();
+            ProjectOperations.UnsavedChangesChanged -= _ => UpdateTitle();
         }
 
         private void AddFileMenu(MenuBar menuBar) {
@@ -79,9 +73,52 @@ namespace KexEdit.UI {
                     submenu.AddItem("NoLimits 2", ShowExportDialog);
                 });
                 menu.AddSeparator();
-                menu.AddSubmenu("Preferences", submenu => {
-                    submenu.AddItem("Node Grid", ToggleNodeGridSnapping,
-                        isChecked: PreferencesSystem.NodeGridSnapping);
+                menu.AddSubmenu("Units", submenu => {
+                    submenu.AddItem("Metric", () => {
+                        Preferences.DistanceUnits = DistanceUnitsType.Meters;
+                        if (Preferences.SpeedUnits != SpeedUnitsType.MetersPerSecond &&
+                            Preferences.SpeedUnits != SpeedUnitsType.KilometersPerHour) {
+                            Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond;
+                        }
+                    });
+                    submenu.AddItem("Imperial", () => {
+                        Preferences.DistanceUnits = DistanceUnitsType.Feet;
+                        Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour;
+                    });
+                    submenu.AddSeparator();
+                    submenu.AddSubmenu("Distance", submenu => {
+                        submenu.AddItem("Meters", () => Preferences.DistanceUnits = DistanceUnitsType.Meters,
+                            isChecked: Preferences.DistanceUnits == DistanceUnitsType.Meters);
+                        submenu.AddItem("Feet", () => Preferences.DistanceUnits = DistanceUnitsType.Feet,
+                            isChecked: Preferences.DistanceUnits == DistanceUnitsType.Feet);
+                    });
+                    submenu.AddSubmenu("Velocity", submenu => {
+                        submenu.AddItem("Meters Per Second", () => Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond,
+                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.MetersPerSecond);
+                        submenu.AddItem("Kilometers Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.KilometersPerHour,
+                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.KilometersPerHour);
+                        submenu.AddItem("Miles Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour,
+                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.MilesPerHour);
+                    });
+                    submenu.AddSubmenu("Angle", submenu => {
+                        submenu.AddItem("Degrees", () => Preferences.AngleUnits = AngleUnitsType.Degrees,
+                            isChecked: Preferences.AngleUnits == AngleUnitsType.Degrees);
+                        submenu.AddItem("Radians", () => Preferences.AngleUnits = AngleUnitsType.Radians,
+                            isChecked: Preferences.AngleUnits == AngleUnitsType.Radians);
+                    });
+                    submenu.AddSubmenu("Angle Change", submenu => {
+                        submenu.AddItem("Degrees", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Degrees,
+                            isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Degrees);
+                        submenu.AddItem("Radians", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians,
+                            isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Radians);
+                    });
+                    submenu.AddSeparator();
+                    submenu.AddItem("Reset to Default", () => {
+                        Preferences.DistanceUnits = DistanceUnitsType.Meters;
+                        Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond;
+                        Preferences.AngleUnits = AngleUnitsType.Degrees;
+                        Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians;
+                    });
                 });
                 menu.AddSeparator();
                 menu.AddItem("Quit", QuitWithConfirmation);
@@ -91,20 +128,20 @@ namespace KexEdit.UI {
         private void AddEditMenu(MenuBar menuBar) {
             menuBar.AddMenu("Edit", menu => {
                 bool canUndo = Undo.CanUndo, canRedo = Undo.CanRedo;
-                bool canCopy = CanCopy, canPaste = CanPaste;
-                bool canDelete = CanDelete, canCut = CanCut;
-                bool canSelectAll = CanSelectAll, canDeselectAll = CanDeselectAll;
+                bool canCopy = EditOperationsSystem.CanCopy, canPaste = EditOperationsSystem.CanPaste;
+                bool canDelete = EditOperationsSystem.CanDelete, canCut = EditOperationsSystem.CanCut;
+                bool canSelectAll = EditOperationsSystem.CanSelectAll, canDeselectAll = EditOperationsSystem.CanDeselectAll;
 
                 menu.AddItem(canUndo ? "Undo" : "Can't Undo", Undo.Execute, "Ctrl+Z".ToPlatformShortcut(), enabled: canUndo);
                 menu.AddItem(canRedo ? "Redo" : "Can't Redo", Undo.Redo, "Ctrl+Y".ToPlatformShortcut(), enabled: canRedo);
                 menu.AddSeparator();
-                menu.AddItem("Cut", HandleCut, "Ctrl+X".ToPlatformShortcut(), enabled: canCut);
-                menu.AddItem("Copy", HandleCopy, "Ctrl+C".ToPlatformShortcut(), enabled: canCopy);
-                menu.AddItem("Paste", HandlePaste, "Ctrl+V".ToPlatformShortcut(), enabled: canPaste);
-                menu.AddItem("Delete", HandleDelete, "Del", enabled: canDelete);
+                menu.AddItem("Cut", EditOperationsSystem.HandleCut, "Ctrl+X".ToPlatformShortcut(), enabled: canCut);
+                menu.AddItem("Copy", EditOperationsSystem.HandleCopy, "Ctrl+C".ToPlatformShortcut(), enabled: canCopy);
+                menu.AddItem("Paste", EditOperationsSystem.HandlePaste, "Ctrl+V".ToPlatformShortcut(), enabled: canPaste);
+                menu.AddItem("Delete", EditOperationsSystem.HandleDelete, "Del", enabled: canDelete);
                 menu.AddSeparator();
-                menu.AddItem("Select All", HandleSelectAll, "Ctrl+A".ToPlatformShortcut(), enabled: canSelectAll);
-                menu.AddItem("Deselect All", HandleDeselectAll, "Alt+A".ToPlatformShortcut(), enabled: canDeselectAll);
+                menu.AddItem("Select All", EditOperationsSystem.HandleSelectAll, "Ctrl+A".ToPlatformShortcut(), enabled: canSelectAll);
+                menu.AddItem("Deselect All", EditOperationsSystem.HandleDeselectAll, "Alt+A".ToPlatformShortcut(), enabled: canDeselectAll);
             });
         }
 
@@ -117,7 +154,9 @@ namespace KexEdit.UI {
                 menu.AddItem("Grid", () => GridSystem.Instance?.ToggleGrid(), "F2",
                     isChecked: GridSystem.Instance?.ShowGrid == true);
                 menu.AddItem("Stats", ToggleShowStats, "F3",
-                    isChecked: PreferencesSystem.ShowStats);
+                    isChecked: Preferences.ShowStats);
+                menu.AddItem("Node Grid", ToggleNodeGridSnapping, "F4",
+                    isChecked: Preferences.NodeGridSnapping);
             });
         }
 
@@ -146,20 +185,19 @@ namespace KexEdit.UI {
         }
 
         private void ToggleNodeGridSnapping() {
-            PreferencesSystem.NodeGridSnapping = !PreferencesSystem.NodeGridSnapping;
+            Preferences.NodeGridSnapping = !Preferences.NodeGridSnapping;
         }
 
         private void ToggleShowStats() {
-            PreferencesSystem.ShowStats = !PreferencesSystem.ShowStats;
+            Preferences.ShowStats = !Preferences.ShowStats;
         }
 
         protected override void OnUpdate() {
             var kb = Keyboard.current;
-            if (kb == null) return;
 
             if (kb.f2Key.wasPressedThisFrame) GridSystem.Instance?.ToggleGrid();
             else if (kb.f3Key.wasPressedThisFrame) ToggleShowStats();
-            else if (kb.deleteKey.wasPressedThisFrame) HandleDelete();
+            else if (kb.f4Key.wasPressedThisFrame) ToggleNodeGridSnapping();
             else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
 
             if (kb.ctrlKey.isPressed || kb.leftCommandKey.isPressed) {
@@ -168,19 +206,10 @@ namespace KexEdit.UI {
                         if (Undo.CanRedo) Undo.Redo();
                     }
                     else if (Undo.CanUndo) Undo.Execute();
-
-                    _hasUnsavedChanges = true;
-                    UpdateTitle();
                 }
                 else if (kb.yKey.wasPressedThisFrame && Undo.CanRedo) {
                     Undo.Redo();
-                    _hasUnsavedChanges = true;
-                    UpdateTitle();
                 }
-                else if (kb.xKey.wasPressedThisFrame) HandleCut();
-                else if (kb.cKey.wasPressedThisFrame) HandleCopy();
-                else if (kb.vKey.wasPressedThisFrame) HandlePaste();
-                else if (kb.aKey.wasPressedThisFrame) HandleSelectAll();
                 else if (kb.nKey.wasPressedThisFrame) NewProject();
                 else if (kb.oKey.wasPressedThisFrame) OpenProject();
                 else if (kb.sKey.wasPressedThisFrame) SaveProject();
@@ -188,32 +217,19 @@ namespace KexEdit.UI {
                 else if (kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomIn();
                 else if (kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomOut();
             }
-            else if (kb.altKey.isPressed || kb.leftCommandKey.isPressed || kb.rightCommandKey.isPressed) {
-                if (kb.aKey.wasPressedThisFrame) HandleDeselectAll();
-            }
         }
 
         private void NewProject() {
-            if (_hasUnsavedChanges) {
-                ShowUnsavedChangesDialog(() => {
-                    CreateNewProject();
-                });
+            if (ProjectOperations.HasUnsavedChanges) {
+                ShowUnsavedChangesDialog(ProjectOperations.CreateNewProject);
             }
             else {
-                CreateNewProject();
+                ProjectOperations.CreateNewProject();
             }
-        }
-
-        private void CreateNewProject() {
-            _currentFilePath = null;
-            SerializationSystem.Instance.DeserializeGraph(new byte[0]);
-            Undo.Clear();
-            _hasUnsavedChanges = false;
-            UpdateTitle();
         }
 
         private void OpenProject() {
-            if (_hasUnsavedChanges) {
+            if (ProjectOperations.HasUnsavedChanges) {
                 ShowUnsavedChangesDialog(DoOpenProject);
             }
             else {
@@ -223,73 +239,34 @@ namespace KexEdit.UI {
 
         private void DoOpenProject() {
             string filePath = FileManager.ShowOpenFileDialog();
-            if (string.IsNullOrEmpty(filePath)) return;
-
-            try {
-                byte[] graphData = FileManager.LoadGraph(filePath);
-                if (graphData.Length == 0) return;
-
-                SerializationSystem.Instance.DeserializeGraph(graphData);
-                _currentFilePath = filePath;
-                Undo.Clear();
-                _hasUnsavedChanges = false;
-                UpdateTitle();
-            }
-            catch (System.Exception ex) {
-                Debug.LogError($"Failed to open project: {ex.Message}");
+            if (!string.IsNullOrEmpty(filePath)) {
+                ProjectOperations.OpenProject(filePath);
             }
         }
 
         private void SaveProject() {
-            if (string.IsNullOrEmpty(_currentFilePath)) {
+            if (string.IsNullOrEmpty(ProjectOperations.CurrentFilePath)) {
                 SaveProjectAs();
                 return;
             }
 
-            try {
-                FileManager.SaveGraph(
-                    SerializationSystem.Instance.SerializeGraph(),
-                    _currentFilePath
-                );
-                _hasUnsavedChanges = false;
-                UpdateTitle();
-            }
-            catch (System.Exception ex) {
-                Debug.LogError($"Failed to save project: {ex.Message}");
-            }
+            ProjectOperations.SaveProject();
         }
 
         private void SaveProjectAs() {
-            string fileName = Path.GetFileNameWithoutExtension(_currentFilePath);
+            string fileName = ProjectOperations.GetProjectDisplayName();
             string filePath = FileManager.ShowSaveFileDialog(fileName);
-            if (string.IsNullOrEmpty(filePath)) return;
-
-            try {
-                FileManager.SaveGraph(
-                    SerializationSystem.Instance.SerializeGraph(),
-                    filePath
-                );
-                _currentFilePath = filePath;
-                _hasUnsavedChanges = false;
-                UpdateTitle();
-            }
-            catch (System.Exception ex) {
-                Debug.LogError($"Failed to save project: {ex.Message}");
+            if (!string.IsNullOrEmpty(filePath)) {
+                ProjectOperations.SaveProject(filePath);
             }
         }
 
         private void UpdateTitle() {
-            if (_titleLabel == null) return;
-
-            _titleLabel.text = string.IsNullOrEmpty(_currentFilePath)
-                ? "Untitled"
-                : Path.GetFileNameWithoutExtension(_currentFilePath);
-
-            if (_hasUnsavedChanges) _titleLabel.text += "*";
+            _titleLabel.text = ProjectOperations.GetProjectTitle();
         }
 
         private void QuitWithConfirmation() {
-            if (_hasUnsavedChanges) {
+            if (ProjectOperations.HasUnsavedChanges) {
                 ShowUnsavedChangesDialog(QuitApplication);
             }
             else {
@@ -300,76 +277,24 @@ namespace KexEdit.UI {
         private void ShowUnsavedChangesDialog(System.Action proceedAction) {
             _root.ShowUnsavedChangesDialog(
                 onSave: () => {
-                    SaveProject();
-                    if (!_hasUnsavedChanges) proceedAction?.Invoke();
+                    try {
+                        if (string.IsNullOrEmpty(ProjectOperations.CurrentFilePath)) {
+                            SaveProjectAs();
+                        }
+                        else {
+                            ProjectOperations.SaveProject();
+                        }
+
+                        if (!ProjectOperations.HasUnsavedChanges) {
+                            proceedAction?.Invoke();
+                        }
+                    }
+                    catch (System.Exception ex) {
+                        Debug.LogError($"Failed to save project: {ex.Message}");
+                    }
                 },
-                onDontSave: () => {
-                    _hasUnsavedChanges = false;
-                    proceedAction?.Invoke();
-                }
+                onDontSave: proceedAction
             );
-        }
-
-        public static void SetActiveHandler(IEditableHandler handler) => _activeHandler = handler;
-
-        public static void ClearActiveHandler(IEditableHandler handler) {
-            if (_activeHandler == handler && !_menuInteractionActive) _activeHandler = null;
-        }
-
-        private static void BeginMenuInteraction() => _menuInteractionActive = true;
-        private static void EndMenuInteraction() => _menuInteractionActive = false;
-
-        public static void HandleCopy() {
-            if (CanCopy) {
-                BeginMenuInteraction();
-                _activeHandler.Copy();
-                EndMenuInteraction();
-            }
-        }
-
-        public static void HandlePaste() => HandlePaste(null);
-
-        public static void HandlePaste(Vector2? worldPosition) {
-            if (CanPaste) {
-                BeginMenuInteraction();
-                Undo.Record();
-                _activeHandler.Paste(worldPosition);
-                EndMenuInteraction();
-            }
-        }
-
-        public static void HandleDelete() {
-            if (CanDelete) {
-                BeginMenuInteraction();
-                Undo.Record();
-                _activeHandler.Delete();
-                EndMenuInteraction();
-            }
-        }
-
-        public static void HandleCut() {
-            if (CanCut) {
-                BeginMenuInteraction();
-                Undo.Record();
-                _activeHandler.Cut();
-                EndMenuInteraction();
-            }
-        }
-
-        public static void HandleSelectAll() {
-            if (CanSelectAll) {
-                BeginMenuInteraction();
-                _activeHandler.SelectAll();
-                EndMenuInteraction();
-            }
-        }
-
-        public static void HandleDeselectAll() {
-            if (CanDeselectAll) {
-                BeginMenuInteraction();
-                _activeHandler.DeselectAll();
-                EndMenuInteraction();
-            }
         }
 
         private static void QuitApplication() {
@@ -380,15 +305,8 @@ namespace KexEdit.UI {
 #endif
         }
 
-        public static bool CanCopy => _activeHandler?.CanCopy() == true;
-        public static bool CanPaste => _activeHandler?.CanPaste() == true;
-        public static bool CanDelete => _activeHandler?.CanDelete() == true;
-        public static bool CanCut => _activeHandler?.CanCut() == true;
-        public static bool CanSelectAll => _activeHandler?.CanSelectAll() == true;
-        public static bool CanDeselectAll => _activeHandler?.CanDeselectAll() == true;
-
         private bool HandleApplicationWantsToQuit() {
-            if (_hasUnsavedChanges) {
+            if (ProjectOperations.HasUnsavedChanges) {
                 ShowUnsavedChangesDialog(QuitApplication);
                 return false;
             }

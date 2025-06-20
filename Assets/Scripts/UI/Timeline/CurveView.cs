@@ -74,16 +74,16 @@ namespace KexEdit.UI.Timeline {
             var bounds = _draggingKeyframe || _draggingBezierHandle ? _dragBounds : _data.ValueBounds;
 
             TimelineDrawUtils.DrawVerticalGrid(painter, _data, contentRect);
-            TimelineDrawUtils.DrawValueLegend(ctx, bounds, contentRect);
+            TimelineDrawUtils.DrawValueLegend(ctx, _data, bounds, contentRect);
             TimelineDrawUtils.DrawPlayhead(painter, _data, contentRect);
 
             foreach (var (type, propertyData) in _data.Properties) {
-                if (!propertyData.Selected) {
-                    if (propertyData.DrawReadOnly) {
-                        painter.DrawCurvesReadOnly(_data, bounds, propertyData, contentRect);
-                    }
+                if (propertyData.DrawReadOnly) {
+                    painter.DrawCurvesReadOnly(_data, bounds, propertyData, contentRect);
                     continue;
                 }
+
+                if (!propertyData.Selected) continue;
 
                 painter.DrawCurves(_data, bounds, propertyData, contentRect);
                 painter.DrawKeyframes(_data, bounds, propertyData, contentRect);
