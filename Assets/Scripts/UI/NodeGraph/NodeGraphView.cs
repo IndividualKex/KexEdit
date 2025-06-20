@@ -555,6 +555,15 @@ namespace KexEdit.UI.NodeGraph {
             _verticalGuide.style.display = DisplayStyle.None;
         }
 
+        public Vector2 GetNodeVisualCenter(Entity entity) {
+            if (_nodes.TryGetValue(entity, out var node)) {
+                Vector2 topLeft = (Vector2)_data.Nodes[entity].Position;
+                Vector2 size = new Vector2(node.resolvedStyle.width, node.resolvedStyle.height);
+                return topLeft + size * 0.5f;
+            }
+            return Vector2.zero;
+        }
+
         private struct SnapInfo {
             public bool IsValid;
             public float TargetPosition;
