@@ -1,5 +1,6 @@
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Physics;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -9,7 +10,7 @@ using UnityEngine;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    public partial class GameViewControlSystem : SystemBase {
+    public partial class GameViewControlSystem : SystemBase, IEditableHandler {
         private const float SpeedLabelDisplayTime = 2f;
 
         private UnityEngine.Camera _camera;
@@ -35,6 +36,8 @@ namespace KexEdit.UI {
             SetupSpeedLabel();
 
             _gameView.RegisterCallback<MouseDownEvent>(OnGameViewMouseDown);
+            _gameView.RegisterCallback<FocusInEvent>(OnGameViewFocusIn, TrickleDown.NoTrickleDown);
+            _gameView.RegisterCallback<FocusOutEvent>(OnGameViewFocusOut, TrickleDown.NoTrickleDown);
 
             OrbitCameraController.OnSpeedMultiplierChanged += OnSpeedMultiplierChanged;
         }
@@ -77,6 +80,18 @@ namespace KexEdit.UI {
             ShowSpeedLabel(multiplier);
         }
 
+        private void OnGameViewFocusIn(FocusInEvent evt) {
+            NavigationMenuSystem.SetActiveHandler(this);
+        }
+
+        private void OnGameViewFocusOut(FocusOutEvent evt) {
+            if (evt.relatedTarget != null &&
+                evt.relatedTarget is VisualElement element &&
+                !IsWithinGameView(element)) {
+                NavigationMenuSystem.ClearActiveHandler(this);
+            }
+        }
+
         private void ShowSpeedLabel(float multiplier) {
             _speedLabel.text = $"Fly Speed: {multiplier:F1}x";
             _speedLabel.style.visibility = Visibility.Visible;
@@ -86,12 +101,6 @@ namespace KexEdit.UI {
 
         protected override void OnUpdate() {
             UpdateSpeedLabel();
-
-            if (Keyboard.current.fKey.wasPressedThisFrame) {
-                if (TryGetSelectionBounds(out var bounds)) {
-                    OrbitCameraController.Focus(bounds);
-                }
-            }
         }
 
         private void UpdateSpeedLabel() {
@@ -108,11 +117,11 @@ namespace KexEdit.UI {
         }
 
         private void OnGameViewMouseDown(MouseDownEvent evt) {
-            bool altOrCmdPressed = Keyboard.current.leftAltKey.isPressed || 
+            bool altOrCmdPressed = Keyboard.current.leftAltKey.isPressed ||
                                   Keyboard.current.rightAltKey.isPressed ||
-                                  Keyboard.current.leftCommandKey.isPressed || 
+                                  Keyboard.current.leftCommandKey.isPressed ||
                                   Keyboard.current.rightCommandKey.isPressed;
-            
+
             if (altOrCmdPressed || OrbitCameraController.IsRideCameraActive || evt.button != 0) return;
 
             bool shiftPressed = Keyboard.current.shiftKey.isPressed;
@@ -206,6 +215,27 @@ namespace KexEdit.UI {
 
         public void ResetGameViewState() {
             OrbitCameraController.Instance.ResetState();
+        }
+
+        public bool CanCopy() => false;
+        public bool CanPaste() => false;
+        public bool CanDelete() => false;
+        public bool CanCut() => false;
+        public bool CanSelectAll() => false;
+        public bool CanDeselectAll() => false;
+        public bool CanFocus() => TryGetSelectionBounds(out _);
+
+        public void Copy() { }
+        public void Paste(float2? worldPosition = null) { }
+        public void Delete() { }
+        public void Cut() { }
+        public void SelectAll() { }
+        public void DeselectAll() { }
+
+        public void Focus() {
+            if (TryGetSelectionBounds(out var bounds)) {
+                OrbitCameraController.Focus(bounds);
+            }
         }
     }
 }

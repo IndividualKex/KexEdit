@@ -1359,6 +1359,7 @@ namespace KexEdit.UI.Timeline {
         public bool CanCut() => CanCopy();
         public bool CanSelectAll() => _data.Active;
         public bool CanDeselectAll() => _data.Active && _data.SelectedKeyframeCount > 0;
+        public bool CanFocus() => false;
 
         public void Copy() {
             CopyKeyframes();
@@ -1391,6 +1392,10 @@ namespace KexEdit.UI.Timeline {
         public void DeselectAll() {
             DeselectAllKeyframes();
             DeselectAllProperties();
+        }
+
+        public void Focus() {
+            // Empty implementation for now
         }
     }
 }

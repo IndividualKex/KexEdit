@@ -159,6 +159,7 @@ namespace KexEdit.UI {
 
             if (kb.f2Key.wasPressedThisFrame) GridSystem.Instance?.ToggleGrid();
             else if (kb.f3Key.wasPressedThisFrame) ToggleShowStats();
+            else if (kb.fKey.wasPressedThisFrame) HandleFocus();
             else if (kb.deleteKey.wasPressedThisFrame) HandleDelete();
             else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
 
@@ -372,6 +373,14 @@ namespace KexEdit.UI {
             }
         }
 
+        public static void HandleFocus() {
+            if (CanFocus) {
+                BeginMenuInteraction();
+                _activeHandler.Focus();
+                EndMenuInteraction();
+            }
+        }
+
         private static void QuitApplication() {
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
@@ -386,6 +395,7 @@ namespace KexEdit.UI {
         public static bool CanCut => _activeHandler?.CanCut() == true;
         public static bool CanSelectAll => _activeHandler?.CanSelectAll() == true;
         public static bool CanDeselectAll => _activeHandler?.CanDeselectAll() == true;
+        public static bool CanFocus => _activeHandler?.CanFocus() == true;
 
         private bool HandleApplicationWantsToQuit() {
             if (_hasUnsavedChanges) {

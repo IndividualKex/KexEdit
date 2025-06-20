@@ -1063,6 +1063,43 @@ namespace KexEdit.UI.NodeGraph {
             AddConnection(sourceEntity, targetEntity);
         }
 
+        private void CenterOnSelection() {
+            int count = _data.Nodes.Count * 4;
+            var portToPos = new NativeHashMap<Entity, Vector2>(count, Allocator.Temp);
+            Vector2 center = Vector2.zero;
+            int selectedCount = 0;
+
+            foreach (var (_, nodeData) in _data.Nodes) {
+                Vector2 nodeCenter = _view.GetNodeVisualCenter(nodeData.Entity);
+                foreach (var port in nodeData.Inputs.Keys) portToPos[port] = nodeCenter;
+                foreach (var port in nodeData.Outputs.Keys) portToPos[port] = nodeCenter;
+            }
+
+            foreach (var (_, nodeData) in _data.Nodes) {
+                if (nodeData.Selected) {
+                    center += _view.GetNodeVisualCenter(nodeData.Entity);
+                    selectedCount++;
+                }
+            }
+
+            foreach (var (_, edgeData) in _data.Edges) {
+                if (!edgeData.Selected) continue;
+                if (portToPos.TryGetValue(edgeData.Source, out var sourcePos) &&
+                    portToPos.TryGetValue(edgeData.Target, out var targetPos)) {
+                    center += (sourcePos + targetPos) * 0.5f;
+                    selectedCount++;
+                }
+            }
+
+            if (selectedCount > 0) {
+                center /= selectedCount;
+                var viewCenter = new Vector2(_view.resolvedStyle.width, _view.resolvedStyle.height) * 0.5f;
+                _data.Pan = viewCenter - (center * _data.Zoom);
+            }
+
+            portToPos.Dispose();
+        }
+
         private void CopySelectedNodes() {
             _clipboardData = null;
             _clipboardCenter = float2.zero;
@@ -1221,6 +1258,7 @@ namespace KexEdit.UI.NodeGraph {
         public bool CanCut() => CanCopy();
         public bool CanSelectAll() => _data.Nodes.Count > 0 || _data.Edges.Count > 0;
         public bool CanDeselectAll() => _data.HasSelectedNodes || _data.HasSelectedEdges;
+        public bool CanFocus() => _data.HasSelectedNodes || _data.HasSelectedEdges;
 
         public void Copy() {
             CopySelectedNodes();
@@ -1249,5 +1287,11 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         public void DeselectAll() => ClearSelection();
+
+        public void Focus() {
+            if (CanFocus()) {
+                CenterOnSelection();
+            }
+        }
     }
 }
