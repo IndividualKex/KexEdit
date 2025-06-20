@@ -259,7 +259,7 @@ namespace KexEdit.UI.Timeline {
 
             float roundedValue = math.round(_rawValue * 1e3f) / 1e3f;
 
-            if (roundedValue != _data.Value) {
+            if (math.abs(roundedValue - _data.Value) > 1e-6f) {
                 if (!_undoRecorded) {
                     Undo.Record();
                     _undoRecorded = true;
@@ -303,8 +303,7 @@ namespace KexEdit.UI.Timeline {
 
         private void OnValueChanged(ChangeEvent<float> evt) {
             float newValue = _data.Units.DisplayToValue(evt.newValue);
-
-            if (newValue == _data.Value) return;
+            if (math.abs(newValue - _data.Value) < 1e-6f) return;
             Undo.Record();
             var e = this.GetPooled<SetKeyframeEvent>();
             e.Type = _data.Type;
@@ -320,7 +319,7 @@ namespace KexEdit.UI.Timeline {
             float roundedValue = math.round(newValue * 1e3f) / 1e3f;
             float internalValue = _data.Units.DisplayToValue(roundedValue);
 
-            if (internalValue != _data.Value) {
+            if (math.abs(internalValue - _data.Value) > 1e-6f) {
                 float currentTime = Time.realtimeSinceStartup;
                 if (currentTime - _lastScrollTime > 0.5f) {
                     Undo.Record();
