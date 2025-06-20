@@ -1,3 +1,4 @@
+using Unity.Properties;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
@@ -31,9 +32,23 @@ namespace KexEdit.UI.Timeline {
             RegisterCallback<MouseEnterEvent>(OnMouseEnter);
             RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
             RegisterCallback<MouseDownEvent>(OnMouseDown);
-            RegisterCallback<CurveButtonClickEvent>(OnCurveButtonClick);
 
-            UpdateStyle();
+            var backgroundBinding = new DataBinding {
+                dataSourcePath = new PropertyPath(nameof(_data.ViewMode)),
+                bindingMode = BindingMode.ToTarget,
+            };
+            backgroundBinding.sourceToUiConverters.AddConverter((ref TimelineViewMode viewMode) =>
+                (StyleColor)(viewMode == TimelineViewMode.Curve ? s_ActiveColor : s_BackgroundColor));
+
+            var tintBinding = new DataBinding {
+                dataSourcePath = new PropertyPath(nameof(_data.ViewMode)),
+                bindingMode = BindingMode.ToTarget,
+            };
+            tintBinding.sourceToUiConverters.AddConverter((ref TimelineViewMode viewMode) =>
+                (StyleColor)(viewMode == TimelineViewMode.Curve ? s_ActiveTextColor : s_TextColor));
+
+            SetBinding("style.backgroundColor", backgroundBinding);
+            SetBinding("style.unityBackgroundImageTintColor", tintBinding);
         }
 
         private void OnGeometryChanged(GeometryChangedEvent evt) {
@@ -60,16 +75,6 @@ namespace KexEdit.UI.Timeline {
             e.IsRightClick = evt.button == 1;
             this.Send(e);
             evt.StopPropagation();
-        }
-
-        private void OnCurveButtonClick(CurveButtonClickEvent evt) {
-            schedule.Execute(UpdateStyle);
-        }
-
-        private void UpdateStyle() {
-            bool active = _data.ViewMode == TimelineViewMode.Curve;
-            style.backgroundColor = active ? s_ActiveColor : s_BackgroundColor;
-            style.unityBackgroundImageTintColor = active ? s_ActiveTextColor : s_TextColor;
         }
     }
 }

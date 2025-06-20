@@ -11,6 +11,7 @@ namespace KexEdit.UI.NodeGraph {
         private Connector _connector;
         private InputThumb _thumb;
         private Label _label;
+        private Label _unitsLabel;
         private NodeGraphEdge _dragEdge;
 
         private NodeGraphView _view;
@@ -55,6 +56,23 @@ namespace KexEdit.UI.NodeGraph {
                 }
             };
             Add(_label);
+
+            if (_data.Units != UnitsType.None) {
+                _unitsLabel = new Label {
+                    style = {
+                        marginLeft = 0f,
+                        marginRight = 4f,
+                        marginTop = 2f,
+                        marginBottom = 0f,
+                        paddingLeft = 0f,
+                        paddingRight = 0f,
+                        paddingTop = 0f,
+                        paddingBottom = 0f,
+                        color = s_MutedTextColor
+                    }
+                };
+                Add(_unitsLabel);
+            }
 
             if (_data.Port.IsInput) {
                 _thumb = new InputThumb(_data);
@@ -103,6 +121,15 @@ namespace KexEdit.UI.NodeGraph {
                     new StyleEnum<DisplayStyle>(value.HasFlag(PortState.Connected) ? DisplayStyle.None : DisplayStyle.Flex)
                 );
                 _thumb.SetBinding("style.display", thumbBinding);
+            }
+
+            if (_unitsLabel != null) {
+                var unitsBinding = new DataBinding {
+                    dataSourcePath = new PropertyPath(nameof(PortData.Units)),
+                    bindingMode = BindingMode.ToTarget
+                };
+                unitsBinding.sourceToUiConverters.AddConverter((ref UnitsType value) => value.ToDisplaySuffix());
+                _unitsLabel.SetBinding("text", unitsBinding);
             }
         }
 

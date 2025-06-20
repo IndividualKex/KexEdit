@@ -1,5 +1,6 @@
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.Physics;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -9,7 +10,7 @@ using UnityEngine;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    public partial class GameViewControlSystem : SystemBase {
+    public partial class GameViewControlSystem : SystemBase, IEditableHandler {
         private const float SpeedLabelDisplayTime = 2f;
 
         private UnityEngine.Camera _camera;
@@ -37,9 +38,12 @@ namespace KexEdit.UI {
             _gameView.RegisterCallback<MouseDownEvent>(OnGameViewMouseDown);
 
             OrbitCameraController.OnSpeedMultiplierChanged += OnSpeedMultiplierChanged;
+
+            EditOperationsSystem.RegisterHandler(this);
         }
 
         protected override void OnDestroy() {
+            EditOperationsSystem.UnregisterHandler(this);
             OrbitCameraController.OnSpeedMultiplierChanged -= OnSpeedMultiplierChanged;
             base.OnDestroy();
         }
@@ -84,35 +88,12 @@ namespace KexEdit.UI {
             _speedLabelTimer = SpeedLabelDisplayTime;
         }
 
-        protected override void OnUpdate() {
-            UpdateSpeedLabel();
-
-            if (Keyboard.current.fKey.wasPressedThisFrame) {
-                if (TryGetSelectionBounds(out var bounds)) {
-                    OrbitCameraController.Focus(bounds);
-                }
-            }
-        }
-
-        private void UpdateSpeedLabel() {
-            if (_speedLabelTimer > 0f) {
-                _speedLabelTimer -= UnityEngine.Time.unscaledDeltaTime;
-
-                if (_speedLabelTimer <= 0f) {
-                    _speedLabel.style.opacity = 0f;
-                    _speedLabel.schedule.Execute(() => {
-                        _speedLabel.style.visibility = Visibility.Hidden;
-                    }).ExecuteLater(300);
-                }
-            }
-        }
-
         private void OnGameViewMouseDown(MouseDownEvent evt) {
-            bool altOrCmdPressed = Keyboard.current.leftAltKey.isPressed || 
+            bool altOrCmdPressed = Keyboard.current.leftAltKey.isPressed ||
                                   Keyboard.current.rightAltKey.isPressed ||
-                                  Keyboard.current.leftCommandKey.isPressed || 
+                                  Keyboard.current.leftCommandKey.isPressed ||
                                   Keyboard.current.rightCommandKey.isPressed;
-            
+
             if (altOrCmdPressed || OrbitCameraController.IsRideCameraActive || evt.button != 0) return;
 
             bool shiftPressed = Keyboard.current.shiftKey.isPressed;
@@ -206,6 +187,48 @@ namespace KexEdit.UI {
 
         public void ResetGameViewState() {
             OrbitCameraController.Instance.ResetState();
+        }
+
+        public bool CanCopy() => false;
+        public bool CanPaste() => false;
+        public bool CanDelete() => false;
+        public bool CanCut() => false;
+        public bool CanSelectAll() => false;
+        public bool CanDeselectAll() => false;
+        public bool CanFocus() => TryGetSelectionBounds(out _);
+
+        public void Copy() { }
+        public void Paste(float2? worldPosition = null) { }
+        public void Delete() { }
+        public void Cut() { }
+        public void SelectAll() { }
+        public void DeselectAll() { }
+
+        public void Focus() {
+            if (TryGetSelectionBounds(out var bounds)) {
+                OrbitCameraController.Focus(bounds);
+            }
+        }
+
+        public bool IsInBounds(Vector2 mousePosition) {
+            return _gameView.worldBound.Contains(mousePosition);
+        }
+
+        protected override void OnUpdate() {
+            UpdateSpeedLabel();
+        }
+
+        private void UpdateSpeedLabel() {
+            if (_speedLabelTimer > 0f) {
+                _speedLabelTimer -= UnityEngine.Time.unscaledDeltaTime;
+
+                if (_speedLabelTimer <= 0f) {
+                    _speedLabel.style.opacity = 0f;
+                    _speedLabel.schedule.Execute(() => {
+                        _speedLabel.style.visibility = Visibility.Hidden;
+                    }).ExecuteLater(300);
+                }
+            }
         }
     }
 }

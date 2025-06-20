@@ -13,6 +13,9 @@ namespace KexEdit.UI {
             { TargetValueType.Roll, "Roll" },
             { TargetValueType.Pitch, "Pitch" },
             { TargetValueType.Yaw, "Yaw" },
+            { TargetValueType.X, "X" },
+            { TargetValueType.Y, "Y" },
+            { TargetValueType.Z, "Z" },
         };
 
         private static readonly Dictionary<DurationType, string> _durationTypeUnits = new() {
@@ -22,6 +25,7 @@ namespace KexEdit.UI {
 
         private Label _title;
         private FloatField _targetField;
+        private Label _unitLabel;
 
         private Action _onClose;
         private OptimizerData _data;
@@ -85,9 +89,19 @@ namespace KexEdit.UI {
             };
 
             _targetField = new FloatField {
+                formatString = "0.###",
+                isDelayed = true,
                 style = {
                     minWidth = 48f,
                     fontSize = 12
+                }
+            };
+
+            _unitLabel = new Label(_data.Units.ToDisplayString()) {
+                style = {
+                    fontSize = 11,
+                    color = new Color(0.4f, 0.4f, 0.4f),
+                    marginLeft = 4f
                 }
             };
 
@@ -101,6 +115,7 @@ namespace KexEdit.UI {
 
             inputContainer.Add(targetLabel);
             inputContainer.Add(_targetField);
+            inputContainer.Add(_unitLabel);
             inputContainer.Add(timeLabel);
 
             var progressLabel = new Label("Iteration: 0 | Loss: 0.000000") {
@@ -134,8 +149,10 @@ namespace KexEdit.UI {
                 }
             };
 
+            _targetField.SetValueWithoutNotify(_data.Units.ValueToDisplay(_data.TargetValue));
+
             _targetField.RegisterValueChangedCallback(evt => {
-                _data.TargetValue = evt.newValue;
+                _data.TargetValue = _data.Units.DisplayToValue(evt.newValue);
             });
 
             button.RegisterCallback<MouseEnterEvent>(_ => button.style.backgroundColor = s_HoverColor);
@@ -231,6 +248,20 @@ namespace KexEdit.UI {
                 return _data.IsStarted ? "Cancel" : "Start";
             });
 
+            var targetValueBinding = new DataBinding {
+                dataSourcePath = new PropertyPath(nameof(OptimizerData.TargetValue)),
+                bindingMode = BindingMode.ToTarget
+            };
+            targetValueBinding.sourceToUiConverters.AddConverter((ref float value) => {
+                return _data.Units.ValueToDisplay(value);
+            });
+
+            var unitBinding = new DataBinding {
+                dataSourcePath = new PropertyPath(nameof(OptimizerData.Units)),
+                bindingMode = BindingMode.ToTarget
+            };
+            unitBinding.sourceToUiConverters.AddConverter((ref UnitsType value) => value.ToDisplayString());
+
             progressLabel.SetBinding("text", progressBinding);
             progressLabel.SetBinding("style.display", progressVisibilityBinding);
             inputContainer.SetBinding("style.display", inputVisibilityBinding);
@@ -238,6 +269,8 @@ namespace KexEdit.UI {
             statusLabel.SetBinding("text", statusTextBinding);
             statusLabel.SetBinding("style.color", statusColorBinding);
             button.SetBinding("text", buttonBinding);
+            _targetField.SetBinding("value", targetValueBinding);
+            _unitLabel.SetBinding("text", unitBinding);
         }
 
         private string FormatTimeString() {
@@ -253,7 +286,7 @@ namespace KexEdit.UI {
                 Close();
             }
             else {
-                _data.TargetValue = _targetField.value;
+                _data.TargetValue = _data.Units.DisplayToValue(_targetField.value);
                 _data.IsStarted = true;
                 _title.text = "Optimizing";
             }

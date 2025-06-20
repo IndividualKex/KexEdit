@@ -16,12 +16,12 @@
 
 ## Reference
 
-Detailed information editor features.
+Detailed information about editor features.
 
+-   **[Menu](reference/menu.md)** - Save/load, export, and preferences
 -   **[Game View](reference/game-view.md)** - Camera controls, playback, and display options
 -   **[Node Graph](reference/node-graph.md)** - Node management and types
 -   **[Timeline](reference/timeline.md)** - Timeline controls, keyframe editing, and property types
--   **[Export](reference/export.md)** - Built-in `.kex` format and NoLimits 2-compatible export
 
 ---
 

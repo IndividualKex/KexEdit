@@ -40,8 +40,6 @@ namespace KexEdit.UI.NodeGraph {
             _view = root.Q<NodeGraphView>();
             _view.Initialize(_data);
 
-            _view.RegisterCallback<FocusInEvent>(OnViewFocusIn, TrickleDown.NoTrickleDown);
-            _view.RegisterCallback<FocusOutEvent>(OnViewFocusOut, TrickleDown.NoTrickleDown);
             _view.RegisterCallback<ViewRightClickEvent>(OnViewRightClick);
             _view.RegisterCallback<NodeClickEvent>(OnNodeClick);
             _view.RegisterCallback<NodeRightClickEvent>(OnNodeRightClick);
@@ -55,10 +53,17 @@ namespace KexEdit.UI.NodeGraph {
             _view.RegisterCallback<AnchorPromoteEvent>(OnAnchorPromote);
             _view.RegisterCallback<AddConnectionEvent>(OnAddConnection);
             _view.RegisterCallback<SelectionEvent>(OnSelection);
-            _view.RegisterCallback<ClearSelectionEvent>(OnClearSelection);
+            _view.RegisterCallback<ClearSelectionEvent>(_ => ClearSelection());
             _view.RegisterCallback<DurationTypeChangeEvent>(OnDurationTypeChange);
             _view.RegisterCallback<RenderToggleChangeEvent>(OnRenderToggleChange);
             _view.RegisterCallback<PriorityChangeEvent>(OnPriorityChange);
+
+            EditOperationsSystem.RegisterHandler(this);
+        }
+
+        protected override void OnDestroy() {
+            EditOperationsSystem.UnregisterHandler(this);
+            base.OnDestroy();
         }
 
         protected override void OnUpdate() {
@@ -94,7 +99,8 @@ namespace KexEdit.UI.NodeGraph {
                 foreach (var inputPortReference in inputPortReferences) {
                     var portEntity = inputPortReference.Value;
                     var port = SystemAPI.GetComponent<Port>(portEntity);
-                    var portData = PortData.Create(portEntity, port, entity);
+                    UnitsType units = GetUnits(port.Type, durationType);
+                    var portData = PortData.Create(portEntity, port, entity, units);
                     nodeData.OrderedInputs.Add(portEntity);
                     nodeData.Inputs.Add(portEntity, portData);
                 }
@@ -103,7 +109,8 @@ namespace KexEdit.UI.NodeGraph {
                 foreach (var outputPortReference in outputPortReferences) {
                     var portEntity = outputPortReference.Value;
                     var port = SystemAPI.GetComponent<Port>(portEntity);
-                    var portData = PortData.Create(portEntity, port, entity);
+                    UnitsType units = GetUnits(port.Type, durationType);
+                    var portData = PortData.Create(portEntity, port, entity, units);
                     nodeData.OrderedOutputs.Add(portEntity);
                     nodeData.Outputs.Add(portEntity, portData);
                 }
@@ -119,6 +126,17 @@ namespace KexEdit.UI.NodeGraph {
             foreach (var entity in toRemove) {
                 _data.Nodes.Remove(entity);
             }
+        }
+
+        private UnitsType GetUnits(PortType portType, DurationType durationType) {
+            return portType switch {
+                PortType.Duration => durationType switch {
+                    DurationType.Time => UnitsType.Time,
+                    DurationType.Distance => UnitsType.Distance,
+                    _ => throw new NotImplementedException(),
+                },
+                _ => portType.GetUnits(),
+            };
         }
 
         private void InitializeEdges() {
@@ -172,6 +190,14 @@ namespace KexEdit.UI.NodeGraph {
                 foreach (var portData in nodeData.Inputs.Values) {
                     UpdateInputPortValue(portData);
 
+                    if (portData.Port.Type == PortType.Duration) {
+                        portData.Units = durationType switch {
+                            DurationType.Time => UnitsType.Time,
+                            DurationType.Distance => UnitsType.Distance,
+                            _ => throw new NotImplementedException(),
+                        };
+                    }
+
                     bool isConnected = connected.Contains(portData.Entity);
                     portData.Update(isConnected);
                 }
@@ -187,6 +213,14 @@ namespace KexEdit.UI.NodeGraph {
                             break;
                         default:
                             throw new NotImplementedException();
+                    }
+
+                    if (portData.Port.Type == PortType.Duration) {
+                        portData.Units = durationType switch {
+                            DurationType.Time => UnitsType.Time,
+                            DurationType.Distance => UnitsType.Distance,
+                            _ => throw new NotImplementedException(),
+                        };
                     }
 
                     bool isConnected = connected.Contains(portData.Entity);
@@ -206,29 +240,6 @@ namespace KexEdit.UI.NodeGraph {
 
                 _data.HasSelectedEdges |= connection.Selected;
             }
-        }
-
-        private void OnViewFocusIn(FocusInEvent evt) {
-            NavigationMenuSystem.SetActiveHandler(this);
-        }
-
-        private void OnViewFocusOut(FocusOutEvent evt) {
-            if (evt.relatedTarget != null && !IsWithinNodeGraph(evt.relatedTarget as VisualElement)) {
-                NavigationMenuSystem.ClearActiveHandler(this);
-            }
-        }
-
-        private bool IsWithinNodeGraph(VisualElement element) {
-            if (element == null) return false;
-
-            var current = element;
-            while (current != null) {
-                if (current == _view) {
-                    return true;
-                }
-                current = current.parent;
-            }
-            return false;
         }
 
         private void OnViewRightClick(ViewRightClickEvent evt) {
@@ -268,10 +279,10 @@ namespace KexEdit.UI.NodeGraph {
                     });
                 });
                 menu.AddSeparator();
-                var canPaste = NavigationMenuSystem.CanPaste;
+                var canPaste = EditOperationsSystem.CanPaste;
                 menu.AddItem(canPaste ? "Paste" : "Cannot Paste", () => {
-                    if (NavigationMenuSystem.CanPaste) {
-                        NavigationMenuSystem.HandlePaste(evt.MousePosition);
+                    if (EditOperationsSystem.CanPaste) {
+                        EditOperationsSystem.HandlePaste(evt.MousePosition);
                     }
                 }, "Ctrl+V".ToPlatformShortcut(), enabled: canPaste);
             });
@@ -296,13 +307,13 @@ namespace KexEdit.UI.NodeGraph {
             _data.HasSelectedNodes = true;
 
             (evt.target as VisualElement).ShowContextMenu(evt.MousePosition, menu => {
-                bool canCut = NavigationMenuSystem.CanCut;
-                bool canCopy = NavigationMenuSystem.CanCopy;
-                bool canPaste = NavigationMenuSystem.CanPaste;
+                bool canCut = EditOperationsSystem.CanCut;
+                bool canCopy = EditOperationsSystem.CanCopy;
+                bool canPaste = EditOperationsSystem.CanPaste;
 
-                menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", NavigationMenuSystem.HandleCut, "Ctrl+X", enabled: canCut);
-                menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", NavigationMenuSystem.HandleCopy, "Ctrl+C", enabled: canCopy);
-                menu.AddPlatformItem(canPaste ? "Paste" : "Cannot Paste", NavigationMenuSystem.HandlePaste, "Ctrl+V", enabled: canPaste);
+                menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", EditOperationsSystem.HandleCut, "Ctrl+X", enabled: canCut);
+                menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", EditOperationsSystem.HandleCopy, "Ctrl+C", enabled: canCopy);
+                menu.AddPlatformItem(canPaste ? "Paste" : "Cannot Paste", EditOperationsSystem.HandlePaste, "Ctrl+V", enabled: canPaste);
                 menu.AddSeparator();
                 menu.AddItem("Delete", () => {
                     Undo.Record();
@@ -466,8 +477,6 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void OnSelection(SelectionEvent evt) {
-            NavigationMenuSystem.SetActiveHandler(this);
-
             if (evt.Nodes != null) {
                 foreach (var entity in evt.Nodes) {
                     ref Node node = ref SystemAPI.GetComponentRW<Node>(entity).ValueRW;
@@ -482,12 +491,6 @@ namespace KexEdit.UI.NodeGraph {
             }
 
             UpdateSelectionState();
-        }
-
-        private void OnClearSelection(ClearSelectionEvent evt) {
-            NavigationMenuSystem.ClearActiveHandler(this);
-
-            ClearSelection();
         }
 
         private void OnDurationTypeChange(DurationTypeChangeEvent evt) {
@@ -1063,6 +1066,43 @@ namespace KexEdit.UI.NodeGraph {
             AddConnection(sourceEntity, targetEntity);
         }
 
+        private void CenterOnSelection() {
+            int count = _data.Nodes.Count * 4;
+            var portToPos = new NativeHashMap<Entity, Vector2>(count, Allocator.Temp);
+            Vector2 center = Vector2.zero;
+            int selectedCount = 0;
+
+            foreach (var (_, nodeData) in _data.Nodes) {
+                Vector2 nodeCenter = _view.GetNodeVisualCenter(nodeData.Entity);
+                foreach (var port in nodeData.Inputs.Keys) portToPos[port] = nodeCenter;
+                foreach (var port in nodeData.Outputs.Keys) portToPos[port] = nodeCenter;
+            }
+
+            foreach (var (_, nodeData) in _data.Nodes) {
+                if (nodeData.Selected) {
+                    center += _view.GetNodeVisualCenter(nodeData.Entity);
+                    selectedCount++;
+                }
+            }
+
+            foreach (var (_, edgeData) in _data.Edges) {
+                if (!edgeData.Selected) continue;
+                if (portToPos.TryGetValue(edgeData.Source, out var sourcePos) &&
+                    portToPos.TryGetValue(edgeData.Target, out var targetPos)) {
+                    center += (sourcePos + targetPos) * 0.5f;
+                    selectedCount++;
+                }
+            }
+
+            if (selectedCount > 0) {
+                center /= selectedCount;
+                var viewCenter = new Vector2(_view.resolvedStyle.width, _view.resolvedStyle.height) * 0.5f;
+                _data.Pan = viewCenter - (center * _data.Zoom);
+            }
+
+            portToPos.Dispose();
+        }
+
         private void CopySelectedNodes() {
             _clipboardData = null;
             _clipboardCenter = float2.zero;
@@ -1221,6 +1261,7 @@ namespace KexEdit.UI.NodeGraph {
         public bool CanCut() => CanCopy();
         public bool CanSelectAll() => _data.Nodes.Count > 0 || _data.Edges.Count > 0;
         public bool CanDeselectAll() => _data.HasSelectedNodes || _data.HasSelectedEdges;
+        public bool CanFocus() => _data.HasSelectedNodes || _data.HasSelectedEdges;
 
         public void Copy() {
             CopySelectedNodes();
@@ -1249,5 +1290,28 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         public void DeselectAll() => ClearSelection();
+
+        public void Focus() {
+            if (CanFocus()) {
+                CenterOnSelection();
+            }
+        }
+
+        private bool IsWithinNodeGraph(VisualElement element) {
+            if (element == null) return false;
+
+            var current = element;
+            while (current != null) {
+                if (current == _view) {
+                    return true;
+                }
+                current = current.parent;
+            }
+            return false;
+        }
+
+        public bool IsInBounds(Vector2 mousePosition) {
+            return _view.worldBound.Contains(mousePosition);
+        }
     }
 }

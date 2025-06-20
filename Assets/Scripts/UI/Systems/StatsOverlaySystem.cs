@@ -99,7 +99,7 @@ namespace KexEdit.UI {
         }
 
         protected override void OnUpdate() {
-            bool shouldShow = PreferencesSystem.ShowStats;
+            bool shouldShow = Preferences.ShowStats;
 
             if (shouldShow != _isVisible) {
                 _isVisible = shouldShow;

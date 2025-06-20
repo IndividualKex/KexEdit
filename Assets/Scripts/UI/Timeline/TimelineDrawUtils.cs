@@ -146,7 +146,11 @@ namespace KexEdit.UI.Timeline {
                 painter.Stroke();
 
                 if (isMajor) {
-                    string timeText = FormatPooledString(tickTime, "0.#");
+                    float displayValue = data.DurationType == DurationType.Distance
+                        ? Units.DistanceToDisplay(tickTime)
+                        : tickTime;
+
+                    string timeText = FormatPooledString(displayValue, "0.#");
                     Color textColor = s_ActiveTextColorTransparent;
                     textColor.a *= opacityMultiplier;
                     ctx.DrawText(timeText, new Vector2(x + 3, 4), 10, textColor, null);
@@ -154,7 +158,7 @@ namespace KexEdit.UI.Timeline {
             }
         }
 
-        public static void DrawValueLegend(MeshGenerationContext ctx, ValueBounds bounds, Rect rect) {
+        public static void DrawValueLegend(MeshGenerationContext ctx, TimelineData data, ValueBounds bounds, Rect rect) {
             if (bounds.Max <= bounds.Min) return;
 
             var painter = ctx.painter2D;
@@ -165,6 +169,12 @@ namespace KexEdit.UI.Timeline {
 
             float startValue = Mathf.Ceil(bounds.Min / step) * step;
             float endValue = bounds.Max;
+
+            UnitsType unitsType = UnitsType.None;
+            if (data.LatestSelectedProperty.HasValue &&
+                data.Properties.ContainsKey(data.LatestSelectedProperty.Value)) {
+                unitsType = data.Properties[data.LatestSelectedProperty.Value].Units;
+            }
 
             painter.strokeColor = s_MajorGridColor;
             painter.lineWidth = 1f;
@@ -179,7 +189,8 @@ namespace KexEdit.UI.Timeline {
                 painter.LineTo(new Vector2(rect.width, y));
                 painter.Stroke();
 
-                string labelText = FormatPooledString(value);
+                float displayValue = unitsType.ValueToDisplay(value);
+                string labelText = FormatPooledString(displayValue);
                 Vector2 labelPosition = new(VALUE_LABEL_OFFSET, y - VALUE_LABEL_FONT_SIZE / 2f);
 
                 ctx.DrawText(labelText, labelPosition, VALUE_LABEL_FONT_SIZE, s_ActiveTextColorTransparent, null);

@@ -280,7 +280,7 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void OnDrawGrid(MeshGenerationContext ctx) {
-            if (!PreferencesSystem.NodeGridSnapping) return;
+            if (!Preferences.NodeGridSnapping) return;
 
             var painter = ctx.painter2D;
             Rect rect = contentRect;
@@ -428,7 +428,7 @@ namespace KexEdit.UI.NodeGraph {
                 }
             }
 
-            if (PreferencesSystem.NodeGridSnapping) {
+            if (Preferences.NodeGridSnapping) {
                 float gridSize = NODE_GRID_SIZE;
                 float2 gridSnappedPosition = new(
                     Mathf.Round(desiredPosition.x / gridSize) * gridSize - 2f,
@@ -553,6 +553,15 @@ namespace KexEdit.UI.NodeGraph {
         public void ClearGuides() {
             _horizontalGuide.style.display = DisplayStyle.None;
             _verticalGuide.style.display = DisplayStyle.None;
+        }
+
+        public Vector2 GetNodeVisualCenter(Entity entity) {
+            if (_nodes.TryGetValue(entity, out var node)) {
+                Vector2 topLeft = (Vector2)_data.Nodes[entity].Position;
+                Vector2 size = new Vector2(node.resolvedStyle.width, node.resolvedStyle.height);
+                return topLeft + size * 0.5f;
+            }
+            return Vector2.zero;
         }
 
         private struct SnapInfo {

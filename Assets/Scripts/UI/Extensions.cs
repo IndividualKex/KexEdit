@@ -98,15 +98,15 @@ namespace KexEdit.UI {
 
         public static UnitsType GetUnits(this PropertyType propertyType, DurationType durationType) {
             return propertyType switch {
-                PropertyType.FixedVelocity => UnitsType.MetersPerSecond,
-                PropertyType.RollSpeed => durationType == DurationType.Time ? UnitsType.RadiansPerSecond : UnitsType.RadiansPerMeter,
-                PropertyType.NormalForce => UnitsType.Gs,
-                PropertyType.LateralForce => UnitsType.Gs,
-                PropertyType.PitchSpeed => durationType == DurationType.Time ? UnitsType.RadiansPerSecond : UnitsType.RadiansPerMeter,
-                PropertyType.YawSpeed => durationType == DurationType.Time ? UnitsType.RadiansPerSecond : UnitsType.RadiansPerMeter,
-                PropertyType.Heart => UnitsType.Meters,
+                PropertyType.FixedVelocity => UnitsType.Velocity,
+                PropertyType.RollSpeed => durationType == DurationType.Time ? UnitsType.AnglePerTime : UnitsType.AnglePerDistance,
+                PropertyType.NormalForce => UnitsType.Force,
+                PropertyType.LateralForce => UnitsType.Force,
+                PropertyType.PitchSpeed => durationType == DurationType.Time ? UnitsType.AnglePerTime : UnitsType.AnglePerDistance,
+                PropertyType.YawSpeed => durationType == DurationType.Time ? UnitsType.AnglePerTime : UnitsType.AnglePerDistance,
+                PropertyType.Heart => UnitsType.Distance,
                 PropertyType.Friction => UnitsType.None,
-                PropertyType.Resistance => UnitsType.OneOverMicrometers,
+                PropertyType.Resistance => UnitsType.Resistance,
                 _ => UnitsType.None
             };
         }
@@ -114,15 +114,84 @@ namespace KexEdit.UI {
         public static string ToDisplayString(this UnitsType unitsType) {
             return unitsType switch {
                 UnitsType.None => "",
-                UnitsType.Meters => s_UnitsMeters,
-                UnitsType.Radians => s_UnitsRadians,
-                UnitsType.Seconds => s_UnitsSeconds,
-                UnitsType.MetersPerSecond => s_UnitsMetersPerSecond,
-                UnitsType.RadiansPerSecond => s_UnitsRadiansPerSecond,
-                UnitsType.RadiansPerMeter => s_UnitsRadiansPerMeter,
-                UnitsType.Gs => s_UnitsGs,
-                UnitsType.OneOverMicrometers => s_UnitsOneOverMicrometers,
+                UnitsType.Time => s_UnitsSeconds,
+                UnitsType.Distance => Units.GetDistanceUnitsString(),
+                UnitsType.Angle => Units.GetAngleUnitsString(),
+                UnitsType.AnglePerTime => Units.GetAnglePerTimeString(),
+                UnitsType.AnglePerDistance => Units.GetAnglePerDistanceString(),
+                UnitsType.Force => s_UnitsGs,
+                UnitsType.Velocity => Units.GetSpeedUnitsString(),
+                UnitsType.Resistance => s_UnitsOneOverMicrometers,
                 _ => throw new System.ArgumentOutOfRangeException(nameof(unitsType), unitsType, "Unknown UnitsType")
+            };
+        }
+
+        public static string ToDisplaySuffix(this UnitsType unitsType) {
+            return unitsType switch {
+                UnitsType.None => "",
+                UnitsType.Time => s_UnitsSuffixSeconds,
+                UnitsType.Distance => Units.GetDistanceUnitsSuffix(),
+                UnitsType.Angle => Units.GetAngleUnitsSuffix(),
+                UnitsType.AnglePerTime => Units.GetAnglePerTimeSuffix(),
+                UnitsType.AnglePerDistance => Units.GetAnglePerDistanceSuffix(),
+                UnitsType.Force => s_UnitsSuffixGs,
+                UnitsType.Velocity => Units.GetSpeedUnitsSuffix(),
+                UnitsType.Resistance => s_UnitsSuffixOneOverMicrometers,
+                _ => throw new System.ArgumentOutOfRangeException(nameof(unitsType), unitsType, "Unknown UnitsType")
+            };
+        }
+
+        public static float DisplayToValue(this UnitsType unitsType, float display) {
+            return unitsType switch {
+                UnitsType.Distance => Units.DisplayToDistance(display),
+                UnitsType.Angle => Units.DisplayToAngle(display),
+                UnitsType.AnglePerTime => Units.DisplayToAnglePerTime(display),
+                UnitsType.AnglePerDistance => Units.DisplayToAnglePerDistance(display),
+                UnitsType.Velocity => Units.DisplayToSpeed(display),
+                _ => display,
+            };
+        }
+
+        public static float ValueToDisplay(this UnitsType unitsType, float value) {
+            return unitsType switch {
+                UnitsType.Distance => Units.DistanceToDisplay(value),
+                UnitsType.Angle => Units.AngleToDisplay(value),
+                UnitsType.AnglePerTime => Units.AnglePerTimeToDisplay(value),
+                UnitsType.AnglePerDistance => Units.AnglePerDistanceToDisplay(value),
+                UnitsType.Velocity => Units.SpeedToDisplay(value),
+                _ => value,
+            };
+        }
+
+        public static UnitsType GetUnits(this PortType portType) {
+            return portType switch {
+                PortType.Duration => throw new System.Exception("Duration port type should not be used in GetUnits"),
+                PortType.Position => UnitsType.Distance,
+                PortType.Roll => UnitsType.Angle,
+                PortType.Pitch => UnitsType.Angle,
+                PortType.Yaw => UnitsType.Angle,
+                PortType.Velocity => UnitsType.Velocity,
+                PortType.Heart => UnitsType.Distance,
+                PortType.Friction => UnitsType.None,
+                PortType.Resistance => UnitsType.Resistance,
+                PortType.Radius => UnitsType.Distance,
+                PortType.Arc => UnitsType.Angle,
+                PortType.Axis => UnitsType.Angle,
+                PortType.LeadIn => UnitsType.Angle,
+                PortType.LeadOut => UnitsType.Angle,
+                _ => UnitsType.None
+            };
+        }
+
+        public static UnitsType GetUnits(this TargetValueType targetValueType) {
+            return targetValueType switch {
+                TargetValueType.Roll => UnitsType.Angle,
+                TargetValueType.Pitch => UnitsType.Angle,
+                TargetValueType.Yaw => UnitsType.Angle,
+                TargetValueType.X => UnitsType.Distance,
+                TargetValueType.Y => UnitsType.Distance,
+                TargetValueType.Z => UnitsType.Distance,
+                _ => UnitsType.None
             };
         }
 
