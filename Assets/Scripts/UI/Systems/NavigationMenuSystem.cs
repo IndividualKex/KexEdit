@@ -74,8 +74,16 @@ namespace KexEdit.UI {
                 });
                 menu.AddSeparator();
                 menu.AddSubmenu("Preferences", submenu => {
+                    submenu.AddSubmenu("Units", submenu => {
+                        submenu.AddSubmenu("Distance", submenu => {
+                            submenu.AddItem("Meters", () => Preferences.DistanceUnits = DistanceUnitsType.Meters,
+                                isChecked: Preferences.DistanceUnits == DistanceUnitsType.Meters);
+                            submenu.AddItem("Feet", () => Preferences.DistanceUnits = DistanceUnitsType.Feet,
+                                isChecked: Preferences.DistanceUnits == DistanceUnitsType.Feet);
+                        });
+                    });
                     submenu.AddItem("Node Grid", ToggleNodeGridSnapping,
-                        isChecked: PreferencesSystem.NodeGridSnapping);
+                        isChecked: Preferences.NodeGridSnapping);
                 });
                 menu.AddSeparator();
                 menu.AddItem("Quit", QuitWithConfirmation);
@@ -111,7 +119,7 @@ namespace KexEdit.UI {
                 menu.AddItem("Grid", () => GridSystem.Instance?.ToggleGrid(), "F2",
                     isChecked: GridSystem.Instance?.ShowGrid == true);
                 menu.AddItem("Stats", ToggleShowStats, "F3",
-                    isChecked: PreferencesSystem.ShowStats);
+                    isChecked: Preferences.ShowStats);
             });
         }
 
@@ -140,11 +148,11 @@ namespace KexEdit.UI {
         }
 
         private void ToggleNodeGridSnapping() {
-            PreferencesSystem.NodeGridSnapping = !PreferencesSystem.NodeGridSnapping;
+            Preferences.NodeGridSnapping = !Preferences.NodeGridSnapping;
         }
 
         private void ToggleShowStats() {
-            PreferencesSystem.ShowStats = !PreferencesSystem.ShowStats;
+            Preferences.ShowStats = !Preferences.ShowStats;
         }
 
         protected override void OnUpdate() {

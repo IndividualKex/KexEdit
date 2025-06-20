@@ -26,6 +26,7 @@ namespace KexEdit.UI {
         public static readonly Color s_YellowOutline = new(0.8f, 0.7f, 0.2f);
 
         public static readonly string s_UnitsMeters = " m";
+        public static readonly string s_UnitsFeet = " ft";
         public static readonly string s_UnitsRadians = " rad";
         public static readonly string s_UnitsSeconds = " s";
         public static readonly string s_UnitsMetersPerSecond = " m/s";

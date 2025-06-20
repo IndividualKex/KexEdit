@@ -114,7 +114,7 @@ namespace KexEdit.UI {
         public static string ToDisplayString(this UnitsType unitsType) {
             return unitsType switch {
                 UnitsType.None => "",
-                UnitsType.Meters => s_UnitsMeters,
+                UnitsType.Meters => Units.GetDistanceUnitsString(),
                 UnitsType.Radians => s_UnitsRadians,
                 UnitsType.Seconds => s_UnitsSeconds,
                 UnitsType.MetersPerSecond => s_UnitsMetersPerSecond,
@@ -123,6 +123,26 @@ namespace KexEdit.UI {
                 UnitsType.Gs => s_UnitsGs,
                 UnitsType.OneOverMicrometers => s_UnitsOneOverMicrometers,
                 _ => throw new System.ArgumentOutOfRangeException(nameof(unitsType), unitsType, "Unknown UnitsType")
+            };
+        }
+
+        public static UnitsType GetUnits(this PortType portType) {
+            return portType switch {
+                PortType.Duration => UnitsType.Seconds,
+                PortType.Position => UnitsType.Meters,
+                PortType.Roll => UnitsType.Degrees,
+                PortType.Pitch => UnitsType.Degrees,
+                PortType.Yaw => UnitsType.Degrees,
+                PortType.Velocity => UnitsType.MetersPerSecond,
+                PortType.Heart => UnitsType.Meters,
+                PortType.Friction => UnitsType.None,
+                PortType.Resistance => UnitsType.OneOverMicrometers,
+                PortType.Radius => UnitsType.Meters,
+                PortType.Arc => UnitsType.Degrees,
+                PortType.Axis => UnitsType.Degrees,
+                PortType.LeadIn => UnitsType.None,
+                PortType.LeadOut => UnitsType.None,
+                _ => UnitsType.None
             };
         }
 

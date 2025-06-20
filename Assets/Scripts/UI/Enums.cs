@@ -5,6 +5,7 @@ namespace KexEdit.UI {
         None,
         Meters,
         Radians,
+        Degrees,
         Seconds,
         MetersPerSecond,
         RadiansPerSecond,
@@ -35,5 +36,10 @@ namespace KexEdit.UI {
         X,
         Y,
         Z,
+    }
+
+    public enum DistanceUnitsType {
+        Meters,
+        Feet,
     }
 }

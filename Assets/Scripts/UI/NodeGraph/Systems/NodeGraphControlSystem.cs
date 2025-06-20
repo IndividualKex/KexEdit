@@ -99,7 +99,11 @@ namespace KexEdit.UI.NodeGraph {
                 foreach (var inputPortReference in inputPortReferences) {
                     var portEntity = inputPortReference.Value;
                     var port = SystemAPI.GetComponent<Port>(portEntity);
-                    var portData = PortData.Create(portEntity, port, entity);
+                    var units = port.Type.GetUnits();
+                    if (port.Type == PortType.Duration && durationType == DurationType.Distance) {
+                        units = UnitsType.Meters;
+                    }
+                    var portData = PortData.Create(portEntity, port, entity, units);
                     nodeData.OrderedInputs.Add(portEntity);
                     nodeData.Inputs.Add(portEntity, portData);
                 }
@@ -108,7 +112,11 @@ namespace KexEdit.UI.NodeGraph {
                 foreach (var outputPortReference in outputPortReferences) {
                     var portEntity = outputPortReference.Value;
                     var port = SystemAPI.GetComponent<Port>(portEntity);
-                    var portData = PortData.Create(portEntity, port, entity);
+                    var units = port.Type.GetUnits();
+                    if (port.Type == PortType.Duration && durationType == DurationType.Distance) {
+                        units = UnitsType.Meters;
+                    }
+                    var portData = PortData.Create(portEntity, port, entity, units);
                     nodeData.OrderedOutputs.Add(portEntity);
                     nodeData.Outputs.Add(portEntity, portData);
                 }
@@ -177,6 +185,14 @@ namespace KexEdit.UI.NodeGraph {
                 foreach (var portData in nodeData.Inputs.Values) {
                     UpdateInputPortValue(portData);
 
+                    if (portData.Port.Type == PortType.Duration) {
+                        portData.Units.Units = durationType switch {
+                            DurationType.Time => UnitsType.Seconds,
+                            DurationType.Distance => UnitsType.Meters,
+                            _ => throw new NotImplementedException(),
+                        };
+                    }
+
                     bool isConnected = connected.Contains(portData.Entity);
                     portData.Update(isConnected);
                 }
@@ -192,6 +208,14 @@ namespace KexEdit.UI.NodeGraph {
                             break;
                         default:
                             throw new NotImplementedException();
+                    }
+
+                    if (portData.Port.Type == PortType.Duration) {
+                        portData.Units.Units = durationType switch {
+                            DurationType.Time => UnitsType.Seconds,
+                            DurationType.Distance => UnitsType.Meters,
+                            _ => throw new NotImplementedException(),
+                        };
                     }
 
                     bool isConnected = connected.Contains(portData.Entity);
