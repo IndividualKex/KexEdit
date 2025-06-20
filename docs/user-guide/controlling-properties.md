@@ -43,8 +43,6 @@ Shape track elevation using normal force values.
 
 Creates a hill with airtime - riders experience strong downward force, then weightlessness.
 
-_Note: Property values automatically carry forward between connected sections. For example, pitch curvature created in a Force Section will carry over to the default pitch speed of a following Geometric Section. To reset a property to its inherited value, right-click the keyframe and select **Reset**._
-
 ---
 
 **Next**: [Getting Started - Lift Hill](lift-hill.md)
