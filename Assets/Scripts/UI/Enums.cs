@@ -35,6 +35,8 @@ namespace KexEdit.UI {
         X,
         Y,
         Z,
+        NormalForce,
+        LateralForce,
     }
 
     public enum DistanceUnitsType {

@@ -191,6 +191,8 @@ namespace KexEdit.UI {
                 TargetValueType.X => UnitsType.Distance,
                 TargetValueType.Y => UnitsType.Distance,
                 TargetValueType.Z => UnitsType.Distance,
+                TargetValueType.NormalForce => UnitsType.Force,
+                TargetValueType.LateralForce => UnitsType.Force,
                 _ => UnitsType.None
             };
         }
