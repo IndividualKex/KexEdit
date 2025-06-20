@@ -40,8 +40,6 @@ namespace KexEdit.UI.NodeGraph {
             _view = root.Q<NodeGraphView>();
             _view.Initialize(_data);
 
-            _view.RegisterCallback<FocusInEvent>(OnViewFocusIn, TrickleDown.NoTrickleDown);
-            _view.RegisterCallback<FocusOutEvent>(OnViewFocusOut, TrickleDown.NoTrickleDown);
             _view.RegisterCallback<ViewRightClickEvent>(OnViewRightClick);
             _view.RegisterCallback<NodeClickEvent>(OnNodeClick);
             _view.RegisterCallback<NodeRightClickEvent>(OnNodeRightClick);
@@ -55,10 +53,17 @@ namespace KexEdit.UI.NodeGraph {
             _view.RegisterCallback<AnchorPromoteEvent>(OnAnchorPromote);
             _view.RegisterCallback<AddConnectionEvent>(OnAddConnection);
             _view.RegisterCallback<SelectionEvent>(OnSelection);
-            _view.RegisterCallback<ClearSelectionEvent>(OnClearSelection);
+            _view.RegisterCallback<ClearSelectionEvent>(_ => ClearSelection());
             _view.RegisterCallback<DurationTypeChangeEvent>(OnDurationTypeChange);
             _view.RegisterCallback<RenderToggleChangeEvent>(OnRenderToggleChange);
             _view.RegisterCallback<PriorityChangeEvent>(OnPriorityChange);
+
+            EditOperationsSystem.RegisterHandler(this);
+        }
+
+        protected override void OnDestroy() {
+            EditOperationsSystem.UnregisterHandler(this);
+            base.OnDestroy();
         }
 
         protected override void OnUpdate() {
@@ -208,29 +213,6 @@ namespace KexEdit.UI.NodeGraph {
             }
         }
 
-        private void OnViewFocusIn(FocusInEvent evt) {
-            NavigationMenuSystem.SetActiveHandler(this);
-        }
-
-        private void OnViewFocusOut(FocusOutEvent evt) {
-            if (evt.relatedTarget != null && !IsWithinNodeGraph(evt.relatedTarget as VisualElement)) {
-                NavigationMenuSystem.ClearActiveHandler(this);
-            }
-        }
-
-        private bool IsWithinNodeGraph(VisualElement element) {
-            if (element == null) return false;
-
-            var current = element;
-            while (current != null) {
-                if (current == _view) {
-                    return true;
-                }
-                current = current.parent;
-            }
-            return false;
-        }
-
         private void OnViewRightClick(ViewRightClickEvent evt) {
             (evt.target as VisualElement).ShowContextMenu(evt.MousePosition, menu => {
                 menu.AddItem("Force Section", () => {
@@ -268,10 +250,10 @@ namespace KexEdit.UI.NodeGraph {
                     });
                 });
                 menu.AddSeparator();
-                var canPaste = NavigationMenuSystem.CanPaste;
+                var canPaste = EditOperationsSystem.CanPaste;
                 menu.AddItem(canPaste ? "Paste" : "Cannot Paste", () => {
-                    if (NavigationMenuSystem.CanPaste) {
-                        NavigationMenuSystem.HandlePaste(evt.MousePosition);
+                    if (EditOperationsSystem.CanPaste) {
+                        EditOperationsSystem.HandlePaste(evt.MousePosition);
                     }
                 }, "Ctrl+V".ToPlatformShortcut(), enabled: canPaste);
             });
@@ -296,13 +278,13 @@ namespace KexEdit.UI.NodeGraph {
             _data.HasSelectedNodes = true;
 
             (evt.target as VisualElement).ShowContextMenu(evt.MousePosition, menu => {
-                bool canCut = NavigationMenuSystem.CanCut;
-                bool canCopy = NavigationMenuSystem.CanCopy;
-                bool canPaste = NavigationMenuSystem.CanPaste;
+                bool canCut = EditOperationsSystem.CanCut;
+                bool canCopy = EditOperationsSystem.CanCopy;
+                bool canPaste = EditOperationsSystem.CanPaste;
 
-                menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", NavigationMenuSystem.HandleCut, "Ctrl+X", enabled: canCut);
-                menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", NavigationMenuSystem.HandleCopy, "Ctrl+C", enabled: canCopy);
-                menu.AddPlatformItem(canPaste ? "Paste" : "Cannot Paste", NavigationMenuSystem.HandlePaste, "Ctrl+V", enabled: canPaste);
+                menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", EditOperationsSystem.HandleCut, "Ctrl+X", enabled: canCut);
+                menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", EditOperationsSystem.HandleCopy, "Ctrl+C", enabled: canCopy);
+                menu.AddPlatformItem(canPaste ? "Paste" : "Cannot Paste", EditOperationsSystem.HandlePaste, "Ctrl+V", enabled: canPaste);
                 menu.AddSeparator();
                 menu.AddItem("Delete", () => {
                     Undo.Record();
@@ -466,8 +448,6 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void OnSelection(SelectionEvent evt) {
-            NavigationMenuSystem.SetActiveHandler(this);
-
             if (evt.Nodes != null) {
                 foreach (var entity in evt.Nodes) {
                     ref Node node = ref SystemAPI.GetComponentRW<Node>(entity).ValueRW;
@@ -482,12 +462,6 @@ namespace KexEdit.UI.NodeGraph {
             }
 
             UpdateSelectionState();
-        }
-
-        private void OnClearSelection(ClearSelectionEvent evt) {
-            NavigationMenuSystem.ClearActiveHandler(this);
-
-            ClearSelection();
         }
 
         private void OnDurationTypeChange(DurationTypeChangeEvent evt) {
@@ -1292,6 +1266,23 @@ namespace KexEdit.UI.NodeGraph {
             if (CanFocus()) {
                 CenterOnSelection();
             }
+        }
+
+        private bool IsWithinNodeGraph(VisualElement element) {
+            if (element == null) return false;
+
+            var current = element;
+            while (current != null) {
+                if (current == _view) {
+                    return true;
+                }
+                current = current.parent;
+            }
+            return false;
+        }
+
+        public bool IsInBounds(Vector2 mousePosition) {
+            return _view.worldBound.Contains(mousePosition);
         }
     }
 }

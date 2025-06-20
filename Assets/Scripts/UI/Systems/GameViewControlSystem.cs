@@ -36,13 +36,14 @@ namespace KexEdit.UI {
             SetupSpeedLabel();
 
             _gameView.RegisterCallback<MouseDownEvent>(OnGameViewMouseDown);
-            _gameView.RegisterCallback<FocusInEvent>(OnGameViewFocusIn, TrickleDown.NoTrickleDown);
-            _gameView.RegisterCallback<FocusOutEvent>(OnGameViewFocusOut, TrickleDown.NoTrickleDown);
 
             OrbitCameraController.OnSpeedMultiplierChanged += OnSpeedMultiplierChanged;
+
+            EditOperationsSystem.RegisterHandler(this);
         }
 
         protected override void OnDestroy() {
+            EditOperationsSystem.UnregisterHandler(this);
             OrbitCameraController.OnSpeedMultiplierChanged -= OnSpeedMultiplierChanged;
             base.OnDestroy();
         }
@@ -80,40 +81,11 @@ namespace KexEdit.UI {
             ShowSpeedLabel(multiplier);
         }
 
-        private void OnGameViewFocusIn(FocusInEvent evt) {
-            NavigationMenuSystem.SetActiveHandler(this);
-        }
-
-        private void OnGameViewFocusOut(FocusOutEvent evt) {
-            if (evt.relatedTarget != null &&
-                evt.relatedTarget is VisualElement element &&
-                !IsWithinGameView(element)) {
-                NavigationMenuSystem.ClearActiveHandler(this);
-            }
-        }
-
         private void ShowSpeedLabel(float multiplier) {
             _speedLabel.text = $"Fly Speed: {multiplier:F1}x";
             _speedLabel.style.visibility = Visibility.Visible;
             _speedLabel.style.opacity = 1f;
             _speedLabelTimer = SpeedLabelDisplayTime;
-        }
-
-        protected override void OnUpdate() {
-            UpdateSpeedLabel();
-        }
-
-        private void UpdateSpeedLabel() {
-            if (_speedLabelTimer > 0f) {
-                _speedLabelTimer -= UnityEngine.Time.unscaledDeltaTime;
-
-                if (_speedLabelTimer <= 0f) {
-                    _speedLabel.style.opacity = 0f;
-                    _speedLabel.schedule.Execute(() => {
-                        _speedLabel.style.visibility = Visibility.Hidden;
-                    }).ExecuteLater(300);
-                }
-            }
         }
 
         private void OnGameViewMouseDown(MouseDownEvent evt) {
@@ -235,6 +207,27 @@ namespace KexEdit.UI {
         public void Focus() {
             if (TryGetSelectionBounds(out var bounds)) {
                 OrbitCameraController.Focus(bounds);
+            }
+        }
+
+        public bool IsInBounds(Vector2 mousePosition) {
+            return _gameView.worldBound.Contains(mousePosition);
+        }
+
+        protected override void OnUpdate() {
+            UpdateSpeedLabel();
+        }
+
+        private void UpdateSpeedLabel() {
+            if (_speedLabelTimer > 0f) {
+                _speedLabelTimer -= UnityEngine.Time.unscaledDeltaTime;
+
+                if (_speedLabelTimer <= 0f) {
+                    _speedLabel.style.opacity = 0f;
+                    _speedLabel.schedule.Execute(() => {
+                        _speedLabel.style.visibility = Visibility.Hidden;
+                    }).ExecuteLater(300);
+                }
             }
         }
     }

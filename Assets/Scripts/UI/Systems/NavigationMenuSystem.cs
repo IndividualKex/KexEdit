@@ -9,9 +9,6 @@ using KexEdit.UI.Timeline;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial class NavigationMenuSystem : SystemBase {
-        private static IEditableHandler _activeHandler;
-        private static bool _menuInteractionActive;
-
         private VisualElement _root;
         private Timeline.Timeline _timeline;
         private Label _titleLabel;
@@ -91,20 +88,20 @@ namespace KexEdit.UI {
         private void AddEditMenu(MenuBar menuBar) {
             menuBar.AddMenu("Edit", menu => {
                 bool canUndo = Undo.CanUndo, canRedo = Undo.CanRedo;
-                bool canCopy = CanCopy, canPaste = CanPaste;
-                bool canDelete = CanDelete, canCut = CanCut;
-                bool canSelectAll = CanSelectAll, canDeselectAll = CanDeselectAll;
+                bool canCopy = EditOperationsSystem.CanCopy, canPaste = EditOperationsSystem.CanPaste;
+                bool canDelete = EditOperationsSystem.CanDelete, canCut = EditOperationsSystem.CanCut;
+                bool canSelectAll = EditOperationsSystem.CanSelectAll, canDeselectAll = EditOperationsSystem.CanDeselectAll;
 
                 menu.AddItem(canUndo ? "Undo" : "Can't Undo", Undo.Execute, "Ctrl+Z".ToPlatformShortcut(), enabled: canUndo);
                 menu.AddItem(canRedo ? "Redo" : "Can't Redo", Undo.Redo, "Ctrl+Y".ToPlatformShortcut(), enabled: canRedo);
                 menu.AddSeparator();
-                menu.AddItem("Cut", HandleCut, "Ctrl+X".ToPlatformShortcut(), enabled: canCut);
-                menu.AddItem("Copy", HandleCopy, "Ctrl+C".ToPlatformShortcut(), enabled: canCopy);
-                menu.AddItem("Paste", HandlePaste, "Ctrl+V".ToPlatformShortcut(), enabled: canPaste);
-                menu.AddItem("Delete", HandleDelete, "Del", enabled: canDelete);
+                menu.AddItem("Cut", EditOperationsSystem.HandleCut, "Ctrl+X".ToPlatformShortcut(), enabled: canCut);
+                menu.AddItem("Copy", EditOperationsSystem.HandleCopy, "Ctrl+C".ToPlatformShortcut(), enabled: canCopy);
+                menu.AddItem("Paste", EditOperationsSystem.HandlePaste, "Ctrl+V".ToPlatformShortcut(), enabled: canPaste);
+                menu.AddItem("Delete", EditOperationsSystem.HandleDelete, "Del", enabled: canDelete);
                 menu.AddSeparator();
-                menu.AddItem("Select All", HandleSelectAll, "Ctrl+A".ToPlatformShortcut(), enabled: canSelectAll);
-                menu.AddItem("Deselect All", HandleDeselectAll, "Alt+A".ToPlatformShortcut(), enabled: canDeselectAll);
+                menu.AddItem("Select All", EditOperationsSystem.HandleSelectAll, "Ctrl+A".ToPlatformShortcut(), enabled: canSelectAll);
+                menu.AddItem("Deselect All", EditOperationsSystem.HandleDeselectAll, "Alt+A".ToPlatformShortcut(), enabled: canDeselectAll);
             });
         }
 
@@ -159,8 +156,6 @@ namespace KexEdit.UI {
 
             if (kb.f2Key.wasPressedThisFrame) GridSystem.Instance?.ToggleGrid();
             else if (kb.f3Key.wasPressedThisFrame) ToggleShowStats();
-            else if (kb.fKey.wasPressedThisFrame) HandleFocus();
-            else if (kb.deleteKey.wasPressedThisFrame) HandleDelete();
             else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
 
             if (kb.ctrlKey.isPressed || kb.leftCommandKey.isPressed) {
@@ -178,19 +173,12 @@ namespace KexEdit.UI {
                     _hasUnsavedChanges = true;
                     UpdateTitle();
                 }
-                else if (kb.xKey.wasPressedThisFrame) HandleCut();
-                else if (kb.cKey.wasPressedThisFrame) HandleCopy();
-                else if (kb.vKey.wasPressedThisFrame) HandlePaste();
-                else if (kb.aKey.wasPressedThisFrame) HandleSelectAll();
                 else if (kb.nKey.wasPressedThisFrame) NewProject();
                 else if (kb.oKey.wasPressedThisFrame) OpenProject();
                 else if (kb.sKey.wasPressedThisFrame) SaveProject();
                 else if (kb.hKey.wasPressedThisFrame) ShowControls();
                 else if (kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomIn();
                 else if (kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomOut();
-            }
-            else if (kb.altKey.isPressed || kb.leftCommandKey.isPressed || kb.rightCommandKey.isPressed) {
-                if (kb.aKey.wasPressedThisFrame) HandleDeselectAll();
             }
         }
 
@@ -311,76 +299,6 @@ namespace KexEdit.UI {
             );
         }
 
-        public static void SetActiveHandler(IEditableHandler handler) => _activeHandler = handler;
-
-        public static void ClearActiveHandler(IEditableHandler handler) {
-            if (_activeHandler == handler && !_menuInteractionActive) _activeHandler = null;
-        }
-
-        private static void BeginMenuInteraction() => _menuInteractionActive = true;
-        private static void EndMenuInteraction() => _menuInteractionActive = false;
-
-        public static void HandleCopy() {
-            if (CanCopy) {
-                BeginMenuInteraction();
-                _activeHandler.Copy();
-                EndMenuInteraction();
-            }
-        }
-
-        public static void HandlePaste() => HandlePaste(null);
-
-        public static void HandlePaste(Vector2? worldPosition) {
-            if (CanPaste) {
-                BeginMenuInteraction();
-                Undo.Record();
-                _activeHandler.Paste(worldPosition);
-                EndMenuInteraction();
-            }
-        }
-
-        public static void HandleDelete() {
-            if (CanDelete) {
-                BeginMenuInteraction();
-                Undo.Record();
-                _activeHandler.Delete();
-                EndMenuInteraction();
-            }
-        }
-
-        public static void HandleCut() {
-            if (CanCut) {
-                BeginMenuInteraction();
-                Undo.Record();
-                _activeHandler.Cut();
-                EndMenuInteraction();
-            }
-        }
-
-        public static void HandleSelectAll() {
-            if (CanSelectAll) {
-                BeginMenuInteraction();
-                _activeHandler.SelectAll();
-                EndMenuInteraction();
-            }
-        }
-
-        public static void HandleDeselectAll() {
-            if (CanDeselectAll) {
-                BeginMenuInteraction();
-                _activeHandler.DeselectAll();
-                EndMenuInteraction();
-            }
-        }
-
-        public static void HandleFocus() {
-            if (CanFocus) {
-                BeginMenuInteraction();
-                _activeHandler.Focus();
-                EndMenuInteraction();
-            }
-        }
-
         private static void QuitApplication() {
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
@@ -388,14 +306,6 @@ namespace KexEdit.UI {
             Application.Quit();
 #endif
         }
-
-        public static bool CanCopy => _activeHandler?.CanCopy() == true;
-        public static bool CanPaste => _activeHandler?.CanPaste() == true;
-        public static bool CanDelete => _activeHandler?.CanDelete() == true;
-        public static bool CanCut => _activeHandler?.CanCut() == true;
-        public static bool CanSelectAll => _activeHandler?.CanSelectAll() == true;
-        public static bool CanDeselectAll => _activeHandler?.CanDeselectAll() == true;
-        public static bool CanFocus => _activeHandler?.CanFocus() == true;
 
         private bool HandleApplicationWantsToQuit() {
             if (_hasUnsavedChanges) {

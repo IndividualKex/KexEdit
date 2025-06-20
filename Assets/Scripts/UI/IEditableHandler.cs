@@ -1,7 +1,9 @@
 using Unity.Mathematics;
+using UnityEngine;
 
 namespace KexEdit.UI {
     public interface IEditableHandler {
+        bool IsInBounds(Vector2 mousePosition);
         bool CanCopy();
         bool CanPaste();
         bool CanDelete();

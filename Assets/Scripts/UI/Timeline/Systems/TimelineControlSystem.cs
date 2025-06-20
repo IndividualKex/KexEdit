@@ -2,6 +2,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
+using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
 using System;
@@ -50,17 +51,6 @@ namespace KexEdit.UI.Timeline {
             _timeline = root.Q<Timeline>();
             _timeline.Initialize(_data);
 
-            _timeline.RegisterCallback<FocusInEvent>(_ => NavigationMenuSystem.SetActiveHandler(this), TrickleDown.NoTrickleDown);
-            _timeline.RegisterCallback<FocusOutEvent>(evt => {
-                if (
-                    evt.relatedTarget != null &&
-                    evt.relatedTarget is VisualElement element &&
-                    !element.IsWithinElement(_timeline)
-                ) {
-                    NavigationMenuSystem.ClearActiveHandler(this);
-                }
-            }, TrickleDown.NoTrickleDown);
-
             _timeline.RegisterCallback<CurveButtonClickEvent>(OnCurveButtonClick);
             _timeline.RegisterCallback<TimeChangeEvent>(OnTimeChange);
             _timeline.RegisterCallback<DurationChangeEvent>(OnDurationChange);
@@ -80,9 +70,12 @@ namespace KexEdit.UI.Timeline {
             _timeline.RegisterCallback<DragBezierHandleEvent>(OnDragBezierHandle);
             _timeline.RegisterCallback<SelectKeyframesEvent>(OnSelectKeyframes);
             _timeline.RegisterCallback<AddKeyframeEvent>(OnAddKeyframe);
+
+            EditOperationsSystem.RegisterHandler(this);
         }
 
         protected override void OnDestroy() {
+            EditOperationsSystem.UnregisterHandler(this);
             _data.Dispose();
         }
 
@@ -826,14 +819,14 @@ namespace KexEdit.UI.Timeline {
         private void OnViewRightClick(ViewRightClickEvent evt) {
             bool hasSelection = _data.SelectedKeyframeCount > 0;
             bool hasMultiSelection = _data.SelectedKeyframeCount > 1;
-            bool canPaste = NavigationMenuSystem.CanPaste;
+            bool canPaste = EditOperationsSystem.CanPaste;
 
             if (!hasSelection && !canPaste) return;
 
             VisualElement target = evt.target as VisualElement;
             target.ShowContextMenu(evt.MousePosition, menu => {
-                bool canCut = NavigationMenuSystem.CanCut;
-                bool canCopy = NavigationMenuSystem.CanCopy;
+                bool canCut = EditOperationsSystem.CanCut;
+                bool canCopy = EditOperationsSystem.CanCopy;
 
                 if (hasSelection && !hasMultiSelection) {
                     menu.AddItem("Edit", () => {
@@ -868,9 +861,9 @@ namespace KexEdit.UI.Timeline {
                     menu.AddSeparator();
                 }
 
-                menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", NavigationMenuSystem.HandleCut, "Ctrl+X", enabled: canCut && hasSelection);
-                menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", NavigationMenuSystem.HandleCopy, "Ctrl+C", enabled: canCopy && hasSelection);
-                menu.AddPlatformItem(canPaste ? "Paste" : "Cannot Paste", NavigationMenuSystem.HandlePaste, "Ctrl+V", enabled: canPaste);
+                menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", EditOperationsSystem.HandleCut, "Ctrl+X", enabled: canCut && hasSelection);
+                menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", EditOperationsSystem.HandleCopy, "Ctrl+C", enabled: canCopy && hasSelection);
+                menu.AddPlatformItem(canPaste ? "Paste" : "Cannot Paste", EditOperationsSystem.HandlePaste, "Ctrl+V", enabled: canPaste);
                 menu.AddItem(hasSelection ? "Delete" : "Cannot Delete", () => {
                     if (hasSelection) {
                         Undo.Record();
@@ -1394,8 +1387,10 @@ namespace KexEdit.UI.Timeline {
             DeselectAllProperties();
         }
 
-        public void Focus() {
-            // Empty implementation for now
+        public void Focus() { }
+
+        public bool IsInBounds(Vector2 mousePosition) {
+            return _timeline.worldBound.Contains(mousePosition);
         }
     }
 }
