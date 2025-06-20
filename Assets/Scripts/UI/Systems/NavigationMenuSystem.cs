@@ -2,8 +2,6 @@ using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
-using System.IO;
-using KexEdit.UI.Serialization;
 using KexEdit.UI.Timeline;
 
 namespace KexEdit.UI {
@@ -13,9 +11,7 @@ namespace KexEdit.UI {
         private Timeline.Timeline _timeline;
         private Label _titleLabel;
 
-        private string _currentFilePath;
         private bool _initialized;
-        private bool _hasUnsavedChanges;
 
         protected override void OnStartRunning() {
             if (_initialized) return;
@@ -49,19 +45,20 @@ namespace KexEdit.UI {
                 };
                 menuContainer.Add(_titleLabel);
 
-                Undo.Recorded += () => {
-                    _hasUnsavedChanges = true;
-                    UpdateTitle();
-                };
+                ProjectOperations.FilePathChanged += _ => UpdateTitle();
+                ProjectOperations.UnsavedChangesChanged += _ => UpdateTitle();
 
                 Application.wantsToQuit += HandleApplicationWantsToQuit;
 
+                UpdateTitle();
                 _initialized = true;
             }
         }
 
         protected override void OnDestroy() {
             Application.wantsToQuit -= HandleApplicationWantsToQuit;
+            ProjectOperations.FilePathChanged -= _ => UpdateTitle();
+            ProjectOperations.UnsavedChangesChanged -= _ => UpdateTitle();
         }
 
         private void AddFileMenu(MenuBar menuBar) {
@@ -152,7 +149,6 @@ namespace KexEdit.UI {
 
         protected override void OnUpdate() {
             var kb = Keyboard.current;
-            if (kb == null) return;
 
             if (kb.f2Key.wasPressedThisFrame) GridSystem.Instance?.ToggleGrid();
             else if (kb.f3Key.wasPressedThisFrame) ToggleShowStats();
@@ -164,14 +160,9 @@ namespace KexEdit.UI {
                         if (Undo.CanRedo) Undo.Redo();
                     }
                     else if (Undo.CanUndo) Undo.Execute();
-
-                    _hasUnsavedChanges = true;
-                    UpdateTitle();
                 }
                 else if (kb.yKey.wasPressedThisFrame && Undo.CanRedo) {
                     Undo.Redo();
-                    _hasUnsavedChanges = true;
-                    UpdateTitle();
                 }
                 else if (kb.nKey.wasPressedThisFrame) NewProject();
                 else if (kb.oKey.wasPressedThisFrame) OpenProject();
@@ -183,26 +174,16 @@ namespace KexEdit.UI {
         }
 
         private void NewProject() {
-            if (_hasUnsavedChanges) {
-                ShowUnsavedChangesDialog(() => {
-                    CreateNewProject();
-                });
+            if (ProjectOperations.HasUnsavedChanges) {
+                ShowUnsavedChangesDialog(ProjectOperations.CreateNewProject);
             }
             else {
-                CreateNewProject();
+                ProjectOperations.CreateNewProject();
             }
-        }
-
-        private void CreateNewProject() {
-            _currentFilePath = null;
-            SerializationSystem.Instance.DeserializeGraph(new byte[0]);
-            Undo.Clear();
-            _hasUnsavedChanges = false;
-            UpdateTitle();
         }
 
         private void OpenProject() {
-            if (_hasUnsavedChanges) {
+            if (ProjectOperations.HasUnsavedChanges) {
                 ShowUnsavedChangesDialog(DoOpenProject);
             }
             else {
@@ -212,73 +193,34 @@ namespace KexEdit.UI {
 
         private void DoOpenProject() {
             string filePath = FileManager.ShowOpenFileDialog();
-            if (string.IsNullOrEmpty(filePath)) return;
-
-            try {
-                byte[] graphData = FileManager.LoadGraph(filePath);
-                if (graphData.Length == 0) return;
-
-                SerializationSystem.Instance.DeserializeGraph(graphData);
-                _currentFilePath = filePath;
-                Undo.Clear();
-                _hasUnsavedChanges = false;
-                UpdateTitle();
-            }
-            catch (System.Exception ex) {
-                Debug.LogError($"Failed to open project: {ex.Message}");
+            if (!string.IsNullOrEmpty(filePath)) {
+                ProjectOperations.OpenProject(filePath);
             }
         }
 
         private void SaveProject() {
-            if (string.IsNullOrEmpty(_currentFilePath)) {
+            if (string.IsNullOrEmpty(ProjectOperations.CurrentFilePath)) {
                 SaveProjectAs();
                 return;
             }
 
-            try {
-                FileManager.SaveGraph(
-                    SerializationSystem.Instance.SerializeGraph(),
-                    _currentFilePath
-                );
-                _hasUnsavedChanges = false;
-                UpdateTitle();
-            }
-            catch (System.Exception ex) {
-                Debug.LogError($"Failed to save project: {ex.Message}");
-            }
+            ProjectOperations.SaveProject();
         }
 
         private void SaveProjectAs() {
-            string fileName = Path.GetFileNameWithoutExtension(_currentFilePath);
+            string fileName = ProjectOperations.GetProjectDisplayName();
             string filePath = FileManager.ShowSaveFileDialog(fileName);
-            if (string.IsNullOrEmpty(filePath)) return;
-
-            try {
-                FileManager.SaveGraph(
-                    SerializationSystem.Instance.SerializeGraph(),
-                    filePath
-                );
-                _currentFilePath = filePath;
-                _hasUnsavedChanges = false;
-                UpdateTitle();
-            }
-            catch (System.Exception ex) {
-                Debug.LogError($"Failed to save project: {ex.Message}");
+            if (!string.IsNullOrEmpty(filePath)) {
+                ProjectOperations.SaveProject(filePath);
             }
         }
 
         private void UpdateTitle() {
-            if (_titleLabel == null) return;
-
-            _titleLabel.text = string.IsNullOrEmpty(_currentFilePath)
-                ? "Untitled"
-                : Path.GetFileNameWithoutExtension(_currentFilePath);
-
-            if (_hasUnsavedChanges) _titleLabel.text += "*";
+            _titleLabel.text = ProjectOperations.GetProjectTitle();
         }
 
         private void QuitWithConfirmation() {
-            if (_hasUnsavedChanges) {
+            if (ProjectOperations.HasUnsavedChanges) {
                 ShowUnsavedChangesDialog(QuitApplication);
             }
             else {
@@ -289,13 +231,23 @@ namespace KexEdit.UI {
         private void ShowUnsavedChangesDialog(System.Action proceedAction) {
             _root.ShowUnsavedChangesDialog(
                 onSave: () => {
-                    SaveProject();
-                    if (!_hasUnsavedChanges) proceedAction?.Invoke();
+                    try {
+                        if (string.IsNullOrEmpty(ProjectOperations.CurrentFilePath)) {
+                            SaveProjectAs();
+                        }
+                        else {
+                            ProjectOperations.SaveProject();
+                        }
+
+                        if (!ProjectOperations.HasUnsavedChanges) {
+                            proceedAction?.Invoke();
+                        }
+                    }
+                    catch (System.Exception ex) {
+                        Debug.LogError($"Failed to save project: {ex.Message}");
+                    }
                 },
-                onDontSave: () => {
-                    _hasUnsavedChanges = false;
-                    proceedAction?.Invoke();
-                }
+                onDontSave: proceedAction
             );
         }
 
@@ -308,7 +260,7 @@ namespace KexEdit.UI {
         }
 
         private bool HandleApplicationWantsToQuit() {
-            if (_hasUnsavedChanges) {
+            if (ProjectOperations.HasUnsavedChanges) {
                 ShowUnsavedChangesDialog(QuitApplication);
                 return false;
             }
