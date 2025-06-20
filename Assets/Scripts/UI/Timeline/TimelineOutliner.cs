@@ -97,6 +97,12 @@ namespace KexEdit.UI.Timeline {
                 dataSourcePath = new PropertyPath(nameof(TimelineData.Time)),
                 bindingMode = BindingMode.ToTarget
             };
+            timeBinding.sourceToUiConverters.AddConverter((ref float value) => {
+                return _data.DurationType switch {
+                    DurationType.Distance => Units.DistanceToDisplay(value),
+                    _ => value,
+                };
+            });
             _timeField.SetBinding("value", timeBinding);
 
             var activeBinding = new DataBinding {
@@ -143,7 +149,10 @@ namespace KexEdit.UI.Timeline {
         private void OnTimeFieldChanged(ChangeEvent<float> evt) {
             if (evt.newValue == _data.Time) return;
             var e = this.GetPooled<TimeChangeEvent>();
-            e.Time = _timeField.value;
+            e.Time = _data.DurationType switch {
+                DurationType.Distance => Units.DisplayToDistance(_timeField.value),
+                _ => _timeField.value,
+            };
             e.Snap = false;
             this.Send(e);
         }

@@ -73,17 +73,52 @@ namespace KexEdit.UI {
                     submenu.AddItem("NoLimits 2", ShowExportDialog);
                 });
                 menu.AddSeparator();
-                menu.AddSubmenu("Preferences", submenu => {
-                    submenu.AddSubmenu("Units", submenu => {
-                        submenu.AddSubmenu("Distance", submenu => {
-                            submenu.AddItem("Meters", () => Preferences.DistanceUnits = DistanceUnitsType.Meters,
-                                isChecked: Preferences.DistanceUnits == DistanceUnitsType.Meters);
-                            submenu.AddItem("Feet", () => Preferences.DistanceUnits = DistanceUnitsType.Feet,
-                                isChecked: Preferences.DistanceUnits == DistanceUnitsType.Feet);
-                        });
+                menu.AddSubmenu("Units", submenu => {
+                    submenu.AddItem("Metric", () => {
+                        Preferences.DistanceUnits = DistanceUnitsType.Meters;
+                        if (Preferences.SpeedUnits != SpeedUnitsType.MetersPerSecond &&
+                            Preferences.SpeedUnits != SpeedUnitsType.KilometersPerHour) {
+                            Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond;
+                        }
                     });
-                    submenu.AddItem("Node Grid", ToggleNodeGridSnapping,
-                        isChecked: Preferences.NodeGridSnapping);
+                    submenu.AddItem("Imperial", () => {
+                        Preferences.DistanceUnits = DistanceUnitsType.Feet;
+                        Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour;
+                    });
+                    submenu.AddSeparator();
+                    submenu.AddSubmenu("Distance", submenu => {
+                        submenu.AddItem("Meters", () => Preferences.DistanceUnits = DistanceUnitsType.Meters,
+                            isChecked: Preferences.DistanceUnits == DistanceUnitsType.Meters);
+                        submenu.AddItem("Feet", () => Preferences.DistanceUnits = DistanceUnitsType.Feet,
+                            isChecked: Preferences.DistanceUnits == DistanceUnitsType.Feet);
+                    });
+                    submenu.AddSubmenu("Velocity", submenu => {
+                        submenu.AddItem("Meters Per Second", () => Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond,
+                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.MetersPerSecond);
+                        submenu.AddItem("Kilometers Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.KilometersPerHour,
+                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.KilometersPerHour);
+                        submenu.AddItem("Miles Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour,
+                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.MilesPerHour);
+                    });
+                    submenu.AddSubmenu("Angle", submenu => {
+                        submenu.AddItem("Degrees", () => Preferences.AngleUnits = AngleUnitsType.Degrees,
+                            isChecked: Preferences.AngleUnits == AngleUnitsType.Degrees);
+                        submenu.AddItem("Radians", () => Preferences.AngleUnits = AngleUnitsType.Radians,
+                            isChecked: Preferences.AngleUnits == AngleUnitsType.Radians);
+                    });
+                    submenu.AddSubmenu("Angle Change", submenu => {
+                        submenu.AddItem("Degrees", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Degrees,
+                            isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Degrees);
+                        submenu.AddItem("Radians", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians,
+                            isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Radians);
+                    });
+                    submenu.AddSeparator();
+                    submenu.AddItem("Reset to Default", () => {
+                        Preferences.DistanceUnits = DistanceUnitsType.Meters;
+                        Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond;
+                        Preferences.AngleUnits = AngleUnitsType.Degrees;
+                        Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians;
+                    });
                 });
                 menu.AddSeparator();
                 menu.AddItem("Quit", QuitWithConfirmation);
@@ -120,6 +155,8 @@ namespace KexEdit.UI {
                     isChecked: GridSystem.Instance?.ShowGrid == true);
                 menu.AddItem("Stats", ToggleShowStats, "F3",
                     isChecked: Preferences.ShowStats);
+                menu.AddItem("Node Grid", ToggleNodeGridSnapping, "F4",
+                    isChecked: Preferences.NodeGridSnapping);
             });
         }
 
@@ -160,6 +197,7 @@ namespace KexEdit.UI {
 
             if (kb.f2Key.wasPressedThisFrame) GridSystem.Instance?.ToggleGrid();
             else if (kb.f3Key.wasPressedThisFrame) ToggleShowStats();
+            else if (kb.f4Key.wasPressedThisFrame) ToggleNodeGridSnapping();
             else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
 
             if (kb.ctrlKey.isPressed || kb.leftCommandKey.isPressed) {

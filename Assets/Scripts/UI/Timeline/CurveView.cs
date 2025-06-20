@@ -74,7 +74,7 @@ namespace KexEdit.UI.Timeline {
             var bounds = _draggingKeyframe || _draggingBezierHandle ? _dragBounds : _data.ValueBounds;
 
             TimelineDrawUtils.DrawVerticalGrid(painter, _data, contentRect);
-            TimelineDrawUtils.DrawValueLegend(ctx, bounds, contentRect);
+            TimelineDrawUtils.DrawValueLegend(ctx, _data, bounds, contentRect);
             TimelineDrawUtils.DrawPlayhead(painter, _data, contentRect);
 
             foreach (var (type, propertyData) in _data.Properties) {

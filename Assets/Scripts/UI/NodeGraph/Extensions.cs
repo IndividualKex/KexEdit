@@ -17,13 +17,7 @@ namespace KexEdit.UI.NodeGraph {
                 PortType.Pitch => 90f,
                 _ => float.MaxValue
             };
-            float sensitivity = portType switch {
-                PortType.Roll or PortType.Pitch or PortType.Yaw or
-                PortType.Arc or PortType.Axis or
-                PortType.LeadIn or PortType.LeadOut => 0.1f,
-                _ => 0.01f
-            };
-            return new(min, max, sensitivity);
+            return new(min, max);
         }
 
         public static float DistanceToQuadraticBezier(this Vector2 point, Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3) {

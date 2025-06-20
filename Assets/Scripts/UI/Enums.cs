@@ -3,15 +3,14 @@ using System;
 namespace KexEdit.UI {
     public enum UnitsType {
         None,
-        Meters,
-        Radians,
-        Degrees,
-        Seconds,
-        MetersPerSecond,
-        RadiansPerSecond,
-        RadiansPerMeter,
-        Gs,
-        OneOverMicrometers
+        Time,
+        Distance,
+        Angle,
+        AnglePerTime,
+        AnglePerDistance,
+        Force,
+        Velocity,
+        Resistance
     }
 
     [Flags]
@@ -41,5 +40,21 @@ namespace KexEdit.UI {
     public enum DistanceUnitsType {
         Meters,
         Feet,
+    }
+
+    public enum AngleUnitsType {
+        Degrees,
+        Radians,
+    }
+
+    public enum AngleChangeUnitsType {
+        Degrees,
+        Radians,
+    }
+
+    public enum SpeedUnitsType {
+        MetersPerSecond,
+        KilometersPerHour,
+        MilesPerHour,
     }
 }
