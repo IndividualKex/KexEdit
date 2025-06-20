@@ -61,6 +61,7 @@ namespace KexEdit.UI {
 
             _metersField = new FloatField {
                 value = 2f,
+                isDelayed = true,
                 style = { width = 60f }
             };
 

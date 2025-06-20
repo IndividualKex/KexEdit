@@ -10,6 +10,7 @@ namespace KexEdit.UI {
         private VisualElement _root;
         private Timeline.Timeline _timeline;
         private Label _titleLabel;
+        private bool _bypassUnsavedChangesCheck;
 
         private bool _initialized;
 
@@ -293,7 +294,10 @@ namespace KexEdit.UI {
                         Debug.LogError($"Failed to save project: {ex.Message}");
                     }
                 },
-                onDontSave: proceedAction
+                onDontSave: () => {
+                    _bypassUnsavedChangesCheck = true;
+                    proceedAction?.Invoke();
+                }
             );
         }
 
@@ -306,6 +310,10 @@ namespace KexEdit.UI {
         }
 
         private bool HandleApplicationWantsToQuit() {
+            if (_bypassUnsavedChangesCheck) {
+                return true;
+            }
+
             if (ProjectOperations.HasUnsavedChanges) {
                 ShowUnsavedChangesDialog(QuitApplication);
                 return false;

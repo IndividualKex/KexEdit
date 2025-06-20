@@ -806,6 +806,7 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void ShowKeyframeValueEditor(KeyframeData keyframe, UnityEngine.Vector2 position) {
+            var unitsType = keyframe.Type.GetUnits(_data.DurationType);
             _timeline.View.ShowFloatFieldEditor(
                 position,
                 keyframe.Value.Value,
@@ -814,7 +815,8 @@ namespace KexEdit.UI.Timeline {
                     var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
                     adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithValue(newValue));
                     MarkTrackDirty();
-                }
+                },
+                unitsType
             );
         }
 

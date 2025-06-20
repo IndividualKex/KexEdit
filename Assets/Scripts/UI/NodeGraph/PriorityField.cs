@@ -38,6 +38,7 @@ namespace KexEdit.UI.NodeGraph {
             Add(label);
 
             _field = new IntegerField {
+                isDelayed = true,
                 style = {
                     flexGrow = 0f,
                     width = 30f,

@@ -129,7 +129,7 @@ namespace KexEdit.UI.NodeGraph {
 
         private void OnFieldValueChanged(ChangeEvent<float> evt) {
             float internalValue = _data.Units.DisplayToValue(evt.newValue);
-            if (internalValue == GetValue()) return;
+            if (math.abs(internalValue - GetValue()) < 1e-6f) return;
             Undo.Record();
             SetInternalValue(internalValue);
         }

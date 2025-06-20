@@ -451,10 +451,15 @@ namespace KexEdit.UI {
             Vector2 position,
             float initialValue,
             Action<float> onSave,
+            UnitsType unitsType = UnitsType.None,
             Action onCancel = null
         ) {
+            float displayValue = unitsType.ValueToDisplay(initialValue);
+
             var floatField = new FloatField {
-                value = initialValue,
+                value = displayValue,
+                formatString = "0.###",
+                isDelayed = true,
                 style = {
                     position = Position.Absolute,
                     left = position.x,
@@ -471,7 +476,8 @@ namespace KexEdit.UI {
             }
 
             void SaveValue() {
-                onSave?.Invoke(floatField.value);
+                float rawValue = unitsType.DisplayToValue(floatField.value);
+                onSave?.Invoke(rawValue);
                 CloseEditor();
             }
 
