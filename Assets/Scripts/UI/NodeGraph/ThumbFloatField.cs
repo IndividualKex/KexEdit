@@ -6,7 +6,7 @@ namespace KexEdit.UI.NodeGraph {
     public class ThumbFloatField : VisualElement {
         private static readonly string[] s_DisplayNames = new string[] { "X", "Y", "Z" };
 
-        private LocalizedFloatField _field;
+        private FloatField _field;
         private Label _label;
 
         private PortData _data;
@@ -47,7 +47,7 @@ namespace KexEdit.UI.NodeGraph {
             };
             dummy.Add(_label);
 
-            _field = new LocalizedFloatField(data.Units) {
+            _field = new FloatField {
                 formatString = "0.###",
                 isDelayed = true,
                 style = {
@@ -72,20 +72,22 @@ namespace KexEdit.UI.NodeGraph {
                 dataSourcePath = new PropertyPath(nameof(PortData.Value)),
                 bindingMode = BindingMode.ToTarget
             };
-            binding.sourceToUiConverters.AddConverter((ref PointData value) =>
-                _index switch {
+            binding.sourceToUiConverters.AddConverter((ref PointData value) => {
+                float floatValue = _index switch {
                     0 => value.Roll,
                     1 => value.Velocity,
                     2 => value.Energy,
                     _ => throw new System.NotImplementedException(),
-                });
-            _field.SetBinding("Value", binding);
+                };
+                return _data.Units.ValueToDisplay(floatValue);
+            });
+            _field.SetBinding("value", binding);
             _field.RegisterValueChangedCallback<float>(OnFieldValueChanged);
         }
 
         private void OnMouseDown(MouseDownEvent evt) {
             _startPosition = evt.mousePosition.x;
-            _startValue = _field.Value;
+            _startValue = _data.Units.DisplayToValue(_field.value);
             _dragging = true;
             _moved = false;
             _label.CaptureMouse();
@@ -98,19 +100,21 @@ namespace KexEdit.UI.NodeGraph {
             var bounds = _data.Port.Type.GetPortBounds();
 
             float delta = evt.mousePosition.x - _startPosition;
+            delta = _data.Units.DisplayToValue(delta);
 
             if (!_moved && math.abs(delta) > 1e-3f) {
                 _moved = true;
                 Undo.Record();
             }
 
-            float value = _startValue + delta * bounds.Sensitivity;
+            float value = _startValue + delta * 1e-2f;
 
             value = math.round(value * 1e3f) / 1e3f;
             value = math.clamp(value, bounds.Min, bounds.Max);
 
-            _field.SetValueWithoutNotify(value);
-            SetValue(value);
+            float displayValue = _data.Units.ValueToDisplay(value);
+            _field.SetValueWithoutNotify(displayValue);
+            SetInternalValue(value);
 
             evt.StopPropagation();
         }
@@ -124,21 +128,22 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void OnFieldValueChanged(ChangeEvent<float> evt) {
-            if (evt.newValue == GetValue()) return;
+            float internalValue = _data.Units.DisplayToValue(evt.newValue);
+            if (internalValue == GetValue()) return;
             Undo.Record();
-            SetValue(evt.newValue);
+            SetInternalValue(internalValue);
         }
 
-        private void SetValue(float value) {
+        private void SetInternalValue(float internalValue) {
             switch (_index) {
                 case 0:
-                    _data.Value.Roll = value;
+                    _data.Value.Roll = internalValue;
                     break;
                 case 1:
-                    _data.Value.Velocity = value;
+                    _data.Value.Velocity = internalValue;
                     break;
                 case 2:
-                    _data.Value.Energy = value;
+                    _data.Value.Energy = internalValue;
                     break;
                 default:
                     throw new System.NotImplementedException();

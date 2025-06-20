@@ -8,7 +8,7 @@ namespace KexEdit.UI.NodeGraph {
         public Entity Node;
         public PointData Value;
         public PortState InteractionState;
-        public UnitsData Units;
+        public UnitsType Units;
         public bool IsConnected;
 
         public bool Hovered => InteractionState.HasFlag(PortState.Hovered);
@@ -20,7 +20,7 @@ namespace KexEdit.UI.NodeGraph {
                 Entity = entity,
                 Port = port,
                 Node = node,
-                Units = new UnitsData(units),
+                Units = units,
             };
         }
 
