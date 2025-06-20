@@ -6,6 +6,7 @@ namespace KexEdit.UI {
         public TargetValueType ValueType;
         public PropertyType PropertyType;
         public DurationType DurationType;
+        public UnitsType Units;
         public int Iteration;
         public bool IsStarted;
         public bool IsComplete;

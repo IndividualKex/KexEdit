@@ -183,6 +183,18 @@ namespace KexEdit.UI {
             };
         }
 
+        public static UnitsType GetUnits(this TargetValueType targetValueType) {
+            return targetValueType switch {
+                TargetValueType.Roll => UnitsType.Angle,
+                TargetValueType.Pitch => UnitsType.Angle,
+                TargetValueType.Yaw => UnitsType.Angle,
+                TargetValueType.X => UnitsType.Distance,
+                TargetValueType.Y => UnitsType.Distance,
+                TargetValueType.Z => UnitsType.Distance,
+                _ => UnitsType.None
+            };
+        }
+
         public static bool IsWithinElement(this VisualElement current, VisualElement element) {
             if (current == null) return false;
             while (current != null) {

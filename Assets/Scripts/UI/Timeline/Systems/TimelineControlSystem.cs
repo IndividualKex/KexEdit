@@ -1031,7 +1031,8 @@ namespace KexEdit.UI.Timeline {
                 Time = _data.Time,
                 ValueType = targetValueType,
                 PropertyType = keyframe.Type,
-                DurationType = _data.DurationType
+                DurationType = _data.DurationType,
+                Units = targetValueType.GetUnits()
             };
             var dialog = root.ShowOptimizerDialog(optimizerData);
             var optimizer = new Optimizer(_data.Entity, keyframe, optimizerData);
