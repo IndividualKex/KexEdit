@@ -336,8 +336,9 @@ namespace KexEdit.UI.Timeline {
                         }
                     }
                 }
-                else if (propertyData.DrawReadOnly) {
+                else if (propertyData.DrawReadOnly && !propertyData.Visible) {
                     for (int i = 1; i < propertyData.Values.Length; i++) {
+                        hasAnyKeyframes = true;
                         tempMin = math.min(tempMin, propertyData.Values[i]);
                         tempMax = math.max(tempMax, propertyData.Values[i]);
                     }
@@ -673,6 +674,7 @@ namespace KexEdit.UI.Timeline {
 
                     menu.AddItem(type.GetDisplayName(), () => {
                         propertyData.DrawReadOnly = !propertyData.DrawReadOnly;
+                        EnableCurveView();
                     }, isChecked: propertyData.DrawReadOnly);
                 }
             });
@@ -696,6 +698,11 @@ namespace KexEdit.UI.Timeline {
             else if (fromMode == TimelineViewMode.DopeSheet && toMode == TimelineViewMode.Curve) {
                 DeselectAllKeyframes();
             }
+        }
+
+        private void EnableCurveView() {
+            if (_data.ViewMode == TimelineViewMode.Curve) return;
+            ToggleCurveView();
         }
 
         private void OnTimeChange(TimeChangeEvent evt) {
@@ -846,6 +853,21 @@ namespace KexEdit.UI.Timeline {
                         submenu.AddItem("Yaw", () => {
                             Undo.Record();
                             Optimize(TargetValueType.Yaw);
+                        });
+                        submenu.AddSeparator();
+                        submenu.AddSubmenu("Position", positionSubmenu => {
+                            positionSubmenu.AddItem("X", () => {
+                                Undo.Record();
+                                Optimize(TargetValueType.X);
+                            });
+                            positionSubmenu.AddItem("Y", () => {
+                                Undo.Record();
+                                Optimize(TargetValueType.Y);
+                            });
+                            positionSubmenu.AddItem("Z", () => {
+                                Undo.Record();
+                                Optimize(TargetValueType.Z);
+                            });
                         });
                     });
                     menu.AddSubmenu("Reset", submenu => {
@@ -1019,6 +1041,9 @@ namespace KexEdit.UI.Timeline {
                     TargetValueType.Roll => playheadPoint.Roll,
                     TargetValueType.Pitch => playheadPoint.GetPitch(),
                     TargetValueType.Yaw => playheadPoint.GetYaw(),
+                    TargetValueType.X => playheadPoint.Position.x,
+                    TargetValueType.Y => playheadPoint.Position.y,
+                    TargetValueType.Z => playheadPoint.Position.z,
                     _ => throw new NotImplementedException()
                 };
                 optimizer.Step(value);

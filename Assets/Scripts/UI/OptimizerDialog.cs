@@ -13,6 +13,9 @@ namespace KexEdit.UI {
             { TargetValueType.Roll, "Roll" },
             { TargetValueType.Pitch, "Pitch" },
             { TargetValueType.Yaw, "Yaw" },
+            { TargetValueType.X, "X" },
+            { TargetValueType.Y, "Y" },
+            { TargetValueType.Z, "Z" },
         };
 
         private static readonly Dictionary<DurationType, string> _durationTypeUnits = new() {

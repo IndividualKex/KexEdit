@@ -32,5 +32,8 @@ namespace KexEdit.UI {
         Roll,
         Pitch,
         Yaw,
+        X,
+        Y,
+        Z,
     }
 }
