@@ -33,7 +33,6 @@ Detailed information editor features.
 
 -   **[Discord](https://discord.gg/eEY75Nqk3C)** - Join the community
 -   **[GitHub Issues](https://github.com/IndividualKex/KexEdit/issues)** - Bug reports and feature requests
--   **[Contributing](../CONTRIBUTING.md)** - Help improve KexEdit
 
 ---
 
