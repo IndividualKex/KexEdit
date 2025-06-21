@@ -138,7 +138,25 @@ namespace KexEdit.UI.Timeline {
             }
 
             float startX = data.TimeToPixel(propertyData.Keyframes[0].Time);
-            if (startX > minX && startX < rect.width) {
+            float endX = data.TimeToPixel(propertyData.Keyframes[^1].Time);
+
+            if (startX > maxX) {
+                float y = bounds.ValueToPixel(propertyData.Keyframes[0].Value, rect.height);
+                Vector2 start = new(minX, y);
+                Vector2 end = new(maxX, y);
+                painter.DrawLine(rect, start, end, color, true);
+                return;
+            }
+
+            if (endX < minX) {
+                float y = bounds.ValueToPixel(propertyData.Keyframes[^1].Value, rect.height);
+                Vector2 start = new(minX, y);
+                Vector2 end = new(maxX, y);
+                painter.DrawLine(rect, start, end, color, true);
+                return;
+            }
+
+            if (startX > minX) {
                 float y = bounds.ValueToPixel(propertyData.Keyframes[0].Value, rect.height);
                 Vector2 start = new(minX, y);
                 Vector2 end = new(startX, y);
@@ -151,8 +169,7 @@ namespace KexEdit.UI.Timeline {
                 painter.DrawCurveSegment(data, bounds, rect, propertyData.Type, start, end, color);
             }
 
-            float endX = data.TimeToPixel(propertyData.Keyframes[^1].Time);
-            if (endX < maxX && endX < rect.width) {
+            if (endX < maxX) {
                 float y = bounds.ValueToPixel(propertyData.Keyframes[^1].Value, rect.height);
                 Vector2 start = new(endX, y);
                 Vector2 end = new(maxX, y);

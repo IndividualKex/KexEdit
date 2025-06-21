@@ -16,6 +16,8 @@ namespace KexEdit.UI {
             { TargetValueType.X, "X" },
             { TargetValueType.Y, "Y" },
             { TargetValueType.Z, "Z" },
+            { TargetValueType.NormalForce, "Normal Force" },
+            { TargetValueType.LateralForce, "Lateral Force" },
         };
 
         private static readonly Dictionary<DurationType, string> _durationTypeUnits = new() {

@@ -270,6 +270,14 @@ namespace KexEdit.UI {
 
             UpdateCamera();
         }
+
+        private void OnApplicationFocus(bool hasFocus) {
+            if (!hasFocus) {
+                _isOrbiting = false;
+                _isPanning = false;
+                _isFreeLooking = false;
+            }
+        }
     }
 
     public struct CameraState {
