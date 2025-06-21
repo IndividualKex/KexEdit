@@ -97,10 +97,9 @@ namespace KexEdit {
 
                     curr.RollSpeed = rollSpeed;
 
-                    float deltaTime = 1f / HZ;
-                    float deltaRoll = rollSpeed * deltaTime;
-                    float deltaPitch = pitchChangeRate * deltaTime;
-                    float deltaYaw = yawChangeRate * deltaTime;
+                    float deltaRoll = rollSpeed / HZ;
+                    float deltaPitch = pitchChangeRate / HZ;
+                    float deltaYaw = yawChangeRate / HZ;
 
                     UpdateGeometricPoint(section, ref curr, prev, deltaRoll, deltaPitch, deltaYaw);
                     section.Points.Add(curr);
@@ -150,10 +149,9 @@ namespace KexEdit {
                     PointData curr = prev;
                     curr.RollSpeed = rollSpeed;
 
-                    float deltaTime = 1f / HZ;
-                    float deltaRoll = rollSpeed * deltaTime;
-                    float deltaPitch = pitchChangeRate * deltaTime;
-                    float deltaYaw = yawChangeRate * deltaTime;
+                    float deltaRoll = rollSpeed * (prev.Velocity / HZ);
+                    float deltaPitch = pitchChangeRate * (prev.Velocity / HZ);
+                    float deltaYaw = yawChangeRate * (prev.Velocity / HZ);
 
                     UpdateGeometricPoint(section, ref curr, prev, deltaRoll, deltaPitch, deltaYaw);
                     section.Points.Add(curr);
