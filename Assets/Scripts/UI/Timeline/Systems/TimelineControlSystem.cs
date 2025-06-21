@@ -858,6 +858,15 @@ namespace KexEdit.UI.Timeline {
                             Optimize(TargetValueType.Yaw);
                         });
                         submenu.AddSeparator();
+                        submenu.AddItem("Normal Force", () => {
+                            Undo.Record();
+                            Optimize(TargetValueType.NormalForce);
+                        });
+                        submenu.AddItem("Lateral Force", () => {
+                            Undo.Record();
+                            Optimize(TargetValueType.LateralForce);
+                        });
+                        submenu.AddSeparator();
                         submenu.AddSubmenu("Position", positionSubmenu => {
                             positionSubmenu.AddItem("X", () => {
                                 Undo.Record();
@@ -1048,6 +1057,8 @@ namespace KexEdit.UI.Timeline {
                     TargetValueType.X => playheadPoint.Position.x,
                     TargetValueType.Y => playheadPoint.Position.y,
                     TargetValueType.Z => playheadPoint.Position.z,
+                    TargetValueType.NormalForce => playheadPoint.NormalForce,
+                    TargetValueType.LateralForce => playheadPoint.LateralForce,
                     _ => throw new NotImplementedException()
                 };
                 optimizer.Step(value);

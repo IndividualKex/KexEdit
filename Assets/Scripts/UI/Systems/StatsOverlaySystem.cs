@@ -198,31 +198,31 @@ namespace KexEdit.UI {
         }
 
         private unsafe void UpdateLabels(PointData point) {
-            _xLabel.text = FormatValue("X: ", point.Position.x, "F2", " m");
+            _xLabel.text = FormatValue("X: ", Units.DistanceToDisplay(point.Position.x), "F2", Units.GetDistanceUnitsString());
             _xLabel.MarkDirtyRepaint();
 
-            _yLabel.text = FormatValue("Y: ", point.Position.y, "F2", " m");
+            _yLabel.text = FormatValue("Y: ", Units.DistanceToDisplay(point.Position.y), "F2", Units.GetDistanceUnitsString());
             _yLabel.MarkDirtyRepaint();
 
-            _zLabel.text = FormatValue("Z: ", point.Position.z, "F2", " m");
+            _zLabel.text = FormatValue("Z: ", Units.DistanceToDisplay(point.Position.z), "F2", Units.GetDistanceUnitsString());
             _zLabel.MarkDirtyRepaint();
 
-            _rollLabel.text = FormatValue("Roll: ", point.Roll, "F1", "°");
+            _rollLabel.text = FormatValue("Roll: ", Units.AngleToDisplay(point.Roll), "F1", Units.GetAngleUnitsString());
             _rollLabel.MarkDirtyRepaint();
 
-            _pitchLabel.text = FormatValue("Pitch: ", point.GetPitch(), "F1", "°");
+            _pitchLabel.text = FormatValue("Pitch: ", Units.AngleToDisplay(point.GetPitch()), "F1", Units.GetAngleUnitsString());
             _pitchLabel.MarkDirtyRepaint();
 
-            _yawLabel.text = FormatValue("Yaw: ", point.GetYaw(), "F1", "°");
+            _yawLabel.text = FormatValue("Yaw: ", Units.AngleToDisplay(point.GetYaw()), "F1", Units.GetAngleUnitsString());
             _yawLabel.MarkDirtyRepaint();
 
-            _velocityLabel.text = FormatValue("Velocity: ", point.Velocity, "F2", " m/s");
+            _velocityLabel.text = FormatValue("Velocity: ", Units.SpeedToDisplay(point.Velocity), "F2", Units.GetSpeedUnitsString());
             _velocityLabel.MarkDirtyRepaint();
 
-            _normalForceLabel.text = FormatValue("Normal Force: ", point.NormalForce, "F2", " G");
+            _normalForceLabel.text = FormatValue("Normal Force: ", point.NormalForce, "F2", "G");
             _normalForceLabel.MarkDirtyRepaint();
 
-            _lateralForceLabel.text = FormatValue("Lateral Force: ", point.LateralForce, "F2", " G");
+            _lateralForceLabel.text = FormatValue("Lateral Force: ", point.LateralForce, "F2", "G");
             _lateralForceLabel.MarkDirtyRepaint();
         }
 
@@ -236,10 +236,11 @@ namespace KexEdit.UI {
             prefix.AsSpan().CopyTo(buffer[pos..]);
             pos += prefix.Length;
 
-            if (!value.TryFormat(buffer[pos..], out int charsWritten, format)) return $"{prefix}0.00{suffix}";
+            if (!value.TryFormat(buffer[pos..], out int charsWritten, format)) return $"{prefix}0.00 {suffix}";
             pos += charsWritten;
 
             if (suffix.Length > 0) {
+                buffer[pos++] = ' ';
                 suffix.AsSpan().CopyTo(buffer[pos..]);
                 pos += suffix.Length;
             }

@@ -22,7 +22,7 @@ namespace KexEdit.UI {
         private bool _showGrid = true;
         private int _gridSize = 250;
         private float _gridSpacing = 10f;
-        private Color _gridColor = new(1f, 1f, 1f, 0.05f);
+        private Color _gridColor = new(1f, 1f, 1f, 0.1f);
 
         public bool ShowGrid => _showGrid;
 
@@ -85,9 +85,10 @@ namespace KexEdit.UI {
 
             _gridMaterial.SetFloat("_Surface", 1f);
             _gridMaterial.SetFloat("_Blend", 0f);
-            _gridMaterial.SetFloat("_SrcBlend", 5f);
-            _gridMaterial.SetFloat("_DstBlend", 10f);
+            _gridMaterial.SetFloat("_SrcBlend", 1f);
+            _gridMaterial.SetFloat("_DstBlend", 1f);
             _gridMaterial.SetFloat("_ZWrite", 0f);
+            _gridMaterial.SetFloat("_ZTest", 4f);
             _gridMaterial.SetColor("_BaseColor", _gridColor);
             _gridMaterial.SetColor("_Color", _gridColor);
             _gridMaterial.renderQueue = 3000;
@@ -171,8 +172,8 @@ namespace KexEdit.UI {
                     float xPos = Center.x + x * GridSpacing;
 
                     int baseIndex = x + halfSize;
-                    Vertices[baseIndex * 2] = new float3(xPos, 0f, Center.z + (-halfSize * GridSpacing));
-                    Vertices[baseIndex * 2 + 1] = new float3(xPos, 0f, Center.z + (halfSize * GridSpacing));
+                    Vertices[baseIndex * 2] = new float3(xPos, 0.01f, Center.z + (-halfSize * GridSpacing));
+                    Vertices[baseIndex * 2 + 1] = new float3(xPos, 0.01f, Center.z + (halfSize * GridSpacing));
 
                     Indices[indexCounter++] = (uint)(baseIndex * 2);
                     Indices[indexCounter++] = (uint)(baseIndex * 2 + 1);
@@ -184,8 +185,8 @@ namespace KexEdit.UI {
 
                     int baseIndex = z + halfSize;
                     int vertexOffset = zLinesOffset + baseIndex * 2;
-                    Vertices[vertexOffset] = new float3(Center.x + (-halfSize * GridSpacing), 0f, zPos);
-                    Vertices[vertexOffset + 1] = new float3(Center.x + (halfSize * GridSpacing), 0f, zPos);
+                    Vertices[vertexOffset] = new float3(Center.x + (-halfSize * GridSpacing), 0.01f, zPos);
+                    Vertices[vertexOffset + 1] = new float3(Center.x + (halfSize * GridSpacing), 0.01f, zPos);
 
                     Indices[indexCounter++] = (uint)vertexOffset;
                     Indices[indexCounter++] = (uint)(vertexOffset + 1);
