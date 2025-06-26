@@ -110,7 +110,7 @@ namespace KexEdit.UI.Timeline {
             if (!playhead.Active) return;
 
             var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
-            if (pointBuffer.Length == 0) return;
+            if (pointBuffer.Length < 2) return;
 
             if (SystemAPI.HasComponent<Duration>(_data.Entity)) {
                 var duration = SystemAPI.GetComponent<Duration>(_data.Entity);
@@ -257,11 +257,12 @@ namespace KexEdit.UI.Timeline {
             public PropertyType Type;
 
             public void Execute() {
+                if (Points.Length == 0) return;
+                Values.Clear();
+                Values.ResizeUninitialized(Points.Length);
+
                 for (int i = 0; i < Points.Length; i++) {
                     var point = Points[i].Value;
-                    float time = i / HZ;
-                    Values.Clear();
-                    Values.ResizeUninitialized(Points.Length);
                     switch (Type) {
                         case PropertyType.NormalForce:
                             Values[i] = point.NormalForce;

@@ -14,6 +14,7 @@ namespace KexEdit.UI.NodeGraph {
     public partial class NodeGraphControlSystem : SystemBase, IEditableHandler {
         private byte[] _clipboardData = null;
         private float2 _clipboardCenter = float2.zero;
+        private float2 _clipboardPan = float2.zero;
         private NodeGraphData _data;
         private NodeGraphView _view;
 
@@ -432,7 +433,7 @@ namespace KexEdit.UI.NodeGraph {
 
             var targetNode = _data.Nodes[evt.Port.Node];
 
-            float2 sourcePosition = targetNode.Position + new float2(-256f, 0f);
+            float2 sourcePosition = targetNode.Position + new float2(-350f, 0f);
             var node = AddNode(sourcePosition, NodeType.Anchor);
 
             var sourcePort = SystemAPI.GetBuffer<OutputPortReference>(node)[0];
@@ -1106,6 +1107,7 @@ namespace KexEdit.UI.NodeGraph {
         private void CopySelectedNodes() {
             _clipboardData = null;
             _clipboardCenter = float2.zero;
+            _clipboardPan = (float2)_data.Pan;
 
             if (!_data.HasSelectedNodes) return;
 
@@ -1275,7 +1277,9 @@ namespace KexEdit.UI.NodeGraph {
                 pasteCenter = (worldPosition.Value - (float2)_data.Pan) / _data.Zoom;
             }
             else {
-                pasteCenter = _clipboardCenter + new float2(100f, 100f);
+                float2 panDelta = (float2)_data.Pan - _clipboardPan;
+                float2 offset = new(50f, 50f);
+                pasteCenter = _clipboardCenter - (panDelta / _data.Zoom) + offset;
             }
             PasteNodes(pasteCenter);
         }
