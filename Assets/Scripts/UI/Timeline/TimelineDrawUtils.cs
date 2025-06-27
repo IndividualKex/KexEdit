@@ -6,7 +6,8 @@ using static KexEdit.UI.Timeline.Constants;
 
 namespace KexEdit.UI.Timeline {
     public static class TimelineDrawUtils {
-        private const float VALUE_LABEL_FONT_SIZE = 10f;
+        private const float BASE_VALUE_LABEL_FONT_SIZE = 10f;
+        private const float BASE_RULER_FONT_SIZE = 10f;
         private const float VALUE_LABEL_OFFSET = 4f;
 
         private static readonly string[] s_StringPool = new string[128];
@@ -153,7 +154,8 @@ namespace KexEdit.UI.Timeline {
                     string timeText = FormatPooledString(displayValue, "0.#");
                     Color textColor = s_ActiveTextColorTransparent;
                     textColor.a *= opacityMultiplier;
-                    ctx.DrawText(timeText, new Vector2(x + 3, 4), 10, textColor, null);
+                    float scaledFontSize = BASE_RULER_FONT_SIZE * Preferences.UIScale;
+                    ctx.DrawText(timeText, new Vector2(x + 3, 4), scaledFontSize, textColor, null);
                 }
             }
         }
@@ -191,9 +193,10 @@ namespace KexEdit.UI.Timeline {
 
                 float displayValue = unitsType.ValueToDisplay(value);
                 string labelText = FormatPooledString(displayValue);
-                Vector2 labelPosition = new(VALUE_LABEL_OFFSET, y - VALUE_LABEL_FONT_SIZE / 2f);
+                float scaledValueFontSize = BASE_VALUE_LABEL_FONT_SIZE * Preferences.UIScale;
+                Vector2 labelPosition = new(VALUE_LABEL_OFFSET, y - scaledValueFontSize / 2f);
 
-                ctx.DrawText(labelText, labelPosition, VALUE_LABEL_FONT_SIZE, s_ActiveTextColorTransparent, null);
+                ctx.DrawText(labelText, labelPosition, scaledValueFontSize, s_ActiveTextColorTransparent, null);
             }
         }
 

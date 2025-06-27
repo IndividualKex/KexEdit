@@ -112,7 +112,6 @@ namespace KexEdit.UI.Timeline {
             if (evt.button == 0) {
                 if (hasKeyframe) {
                     ClickKeyframe(keyframe, evt.shiftKey);
-                    StoreKeyframes();
                     _startBounds = _data.ValueBounds;
                     _dragBounds = _data.ValueBounds;
                     _startMousePosition = evt.localMousePosition;
@@ -121,7 +120,6 @@ namespace KexEdit.UI.Timeline {
                     _moved = false;
                 }
                 else if (hasBezierHandle) {
-                    StoreKeyframes();
                     _bezierKeyframe = bezierKeyframe;
                     _isBezierOutHandle = isBezierOutHandle;
                     StoreBezierHandlePosition();
@@ -166,6 +164,7 @@ namespace KexEdit.UI.Timeline {
 
                 if (!_moved && (Mathf.Abs(timeDelta) > 1e-3f || Mathf.Abs(valueDelta) > 1e-3f)) {
                     _moved = true;
+                    StoreKeyframes();
                     Undo.Record();
                 }
 

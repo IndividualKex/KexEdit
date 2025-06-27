@@ -63,7 +63,8 @@ namespace KexEdit.UI {
                     ("Ctrl+X".ToPlatformShortcut(), "Cut"),
                     ("Ctrl+C".ToPlatformShortcut(), "Copy"),
                     ("Ctrl+V".ToPlatformShortcut(), "Paste"),
-                    ("Del", "Delete")
+                    ("Del", "Delete"),
+                    ("T", "Sync Playback")
                 }),
                 ("Camera & Navigation", new[] {
                     ("R", "Toggle Ride Camera"),
