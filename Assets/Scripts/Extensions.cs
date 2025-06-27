@@ -389,5 +389,24 @@ namespace KexEdit {
                 _ => throw new System.Exception($"Invalid property type: {type}")
             };
         }
+
+        public static float Previous(this PropertyType type, float t, PointData anchor, DurationType durationType) {
+            return type switch {
+                PropertyType.RollSpeed => anchor.RollSpeed,
+                PropertyType.NormalForce => anchor.NormalForce,
+                PropertyType.LateralForce => anchor.LateralForce,
+                PropertyType.PitchSpeed => durationType == DurationType.Distance
+                    ? math.radians(anchor.PitchFromLast * HZ) / math.max(anchor.Velocity, MIN_VELOCITY)
+                    : math.radians(anchor.PitchFromLast * HZ),
+                PropertyType.YawSpeed => durationType == DurationType.Distance
+                    ? math.radians(anchor.YawFromLast * HZ) / math.max(anchor.Velocity, MIN_VELOCITY)
+                    : math.radians(anchor.YawFromLast * HZ),
+                PropertyType.FixedVelocity => anchor.Velocity,
+                PropertyType.Heart => anchor.Heart,
+                PropertyType.Friction => anchor.Friction,
+                PropertyType.Resistance => anchor.Resistance,
+                _ => throw new System.Exception($"Invalid property type: {type}")
+            };
+        }
     }
 }
