@@ -120,7 +120,6 @@ namespace KexEdit.UI.Timeline {
             if (evt.button == 0) {
                 if (hasKeyframe) {
                     ClickKeyframe(keyframe, evt.shiftKey);
-                    StoreKeyframes();
                     _startMousePosition = evt.localMousePosition;
                     _dragging = true;
                     _moved = false;
@@ -156,6 +155,7 @@ namespace KexEdit.UI.Timeline {
 
                 if (!_moved && Mathf.Abs(timeDelta) > 1e-3f) {
                     _moved = true;
+                    StoreKeyframes();
                     Undo.Record();
                 }
 

@@ -7,10 +7,10 @@ using UnityEngine.UIElements;
 using System.Collections.Generic;
 using System;
 using System.Collections;
-using static KexEdit.Constants;
-using static KexEdit.UI.Timeline.Constants;
 using Unity.Burst;
 using Unity.Jobs;
+using static KexEdit.Constants;
+using static KexEdit.UI.Timeline.Constants;
 
 namespace KexEdit.UI.Timeline {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -81,6 +81,7 @@ namespace KexEdit.UI.Timeline {
 
         protected override void OnUpdate() {
             UpdateActive();
+            SyncWithPlayback();
             UpdatePlayhead();
             UpdateTimelineData();
             _timeline.Draw();
@@ -103,10 +104,35 @@ namespace KexEdit.UI.Timeline {
             _data.Active = _data.Entity != Entity.Null;
         }
 
+        private void SyncWithPlayback() {
+            if (!Preferences.SyncPlayback || !_data.Active) return;
+
+            foreach (var cart in SystemAPI.Query<Cart>()) {
+                if (cart.Active && !cart.Kinematic && cart.Section == _data.Entity) {
+                    float timelineTime = cart.Position / HZ;
+                    if (math.abs(_data.Time - timelineTime) > 0.01f) {
+                        _data.Time = math.clamp(timelineTime, 0f, _data.Duration);
+                    }
+                    return;
+                }
+            }
+        }
+
         private void UpdatePlayhead() {
             ref Cart playhead = ref SystemAPI.GetComponentRW<Cart>(_playheadQuery.GetSingletonEntity()).ValueRW;
             playhead.Section = _data.Entity;
-            playhead.Active = _data.Active;
+
+            bool isSynced = false;
+            if (Preferences.SyncPlayback && _data.Active) {
+                foreach (var cart in SystemAPI.Query<Cart>()) {
+                    if (cart.Active && !cart.Kinematic && cart.Section == _data.Entity) {
+                        isSynced = true;
+                        break;
+                    }
+                }
+            }
+            playhead.Active = _data.Active && !isSynced;
+
             if (!playhead.Active) return;
 
             var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
@@ -709,6 +735,16 @@ namespace KexEdit.UI.Timeline {
 
         private void OnTimeChange(TimeChangeEvent evt) {
             SetTime(evt.Time, evt.Snap);
+
+            if (Preferences.SyncPlayback && _data.Active) {
+                foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
+                    if (cart.ValueRO.Active && !cart.ValueRO.Kinematic) {
+                        cart.ValueRW.Section = _data.Entity;
+                        cart.ValueRW.Position = _data.Time * HZ;
+                        break;
+                    }
+                }
+            }
         }
 
         private void OnDurationChange(DurationChangeEvent evt) {
@@ -1026,7 +1062,7 @@ namespace KexEdit.UI.Timeline {
             PointData anchor = SystemAPI.GetComponent<Anchor>(_data.Entity);
             var keyframe = GetSelectedKeyframe();
             var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
-            float previousValue = keyframe.Type.Previous(_data.Time, anchor);
+            float previousValue = keyframe.Type.Previous(_data.Time, anchor, _data.DurationType);
             adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithValue(previousValue));
             MarkTrackDirty();
         }
@@ -1050,19 +1086,30 @@ namespace KexEdit.UI.Timeline {
             var optimizer = new Optimizer(_data.Entity, keyframe, optimizerData);
 
             while (!optimizerData.IsComplete && !optimizerData.IsCanceled) {
-                var playheadPoint = GetPlayheadPoint();
-                float value = targetValueType switch {
-                    TargetValueType.Roll => playheadPoint.Roll,
-                    TargetValueType.Pitch => playheadPoint.GetPitch(),
-                    TargetValueType.Yaw => playheadPoint.GetYaw(),
-                    TargetValueType.X => playheadPoint.Position.x,
-                    TargetValueType.Y => playheadPoint.Position.y,
-                    TargetValueType.Z => playheadPoint.Position.z,
-                    TargetValueType.NormalForce => playheadPoint.NormalForce,
-                    TargetValueType.LateralForce => playheadPoint.LateralForce,
-                    _ => throw new NotImplementedException()
-                };
-                optimizer.Step(value);
+                if (!EntityManager.Exists(_data.Entity) || !_data.Active) {
+                    optimizerData.IsCanceled = true;
+                    break;
+                }
+
+                try {
+                    var playheadPoint = GetPlayheadPoint();
+                    float value = targetValueType switch {
+                        TargetValueType.Roll => playheadPoint.Roll,
+                        TargetValueType.Pitch => playheadPoint.GetPitch(),
+                        TargetValueType.Yaw => playheadPoint.GetYaw(),
+                        TargetValueType.X => playheadPoint.Position.x,
+                        TargetValueType.Y => playheadPoint.Position.y,
+                        TargetValueType.Z => playheadPoint.Position.z,
+                        TargetValueType.NormalForce => playheadPoint.NormalForce,
+                        TargetValueType.LateralForce => playheadPoint.LateralForce,
+                        _ => throw new NotImplementedException()
+                    };
+                    optimizer.Step(value);
+                }
+                catch (System.Exception) {
+                    optimizerData.IsCanceled = true;
+                    break;
+                }
 
                 SystemAPI.SetComponent<Dirty>(_data.Entity, true);
                 while (SystemAPI.GetComponent<Dirty>(_data.Entity).Value) {
@@ -1075,10 +1122,17 @@ namespace KexEdit.UI.Timeline {
             Entity playheadEntity = _playheadQuery.GetSingletonEntity();
             Cart playhead = SystemAPI.GetComponent<Cart>(playheadEntity);
             float playheadPosition = playhead.Position;
+            int index = (int)math.floor(playheadPosition);
+            int nextIndex = index + 1;
 
             var points = SystemAPI.GetBuffer<Point>(_data.Entity);
-            PointData p0 = points[(int)math.floor(playheadPosition)].Value;
-            PointData p1 = points[(int)math.ceil(playheadPosition)].Value;
+            if (index < 0 || nextIndex >= points.Length) {
+                UnityEngine.Debug.LogError($"Playhead position {playheadPosition} is out of bounds for entity {_data.Entity}");
+                return PointData.Create();
+            }
+
+            PointData p0 = points[index].Value;
+            PointData p1 = points[nextIndex].Value;
 
             float t = playheadPosition - math.floor(playheadPosition);
             return PointData.Lerp(p0, p1, t);
@@ -1139,8 +1193,8 @@ namespace KexEdit.UI.Timeline {
                 var adapter = PropertyAdapter.GetAdapter(type);
                 foreach (var keyframe in propertyData.Keyframes) {
                     if (!keyframe.Selected) continue;
+                    if (!evt.StartTimes.TryGetValue(keyframe.Id, out float startTime)) continue;
 
-                    float startTime = evt.StartTimes[keyframe.Id];
                     float time = startTime + evt.TimeDelta;
                     float value = keyframe.Value;
 
@@ -1151,7 +1205,7 @@ namespace KexEdit.UI.Timeline {
                     }
 
                     if (_data.ViewMode == TimelineViewMode.Curve) {
-                        float startValue = evt.StartValues[keyframe.Id];
+                        if (!evt.StartValues.TryGetValue(keyframe.Id, out float startValue)) continue;
                         value = startValue + evt.ValueDelta;
                         value = evt.Bounds.ClampToVisualBounds(value, evt.ContentHeight);
                     }
@@ -1268,6 +1322,8 @@ namespace KexEdit.UI.Timeline {
                 adapter.RemoveKeyframe(_data.Entity, keyframe.Id);
             }
             SetPropertyOverride(type, false);
+            UpdateKeyframes();
+            UpdateSelectionState();
             MarkTrackDirty();
         }
 
@@ -1383,6 +1439,8 @@ namespace KexEdit.UI.Timeline {
             }
 
             if (anyRemoved) {
+                UpdateKeyframes();
+                UpdateSelectionState();
                 MarkTrackDirty();
             }
         }

@@ -33,16 +33,17 @@ Main application menu for project management, editing, and preferences.
 
 ## Edit Menu
 
-| Menu Item        | Shortcut | Description             |
-| ---------------- | -------- | ----------------------- |
-| **Undo**         | `Ctrl+Z` | Undo last action        |
-| **Redo**         | `Ctrl+Y` | Redo undone action      |
-| **Cut**          | `Ctrl+X` | Cut selected items      |
-| **Copy**         | `Ctrl+C` | Copy selected items     |
-| **Paste**        | `Ctrl+V` | Paste clipboard content |
-| **Delete**       | `Del`    | Delete selected items   |
-| **Select All**   | `Ctrl+A` | Select all items        |
-| **Deselect All** | `Alt+A`  | Clear selection         |
+| Menu Item         | Shortcut | Description               |
+| ----------------- | -------- | ------------------------- |
+| **Undo**          | `Ctrl+Z` | Undo last action          |
+| **Redo**          | `Ctrl+Y` | Redo undone action        |
+| **Cut**           | `Ctrl+X` | Cut selected items        |
+| **Copy**          | `Ctrl+C` | Copy selected items       |
+| **Paste**         | `Ctrl+V` | Paste clipboard content   |
+| **Delete**        | `Del`    | Delete selected items     |
+| **Select All**    | `Ctrl+A` | Select all items          |
+| **Deselect All**  | `Alt+A`  | Clear selection           |
+| **Sync Playback** | `T`      | Sync timeline to playback |
 
 ## View Menu
 

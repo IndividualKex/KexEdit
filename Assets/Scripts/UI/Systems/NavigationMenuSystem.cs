@@ -1,3 +1,4 @@
+using System.IO;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -69,6 +70,23 @@ namespace KexEdit.UI {
                 menu.AddItem("Save", SaveProject, "Ctrl+S".ToPlatformShortcut());
                 menu.AddSeparator();
                 menu.AddItem("Save As...", SaveProjectAs);
+                menu.AddSeparator();
+                menu.AddSubmenu("Open Recent", submenu => {
+                    bool hasRecovery = !string.IsNullOrEmpty(ProjectOperations.GetLatestRecoveryFile());
+                    submenu.AddItem("Recover Last Session", ProjectOperations.RecoverLastSession, enabled: hasRecovery);
+
+                    string[] recentFiles = Preferences.RecentFiles;
+                    if (recentFiles.Length > 0) {
+                        submenu.AddSeparator();
+                        for (int i = 0; i < recentFiles.Length; i++) {
+                            string filePath = recentFiles[i];
+                            if (File.Exists(filePath)) {
+                                string fileName = Path.GetFileNameWithoutExtension(filePath);
+                                submenu.AddItem(fileName, () => ProjectOperations.OpenProject(filePath));
+                            }
+                        }
+                    }
+                });
                 menu.AddSeparator();
                 menu.AddSubmenu("Export", submenu => {
                     submenu.AddItem("NoLimits 2", ShowExportDialog);
@@ -143,6 +161,8 @@ namespace KexEdit.UI {
                 menu.AddSeparator();
                 menu.AddItem("Select All", EditOperationsSystem.HandleSelectAll, "Ctrl+A".ToPlatformShortcut(), enabled: canSelectAll);
                 menu.AddItem("Deselect All", EditOperationsSystem.HandleDeselectAll, "Alt+A".ToPlatformShortcut(), enabled: canDeselectAll);
+                menu.AddSeparator();
+                menu.AddItem("Sync Playback", ToggleSyncPlayback, "T", isChecked: Preferences.SyncPlayback);
             });
         }
 
@@ -189,6 +209,10 @@ namespace KexEdit.UI {
             Preferences.NodeGridSnapping = !Preferences.NodeGridSnapping;
         }
 
+        private void ToggleSyncPlayback() {
+            Preferences.SyncPlayback = !Preferences.SyncPlayback;
+        }
+
         private void ToggleShowStats() {
             Preferences.ShowStats = !Preferences.ShowStats;
         }
@@ -200,6 +224,7 @@ namespace KexEdit.UI {
             else if (kb.f3Key.wasPressedThisFrame) ToggleShowStats();
             else if (kb.f4Key.wasPressedThisFrame) ToggleNodeGridSnapping();
             else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
+            else if (kb.tKey.wasPressedThisFrame) ToggleSyncPlayback();
 
             if (kb.ctrlKey.isPressed || kb.leftCommandKey.isPressed) {
                 if (kb.zKey.wasPressedThisFrame) {
