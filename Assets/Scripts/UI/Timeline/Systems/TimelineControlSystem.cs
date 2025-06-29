@@ -109,7 +109,7 @@ namespace KexEdit.UI.Timeline {
 
             foreach (var cart in SystemAPI.Query<Cart>()) {
                 if (cart.Active && !cart.Kinematic && cart.Section == _data.Entity) {
-                    float timelineTime = cart.Position / HZ;
+                    float timelineTime = CartPositionToTime(cart.Position);
                     if (math.abs(_data.Time - timelineTime) > 0.01f) {
                         _data.Time = math.clamp(timelineTime, 0f, _data.Duration);
                     }
@@ -740,11 +740,50 @@ namespace KexEdit.UI.Timeline {
                 foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
                     if (cart.ValueRO.Active && !cart.ValueRO.Kinematic) {
                         cart.ValueRW.Section = _data.Entity;
-                        cart.ValueRW.Position = _data.Time * HZ;
+                        cart.ValueRW.Position = TimeToCartPosition(_data.Time);
                         break;
                     }
                 }
             }
+        }
+
+        private float TimeToCartPosition(float time) {
+            if (GetDurationType() == DurationType.Time) {
+                return time * HZ;
+            }
+
+            return DistanceToCartPosition(SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength + time);
+        }
+
+        private float CartPositionToTime(float cartPosition) {
+            if (GetDurationType() == DurationType.Time) {
+                return cartPosition / HZ;
+            }
+
+            var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+            if (pointBuffer.Length < 2) return 0f;
+
+            int index = math.clamp((int)math.floor(cartPosition), 0, pointBuffer.Length - 2);
+            float t = cartPosition - index;
+
+            float distance = math.lerp(pointBuffer[index].Value.TotalLength, pointBuffer[index + 1].Value.TotalLength, t);
+            return distance - SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
+        }
+
+        private float DistanceToCartPosition(float targetDistance) {
+            var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+            if (pointBuffer.Length < 2) return 0f;
+
+            for (int i = 0; i < pointBuffer.Length - 1; i++) {
+                float currentDistance = pointBuffer[i].Value.TotalLength;
+                float nextDistance = pointBuffer[i + 1].Value.TotalLength;
+                if (targetDistance >= currentDistance && targetDistance <= nextDistance) {
+                    float t = (nextDistance - currentDistance) > 0 ?
+                        (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;
+                    return i + t;
+                }
+            }
+            return pointBuffer.Length - 1;
         }
 
         private void OnDurationChange(DurationChangeEvent evt) {
@@ -783,10 +822,8 @@ namespace KexEdit.UI.Timeline {
             var propertyData = _data.Properties[evt.Type];
             if (evt.ShiftKey) {
                 if (propertyData.Selected) {
+                    DeselectAllKeyframesForProperty(evt.Type);
                     DeselectProperty(evt.Type);
-                    if (_data.ViewMode == TimelineViewMode.DopeSheet) {
-                        DeselectAllKeyframesForProperty(evt.Type);
-                    }
                 }
                 else {
                     SelectProperty(evt.Type);
