@@ -5,6 +5,12 @@ using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using KexEdit.UI.Timeline;
 
+// Veia was here
+using GLTFast;
+using SFB;
+using System.Collections.Generic;
+using System.IO;
+
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial class NavigationMenuSystem : SystemBase {
@@ -86,6 +92,10 @@ namespace KexEdit.UI {
                             }
                         }
                     }
+                });
+                menu.AddSeparator();
+                menu.AddSubmenu("Import", submenu => {
+                    submenu.AddItem("glTF", ShowImportDialog);
                 });
                 menu.AddSeparator();
                 menu.AddSubmenu("Export", submenu => {
@@ -344,6 +354,48 @@ namespace KexEdit.UI {
                 return false;
             }
             return true;
+        }
+
+        private void ShowImportDialog() {
+            var extensions = new List<ExtensionFilter> {
+                new ExtensionFilter("glTF Files", "gltf", "glb"),
+                new ExtensionFilter("All Files", "*")
+            };
+
+            string path = FileManager.ShowOpenFileDialog(extensions);
+
+            if (string.IsNullOrEmpty(path)) {
+                Debug.Log("Import canceled or no file selected.");
+                return;
+            }
+
+            _root.ShowImportDialog((scale, posX, posY, posZ) => {
+                    Vector3 position = new Vector3(posX, posY, posZ);
+                    ImportGltfFile(path, position, scale);
+                    });
+        }
+
+        private async void ImportGltfFile(string path, Vector3 position, float scale) {
+            var gltf = new GltfImport();
+            bool success = await gltf.Load(path);
+
+            if (!success) {
+                Debug.LogError("Failed to load glTF.");
+                return;
+            }
+
+            var rootGO = new GameObject($"Imported glTF: {Path.GetFileNameWithoutExtension(path)}");
+            rootGO.transform.position = position;
+            rootGO.transform.localScale = Vector3.one * scale;
+
+            success = await gltf.InstantiateMainSceneAsync(rootGO.transform);
+
+            if (!success) {
+                Debug.LogError("Failed to instantiate glTF.");
+                GameObject.Destroy(rootGO);
+            } else {
+                Debug.Log("glTF imported successfully.");
+            }
         }
     }
 }
