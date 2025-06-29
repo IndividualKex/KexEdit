@@ -424,6 +424,14 @@ namespace KexEdit.UI {
             return dialog;
         }
 
+        public static ImportDialog ShowImportDialog(this VisualElement element, Action<float, float, float, float> onImport) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new ImportDialog(onImport, KexTime.Unpause);
+            root.Add(dialog);
+            return dialog;
+        }
+
         public static ControlsDialog ShowControlsDialog(this VisualElement element) {
             var root = element.panel.visualTree.Q<TemplateContainer>();
             KexTime.Pause();
