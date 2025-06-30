@@ -64,6 +64,7 @@ namespace KexEdit.UI.Serialization {
             if ((node.FieldFlags & NodeFieldFlags.HasSelectedProperties) != 0) writer.Write(node.SelectedProperties);
             if ((node.FieldFlags & NodeFieldFlags.HasCurveData) != 0) writer.Write(node.CurveData);
             if ((node.FieldFlags & NodeFieldFlags.HasDuration) != 0) writer.Write(node.Duration);
+            if ((node.FieldFlags & NodeFieldFlags.HasMeshFilePath) != 0) writer.Write(node.MeshFilePath);
 
             writer.WriteArray(node.InputPorts);
             writer.WriteArray(node.OutputPorts);
@@ -97,6 +98,7 @@ namespace KexEdit.UI.Serialization {
                 node.SelectedProperties = (node.FieldFlags & NodeFieldFlags.HasSelectedProperties) != 0 ? reader.Read<SelectedProperties>() : default;
                 node.CurveData = (node.FieldFlags & NodeFieldFlags.HasCurveData) != 0 ? reader.Read<CurveData>() : default;
                 node.Duration = (node.FieldFlags & NodeFieldFlags.HasDuration) != 0 ? reader.Read<Duration>() : default;
+                node.MeshFilePath = (node.FieldFlags & NodeFieldFlags.HasMeshFilePath) != 0 ? reader.Read<FixedString512Bytes>() : default;
             }
 
             reader.ReadArray(out node.InputPorts, Allocator.Temp);

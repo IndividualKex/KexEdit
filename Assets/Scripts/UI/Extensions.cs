@@ -15,6 +15,7 @@ namespace KexEdit.UI {
             { NodeType.Bridge, "Bridge" },
             { NodeType.Reverse, "Reverse" },
             { NodeType.ReversePath, "Reverse Path" },
+            { NodeType.Mesh, "Mesh" },
         };
 
         private static readonly Dictionary<PortType, string> s_InputPortNames = new() {
@@ -34,6 +35,8 @@ namespace KexEdit.UI {
             { PortType.Axis, "Axis" },
             { PortType.LeadIn, "Lead In" },
             { PortType.LeadOut, "Lead Out" },
+            { PortType.Rotation, "Rotation" },
+            { PortType.Scale, "Scale" },
         };
 
         private static readonly Dictionary<PortType, string> s_OutputPortNames = new() {
@@ -53,6 +56,8 @@ namespace KexEdit.UI {
             { PortType.Axis, "Axis" },
             { PortType.LeadIn, "Lead In" },
             { PortType.LeadOut, "Lead Out" },
+            { PortType.Rotation, "Rotation" },
+            { PortType.Scale, "Scale" },
         };
 
         private static readonly bool s_IsMacOS = SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX;
@@ -179,6 +184,8 @@ namespace KexEdit.UI {
                 PortType.Axis => UnitsType.Angle,
                 PortType.LeadIn => UnitsType.Angle,
                 PortType.LeadOut => UnitsType.Angle,
+                PortType.Rotation => UnitsType.Angle,
+                PortType.Scale => UnitsType.None,
                 _ => UnitsType.None
             };
         }
@@ -420,14 +427,6 @@ namespace KexEdit.UI {
             var root = element.panel.visualTree.Q<TemplateContainer>();
             KexTime.Pause();
             var dialog = new ExportDialog(onExport, KexTime.Unpause);
-            root.Add(dialog);
-            return dialog;
-        }
-
-        public static ImportDialog ShowImportDialog(this VisualElement element, Action<float, float, float, float> onImport) {
-            var root = element.panel.visualTree.Q<TemplateContainer>();
-            KexTime.Pause();
-            var dialog = new ImportDialog(onImport, KexTime.Unpause);
             root.Add(dialog);
             return dialog;
         }

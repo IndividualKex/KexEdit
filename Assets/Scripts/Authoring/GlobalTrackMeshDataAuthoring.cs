@@ -3,7 +3,7 @@ using Unity.Entities;
 using System.Collections.Generic;
 
 namespace KexEdit {
-    public class GlobalMeshDataAuthoring : MonoBehaviour {
+    public class GlobalTrackMeshDataAuthoring : MonoBehaviour {
         public ComputeShader TrackMeshCompute;
         public List<DuplicationMeshSettings> DuplicationMeshes;
         public List<ExtrusionMeshSettings> ExtrusionMeshes;
@@ -11,10 +11,10 @@ namespace KexEdit {
         public List<ExtrusionGizmoSettings> ExtrusionGizmos;
         public Color SelectedColor;
 
-        private class Baker : Baker<GlobalMeshDataAuthoring> {
-            public override void Bake(GlobalMeshDataAuthoring authoring) {
+        private class Baker : Baker<GlobalTrackMeshDataAuthoring> {
+            public override void Bake(GlobalTrackMeshDataAuthoring authoring) {
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
-                AddComponentObject(entity, new GlobalMeshData {
+                AddComponentObject(entity, new GlobalTrackMeshData {
                     Compute = authoring.TrackMeshCompute,
                     DuplicationMeshes = authoring.DuplicationMeshes,
                     ExtrusionMeshes = authoring.ExtrusionMeshes,

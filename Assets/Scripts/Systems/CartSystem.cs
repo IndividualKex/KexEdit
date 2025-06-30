@@ -7,6 +7,7 @@ using static KexEdit.Constants;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [BurstCompile]
     public partial struct CartSystem : ISystem {
         private BufferLookup<Point> _pointLookup;
         private ComponentLookup<Node> _nodeLookup;

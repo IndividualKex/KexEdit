@@ -5,20 +5,20 @@ using Unity.Entities;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
-    public partial class MeshSystem : SystemBase {
+    public partial class TrackMeshSystem : SystemBase {
         private Bounds _bounds;
 
         protected override void OnCreate() {
             _bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
 
-            RequireForUpdate<GlobalMeshData>();
-            RequireForUpdate<MeshData>();
+            RequireForUpdate<GlobalTrackMeshData>();
+            RequireForUpdate<TrackMeshData>();
         }
 
         protected override void OnUpdate() {
-            var globalData = SystemAPI.ManagedAPI.GetSingleton<GlobalMeshData>();
+            var globalData = SystemAPI.ManagedAPI.GetSingleton<GlobalTrackMeshData>();
 
-            foreach (var data in SystemAPI.Query<MeshData>()) {
+            foreach (var data in SystemAPI.Query<TrackMeshData>()) {
                 if (!SystemAPI.HasBuffer<TrackPoint>(data.Entity)) continue;
 
                 var points = SystemAPI.GetBuffer<TrackPoint>(data.Entity);
@@ -97,7 +97,7 @@ namespace KexEdit {
             }
         }
 
-        private void Build(GlobalMeshData globalData, MeshData data) {
+        private void Build(GlobalTrackMeshData globalData, TrackMeshData data) {
             var points = SystemAPI.GetBuffer<TrackPoint>(data.Entity);
 
             float selected = 0f;

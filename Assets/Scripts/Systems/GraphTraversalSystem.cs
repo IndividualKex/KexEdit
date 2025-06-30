@@ -22,7 +22,6 @@ namespace KexEdit {
                 .Build(state.EntityManager);
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             if (_rootQuery.IsEmpty) {
                 using var ecb = new EntityCommandBuffer(Allocator.Temp);
@@ -35,7 +34,6 @@ namespace KexEdit {
             root = FindGraphRoot(ref state);
         }
 
-        [BurstCompile]
         private Entity FindGraphRoot(ref SystemState state) {
             using var nodes = _nodeQuery.ToEntityArray(Allocator.Temp);
 
@@ -48,6 +46,7 @@ namespace KexEdit {
 
             foreach (var nodeEntity in nodes) {
                 var node = SystemAPI.GetAspect<NodeAspect>(nodeEntity);
+                if (node.Type == NodeType.Mesh) continue;
                 foreach (var inputPort in node.InputPorts) {
                     nodeMap.Add(inputPort, nodeEntity);
                 }
@@ -125,7 +124,6 @@ namespace KexEdit {
             return bestRoot;
         }
 
-        [BurstCompile]
         private void TraverseGraph(
             ref SystemState state,
             Entity node,
@@ -146,7 +144,6 @@ namespace KexEdit {
             }
         }
 
-        [BurstCompile]
         private Entity FindNextValidNode(
             Entity start,
             in NativeHashMap<Entity, Entity> rawGraph,
@@ -164,7 +161,6 @@ namespace KexEdit {
             return Entity.Null;
         }
 
-        [BurstCompile]
         private NativeHashMap<Entity, Entity> PostProcessGraph(
             in NativeHashMap<Entity, Entity> rawGraph,
             in BufferLookup<Point> pointLookup
@@ -187,7 +183,6 @@ namespace KexEdit {
             return graph;
         }
 
-        [BurstCompile]
         private Entity FindValidRoot(
             in NativeHashMap<Entity, Entity> rawGraph,
             in BufferLookup<Point> pointLookup,

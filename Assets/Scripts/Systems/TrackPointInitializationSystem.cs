@@ -17,7 +17,6 @@ namespace KexEdit {
             state.RequireForUpdate(_query);
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 

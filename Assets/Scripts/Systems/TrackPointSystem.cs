@@ -6,6 +6,7 @@ using Unity.Burst;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
+    [BurstCompile]
     public partial struct TrackPointSystem : ISystem {
         private BufferLookup<Point> _pointLookup;
         private BufferLookup<TrackPoint> _trackPointLookup;
