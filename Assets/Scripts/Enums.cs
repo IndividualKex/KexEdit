@@ -22,6 +22,7 @@ namespace KexEdit {
         Reverse,
         ReversePath,
         Bridge,
+        Mesh,
     }
 
     public enum PortType {
@@ -41,6 +42,8 @@ namespace KexEdit {
         Axis,
         LeadIn,
         LeadOut,
+        Rotation,
+        Scale,
     }
 
     public enum PropertyType {

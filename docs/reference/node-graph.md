@@ -202,6 +202,36 @@ Outputs:
 
 -   **Path**: The reversed path data
 
+### Asset Nodes
+
+Visual reference assets that assist with track design and shaping.
+
+| Node Type | Purpose                        | Inputs                    | Outputs |
+| --------- | ------------------------------ | ------------------------- | ------- |
+| **Mesh**  | Import 3D models for reference | Position, Rotation, Scale | None    |
+
+### Mesh
+
+Import external 3D models to use as visual reference when designing track layouts. Supports [glTF/GLB format](https://www.khronos.org/gltf/) files with basic PBR materials.
+
+**Adding a Mesh:**
+
+1. Right-click in the Node Graph
+2. Select **More → Mesh**
+3. Choose a `.gltf` or `.glb` file from the file dialog
+
+**Relinking a Mesh:**
+
+If the source file is moved or deleted, relink the mesh by right-clicking the mesh node and selecting **Link**, then choose a new file.
+
+**Limitations:**
+
+-   Supports basic PBR materials only (no advanced features)
+-   Intended for track shaping assistance, not detailed theming or export
+-   Files are referenced by path, not embedded in project
+
+_Note: Mesh nodes are only for visual reference and do not affect track simulation or export._
+
 ---
 
 [← Back to Documentation](../)

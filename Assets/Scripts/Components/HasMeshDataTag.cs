@@ -1,5 +1,5 @@
 using Unity.Entities;
 
 namespace KexEdit {
-    public struct HasMeshDataTag : IComponentData { }
+    public struct HasTrackMeshDataTag : IComponentData { }
 }

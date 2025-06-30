@@ -16,7 +16,6 @@ namespace KexEdit.UI.Serialization {
             _position = 0;
         }
 
-        [BurstCompile]
         public T Read<T>() where T : unmanaged {
             var tempArray = new NativeArray<T>(1, Allocator.Temp);
             var bytes = new NativeSlice<T>(tempArray).SliceConvert<byte>();
@@ -29,7 +28,6 @@ namespace KexEdit.UI.Serialization {
             return result;
         }
 
-        [BurstCompile]
         public void ReadArray<T>(out NativeArray<T> output, Allocator allocator) where T : unmanaged {
             int length = Read<int>();
             output = new(length, allocator);
@@ -42,7 +40,6 @@ namespace KexEdit.UI.Serialization {
             }
         }
 
-        [BurstCompile]
         private void CheckCapacity(int size) {
             if (_position + size > _buffer.Length) {
                 throw new InvalidOperationException($"Buffer overflow: need {size} bytes, have {_buffer.Length - _position}");

@@ -3,18 +3,18 @@ using Unity.Collections;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
-    public partial class MeshDataCleanupSystem : SystemBase {
+    public partial class TrackMeshDataCleanupSystem : SystemBase {
         protected override void OnUpdate() {
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            foreach (var (meshData, entity) in SystemAPI.Query<MeshData>().WithEntityAccess()) {
-                if (!EntityManager.Exists(meshData.Entity)) {
+            foreach (var (trackMeshData, entity) in SystemAPI.Query<TrackMeshData>().WithEntityAccess()) {
+                if (!EntityManager.Exists(trackMeshData.Entity)) {
                     ecb.DestroyEntity(entity);
                     continue;
                 }
 
-                if (!SystemAPI.GetComponent<Render>(meshData.Entity).Value) {
-                    ecb.RemoveComponent<HasMeshDataTag>(meshData.Entity);
+                if (!SystemAPI.GetComponent<Render>(trackMeshData.Entity).Value) {
+                    ecb.RemoveComponent<HasTrackMeshDataTag>(trackMeshData.Entity);
                     ecb.DestroyEntity(entity);
                 }
             }

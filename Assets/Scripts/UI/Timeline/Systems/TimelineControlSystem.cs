@@ -1129,16 +1129,16 @@ namespace KexEdit.UI.Timeline {
                 }
 
                 try {
-                    var playheadPoint = GetPlayheadPoint();
+                    var timelinePoint = GetPointAtTime(_data.Time);
                     float value = targetValueType switch {
-                        TargetValueType.Roll => playheadPoint.Roll,
-                        TargetValueType.Pitch => playheadPoint.GetPitch(),
-                        TargetValueType.Yaw => playheadPoint.GetYaw(),
-                        TargetValueType.X => playheadPoint.Position.x,
-                        TargetValueType.Y => playheadPoint.Position.y,
-                        TargetValueType.Z => playheadPoint.Position.z,
-                        TargetValueType.NormalForce => playheadPoint.NormalForce,
-                        TargetValueType.LateralForce => playheadPoint.LateralForce,
+                        TargetValueType.Roll => timelinePoint.Roll,
+                        TargetValueType.Pitch => timelinePoint.GetPitch(),
+                        TargetValueType.Yaw => timelinePoint.GetYaw(),
+                        TargetValueType.X => timelinePoint.Position.x,
+                        TargetValueType.Y => timelinePoint.Position.y,
+                        TargetValueType.Z => timelinePoint.Position.z,
+                        TargetValueType.NormalForce => timelinePoint.NormalForce,
+                        TargetValueType.LateralForce => timelinePoint.LateralForce,
                         _ => throw new NotImplementedException()
                     };
                     optimizer.Step(value);
@@ -1172,6 +1172,42 @@ namespace KexEdit.UI.Timeline {
             PointData p1 = points[nextIndex].Value;
 
             float t = playheadPosition - math.floor(playheadPosition);
+            return PointData.Lerp(p0, p1, t);
+        }
+
+        private PointData GetPointAtTime(float time) {
+            var points = SystemAPI.GetBuffer<Point>(_data.Entity);
+            if (points.Length == 0) {
+                return PointData.Create();
+            }
+
+            float position;
+            if (SystemAPI.HasComponent<Duration>(_data.Entity)) {
+                var duration = SystemAPI.GetComponent<Duration>(_data.Entity);
+                if (duration.Type == DurationType.Time) {
+                    position = time * HZ;
+                }
+                else {
+                    float targetDistance = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength + time;
+                    position = DistanceToCartPosition(targetDistance);
+                }
+            }
+            else {
+                position = time * HZ;
+            }
+
+            position = math.clamp(position, 0, points.Length - 1);
+            int index = (int)math.floor(position);
+            int nextIndex = math.min(index + 1, points.Length - 1);
+
+            if (index == nextIndex) {
+                return points[index].Value;
+            }
+
+            PointData p0 = points[index].Value;
+            PointData p1 = points[nextIndex].Value;
+
+            float t = position - math.floor(position);
             return PointData.Lerp(p0, p1, t);
         }
 
