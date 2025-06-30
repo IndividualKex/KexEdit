@@ -6,6 +6,7 @@ using static KexEdit.Constants;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [BurstCompile]
     public partial struct BuildCopyPathSectionSystem : ISystem {
         private ComponentLookup<AnchorPort> _anchorPortLookup;
         private BufferLookup<PathPort> _pathPortLookup;

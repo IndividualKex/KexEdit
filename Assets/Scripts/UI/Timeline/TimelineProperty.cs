@@ -303,7 +303,7 @@ namespace KexEdit.UI.Timeline {
 
         private void OnValueChanged(ChangeEvent<float> evt) {
             float newValue = _data.Units.DisplayToValue(evt.newValue);
-            if (math.abs(newValue - _data.Value) < 1e-6f) return;
+            if (math.abs(newValue - _data.Value) < 1e-3f) return;
             Undo.Record();
             var e = this.GetPooled<SetKeyframeEvent>();
             e.Type = _data.Type;

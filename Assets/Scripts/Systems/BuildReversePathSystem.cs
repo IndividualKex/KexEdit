@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [BurstCompile]
     public partial struct BuildReversePathSystem : ISystem {
         private BufferLookup<PathPort> _pathPortLookup;
 

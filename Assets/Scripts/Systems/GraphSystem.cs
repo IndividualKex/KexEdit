@@ -21,14 +21,12 @@ namespace KexEdit {
             state.RequireForUpdate(_nodeQuery);
         }
 
-        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             PropagateAnchors(ref state);
             PropagateInputPorts(ref state);
             PropagateConnections(ref state);
         }
 
-        [BurstCompile]
         private void PropagateAnchors(ref SystemState state) {
             var nodes = _nodeQuery.ToEntityArray(Allocator.Temp);
             foreach (var nodeEntity in nodes) {
@@ -47,7 +45,6 @@ namespace KexEdit {
             nodes.Dispose();
         }
 
-        [BurstCompile]
         private void PropagateInputPorts(ref SystemState state) {
             var nodes = _nodeQuery.ToEntityArray(Allocator.Temp);
             foreach (var nodeEntity in nodes) {
@@ -130,6 +127,18 @@ namespace KexEdit {
                         ref var curveData = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
                         curveData.LeadOut = leadOut;
                     }
+                    else if (type == PortType.Rotation) {
+                        // Encode rotation into anchor
+                        float3 rotation = SystemAPI.GetComponent<RotationPort>(inputPort);
+                        anchor.Value.Roll = rotation.x;
+                        anchor.Value.Velocity = rotation.y;
+                        anchor.Value.Energy = rotation.z;
+                    }
+                    else if (type == PortType.Scale) {
+                        // Encode scale into anchor
+                        float scale = SystemAPI.GetComponent<ScalePort>(inputPort);
+                        anchor.Value.NormalForce = scale;
+                    }
                     else {
                         throw new System.NotImplementedException($"Unknown input port type: {type}");
                     }
@@ -142,7 +151,6 @@ namespace KexEdit {
             nodes.Dispose();
         }
 
-        [BurstCompile]
         private void PropagateConnections(ref SystemState state) {
             var connections = _connectionQuery.ToComponentDataArray<Connection>(Allocator.Temp);
             var map = new NativeParallelMultiHashMap<Entity, Entity>(connections.Length, Allocator.Temp);
@@ -174,7 +182,6 @@ namespace KexEdit {
             nodes.Dispose();
         }
 
-        [BurstCompile]
         private void PropagateConnection(ref SystemState state, NodeAspect node, Entity sourcePort, Entity targetPort) {
             ref Dirty targetPortDirty = ref SystemAPI.GetComponentRW<Dirty>(targetPort).ValueRW;
 

@@ -27,16 +27,16 @@ namespace KexEdit.UI.Serialization {
         HasSelectedProperties = 1 << 3,
         HasCurveData = 1 << 4,
         HasDuration = 1 << 5,
-        Reserved1 = 1 << 6,
-        Reserved2 = 1 << 7,
-        Reserved3 = 1 << 8,
-        Reserved4 = 1 << 9,
-        Reserved5 = 1 << 10,
-        Reserved6 = 1 << 11,
-        Reserved7 = 1 << 12,
-        Reserved8 = 1 << 13,
-        Reserved9 = 1 << 14,
-        Reserved10 = 1 << 15,
+        HasMeshFilePath = 1 << 6,
+        Reserved1 = 1 << 7,
+        Reserved2 = 1 << 8,
+        Reserved3 = 1 << 9,
+        Reserved4 = 1 << 10,
+        Reserved5 = 1 << 11,
+        Reserved6 = 1 << 12,
+        Reserved7 = 1 << 13,
+        Reserved8 = 1 << 14,
+        Reserved9 = 1 << 15,
     }
 
     public struct SerializedGraph : IDisposable {
@@ -59,6 +59,7 @@ namespace KexEdit.UI.Serialization {
         public SelectedProperties SelectedProperties;
         public CurveData CurveData;
         public Duration Duration;
+        public FixedString512Bytes MeshFilePath;
 
         public NativeArray<SerializedPort> InputPorts;
         public NativeArray<SerializedPort> OutputPorts;

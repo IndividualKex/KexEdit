@@ -52,7 +52,8 @@ namespace KexEdit.UI.NodeGraph {
             else if (_data.Port.Type == PortType.Path) {
                 container.Add(new Label("Path"));
             }
-            else if (_data.Port.Type == PortType.Position) {
+            else if (_data.Port.Type == PortType.Position ||
+                _data.Port.Type == PortType.Rotation) {
                 container.Add(new ThumbFloatField(_data, 0));
                 container.Add(new ThumbFloatField(_data, 1));
                 container.Add(new ThumbFloatField(_data, 2));
@@ -69,7 +70,8 @@ namespace KexEdit.UI.NodeGraph {
                 || _data.Port.Type == PortType.Arc
                 || _data.Port.Type == PortType.Axis
                 || _data.Port.Type == PortType.LeadIn
-                || _data.Port.Type == PortType.LeadOut) {
+                || _data.Port.Type == PortType.LeadOut
+                || _data.Port.Type == PortType.Scale) {
                 container.Add(new ThumbFloatField(_data, 0));
             }
             else {

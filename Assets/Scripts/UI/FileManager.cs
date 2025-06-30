@@ -1,5 +1,4 @@
 using SFB;
-using System.Collections.Generic;
 using System.IO;
 using System;
 using UnityEngine;
@@ -82,11 +81,11 @@ namespace KexEdit.UI {
             return paths.Length > 0 ? paths[0] : null;
         }
 
-        public static string ShowOpenFileDialog(List<ExtensionFilter> extensionFilters) {
+        public static string ShowOpenFileDialog(ExtensionFilter[] extensions) {
             var paths = StandaloneFileBrowser.OpenFilePanel(
                     "Open File",
                     DefaultDirectory,
-                    extensionFilters.ToArray(),
+                    extensions,
                     false);
 
             return paths.Length > 0 ? paths[0] : null;

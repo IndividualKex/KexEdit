@@ -115,43 +115,39 @@ namespace KexEdit.UI {
         public static void RecoverLastSession() {
             try {
                 string directory = Path.Combine(Application.persistentDataPath, "Tracks");
-                if (!Directory.Exists(directory)) {
-                    CurrentFilePath = null;
-                    FilePathChanged?.Invoke(CurrentFilePath);
-                    return;
-                }
+                string mostRecentFile = null;
+                DateTime mostRecentTime = DateTime.MinValue;
 
                 string[] recentFiles = Preferences.RecentFiles;
-                if (recentFiles.Length == 0) {
-                    string untitledRecovery = Path.Combine(directory, "untitled.kex1");
-                    if (File.Exists(untitledRecovery)) {
-                        OpenRecoveryFile(untitledRecovery);
+                foreach (string file in recentFiles) {
+                    if (File.Exists(file)) {
+                        DateTime lastWrite = File.GetLastWriteTime(file);
+                        if (lastWrite > mostRecentTime) {
+                            mostRecentTime = lastWrite;
+                            mostRecentFile = file;
+                        }
                     }
-                    return;
                 }
 
-                for (int i = 0; i < recentFiles.Length; i++) {
-                    string projectFile = recentFiles[i];
-                    if (!File.Exists(projectFile)) continue;
-
-                    string recoveryFile = Path.Combine(directory, Path.GetFileNameWithoutExtension(projectFile) + ".kex1");
-
-                    if (File.Exists(recoveryFile)) {
-                        DateTime projectTime = File.GetLastWriteTime(projectFile);
-                        DateTime recoveryTime = File.GetLastWriteTime(recoveryFile);
-
-                        if (recoveryTime > projectTime) {
-                            OpenRecoveryFile(recoveryFile);
+                if (Directory.Exists(directory)) {
+                    string[] recoveryFiles = Directory.GetFiles(directory, "*.kex1");
+                    foreach (string file in recoveryFiles) {
+                        DateTime lastWrite = File.GetLastWriteTime(file);
+                        if (lastWrite > mostRecentTime) {
+                            mostRecentTime = lastWrite;
+                            mostRecentFile = file;
                         }
-                        else {
-                            OpenProject(projectFile);
-                        }
-                        return;
+                    }
+                }
+
+                if (mostRecentFile != null) {
+                    if (mostRecentFile.EndsWith(".kex1")) {
+                        OpenRecoveryFile(mostRecentFile);
                     }
                     else {
-                        OpenProject(projectFile);
-                        return;
+                        OpenProject(mostRecentFile);
                     }
+                    return;
                 }
             }
             catch (Exception ex) {
