@@ -22,7 +22,7 @@ namespace KexEdit {
                 .WithAll<Point>()
                 .Build(EntityManager);
 
-            RequireForUpdate<GlobalMeshData>();
+            RequireForUpdate<GlobalTrackMeshData>();
         }
 
         protected override void OnStartRunning() {
@@ -38,7 +38,7 @@ namespace KexEdit {
             float deltaTime = UnityEngine.Time.unscaledDeltaTime;
             _mode = math.lerp(_mode, _targetMode, math.saturate(deltaTime * 30f));
 
-            var globalData = SystemAPI.ManagedAPI.GetSingleton<GlobalMeshData>();
+            var globalData = SystemAPI.ManagedAPI.GetSingleton<GlobalTrackMeshData>();
             Shader.SetGlobalColor("_SelectedColor", globalData.SelectedColor);
             Shader.SetGlobalColor("_MinColor", Color.green);
             Shader.SetGlobalColor("_MaxColor", Color.red);

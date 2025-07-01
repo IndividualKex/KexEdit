@@ -4,6 +4,7 @@ using Unity.Entities;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [BurstCompile]
     public partial struct BuildReverseSystem : ISystem {
         private ComponentLookup<AnchorPort> _anchorPortLookup;
 

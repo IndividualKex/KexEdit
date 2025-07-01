@@ -18,6 +18,7 @@ namespace KexEdit.UI.Timeline {
         private List<KeyframeData> _clipboard = new();
         private TimelineData _data;
         private Timeline _timeline;
+        private bool _optimizing;
 
         private BufferLookup<Point> _pointLookup;
 
@@ -105,7 +106,7 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void SyncWithPlayback() {
-            if (!Preferences.SyncPlayback || !_data.Active) return;
+            if (!Preferences.SyncPlayback || !_data.Active || _optimizing) return;
 
             foreach (var cart in SystemAPI.Query<Cart>()) {
                 if (cart.Active && !cart.Kinematic && cart.Section == _data.Entity) {
@@ -1122,6 +1123,8 @@ namespace KexEdit.UI.Timeline {
             var dialog = root.ShowOptimizerDialog(optimizerData);
             var optimizer = new Optimizer(_data.Entity, keyframe, optimizerData);
 
+            _optimizing = true;
+
             while (!optimizerData.IsComplete && !optimizerData.IsCanceled) {
                 if (!EntityManager.Exists(_data.Entity) || !_data.Active) {
                     optimizerData.IsCanceled = true;
@@ -1153,6 +1156,8 @@ namespace KexEdit.UI.Timeline {
                     yield return null;
                 }
             }
+
+            _optimizing = false;
         }
 
         private PointData GetPlayheadPoint() {

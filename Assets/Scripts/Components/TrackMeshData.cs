@@ -3,7 +3,7 @@ using Unity.Entities;
 using System;
 
 namespace KexEdit {
-    public class MeshData : IComponentData, IDisposable {
+    public class TrackMeshData : IComponentData, IDisposable {
         public Entity Entity;
 
         public AsyncGPUReadbackRequest? ComputeFence;

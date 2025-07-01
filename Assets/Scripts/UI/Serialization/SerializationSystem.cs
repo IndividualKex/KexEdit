@@ -254,6 +254,16 @@ namespace KexEdit.UI.Serialization {
                         float leadOutValue = SystemAPI.GetComponent<LeadOutPort>(portEntity).Value;
                         portData.Value.Roll = leadOutValue;
                         break;
+                    case PortType.Rotation:
+                        float3 rotationValue = SystemAPI.GetComponent<RotationPort>(portEntity).Value;
+                        portData.Value.Roll = rotationValue.x;
+                        portData.Value.Velocity = rotationValue.y;
+                        portData.Value.Energy = rotationValue.z;
+                        break;
+                    case PortType.Scale:
+                        float scaleValue = SystemAPI.GetComponent<ScalePort>(portEntity).Value;
+                        portData.Value.Roll = scaleValue;
+                        break;
                     default:
                         throw new NotImplementedException();
                 }
@@ -290,6 +300,10 @@ namespace KexEdit.UI.Serialization {
                 NodeType.ForceSection or NodeType.GeometricSection or
                 NodeType.CurvedSection or NodeType.CopyPathSection or
                 NodeType.Bridge => SystemAPI.GetComponent<SelectedProperties>(entity),
+                _ => default,
+            };
+            FixedString512Bytes meshFilePath = node.Type switch {
+                NodeType.Mesh => SystemAPI.ManagedAPI.GetComponent<MeshReference>(entity).FilePath,
                 _ => default,
             };
             DynamicBuffer<RollSpeedKeyframe>? rollSpeedKeyframeBuffer = node.Type switch {
@@ -431,6 +445,7 @@ namespace KexEdit.UI.Serialization {
             if (!selectedProperties.Equals(default(SelectedProperties))) fieldFlags |= NodeFieldFlags.HasSelectedProperties;
             if (!curveData.Equals(default(CurveData))) fieldFlags |= NodeFieldFlags.HasCurveData;
             if (!duration.Equals(default(Duration))) fieldFlags |= NodeFieldFlags.HasDuration;
+            if (!meshFilePath.IsEmpty) fieldFlags |= NodeFieldFlags.HasMeshFilePath;
 
             return new SerializedNode {
                 Node = node,
@@ -442,6 +457,7 @@ namespace KexEdit.UI.Serialization {
                 Selected = node.Selected,
                 PropertyOverrides = overrides,
                 SelectedProperties = selectedProperties,
+                MeshFilePath = meshFilePath,
                 InputPorts = inputPorts,
                 OutputPorts = outputPorts,
                 RollSpeedKeyframes = rollSpeedKeyframes,
@@ -519,6 +535,13 @@ namespace KexEdit.UI.Serialization {
                         break;
                     case PortType.LeadOut:
                         ecb.AddComponent<LeadOutPort>(portEntity, port.Value.Roll);
+                        break;
+                    case PortType.Rotation:
+                        float3 rotationValue = new(port.Value.Roll, port.Value.Velocity, port.Value.Energy);
+                        ecb.AddComponent<RotationPort>(portEntity, rotationValue);
+                        break;
+                    case PortType.Scale:
+                        ecb.AddComponent<ScalePort>(portEntity, port.Value.Roll);
                         break;
                     default:
                         throw new NotImplementedException();
@@ -616,6 +639,13 @@ namespace KexEdit.UI.Serialization {
             }
             else if (type == NodeType.ReversePath) {
                 ecb.AddComponent<ReversePathTag>(entity);
+            }
+            else if (type == NodeType.Mesh) {
+                ecb.AddComponent(entity, new MeshReference {
+                    FilePath = node.MeshFilePath,
+                    Value = null,
+                    Loaded = false
+                });
             }
 
             ecb.AddBuffer<OutputPortReference>(entity);

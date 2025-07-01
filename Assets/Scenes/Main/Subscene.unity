@@ -128,37 +128,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 77484092}
-  - component: {fileID: 77484091}
+  - component: {fileID: 77484093}
   m_Layer: 0
-  m_Name: GlobalMeshData
+  m_Name: GlobalTrackMeshData
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &77484091
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 77484090}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b099df6c9248b04cb1333313e81eed7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  TrackMeshCompute: {fileID: 7200000, guid: 51468370bad53ac4da26080c3891382e, type: 3}
-  DuplicationMeshes:
-  - Mesh: {fileID: 1009116574429913456, guid: 52d0daa5f6c5b394ab425cd95a70809b, type: 3}
-    Material: {fileID: 2100000, guid: 079b466813203444082aa1cf502390a3, type: 2}
-    Step: 2
-  ExtrusionMeshes:
-  - Mesh: {fileID: 4300000, guid: b8bd7a29c2f9296488a182d12ea857d9, type: 2}
-    Material: {fileID: 2100000, guid: daf02bdaa52b3f84d819592a6948ff8c, type: 2}
-  DuplicationGizmos: []
-  ExtrusionGizmos: []
-  SelectedColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &77484092
 Transform:
   m_ObjectHideFlags: 0
@@ -174,6 +151,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &77484093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 77484090}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b32f64107cea742468bd9d62020baa15, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TrackMeshCompute: {fileID: 7200000, guid: 51468370bad53ac4da26080c3891382e, type: 3}
+  DuplicationMeshes:
+  - Mesh: {fileID: 1009116574429913456, guid: 52d0daa5f6c5b394ab425cd95a70809b, type: 3}
+    Material: {fileID: 2100000, guid: 079b466813203444082aa1cf502390a3, type: 2}
+    Step: 2
+  ExtrusionMeshes:
+  - Mesh: {fileID: 4300000, guid: b8bd7a29c2f9296488a182d12ea857d9, type: 2}
+    Material: {fileID: 2100000, guid: daf02bdaa52b3f84d819592a6948ff8c, type: 2}
+  DuplicationGizmos: []
+  ExtrusionGizmos: []
+  SelectedColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &357499613
 PrefabInstance:
   m_ObjectHideFlags: 0

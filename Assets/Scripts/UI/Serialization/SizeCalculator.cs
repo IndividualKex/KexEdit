@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Unity.Collections;
 
 namespace KexEdit.UI.Serialization {
     public static class SizeCalculator {
@@ -30,6 +31,7 @@ namespace KexEdit.UI.Serialization {
             if ((node.FieldFlags & NodeFieldFlags.HasSelectedProperties) != 0) size += Marshal.SizeOf<SelectedProperties>();
             if ((node.FieldFlags & NodeFieldFlags.HasCurveData) != 0) size += Marshal.SizeOf<CurveData>();
             if ((node.FieldFlags & NodeFieldFlags.HasDuration) != 0) size += Marshal.SizeOf<Duration>();
+            if ((node.FieldFlags & NodeFieldFlags.HasMeshFilePath) != 0) size += Marshal.SizeOf<FixedString512Bytes>();
 
             // Arrays
             size += sizeof(int) + node.InputPorts.Length * Marshal.SizeOf<SerializedPort>();

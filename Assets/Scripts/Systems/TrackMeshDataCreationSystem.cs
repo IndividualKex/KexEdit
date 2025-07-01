@@ -3,13 +3,13 @@ using Unity.Collections;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    public partial class MeshDataCreationSystem : SystemBase {
+    public partial class TrackMeshDataCreationSystem : SystemBase {
         private EntityQuery _query;
 
         protected override void OnCreate() {
             _query = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Render>()
-                .WithNone<HasMeshDataTag>()
+                .WithNone<HasTrackMeshDataTag>()
                 .Build(EntityManager);
 
             RequireForUpdate(_query);
@@ -24,12 +24,12 @@ namespace KexEdit {
                 if (!render[i]) continue;
 
                 var entity = entities[i];
-                var meshDataEntity = ecb.CreateEntity();
-                ecb.AddComponent(meshDataEntity, new MeshData {
+                var trackMeshDataEntity = ecb.CreateEntity();
+                ecb.AddComponent(trackMeshDataEntity, new TrackMeshData {
                     Entity = entity
                 });
-                ecb.AddComponent<HasMeshDataTag>(entity);
-                ecb.SetName(meshDataEntity, "MeshData");
+                ecb.AddComponent<HasTrackMeshDataTag>(entity);
+                ecb.SetName(trackMeshDataEntity, "TrackMeshData");
             }
             entities.Dispose();
             render.Dispose();

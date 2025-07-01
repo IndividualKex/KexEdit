@@ -278,6 +278,18 @@ namespace KexEdit.UI.NodeGraph {
                         Undo.Record();
                         AddNode(evt.ContentPosition, NodeType.ReversePath);
                     });
+                    submenu.AddSeparator();
+                    submenu.AddItem("Mesh", () => {
+                        ImportManager.ShowGltfImportDialog(_view, filePath => {
+                            Undo.Record();
+                            var node = AddNode(evt.ContentPosition, NodeType.Mesh);
+                            EntityManager.AddComponentData<MeshReference>(node, new MeshReference {
+                                FilePath = filePath,
+                                Value = null,
+                                Loaded = false
+                            });
+                        });
+                    });
                 });
                 menu.AddSeparator();
                 var canPaste = EditOperationsSystem.CanPaste;
@@ -306,11 +318,20 @@ namespace KexEdit.UI.NodeGraph {
 
         private void OnNodeRightClick(NodeRightClickEvent evt) {
             _data.HasSelectedNodes = true;
+            var nodeData = _data.Nodes[evt.Node];
 
             (evt.target as VisualElement).ShowContextMenu(evt.MousePosition, menu => {
                 bool canCut = EditOperationsSystem.CanCut;
                 bool canCopy = EditOperationsSystem.CanCopy;
                 bool canPaste = EditOperationsSystem.CanPaste;
+
+                if (nodeData.Type == NodeType.Mesh) {
+                    menu.AddItem("Link", () => {
+                        Undo.Record();
+                        LinkMesh(nodeData);
+                    });
+                    menu.AddSeparator();
+                }
 
                 menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", EditOperationsSystem.HandleCut, "Ctrl+X", enabled: canCut);
                 menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", EditOperationsSystem.HandleCopy, "Ctrl+C", enabled: canCopy);
@@ -646,6 +667,16 @@ namespace KexEdit.UI.NodeGraph {
             }
         }
 
+        private void LinkMesh(NodeData nodeData) {
+            var meshReference = SystemAPI.ManagedAPI.GetComponent<MeshReference>(nodeData.Entity);
+            ImportManager.ShowGltfImportDialog(_view, filePath => {
+                Undo.Record();
+                meshReference.FilePath = filePath;
+                meshReference.Value = null;
+                meshReference.Loaded = false;
+            });
+        }
+
         private void UpdateInputPortValue(PortData port) {
             switch (port.Port.Type) {
                 case PortType.Anchor:
@@ -712,6 +743,14 @@ namespace KexEdit.UI.NodeGraph {
                 case PortType.LeadOut:
                     float leadOutValue = SystemAPI.GetComponent<LeadOutPort>(port.Entity);
                     port.SetValue(leadOutValue);
+                    break;
+                case PortType.Rotation:
+                    float3 rotationValue = SystemAPI.GetComponent<RotationPort>(port.Entity);
+                    port.SetValue(rotationValue);
+                    break;
+                case PortType.Scale:
+                    float scaleValue = SystemAPI.GetComponent<ScalePort>(port.Entity);
+                    port.SetValue(scaleValue);
                     break;
                 default:
                     throw new NotImplementedException();
@@ -799,6 +838,16 @@ namespace KexEdit.UI.NodeGraph {
                     port.GetValue(out float leadOutValue);
                     ref var leadOut = ref SystemAPI.GetComponentRW<LeadOutPort>(port.Entity).ValueRW;
                     leadOut.Value = leadOutValue;
+                    break;
+                case PortType.Rotation:
+                    port.GetValue(out float3 rotationValue);
+                    ref var rotation = ref SystemAPI.GetComponentRW<RotationPort>(port.Entity).ValueRW;
+                    rotation.Value = rotationValue;
+                    break;
+                case PortType.Scale:
+                    port.GetValue(out float scaleValue);
+                    ref var scale = ref SystemAPI.GetComponentRW<ScalePort>(port.Entity).ValueRW;
+                    scale.Value = scaleValue;
                     break;
                 default:
                     throw new NotImplementedException();
@@ -956,6 +1005,29 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.AddComponent<LeadOutPort>(leadOutPort, defaultCurveData.LeadOut);
                 ecb.AppendToBuffer<InputPortReference>(entity, leadOutPort);
                 ecb.SetName(leadOutPort, PortType.LeadOut.GetDisplayName(true));
+            }
+
+            if (type == NodeType.Mesh) {
+                var positionPort = ecb.CreateEntity();
+                ecb.AddComponent<Port>(positionPort, Port.Create(PortType.Position, true));
+                ecb.AddComponent<Dirty>(positionPort, true);
+                ecb.AddComponent<PositionPort>(positionPort, float3.zero);
+                ecb.AppendToBuffer<InputPortReference>(entity, positionPort);
+                ecb.SetName(positionPort, PortType.Position.GetDisplayName(true));
+
+                var rotationPort = ecb.CreateEntity();
+                ecb.AddComponent<Port>(rotationPort, Port.Create(PortType.Rotation, true));
+                ecb.AddComponent<Dirty>(rotationPort, true);
+                ecb.AddComponent<RotationPort>(rotationPort, float3.zero);
+                ecb.AppendToBuffer<InputPortReference>(entity, rotationPort);
+                ecb.SetName(rotationPort, PortType.Rotation.GetDisplayName(true));
+
+                var scalePort = ecb.CreateEntity();
+                ecb.AddComponent<Port>(scalePort, Port.Create(PortType.Scale, true));
+                ecb.AddComponent<Dirty>(scalePort, true);
+                ecb.AddComponent<ScalePort>(scalePort, 1f);
+                ecb.AppendToBuffer<InputPortReference>(entity, scalePort);
+                ecb.SetName(scalePort, PortType.Scale.GetDisplayName(true));
             }
 
             PointData anchor = PointData.Create();

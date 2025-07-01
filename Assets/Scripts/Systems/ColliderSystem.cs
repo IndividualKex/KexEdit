@@ -7,6 +7,7 @@ using Unity.Mathematics;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
+    [BurstCompile]
     public partial struct ColliderSystem : ISystem {
         private EntityQuery _query;
 

@@ -3,7 +3,7 @@ using Unity.Entities;
 using System.Collections.Generic;
 
 namespace KexEdit {
-    public class GlobalMeshData : IComponentData {
+    public class GlobalTrackMeshData : IComponentData {
         public ComputeShader Compute;
         public List<DuplicationMeshSettings> DuplicationMeshes = new();
         public List<ExtrusionMeshSettings> ExtrusionMeshes = new();

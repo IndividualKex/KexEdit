@@ -1,7 +1,7 @@
-using System;
-using System.IO;
-using UnityEngine;
 using SFB;
+using System.IO;
+using System;
+using UnityEngine;
 
 namespace KexEdit.UI {
     public static class FileManager {
@@ -77,6 +77,16 @@ namespace KexEdit.UI {
                 DefaultDirectory,
                 extensionList,
                 false);
+
+            return paths.Length > 0 ? paths[0] : null;
+        }
+
+        public static string ShowOpenFileDialog(ExtensionFilter[] extensions) {
+            var paths = StandaloneFileBrowser.OpenFilePanel(
+                    "Open File",
+                    DefaultDirectory,
+                    extensions,
+                    false);
 
             return paths.Length > 0 ? paths[0] : null;
         }
