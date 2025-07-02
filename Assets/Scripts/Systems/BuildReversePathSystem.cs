@@ -12,6 +12,7 @@ namespace KexEdit {
             _pathPortLookup = SystemAPI.GetBufferLookup<PathPort>(true);
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             _pathPortLookup.Update(ref state);
 

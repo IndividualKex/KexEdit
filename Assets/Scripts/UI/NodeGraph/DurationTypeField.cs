@@ -109,7 +109,7 @@ namespace KexEdit.UI.NodeGraph {
                     marginRight = 0f,
                     marginTop = 0f,
                     marginBottom = 0f,
-                    backgroundImage = Resources.Load<Texture2D>("Dropdown"),
+                    backgroundImage = UIService.Instance.DropdownTexture,
                     unityBackgroundImageTintColor = s_TextColor
                 }
             };

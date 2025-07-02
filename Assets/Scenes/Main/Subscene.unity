@@ -160,20 +160,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 77484090}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b32f64107cea742468bd9d62020baa15, type: 3}
+  m_Script: {fileID: 11500000, guid: f096b346dede36d4083b1b0ef2d8ea90, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   TrackMeshCompute: {fileID: 7200000, guid: 51468370bad53ac4da26080c3891382e, type: 3}
-  DuplicationMeshes:
-  - Mesh: {fileID: 1009116574429913456, guid: 52d0daa5f6c5b394ab425cd95a70809b, type: 3}
-    Material: {fileID: 2100000, guid: 079b466813203444082aa1cf502390a3, type: 2}
-    Step: 2
-  ExtrusionMeshes:
-  - Mesh: {fileID: 4300000, guid: b8bd7a29c2f9296488a182d12ea857d9, type: 2}
-    Material: {fileID: 2100000, guid: daf02bdaa52b3f84d819592a6948ff8c, type: 2}
-  DuplicationGizmos: []
-  ExtrusionGizmos: []
+  DuplicationMaterial: {fileID: 2100000, guid: 079b466813203444082aa1cf502390a3, type: 2}
+  ExtrusionMaterial: {fileID: 2100000, guid: daf02bdaa52b3f84d819592a6948ff8c, type: 2}
+  DuplicationGizmoMaterial: {fileID: 2100000, guid: 346a860e4fa68b946a6dbc90856daffb, type: 2}
+  ExtrusionGizmoMaterial: {fileID: 2100000, guid: 4afeaff119787f1449b9c0e7ade2a344, type: 2}
   SelectedColor: {r: 1, g: 1, b: 1, a: 1}
+  ConfigPath: Config.json
 --- !u!1001 &357499613
 PrefabInstance:
   m_ObjectHideFlags: 0

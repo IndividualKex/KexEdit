@@ -1245,6 +1245,16 @@ namespace KexEdit.UI.Timeline {
 
             if (targetTime.HasValue) {
                 SetTime(targetTime.Value, false);
+
+                if (Preferences.SyncPlayback && _data.Active) {
+                    foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
+                        if (cart.ValueRO.Active && !cart.ValueRO.Kinematic) {
+                            cart.ValueRW.Section = _data.Entity;
+                            cart.ValueRW.Position = TimeToCartPosition(_data.Time);
+                            break;
+                        }
+                    }
+                }
             }
         }
 

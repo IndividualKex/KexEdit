@@ -10,7 +10,5 @@ namespace KexEdit {
         public const float FRONT_WHEEL_OFFSET = 0.75f;
         public const float REAR_WHEEL_OFFSET = -0.75f;
         public const float MIN_VELOCITY = 1e-3f;
-        public const float TRACK_POINT_HZ = 0.4f; // Distance between track points in meters
-        public const int TIE_SPACING = 2; // Track point interval between ties
     }
 }

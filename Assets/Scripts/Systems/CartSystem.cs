@@ -15,8 +15,11 @@ namespace KexEdit {
         public void OnCreate(ref SystemState state) {
             _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
             _nodeLookup = SystemAPI.GetComponentLookup<Node>(true);
+
+            state.RequireForUpdate<PauseSingleton>();
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             _pointLookup.Update(ref state);
             _nodeLookup.Update(ref state);
@@ -26,12 +29,14 @@ namespace KexEdit {
                 rootEntity = SystemAPI.GetSingleton<NodeGraphRoot>().Value;
             }
 
+            bool paused = SystemAPI.GetSingleton<PauseSingleton>().IsPaused;
+
             state.Dependency = new Job {
                 PointLookup = _pointLookup,
                 NodeLookup = _nodeLookup,
                 RootEntity = rootEntity,
                 DeltaTime = SystemAPI.Time.DeltaTime,
-                Paused = KexTime.IsPaused,
+                Paused = paused,
             }.ScheduleParallel(state.Dependency);
         }
 

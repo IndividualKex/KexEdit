@@ -280,7 +280,7 @@ namespace KexEdit.UI.NodeGraph {
                     });
                     submenu.AddSeparator();
                     submenu.AddItem("Mesh", () => {
-                        ImportManager.ShowGltfImportDialog(_view, filePath => {
+                        ImportManager.ShowImportDialog(_view, filePath => {
                             Undo.Record();
                             var node = AddNode(evt.ContentPosition, NodeType.Mesh);
                             EntityManager.AddComponentData<MeshReference>(node, new MeshReference {
@@ -669,7 +669,7 @@ namespace KexEdit.UI.NodeGraph {
 
         private void LinkMesh(NodeData nodeData) {
             var meshReference = SystemAPI.ManagedAPI.GetComponent<MeshReference>(nodeData.Entity);
-            ImportManager.ShowGltfImportDialog(_view, filePath => {
+            ImportManager.ShowImportDialog(_view, filePath => {
                 Undo.Record();
                 meshReference.FilePath = filePath;
                 meshReference.Value = null;

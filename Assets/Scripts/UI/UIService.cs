@@ -5,6 +5,10 @@ namespace KexEdit.UI {
     public class UIService : MonoBehaviour {
         public UIDocument UIDocument;
         public Texture2D CurveButtonTexture;
+        public Texture2D TextCursorTexture;
+        public Texture2D SlideHorizontalCursorTexture;
+        public Texture2D SlideVerticalCursorTexture;
+        public Texture2D DropdownTexture;
         public Shader LineGizmoShader;
 
         public static UIService Instance { get; private set; }
@@ -15,23 +19,20 @@ namespace KexEdit.UI {
         private void Awake() {
             Instance = this;
 
-            var textCursor = Resources.Load<Texture2D>("TextCursor");
             var textCursorCursor = new UnityEngine.UIElements.Cursor {
-                texture = textCursor,
+                texture = TextCursorTexture,
                 hotspot = new Vector2(16, 16)
             };
             TextCursor = textCursorCursor;
 
-            var slideHorizontalArrow = Resources.Load<Texture2D>("SlideHorizontal");
             var slideHorizontalCursor = new UnityEngine.UIElements.Cursor {
-                texture = slideHorizontalArrow,
+                texture = SlideHorizontalCursorTexture,
                 hotspot = new Vector2(16, 16)
             };
             SlideHorizontalCursor = slideHorizontalCursor;
 
-            var slideVerticalArrow = Resources.Load<Texture2D>("SlideVertical");
             var slideVerticalCursor = new UnityEngine.UIElements.Cursor {
-                texture = slideVerticalArrow,
+                texture = SlideVerticalCursorTexture,
                 hotspot = new Vector2(16, 16)
             };
             SlideVerticalCursor = slideVerticalCursor;

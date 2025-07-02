@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Entities;
 
 namespace KexEdit {
@@ -13,7 +14,16 @@ namespace KexEdit {
             Instance = this;
         }
 
-        protected override void OnUpdate() { }
+        protected override void OnUpdate() {
+            if (!SystemAPI.HasSingleton<PauseSingleton>()) {
+                using var ecb = new EntityCommandBuffer(Allocator.Temp);
+                Entity entity = ecb.CreateEntity();
+                ecb.AddComponent<PauseSingleton>(entity);
+                ecb.Playback(EntityManager);
+            }
+
+            SystemAPI.GetSingletonRW<PauseSingleton>().ValueRW.IsPaused = _lock > 0;
+        }
 
         public void Lock() {
             _lock++;
