@@ -1,8 +1,8 @@
 using Unity.Mathematics;
-using static KexEdit.Constants;
 using Unity.Entities;
 using Unity.Collections;
 using Unity.Burst;
+using static KexEdit.Constants;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
@@ -22,15 +22,20 @@ namespace KexEdit {
                 .Build(state.EntityManager);
 
             state.RequireForUpdate(_query);
+            state.RequireForUpdate<TrackMeshSettings>();
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             _pointLookup.Update(ref state);
             _trackPointLookup.Update(ref state);
 
+            var trackMeshConfig = SystemAPI.GetSingleton<TrackMeshSettings>();
+
             state.Dependency = new Job {
                 PointLookup = _pointLookup,
                 TrackPointLookup = _trackPointLookup,
+                Spacing = trackMeshConfig.Spacing,
                 Step = 2,
             }.ScheduleParallel(_query, state.Dependency);
         }
@@ -42,6 +47,9 @@ namespace KexEdit {
 
             [NativeDisableParallelForRestriction]
             public BufferLookup<TrackPoint> TrackPointLookup;
+
+            [ReadOnly]
+            public float Spacing;
 
             [ReadOnly]
             public int Step;
@@ -58,7 +66,7 @@ namespace KexEdit {
                 PointData last = points[^1];
 
                 float sectionLength = last.TotalLength - first.TotalLength;
-                int numPoints = math.max(1, (int)math.round(sectionLength / TRACK_POINT_HZ / Step) * Step);
+                int numPoints = math.max(1, (int)math.round(sectionLength / Spacing / Step) * Step);
                 float adjustedSpacing = sectionLength / numPoints;
 
                 float startLength = first.TotalLength;

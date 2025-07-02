@@ -11,12 +11,14 @@ namespace KexEdit {
         protected override void OnCreate() {
             _bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
 
-            RequireForUpdate<GlobalTrackMeshData>();
+            RequireForUpdate<TrackMeshConfig>();
+            RequireForUpdate<TrackMeshConfigManaged>();
             RequireForUpdate<TrackMeshData>();
         }
 
         protected override void OnUpdate() {
-            var globalData = SystemAPI.ManagedAPI.GetSingleton<GlobalTrackMeshData>();
+            var config = SystemAPI.ManagedAPI.GetSingleton<TrackMeshConfig>();
+            var configManaged = SystemAPI.ManagedAPI.GetSingleton<TrackMeshConfigManaged>();
 
             foreach (var data in SystemAPI.Query<TrackMeshData>()) {
                 if (!SystemAPI.HasBuffer<TrackPoint>(data.Entity)) continue;
@@ -26,14 +28,14 @@ namespace KexEdit {
 
                 data.CurrentBuffers ??= new MeshBuffers(
                     1,
-                    globalData.DuplicationMeshes,
-                    globalData.ExtrusionMeshes,
-                    globalData.DuplicationGizmos,
-                    globalData.ExtrusionGizmos
+                    configManaged.DuplicationMeshes,
+                    configManaged.ExtrusionMeshes,
+                    configManaged.DuplicationGizmos,
+                    configManaged.ExtrusionGizmos
                 );
 
                 if (data.ComputeFence == null) {
-                    Build(globalData, data);
+                    Build(config, configManaged, data);
                 }
 
                 if (data.ComputeFence != null && data.ComputeFence.Value.done) {
@@ -97,7 +99,7 @@ namespace KexEdit {
             }
         }
 
-        private void Build(GlobalTrackMeshData globalData, TrackMeshData data) {
+        private void Build(TrackMeshConfig config, TrackMeshConfigManaged configManaged, TrackMeshData data) {
             var points = SystemAPI.GetBuffer<TrackPoint>(data.Entity);
 
             float selected = 0f;
@@ -111,16 +113,16 @@ namespace KexEdit {
                 data.NextBuffers?.Dispose();
                 data.NextBuffers = new MeshBuffers(
                     points.Length,
-                    globalData.DuplicationMeshes,
-                    globalData.ExtrusionMeshes,
-                    globalData.DuplicationGizmos,
-                    globalData.ExtrusionGizmos
+                    configManaged.DuplicationMeshes,
+                    configManaged.ExtrusionMeshes,
+                    configManaged.DuplicationGizmos,
+                    configManaged.ExtrusionGizmos
                 );
             }
 
             data.NextBuffers.PointsBuffer.SetData(points.AsNativeArray(), 0, 0, points.Length);
 
-            var compute = globalData.Compute;
+            var compute = config.Compute;
 
             // Visualization
             int visualizationKernel = compute.FindKernel("VisualizationKernel");

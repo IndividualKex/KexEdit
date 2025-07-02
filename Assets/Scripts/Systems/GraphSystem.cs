@@ -21,6 +21,7 @@ namespace KexEdit {
             state.RequireForUpdate(_nodeQuery);
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             PropagateAnchors(ref state);
             PropagateInputPorts(ref state);

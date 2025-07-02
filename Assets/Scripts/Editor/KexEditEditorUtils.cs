@@ -1,42 +1,43 @@
 using Unity.Collections;
-using Unity.Mathematics;
 using UnityEditor;
 using UnityEngine;
 
 namespace KexEdit.Editor {
     public class KexEditEditorUtils {
-        [MenuItem("KexEdit/Generate Rail Cross Section")]
-        public static void GenerateRailCrossSection() {
-            var leftRailVertices = new NativeArray<float3>(12, Allocator.Temp) {
-                [0] = new float3(-.656f, 0f, 0f),
-                [1] = new float3(-.656f, .266f, 0f),
-                [2] = new float3(-.6005f, .266f, 0f),
-                [3] = new float3(-.6005f, .342f, 0f),
-                [4] = new float3(-.59825f, .342f, 0f),
-                [5] = new float3(-.59825f, .353f, 0f),
-                [6] = new float3(-.48825f, .353f, 0f),
-                [7] = new float3(-.48825f, .342f, 0f),
-                [8] = new float3(-.4005f, .342f, 0f),
-                [9] = new float3(-.4005f, .266f, 0f),
-                [10] = new float3(-.456f, .266f, 0f),
-                [11] = new float3(-.456f, 0f, 0f),
+        [MenuItem("KexEdit/Generate Default Rail")]
+        public static void GenerateDefaultRail() {
+            var leftRailVertices = new NativeArray<Vector3>(12, Allocator.Temp) {
+                [0] = new Vector3(-.656f, 0f, 0f),
+                [1] = new Vector3(-.656f, .266f, 0f),
+                [2] = new Vector3(-.6005f, .266f, 0f),
+                [3] = new Vector3(-.6005f, .342f, 0f),
+                [4] = new Vector3(-.59825f, .342f, 0f),
+                [5] = new Vector3(-.59825f, .353f, 0f),
+                [6] = new Vector3(-.48825f, .353f, 0f),
+                [7] = new Vector3(-.48825f, .342f, 0f),
+                [8] = new Vector3(-.4005f, .342f, 0f),
+                [9] = new Vector3(-.4005f, .266f, 0f),
+                [10] = new Vector3(-.456f, .266f, 0f),
+                [11] = new Vector3(-.456f, 0f, 0f),
             };
-            var leftRailUVs = new NativeArray<float2>(12, Allocator.Temp);
+            var leftRailUVs = new NativeArray<Vector2>(12, Allocator.Temp);
             for (int i = 0; i < 12; i++) {
                 if (i >= 4 && i < 7) {
-                    leftRailUVs[i] = new float2(0.25f, 0.5f);
+                    leftRailUVs[i] = new Vector2(0.25f, 0.5f);
                 }
                 else {
-                    leftRailUVs[i] = new float2(0.75f, 0.5f);
+                    leftRailUVs[i] = new Vector2(0.75f, 0.5f);
                 }
             }
 
-            var rightRailVertices = new NativeArray<float3>(12, Allocator.Temp);
-            var rightRailUVs = new NativeArray<float2>(12, Allocator.Temp);
+            /* var rightRailVertices = new NativeArray<Vector3>(12, Allocator.Temp);
+            var rightRailUVs = new NativeArray<Vector2>(12, Allocator.Temp);
             for (int i = 0; i < leftRailVertices.Length; i++) {
-                rightRailVertices[leftRailVertices.Length - i - 1] = leftRailVertices[i] * new float3(-1f, 1f, 1f);
+                rightRailVertices[leftRailVertices.Length - i - 1] = new Vector3(
+                    -leftRailVertices[i].x, leftRailVertices[i].y, leftRailVertices[i].z
+                );
                 rightRailUVs[leftRailVertices.Length - i - 1] = leftRailUVs[i];
-            }
+            } */
 
             var edges = new NativeList<Edge>(Allocator.Temp);
             for (int i = 0; i < leftRailVertices.Length; i++) {
@@ -46,32 +47,32 @@ namespace KexEdit.Editor {
                     UV = leftRailUVs[i]
                 });
             }
-            for (int i = 0; i < rightRailVertices.Length; i++) {
+            /* for (int i = 0; i < rightRailVertices.Length; i++) {
                 edges.Add(new Edge {
                     A = rightRailVertices[i],
                     B = rightRailVertices[(i + 1) % rightRailVertices.Length],
                     UV = rightRailUVs[i]
                 });
-            }
+            } */
             leftRailVertices.Dispose();
-            rightRailVertices.Dispose();
+            // rightRailVertices.Dispose();
 
             int edgeCount = edges.Length;
             int vertexCount = edgeCount * 4;
             int indexCount = edgeCount * 6;
 
-            NativeArray<float3> vertices = new(vertexCount, Allocator.Temp);
-            NativeArray<float2> uvs = new(vertexCount, Allocator.Temp);
-            NativeArray<float3> normals = new(vertexCount, Allocator.Temp);
+            NativeArray<Vector3> vertices = new(vertexCount, Allocator.Temp);
+            NativeArray<Vector2> uvs = new(vertexCount, Allocator.Temp);
+            NativeArray<Vector3> normals = new(vertexCount, Allocator.Temp);
             NativeArray<uint> indices = new(indexCount, Allocator.Temp);
 
             for (int i = 0; i < edgeCount; i++) {
-                float3 a = edges[i].A;
-                float3 b = edges[i].B;
-                float3 c = a + math.forward();
-                float3 d = b + math.forward();
+                Vector3 a = edges[i].A;
+                Vector3 b = edges[i].B;
+                Vector3 c = a + Vector3.forward;
+                Vector3 d = b + Vector3.forward;
 
-                float3 normal = math.normalize(math.cross(b - a, math.back()));
+                Vector3 normal = Vector3.Cross(b - a, Vector3.back).normalized;
 
                 int ai = i * 2;
                 int bi = ai + 1;
@@ -102,25 +103,25 @@ namespace KexEdit.Editor {
             }
 
             Mesh mesh = new() {
-                name = "Rail Cross Section"
+                name = "Default Rail"
             };
             mesh.SetVertices(vertices);
             mesh.SetUVs(0, uvs);
             mesh.SetNormals(normals);
             mesh.SetIndices(indices, MeshTopology.Triangles, 0);
 
-            string path = "Assets/Meshes/RailCrossSection.asset";
+            string path = "Assets/Resources/FallbackRail.asset";
             AssetDatabase.CreateAsset(mesh, path);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log($"Rail cross section generated at {path}");
+            Debug.Log($"Default rail generated at {path}");
         }
 
         struct Edge {
-            public float3 A;
-            public float3 B;
-            public float2 UV;
+            public Vector3 A;
+            public Vector3 B;
+            public Vector2 UV;
         }
     }
 }

@@ -1047,8 +1047,8 @@
     "m_ObjectId": "2a982b2a67e84f89b31eae11202b4f70",
     "m_Title": "Visualization A",
     "m_Position": {
-        "x": -2043.999755859375,
-        "y": 629.0
+        "x": -2044.0,
+        "y": 629.0001220703125
     }
 }
 
@@ -1103,10 +1103,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -1724.9998779296875,
-            "y": 325.9999694824219,
-            "width": 189.0,
-            "height": 94.0
+            "x": -1669.000244140625,
+            "y": 326.0000305175781,
+            "width": 189.0001220703125,
+            "height": 94.00006103515625
         }
     },
     "m_Slots": [
@@ -1362,10 +1362,10 @@
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.GroupData",
     "m_ObjectId": "3c8031c414d04d1baf7516dc2e65209a",
-    "m_Title": "Normal Color",
+    "m_Title": "Base Color",
     "m_Position": {
-        "x": -1749.999755859375,
-        "y": 195.9999542236328
+        "x": -1694.0,
+        "y": 196.0
     }
 }
 

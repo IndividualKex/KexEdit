@@ -12,6 +12,7 @@ namespace KexEdit {
             _anchorPortLookup = SystemAPI.GetComponentLookup<AnchorPort>(true);
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             _anchorPortLookup.Update(ref state);
 

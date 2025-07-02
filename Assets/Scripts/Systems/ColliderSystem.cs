@@ -21,6 +21,7 @@ namespace KexEdit {
             state.RequireForUpdate<ColliderPrefabReference>();
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             Entity updateEntity = Entity.Null;
             foreach (var (trackHash, colliderHash, entity) in SystemAPI.Query<TrackHash, RefRW<ColliderHash>>().WithEntityAccess()) {

@@ -22,6 +22,7 @@ namespace KexEdit {
                 .Build(state.EntityManager);
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             if (_rootQuery.IsEmpty) {
                 using var ecb = new EntityCommandBuffer(Allocator.Temp);
