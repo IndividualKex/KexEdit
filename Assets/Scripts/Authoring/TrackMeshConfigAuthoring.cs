@@ -14,10 +14,6 @@ namespace KexEdit {
             public override void Bake(TrackMeshConfigAuthoring authoring) {
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
 
-                AddComponent(entity, new TrackMeshSettings {
-                    Spacing = 0.4f
-                });
-
                 AddComponentObject(entity, new TrackMeshConfig {
                     Compute = authoring.TrackMeshCompute,
                     DuplicationMaterial = authoring.DuplicationMaterial,
