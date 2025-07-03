@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Entities;
 
 namespace KexEdit {
@@ -37,12 +38,17 @@ namespace KexEdit {
                 managedConfig.ExtrusionGizmoMaterial
             );
 
-            EntityManager.AddComponentData(configEntity, new TrackMeshConfigManaged {
+            using var ecb = new EntityCommandBuffer(Allocator.Temp);
+            ecb.AddComponent(configEntity, new TrackMeshSettings {
+                Spacing = config.Spacing
+            });
+            ecb.AddComponent(configEntity, new TrackMeshConfigManaged {
                 DuplicationMeshes = duplicationMeshes,
                 ExtrusionMeshes = extrusionMeshes,
                 DuplicationGizmos = duplicationGizmos,
                 ExtrusionGizmos = extrusionGizmos
             });
+            ecb.Playback(EntityManager);
 
             _loaded = true;
         }
