@@ -29,7 +29,8 @@ namespace KexEdit.UI.Timeline {
             foreach (PropertyType propertyType in System.Enum.GetValues(typeof(PropertyType))) {
                 _data.OrderedProperties.Add(propertyType);
                 _data.Properties.Add(propertyType, new PropertyData {
-                    Type = propertyType
+                    Type = propertyType,
+                    ViewMode = _data.ViewMode
                 });
             }
 
@@ -323,14 +324,13 @@ namespace KexEdit.UI.Timeline {
             bool hasAnyKeyframes = false;
 
             foreach (var (type, propertyData) in _data.Properties) {
-                if (propertyData.Selected && !propertyData.DrawReadOnly) {
+                if (propertyData.Visible && !propertyData.Hidden && !propertyData.DrawReadOnly) {
                     foreach (var keyframe in propertyData.Keyframes) {
                         hasAnyKeyframes = true;
                         tempMin = math.min(tempMin, keyframe.Value);
                         tempMax = math.max(tempMax, keyframe.Value);
 
-                        if (keyframe.OutInterpolation == InterpolationType.Bezier ||
-                            keyframe.OutInterpolation == InterpolationType.ContinuousBezier) {
+                        if (keyframe.OutInterpolation == InterpolationType.Bezier) {
                             float nextKeyframeDt = 0f;
                             foreach (var nextKeyframe in propertyData.Keyframes) {
                                 if (nextKeyframe.Time > keyframe.Time &&
@@ -346,8 +346,7 @@ namespace KexEdit.UI.Timeline {
                             }
                         }
 
-                        if (keyframe.InInterpolation == InterpolationType.Bezier ||
-                            keyframe.InInterpolation == InterpolationType.ContinuousBezier) {
+                        if (keyframe.InInterpolation == InterpolationType.Bezier) {
                             float prevKeyframeDt = 0f;
                             foreach (var prevKeyframe in propertyData.Keyframes) {
                                 if (prevKeyframe.Time < keyframe.Time &&
@@ -604,7 +603,7 @@ namespace KexEdit.UI.Timeline {
                 if (propertyData.SelectedKeyframeCount > 0) {
                     selectedProperties.Select(type);
                 }
-                else if (_data.ViewMode == TimelineViewMode.DopeSheet) {
+                else {
                     selectedProperties.Deselect(type);
                 }
             }
@@ -642,7 +641,7 @@ namespace KexEdit.UI.Timeline {
                             updatedKeyframe.OutInterpolation = interpolationType;
                             changed = true;
                         }
-                        if (interpolationType == InterpolationType.ContinuousBezier && changed) {
+                        if (changed && updatedKeyframe.HasAlignedHandles()) {
                             updatedKeyframe.InTangent = updatedKeyframe.OutTangent;
                         }
                     }
@@ -650,16 +649,16 @@ namespace KexEdit.UI.Timeline {
                         if (inHandle && updatedKeyframe.InInterpolation != interpolationType) {
                             updatedKeyframe.InInterpolation = interpolationType;
                             changed = true;
-                            if (interpolationType != InterpolationType.ContinuousBezier &&
-                                updatedKeyframe.OutInterpolation == InterpolationType.ContinuousBezier) {
+                            if (interpolationType != InterpolationType.Bezier &&
+                                updatedKeyframe.OutInterpolation == InterpolationType.Bezier) {
                                 updatedKeyframe.OutInterpolation = InterpolationType.Bezier;
                             }
                         }
                         else if (!inHandle && updatedKeyframe.OutInterpolation != interpolationType) {
                             updatedKeyframe.OutInterpolation = interpolationType;
                             changed = true;
-                            if (interpolationType != InterpolationType.ContinuousBezier &&
-                                updatedKeyframe.InInterpolation == InterpolationType.ContinuousBezier) {
+                            if (interpolationType != InterpolationType.Bezier &&
+                                updatedKeyframe.InInterpolation == InterpolationType.Bezier) {
                                 updatedKeyframe.InInterpolation = InterpolationType.Bezier;
                             }
                         }
@@ -684,8 +683,8 @@ namespace KexEdit.UI.Timeline {
             }
             else {
                 var (currentInType, currentOutType) = GetSelectedKeyframesInterpolation();
-                InterpolationType newInType = inHandle ? interpolationType : (currentInType ?? InterpolationType.ContinuousBezier);
-                InterpolationType newOutType = !inHandle ? interpolationType : (currentOutType ?? InterpolationType.ContinuousBezier);
+                InterpolationType newInType = inHandle ? interpolationType : (currentInType ?? InterpolationType.Bezier);
+                InterpolationType newOutType = !inHandle ? interpolationType : (currentOutType ?? InterpolationType.Bezier);
                 Keyframe.SetDefaultInterpolation(newInType, newOutType);
             }
         }
@@ -709,22 +708,12 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void ToggleCurveView() {
-            TimelineViewMode fromMode = _data.ViewMode;
-            TimelineViewMode toMode = fromMode == TimelineViewMode.DopeSheet ?
+            _data.ViewMode = _data.ViewMode == TimelineViewMode.DopeSheet ?
                 TimelineViewMode.Curve :
                 TimelineViewMode.DopeSheet;
-
-            _data.ViewMode = toMode;
-
-            if (fromMode == TimelineViewMode.Curve && toMode == TimelineViewMode.DopeSheet) {
-                foreach (var (type, propertyData) in _data.Properties) {
-                    if (propertyData.Selected) {
-                        SelectAllKeyframesForProperty(type);
-                    }
-                }
-            }
-            else if (fromMode == TimelineViewMode.DopeSheet && toMode == TimelineViewMode.Curve) {
-                DeselectAllKeyframes();
+            
+            foreach (var (type, propertyData) in _data.Properties) {
+                propertyData.ViewMode = _data.ViewMode;
             }
         }
 
@@ -827,17 +816,13 @@ namespace KexEdit.UI.Timeline {
                 }
                 else {
                     SelectProperty(evt.Type);
-                    if (_data.ViewMode == TimelineViewMode.DopeSheet) {
-                        SelectAllKeyframesForProperty(evt.Type);
-                    }
+                    SelectAllKeyframesForProperty(evt.Type);
                 }
             }
             else if (!propertyData.Selected) {
                 DeselectAll();
                 SelectProperty(evt.Type);
-                if (_data.ViewMode == TimelineViewMode.DopeSheet) {
-                    SelectAllKeyframesForProperty(evt.Type);
-                }
+                SelectAllKeyframesForProperty(evt.Type);
             }
             else {
                 _data.LatestSelectedProperty = evt.Type;
@@ -876,7 +861,7 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void OnKeyframeDoubleClick(KeyframeDoubleClickEvent evt) {
-            ShowKeyframeValueEditor(evt.Keyframe, evt.MousePosition);
+            ShowKeyframeEditDialog(evt.Keyframe);
         }
 
         private void ShowKeyframeValueEditor(KeyframeData keyframe, UnityEngine.Vector2 position) {
@@ -891,6 +876,94 @@ namespace KexEdit.UI.Timeline {
                     MarkTrackDirty();
                 },
                 unitsType
+            );
+        }
+
+        private void ShowKeyframeTimeEditor(KeyframeData keyframe, UnityEngine.Vector2 position) {
+            var unitsType = _data.DurationType == DurationType.Time ? UnitsType.Time : UnitsType.Distance;
+            _timeline.View.ShowFloatFieldEditor(
+                position,
+                keyframe.Value.Time,
+                newValue => {
+                    Undo.Record();
+                    var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
+                    newValue = _data.ClampTime(newValue);
+                    var updatedKeyframe = new Keyframe {
+                        Id = keyframe.Value.Id,
+                        Time = newValue,
+                        Value = keyframe.Value.Value,
+                        InInterpolation = keyframe.Value.InInterpolation,
+                        OutInterpolation = keyframe.Value.OutInterpolation,
+                        HandleType = keyframe.Value.HandleType,
+                        Flags = keyframe.Value.Flags,
+                        InTangent = keyframe.Value.InTangent,
+                        OutTangent = keyframe.Value.OutTangent,
+                        InWeight = keyframe.Value.InWeight,
+                        OutWeight = keyframe.Value.OutWeight,
+                        Selected = keyframe.Value.Selected
+                    };
+                    adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                    MarkTrackDirty();
+                },
+                unitsType
+            );
+        }
+
+        private void ShowKeyframeInWeightEditor(KeyframeData keyframe, UnityEngine.Vector2 position) {
+            _timeline.View.ShowFloatFieldEditor(
+                position,
+                keyframe.Value.InWeight,
+                newValue => {
+                    Undo.Record();
+                    var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
+                    newValue = math.clamp(newValue, 0.01f, 2f);
+                    adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithInEasing(keyframe.Value.InTangent, newValue));
+                    MarkTrackDirty();
+                },
+                UnitsType.None
+            );
+        }
+
+        private void ShowKeyframeOutWeightEditor(KeyframeData keyframe, UnityEngine.Vector2 position) {
+            _timeline.View.ShowFloatFieldEditor(
+                position,
+                keyframe.Value.OutWeight,
+                newValue => {
+                    Undo.Record();
+                    var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
+                    newValue = math.clamp(newValue, 0.01f, 2f);
+                    adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithOutEasing(keyframe.Value.OutTangent, newValue));
+                    MarkTrackDirty();
+                },
+                UnitsType.None
+            );
+        }
+
+        private void ShowKeyframeInTangentEditor(KeyframeData keyframe, UnityEngine.Vector2 position) {
+            _timeline.View.ShowFloatFieldEditor(
+                position,
+                keyframe.Value.InTangent,
+                newValue => {
+                    Undo.Record();
+                    var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
+                    adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithInEasing(newValue, keyframe.Value.InWeight));
+                    MarkTrackDirty();
+                },
+                UnitsType.None
+            );
+        }
+
+        private void ShowKeyframeOutTangentEditor(KeyframeData keyframe, UnityEngine.Vector2 position) {
+            _timeline.View.ShowFloatFieldEditor(
+                position,
+                keyframe.Value.OutTangent,
+                newValue => {
+                    Undo.Record();
+                    var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
+                    adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithOutEasing(newValue, keyframe.Value.OutWeight));
+                    MarkTrackDirty();
+                },
+                UnitsType.None
             );
         }
 
@@ -915,7 +988,7 @@ namespace KexEdit.UI.Timeline {
                 if (hasSelection && !hasMultiSelection) {
                     menu.AddItem("Edit", () => {
                         var selectedKeyframe = GetSelectedKeyframe();
-                        ShowKeyframeValueEditor(selectedKeyframe, evt.MousePosition);
+                        ShowKeyframeEditDialog(selectedKeyframe);
                     });
                     menu.AddSeparator();
                     menu.AddSubmenu("Optimize", submenu => {
@@ -981,54 +1054,152 @@ namespace KexEdit.UI.Timeline {
 
                 if (hasSelection) {
                     AddInterpolationMenu(menu);
+                    AddLockMenu(menu);
                 }
             });
         }
 
         private void AddInterpolationMenu(ContextMenu menu) {
             var (currentInType, currentOutType) = GetSelectedKeyframesInterpolation();
+            bool isBezier = currentInType == InterpolationType.Bezier || currentOutType == InterpolationType.Bezier;
 
             menu.AddSeparator();
 
-            menu.AddItem("Constant", () => {
-                Undo.Record();
-                SetKeyframeInterpolation(InterpolationType.Constant, false, true);
-            }, isChecked: currentInType == InterpolationType.Constant && currentOutType == InterpolationType.Constant);
+            if (isBezier) {
+                var currentHandleType = GetSelectedKeyframesHandleType();
+                bool isAligned = currentHandleType == HandleType.Aligned;
 
-            menu.AddItem("Linear", () => {
-                Undo.Record();
-                SetKeyframeInterpolation(InterpolationType.Linear, false, true);
-            }, isChecked: currentInType == InterpolationType.Linear && currentOutType == InterpolationType.Linear);
+                menu.AddSubmenu("Handle Type", handleSubmenu => {
+                    handleSubmenu.AddItem("Free", () => {
+                        Undo.Record();
+                        SetKeyframeHandleType(HandleType.Free);
+                    }, isChecked: !isAligned);
 
-            menu.AddItem("Bezier", () => {
-                Undo.Record();
-                SetKeyframeInterpolation(InterpolationType.Bezier, false, true);
-            }, isChecked: currentInType == InterpolationType.Bezier && currentOutType == InterpolationType.Bezier);
+                    handleSubmenu.AddItem("Aligned", () => {
+                        Undo.Record();
+                        SetKeyframeHandleType(HandleType.Aligned);
+                    }, isChecked: isAligned);
+                });
+            }
 
-            menu.AddItem("Continuous Bezier", () => {
-                Undo.Record();
-                SetKeyframeInterpolation(InterpolationType.ContinuousBezier, false, true);
-            }, isChecked: currentInType == InterpolationType.ContinuousBezier && currentOutType == InterpolationType.ContinuousBezier);
+            menu.AddSubmenu("Interpolation Mode", interpolationSubmenu => {
+                interpolationSubmenu.AddItem("Constant", () => {
+                    Undo.Record();
+                    SetKeyframeInterpolation(InterpolationType.Constant, false, true);
+                }, isChecked: currentInType == InterpolationType.Constant && currentOutType == InterpolationType.Constant);
+
+                interpolationSubmenu.AddItem("Linear", () => {
+                    Undo.Record();
+                    SetKeyframeInterpolation(InterpolationType.Linear, false, true);
+                }, isChecked: currentInType == InterpolationType.Linear && currentOutType == InterpolationType.Linear);
+
+                interpolationSubmenu.AddItem("Bezier", () => {
+                    Undo.Record();
+                    SetKeyframeInterpolation(InterpolationType.Bezier, false, true);
+                }, isChecked: isBezier);
+            });
+
+            if (isBezier) {
+                var currentEasing = GetCurrentEasingType();
+
+                menu.AddSubmenu("Easing Mode", easingSubmenu => {
+                    easingSubmenu.AddItem("Sine", () => ApplyEasingToSelectedKeyframes(EasingType.Sine),
+                        isChecked: currentEasing == EasingType.Sine);
+                    easingSubmenu.AddItem("Quadratic", () => ApplyEasingToSelectedKeyframes(EasingType.Quadratic),
+                        isChecked: currentEasing == EasingType.Quadratic);
+                    easingSubmenu.AddItem("Cubic", () => ApplyEasingToSelectedKeyframes(EasingType.Cubic),
+                        isChecked: currentEasing == EasingType.Cubic);
+                    easingSubmenu.AddItem("Quartic", () => ApplyEasingToSelectedKeyframes(EasingType.Quartic),
+                        isChecked: currentEasing == EasingType.Quartic);
+                    easingSubmenu.AddItem("Quintic", () => ApplyEasingToSelectedKeyframes(EasingType.Quintic),
+                        isChecked: currentEasing == EasingType.Quintic);
+                    easingSubmenu.AddItem("Exponential", () => ApplyEasingToSelectedKeyframes(EasingType.Exponential),
+                        isChecked: currentEasing == EasingType.Exponential);
+                });
+            }
+        }
+
+        private void AddLockMenu(ContextMenu menu) {
+            var (timeLocked, valueLocked) = GetSelectedKeyframesLockState();
+            bool bothLocked = timeLocked && valueLocked;
 
             menu.AddSeparator();
+            menu.AddSubmenu("Lock", lockSubmenu => {
+                lockSubmenu.AddItem("Time", () => {
+                    Undo.Record();
+                    SetKeyframesTimeLock(!timeLocked);
+                }, isChecked: timeLocked);
 
-            menu.AddSubmenu("In Tangent", inSubmenu => {
-                AddInterpolationOption(inSubmenu, "Constant", InterpolationType.Constant,
-                    currentInType == InterpolationType.Constant, false, true);
-                AddInterpolationOption(inSubmenu, "Linear", InterpolationType.Linear,
-                    currentInType == InterpolationType.Linear, false, true);
-                AddInterpolationOption(inSubmenu, "Bezier", InterpolationType.Bezier,
-                    currentInType == InterpolationType.Bezier, false, true);
-            });
+                lockSubmenu.AddItem("Value", () => {
+                    Undo.Record();
+                    SetKeyframesValueLock(!valueLocked);
+                }, isChecked: valueLocked);
 
-            menu.AddSubmenu("Out Tangent", outSubmenu => {
-                AddInterpolationOption(outSubmenu, "Constant", InterpolationType.Constant,
-                    currentOutType == InterpolationType.Constant, false, false);
-                AddInterpolationOption(outSubmenu, "Linear", InterpolationType.Linear,
-                    currentOutType == InterpolationType.Linear, false, false);
-                AddInterpolationOption(outSubmenu, "Bezier", InterpolationType.Bezier,
-                    currentOutType == InterpolationType.Bezier, false, false);
+                lockSubmenu.AddSeparator();
+
+                lockSubmenu.AddItem("Both", () => {
+                    Undo.Record();
+                    SetKeyframesBothLock(!bothLocked);
+                }, isChecked: bothLocked);
             });
+        }
+
+        private (bool timeLocked, bool valueLocked) GetSelectedKeyframesLockState() {
+            bool anyTimeLocked = false;
+            bool anyValueLocked = false;
+
+            foreach (var (type, propertyData) in _data.Properties) {
+                if (!propertyData.Visible) continue;
+                foreach (var keyframe in propertyData.Keyframes) {
+                    if (!keyframe.Selected) continue;
+                    if (keyframe.IsTimeLocked) anyTimeLocked = true;
+                    if (keyframe.IsValueLocked) anyValueLocked = true;
+                }
+            }
+
+            return (anyTimeLocked, anyValueLocked);
+        }
+
+        private void SetKeyframesTimeLock(bool locked) {
+            foreach (var (type, propertyData) in _data.Properties) {
+                if (!propertyData.Visible) continue;
+                var adapter = PropertyAdapter.GetAdapter(type);
+                foreach (var keyframe in propertyData.Keyframes) {
+                    if (!keyframe.Selected) continue;
+                    var updatedKeyframe = keyframe.WithTimeLock(locked);
+                    adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                }
+            }
+            UpdateKeyframes();
+            MarkTrackDirty();
+        }
+
+        private void SetKeyframesValueLock(bool locked) {
+            foreach (var (type, propertyData) in _data.Properties) {
+                if (!propertyData.Visible) continue;
+                var adapter = PropertyAdapter.GetAdapter(type);
+                foreach (var keyframe in propertyData.Keyframes) {
+                    if (!keyframe.Selected) continue;
+                    var updatedKeyframe = keyframe.WithValueLock(locked);
+                    adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                }
+            }
+            UpdateKeyframes();
+            MarkTrackDirty();
+        }
+
+        private void SetKeyframesBothLock(bool locked) {
+            foreach (var (type, propertyData) in _data.Properties) {
+                if (!propertyData.Visible) continue;
+                var adapter = PropertyAdapter.GetAdapter(type);
+                foreach (var keyframe in propertyData.Keyframes) {
+                    if (!keyframe.Selected) continue;
+                    var updatedKeyframe = keyframe.WithTimeLock(locked).WithValueLock(locked);
+                    adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                }
+            }
+            UpdateKeyframes();
+            MarkTrackDirty();
         }
 
         private void AddInterpolationOption(ContextMenu menu, string label, InterpolationType interpolationType, bool isSelected, bool setBoth, bool? isInHandle = null) {
@@ -1281,16 +1452,24 @@ namespace KexEdit.UI.Timeline {
                     float time = startTime + evt.TimeDelta;
                     float value = keyframe.Value;
 
-                    time = _data.ClampTime(time);
+                    if (!keyframe.IsTimeLocked) {
+                        time = _data.ClampTime(time);
 
-                    if (_data.ViewMode == TimelineViewMode.DopeSheet && !evt.ShiftKey) {
-                        time = math.round(time / SNAPPING) * SNAPPING;
+                        if (_data.ViewMode == TimelineViewMode.DopeSheet && !evt.ShiftKey) {
+                            time = math.round(time / SNAPPING) * SNAPPING;
+                        }
+                    }
+                    else {
+                        time = keyframe.Time;
                     }
 
                     if (_data.ViewMode == TimelineViewMode.Curve) {
                         if (!evt.StartValues.TryGetValue(keyframe.Id, out float startValue)) continue;
-                        value = startValue + evt.ValueDelta;
-                        value = evt.Bounds.ClampToVisualBounds(value, evt.ContentHeight);
+
+                        if (!keyframe.IsValueLocked) {
+                            value = startValue + evt.ValueDelta;
+                            value = evt.Bounds.ClampToVisualBounds(value, evt.ContentHeight);
+                        }
                     }
 
                     var updatedKeyframe = keyframe;
@@ -1335,14 +1514,14 @@ namespace KexEdit.UI.Timeline {
                 if (evt.IsOutHandle) {
                     evt.Keyframe.Value.OutWeight = weight;
                     evt.Keyframe.Value.OutTangent = tangent;
-                    if (evt.Keyframe.Value.OutInterpolation == InterpolationType.ContinuousBezier) {
+                    if (evt.Keyframe.Value.HasAlignedHandles()) {
                         evt.Keyframe.Value.InTangent = tangent;
                     }
                 }
                 else {
                     evt.Keyframe.Value.InWeight = weight;
                     evt.Keyframe.Value.InTangent = tangent;
-                    if (evt.Keyframe.Value.InInterpolation == InterpolationType.ContinuousBezier) {
+                    if (evt.Keyframe.Value.HasAlignedHandles()) {
                         evt.Keyframe.Value.OutTangent = tangent;
                     }
                 }
@@ -1573,6 +1752,149 @@ namespace KexEdit.UI.Timeline {
 
         public bool IsInBounds(Vector2 mousePosition) {
             return _timeline.worldBound.Contains(mousePosition);
+        }
+
+        private void ApplyEasingToSelectedKeyframes(EasingType easing) {
+            Undo.Record();
+            easing.GetEasingHandles(out float tangent, out float weight, out _, out _);
+
+            foreach (var (type, propertyData) in _data.Properties) {
+                if (!propertyData.Visible) continue;
+                var adapter = PropertyAdapter.GetAdapter(type);
+
+                int selectedCount = 0;
+                int firstSelected = -1;
+                for (int i = 0; i < propertyData.Keyframes.Count; i++) {
+                    if (propertyData.Keyframes[i].Selected) {
+                        if (firstSelected == -1) firstSelected = i;
+                        selectedCount++;
+                    }
+                }
+
+                if (selectedCount == 0) continue;
+
+                if (selectedCount == 1) {
+                    var keyframe = propertyData.Keyframes[firstSelected];
+                    adapter.UpdateKeyframe(_data.Entity, keyframe.WithEasing(tangent, weight));
+                }
+                else {
+                    int prev = -1;
+                    for (int i = 0; i < propertyData.Keyframes.Count; i++) {
+                        if (!propertyData.Keyframes[i].Selected) continue;
+                        if (prev != -1 && i == prev + 1) {
+                            adapter.UpdateKeyframe(_data.Entity, propertyData.Keyframes[prev].WithOutEasing(tangent, weight));
+                            adapter.UpdateKeyframe(_data.Entity, propertyData.Keyframes[i].WithInEasing(tangent, weight));
+                        }
+                        prev = i;
+                    }
+                }
+            }
+
+            MarkTrackDirty();
+        }
+
+        private EasingType? GetCurrentEasingType() {
+            EasingType? result = null;
+            bool hasSelection = false;
+            bool isSingleSelection = _data.SelectedKeyframeCount == 1;
+
+            foreach (var (type, propertyData) in _data.Properties) {
+                if (!propertyData.Visible) continue;
+
+                for (int i = 0; i < propertyData.Keyframes.Count; i++) {
+                    var keyframe = propertyData.Keyframes[i];
+                    if (!keyframe.Selected) continue;
+
+                    hasSelection = true;
+
+                    if (isSingleSelection) {
+                        if (keyframe.InInterpolation != InterpolationType.Bezier ||
+                            keyframe.OutInterpolation != InterpolationType.Bezier) {
+                            return null;
+                        }
+                        return UI.Extensions.GetEasingFromWeights(keyframe.InWeight, keyframe.OutWeight);
+                    }
+
+                    if (i > 0 && propertyData.Keyframes[i - 1].Selected &&
+                        keyframe.InInterpolation == InterpolationType.Bezier) {
+                        var easing = UI.Extensions.GetEasingFromWeight(keyframe.InWeight, true);
+                        if (result == null) result = easing;
+                        else if (result != easing) return null;
+                    }
+
+                    if (i < propertyData.Keyframes.Count - 1 &&
+                        propertyData.Keyframes[i + 1].Selected &&
+                        keyframe.OutInterpolation == InterpolationType.Bezier) {
+                        var easing = UI.Extensions.GetEasingFromWeight(keyframe.OutWeight, false);
+                        if (result == null) result = easing;
+                        else if (result != easing) return null;
+                    }
+                }
+            }
+
+            return hasSelection ? result : null;
+        }
+
+        private HandleType? GetSelectedKeyframesHandleType() {
+            HandleType? commonHandleType = null;
+            bool firstKeyframe = true;
+
+            foreach (var (type, propertyData) in _data.Properties) {
+                if (!propertyData.Visible) continue;
+
+                foreach (var keyframe in propertyData.Keyframes) {
+                    if (!keyframe.Selected) continue;
+
+                    if (firstKeyframe) {
+                        commonHandleType = keyframe.HandleType;
+                        firstKeyframe = false;
+                    }
+                    else if (commonHandleType != keyframe.HandleType) {
+                        return null;
+                    }
+                }
+            }
+
+            return commonHandleType;
+        }
+
+        private void SetKeyframeHandleType(HandleType handleType) {
+            foreach (var (type, propertyData) in _data.Properties) {
+                if (!propertyData.Visible) continue;
+                var adapter = PropertyAdapter.GetAdapter(type);
+
+                foreach (var keyframe in propertyData.Keyframes) {
+                    if (!keyframe.Selected) continue;
+
+                    var updatedKeyframe = new Keyframe {
+                        Id = keyframe.Id,
+                        Time = keyframe.Time,
+                        Value = keyframe.Value,
+                        InInterpolation = keyframe.InInterpolation,
+                        OutInterpolation = keyframe.OutInterpolation,
+                        HandleType = handleType,
+                        Flags = keyframe.Flags,
+                        InTangent = keyframe.InTangent,
+                        OutTangent = keyframe.OutTangent,
+                        InWeight = keyframe.InWeight,
+                        OutWeight = keyframe.OutWeight,
+                        Selected = keyframe.Selected
+                    };
+
+                    adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                }
+            }
+
+            MarkTrackDirty();
+        }
+
+        private void ShowKeyframeEditDialog(KeyframeData keyframe) {
+            _timeline.ShowKeyframeEditDialog(keyframe, _data.DurationType, updatedKeyframe => {
+                Undo.Record();
+                var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
+                adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                MarkTrackDirty();
+            });
         }
     }
 }

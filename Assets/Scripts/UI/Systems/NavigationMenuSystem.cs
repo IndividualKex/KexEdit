@@ -75,15 +75,13 @@ namespace KexEdit.UI {
                     bool hasRecovery = !string.IsNullOrEmpty(ProjectOperations.GetLatestRecoveryFile());
                     submenu.AddItem("Recover Last Session", ProjectOperations.RecoverLastSession, enabled: hasRecovery);
 
-                    string[] recentFiles = Preferences.RecentFiles;
+                    string[] recentFiles = ProjectOperations.GetRecentValidFiles();
                     if (recentFiles.Length > 0) {
                         submenu.AddSeparator();
                         for (int i = 0; i < recentFiles.Length; i++) {
                             string filePath = recentFiles[i];
-                            if (File.Exists(filePath)) {
-                                string fileName = Path.GetFileNameWithoutExtension(filePath);
-                                submenu.AddItem(fileName, () => ProjectOperations.OpenProject(filePath));
-                            }
+                            string fileName = Path.GetFileNameWithoutExtension(filePath);
+                            submenu.AddItem(fileName, () => ProjectOperations.OpenProject(filePath));
                         }
                     }
                 });

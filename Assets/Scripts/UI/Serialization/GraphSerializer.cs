@@ -2,6 +2,43 @@ using Unity.Burst;
 using Unity.Collections;
 
 namespace KexEdit.UI.Serialization {
+    [System.Serializable]
+    internal struct KeyframeV1 {
+#pragma warning disable 0649
+        public uint Id;
+        public float Time;
+        public float Value;
+        public InterpolationType InInterpolation;
+        public InterpolationType OutInterpolation;
+        public float InTangent;
+        public float OutTangent;
+        public float InWeight;
+        public float OutWeight;
+        public bool Selected;
+#pragma warning restore 0649
+
+        public Keyframe ToCurrentKeyframe() {
+            var handleType = HandleType.Free;
+            if ((int)InInterpolation == 3 || (int)OutInterpolation == 3) {
+                handleType = HandleType.Aligned;
+            }
+
+            return new Keyframe {
+                Id = Id,
+                Time = Time,
+                Value = Value,
+                InInterpolation = (int)InInterpolation == 3 ? InterpolationType.Bezier : InInterpolation,
+                OutInterpolation = (int)OutInterpolation == 3 ? InterpolationType.Bezier : OutInterpolation,
+                HandleType = handleType,
+                Flags = KeyframeFlags.None,
+                InTangent = InTangent,
+                OutTangent = OutTangent,
+                InWeight = InWeight,
+                OutWeight = OutWeight,
+                Selected = Selected
+            };
+        }
+    }
     [BurstCompile]
     public static class GraphSerializer {
         [BurstCompile]
@@ -34,17 +71,19 @@ namespace KexEdit.UI.Serialization {
 
         [BurstCompile]
         private static int DeserializeBinary(ref SerializedGraph graph, ref BinaryReader reader) {
-            graph.Version = reader.Read<int>();
+            int fileVersion = reader.Read<int>();
             int nodeCount = reader.Read<int>();
             graph.Nodes = new(nodeCount, Allocator.Temp);
 
             for (int i = 0; i < nodeCount; i++) {
                 var node = new SerializedNode();
-                DeserializeNode(ref node, ref reader, graph.Version);
+                DeserializeNode(ref node, ref reader, fileVersion);
                 graph.Nodes[i] = node;
             }
 
             reader.ReadArray(out graph.Edges, Allocator.Temp);
+
+            graph.Version = fileVersion < SerializationVersion.CURRENT ? SerializationVersion.CURRENT : fileVersion;
             return reader.Position;
         }
 
@@ -103,15 +142,49 @@ namespace KexEdit.UI.Serialization {
 
             reader.ReadArray(out node.InputPorts, Allocator.Temp);
             reader.ReadArray(out node.OutputPorts, Allocator.Temp);
-            reader.ReadArray(out node.RollSpeedKeyframes, Allocator.Temp);
-            reader.ReadArray(out node.NormalForceKeyframes, Allocator.Temp);
-            reader.ReadArray(out node.LateralForceKeyframes, Allocator.Temp);
-            reader.ReadArray(out node.PitchSpeedKeyframes, Allocator.Temp);
-            reader.ReadArray(out node.YawSpeedKeyframes, Allocator.Temp);
-            reader.ReadArray(out node.FixedVelocityKeyframes, Allocator.Temp);
-            reader.ReadArray(out node.HeartKeyframes, Allocator.Temp);
-            reader.ReadArray(out node.FrictionKeyframes, Allocator.Temp);
-            reader.ReadArray(out node.ResistanceKeyframes, Allocator.Temp);
+
+            if (version < SerializationVersion.PRECISION_MIGRATION) {
+                ReadLegacyKeyframes(ref node, ref reader);
+            }
+            else {
+                reader.ReadArray(out node.RollSpeedKeyframes, Allocator.Temp);
+                reader.ReadArray(out node.NormalForceKeyframes, Allocator.Temp);
+                reader.ReadArray(out node.LateralForceKeyframes, Allocator.Temp);
+                reader.ReadArray(out node.PitchSpeedKeyframes, Allocator.Temp);
+                reader.ReadArray(out node.YawSpeedKeyframes, Allocator.Temp);
+                reader.ReadArray(out node.FixedVelocityKeyframes, Allocator.Temp);
+                reader.ReadArray(out node.HeartKeyframes, Allocator.Temp);
+                reader.ReadArray(out node.FrictionKeyframes, Allocator.Temp);
+                reader.ReadArray(out node.ResistanceKeyframes, Allocator.Temp);
+            }
+        }
+
+        [BurstCompile]
+        private static void ReadLegacyKeyframes(ref SerializedNode node, ref BinaryReader reader) {
+            ReadLegacyKeyframeArray(out node.RollSpeedKeyframes, ref reader);
+            ReadLegacyKeyframeArray(out node.NormalForceKeyframes, ref reader);
+            ReadLegacyKeyframeArray(out node.LateralForceKeyframes, ref reader);
+            ReadLegacyKeyframeArray(out node.PitchSpeedKeyframes, ref reader);
+            ReadLegacyKeyframeArray(out node.YawSpeedKeyframes, ref reader);
+            ReadLegacyKeyframeArray(out node.FixedVelocityKeyframes, ref reader);
+            ReadLegacyKeyframeArray(out node.HeartKeyframes, ref reader);
+            ReadLegacyKeyframeArray(out node.FrictionKeyframes, ref reader);
+            ReadLegacyKeyframeArray(out node.ResistanceKeyframes, ref reader);
+        }
+
+        [BurstCompile]
+        private static void ReadLegacyKeyframeArray<T>(out NativeArray<T> output, ref BinaryReader reader) where T : unmanaged {
+            reader.ReadArray(out NativeArray<KeyframeV1> legacy, Allocator.Temp);
+            output = new NativeArray<T>(legacy.Length, Allocator.Temp);
+
+            for (int i = 0; i < legacy.Length; i++) {
+                var currentKeyframe = legacy[i].ToCurrentKeyframe();
+                unsafe {
+                    output[i] = *(T*)(&currentKeyframe);
+                }
+            }
+
+            legacy.Dispose();
         }
     }
 }

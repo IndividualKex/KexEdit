@@ -8,6 +8,7 @@ namespace KexEdit.UI.Timeline {
         public NativeList<float> Values = new(Allocator.Persistent);
         public PropertyType Type;
         public float Value = 0f;
+        public TimelineViewMode ViewMode = TimelineViewMode.DopeSheet;
         public UnitsType Units = UnitsType.None;
         public int SelectedKeyframeCount = 0;
         public bool Visible = false;
@@ -15,6 +16,7 @@ namespace KexEdit.UI.Timeline {
         public bool IsAlt = false;
         public bool HasActiveKeyframe = false;
         public bool DrawReadOnly = false;
+        public bool Hidden = false;
 
         public bool IsReadable => Type switch {
             PropertyType.NormalForce => true,

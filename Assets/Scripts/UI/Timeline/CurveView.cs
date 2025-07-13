@@ -16,6 +16,7 @@ namespace KexEdit.UI.Timeline {
         private Vector2 _lastMouseDownPosition;
         private ValueBounds _startBounds;
         private ValueBounds _dragBounds;
+        private KeyframeData _draggedKeyframe;
         private KeyframeData _bezierKeyframe;
         private float _startBezierTime;
         private float _startBezierValue;
@@ -83,7 +84,7 @@ namespace KexEdit.UI.Timeline {
                     continue;
                 }
 
-                if (!propertyData.Selected) continue;
+                if (!propertyData.Visible || propertyData.Hidden) continue;
 
                 painter.DrawCurves(_data, bounds, propertyData, contentRect);
                 painter.DrawKeyframes(_data, bounds, propertyData, contentRect);
@@ -111,7 +112,7 @@ namespace KexEdit.UI.Timeline {
 
             if (evt.button == 0) {
                 if (hasKeyframe) {
-                    ClickKeyframe(keyframe, evt.shiftKey);
+                    _draggedKeyframe = keyframe;
                     _startBounds = _data.ValueBounds;
                     _dragBounds = _data.ValueBounds;
                     _startMousePosition = evt.localMousePosition;
@@ -142,9 +143,13 @@ namespace KexEdit.UI.Timeline {
                 evt.StopPropagation();
             }
             else if (evt.button == 1 && !evt.altKey) {
-                if (hasKeyframe) {
-                    ClickKeyframe(keyframe, evt.shiftKey);
+                if (hasKeyframe && !keyframe.Value.Selected) {
+                    var selectEvent = this.GetPooled<KeyframeClickEvent>();
+                    selectEvent.Keyframe = keyframe;
+                    selectEvent.ShiftKey = false;
+                    this.Send(selectEvent);
                 }
+
                 var e = this.GetPooled<ViewRightClickEvent>();
                 e.MousePosition = evt.localMousePosition;
                 this.Send(e);
@@ -164,6 +169,12 @@ namespace KexEdit.UI.Timeline {
 
                 if (!_moved && (Mathf.Abs(timeDelta) > 1e-3f || Mathf.Abs(valueDelta) > 1e-3f)) {
                     _moved = true;
+                    if (_draggingKeyframe && !_draggedKeyframe.Value.Selected) {
+                        var selectEvent = this.GetPooled<KeyframeClickEvent>();
+                        selectEvent.Keyframe = _draggedKeyframe;
+                        selectEvent.ShiftKey = false;
+                        this.Send(selectEvent);
+                    }
                     StoreKeyframes();
                     Undo.Record();
                 }
@@ -209,12 +220,24 @@ namespace KexEdit.UI.Timeline {
         private void OnClick(ClickEvent evt) {
             if (!_data.Active) return;
 
-            if (evt.clickCount == 2) {
-                bool hasKeyframe = TryGetKeyframeAtPosition(_data.ValueBounds, _lastMouseDownPosition, out KeyframeData keyframe);
-                if (hasKeyframe) {
+            if (_moved) {
+                _moved = false;
+                return;
+            }
+
+            bool hasKeyframe = TryGetKeyframeAtPosition(_data.ValueBounds, _lastMouseDownPosition, out KeyframeData keyframe);
+            if (hasKeyframe) {
+                if (evt.clickCount == 2 && !evt.shiftKey) {
                     var e = this.GetPooled<KeyframeDoubleClickEvent>();
                     e.Keyframe = keyframe;
                     e.MousePosition = _lastMouseDownPosition;
+                    this.Send(e);
+                    evt.StopPropagation();
+                }
+                else if (evt.clickCount == 1) {
+                    var e = this.GetPooled<KeyframeClickEvent>();
+                    e.Keyframe = keyframe;
+                    e.ShiftKey = evt.shiftKey;
                     this.Send(e);
                     evt.StopPropagation();
                 }
@@ -222,6 +245,10 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void ClickKeyframe(KeyframeData keyframe, bool shiftKey) {
+            if (shiftKey && keyframe.Value.Selected) {
+                return;
+            }
+
             var e = this.GetPooled<KeyframeClickEvent>();
             e.Keyframe = keyframe;
             e.ShiftKey = shiftKey;
@@ -266,7 +293,7 @@ namespace KexEdit.UI.Timeline {
             _startTimes.Clear();
             _startValues.Clear();
             foreach (var (type, propertyData) in _data.Properties) {
-                if (!propertyData.Visible) continue;
+                if (!propertyData.Visible || propertyData.Hidden) continue;
                 foreach (var keyframe in propertyData.Keyframes) {
                     _startTimes[keyframe.Id] = keyframe.Time;
                     _startValues[keyframe.Id] = keyframe.Value;
@@ -357,7 +384,7 @@ namespace KexEdit.UI.Timeline {
             const float tolerance = KEYFRAME_SIZE * 1.5f;
 
             foreach (var (type, propertyData) in _data.Properties) {
-                if (!propertyData.Selected) continue;
+                if (!propertyData.Visible || propertyData.Hidden) continue;
                 foreach (var keyframe in propertyData.Keyframes) {
                     float x = _data.TimeToPixel(keyframe.Time);
                     float y = bounds.ValueToPixel(keyframe.Value, contentRect.height);
@@ -384,7 +411,7 @@ namespace KexEdit.UI.Timeline {
             const float tolerance = HANDLE_SIZE * 1.5f;
 
             foreach (var (type, propertyData) in _data.Properties) {
-                if (!propertyData.Selected) continue;
+                if (!propertyData.Visible || propertyData.Hidden) continue;
                 var keyframes = propertyData.Keyframes;
                 for (int i = 0; i < keyframes.Count; i++) {
                     var keyframe = keyframes[i];
@@ -392,8 +419,7 @@ namespace KexEdit.UI.Timeline {
                     if (!keyframe.Selected) continue;
 
                     if (
-                        (keyframe.OutInterpolation == InterpolationType.Bezier ||
-                        keyframe.OutInterpolation == InterpolationType.ContinuousBezier) &&
+                        keyframe.OutInterpolation == InterpolationType.Bezier &&
                         i < keyframes.Count - 1
                     ) {
                         var next = keyframes[i + 1];
@@ -413,8 +439,7 @@ namespace KexEdit.UI.Timeline {
                     }
 
                     if (
-                        (keyframe.InInterpolation == InterpolationType.Bezier ||
-                        keyframe.InInterpolation == InterpolationType.ContinuousBezier) &&
+                        keyframe.InInterpolation == InterpolationType.Bezier &&
                         i > 0
                     ) {
                         var prev = keyframes[i - 1];
@@ -441,7 +466,7 @@ namespace KexEdit.UI.Timeline {
         private void BoxSelect(Rect rect) {
             _selected.Clear();
             foreach (var (type, propertyData) in _data.Properties) {
-                if (!propertyData.Selected) continue;
+                if (!propertyData.Visible || propertyData.Hidden) continue;
 
                 foreach (var keyframe in propertyData.Keyframes) {
                     float keyframeX = _data.TimeToPixel(keyframe.Time);

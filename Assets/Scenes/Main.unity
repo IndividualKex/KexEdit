@@ -315,6 +315,8 @@ MonoBehaviour:
   SlideHorizontalCursorTexture: {fileID: 2800000, guid: 51a42264503d2f84c945d572aeb70c9c, type: 3}
   SlideVerticalCursorTexture: {fileID: 2800000, guid: 658865ffe7fc083439c68ae57c8c329a, type: 3}
   DropdownTexture: {fileID: 2800000, guid: df36934e139aa95409c41a986f2be240, type: 3}
+  EyeTexture: {fileID: 6192944022281365145, guid: 03abcef2bca993947923c9de4a936134, type: 3}
+  EyeXTexture: {fileID: 6192944022281365145, guid: 0b3e5753bc10a8d4db34a785872a0f90, type: 3}
   LineGizmoShader: {fileID: -6465566751694194690, guid: d4e6f6cb9a42ec346adb41339b0b0247, type: 3}
 --- !u!114 &690885153
 MonoBehaviour:
