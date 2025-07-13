@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
@@ -58,6 +59,15 @@ namespace KexEdit.UI {
             { PortType.LeadOut, "Lead Out" },
             { PortType.Rotation, "Rotation" },
             { PortType.Scale, "Scale" },
+        };
+
+        private static readonly EasingType[] s_EasingTypes = {
+            EasingType.Sine,
+            EasingType.Quadratic,
+            EasingType.Cubic,
+            EasingType.Quartic,
+            EasingType.Quintic,
+            EasingType.Exponential
         };
 
         private static readonly bool s_IsMacOS = SystemInfo.operatingSystemFamily == OperatingSystemFamily.MacOSX;
@@ -527,6 +537,66 @@ namespace KexEdit.UI {
                 current = current.parent;
             }
             return false;
+        }
+
+        public static EasingType? GetEasingFromWeights(float inWeight, float outWeight) {
+            for (int i = 0; i < 6; i++) {
+                var easing = (EasingType)i;
+                easing.GetEasingHandles(out _, out float testOutWeight, out _, out float testInWeight);
+                if (math.abs(outWeight - testOutWeight) < 1e-3f &&
+                    math.abs(inWeight - testInWeight) < 1e-3f) {
+                    return easing;
+                }
+            }
+            return null;
+        }
+
+        public static EasingType? GetEasingFromWeight(float weight, bool isInWeight) {
+            for (int i = 0; i < 6; i++) {
+                var easing = (EasingType)i;
+                easing.GetEasingHandles(out _, out float testOutWeight, out _, out float testInWeight);
+                float testWeight = isInWeight ? testInWeight : testOutWeight;
+                if (math.abs(weight - testWeight) < 1e-3f) {
+                    return easing;
+                }
+            }
+            return null;
+        }
+
+        public static void GetEasingHandles(this EasingType easing, out float outTangent, out float outWeight, out float inTangent, out float inWeight) {
+            outTangent = 0f;
+            inTangent = 0f;
+
+            switch (easing) {
+                case EasingType.Sine:
+                    outWeight = 0.36f;
+                    inWeight = 0.36f;
+                    break;
+                case EasingType.Quadratic:
+                    outWeight = 0.48f;
+                    inWeight = 0.48f;
+                    break;
+                case EasingType.Cubic:
+                    outWeight = 0.66f;
+                    inWeight = 0.66f;
+                    break;
+                case EasingType.Quartic:
+                    outWeight = 0.76f;
+                    inWeight = 0.76f;
+                    break;
+                case EasingType.Quintic:
+                    outWeight = 0.84f;
+                    inWeight = 0.84f;
+                    break;
+                case EasingType.Exponential:
+                    outWeight = 0.9f;
+                    inWeight = 0.9f;
+                    break;
+                default:
+                    outWeight = 0.36f;
+                    inWeight = 0.36f;
+                    break;
+            }
         }
     }
 }

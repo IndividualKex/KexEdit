@@ -90,12 +90,12 @@ namespace KexEdit.UI.Timeline {
                     }
                 };
 
-                this.RegisterCallback<MouseEnterEvent>(_ => {
+                removeButton.RegisterCallback<MouseEnterEvent>(_ => {
                     colorIndicator.style.opacity = 0f;
                     removeButton.style.opacity = 1f;
                 });
 
-                this.RegisterCallback<MouseLeaveEvent>(_ => {
+                removeButton.RegisterCallback<MouseLeaveEvent>(_ => {
                     colorIndicator.style.opacity = 1f;
                     removeButton.style.opacity = 0f;
                 });
@@ -113,6 +113,13 @@ namespace KexEdit.UI.Timeline {
             }
 
             Add(indicatorContainer);
+
+            var visibilityToggle = new VisibilityToggleButton(_data) {
+                style = {
+                    marginRight = 4f
+                }
+            };
+            Add(visibilityToggle);
 
             var nameContainer = new VisualElement {
                 style = {
@@ -188,11 +195,7 @@ namespace KexEdit.UI.Timeline {
             _keyframeButton = new KeyframeButton(_data);
             Add(_keyframeButton);
 
-            _rightArrowButton = new ArrowButton(true) {
-                style = {
-                    marginRight = 4f
-                }
-            };
+            _rightArrowButton = new ArrowButton(true);
             _rightArrowButton.OnClicked += OnRightArrowClicked;
             Add(_rightArrowButton);
 

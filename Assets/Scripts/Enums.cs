@@ -10,7 +10,20 @@ namespace KexEdit {
         Constant,
         Linear,
         Bezier,
-        ContinuousBezier,
+    }
+
+    public enum HandleType {
+        Free,
+        Aligned,
+    }
+
+    public enum EasingType {
+        Sine,
+        Quadratic,
+        Cubic,
+        Quartic,
+        Quintic,
+        Exponential,
     }
 
     public enum NodeType {
@@ -74,6 +87,20 @@ namespace KexEdit {
         Render = 1 << 0,      // 0x01
         Selected = 1 << 1,    // 0x02
         // Reserve bits for future serialization flags
+        Reserved1 = 1 << 2,   // 0x04
+        Reserved2 = 1 << 3,   // 0x08
+        Reserved3 = 1 << 4,   // 0x10
+        Reserved4 = 1 << 5,   // 0x20
+        Reserved5 = 1 << 6,   // 0x40
+        Reserved6 = 1 << 7,   // 0x80
+    }
+
+    [Flags]
+    public enum KeyframeFlags : byte {
+        None = 0,
+        LockTime = 1 << 0,    // 0x01
+        LockValue = 1 << 1,   // 0x02
+        // Reserve bits for future keyframe flags
         Reserved1 = 1 << 2,   // 0x04
         Reserved2 = 1 << 3,   // 0x08
         Reserved3 = 1 << 4,   // 0x10

@@ -9,6 +9,8 @@ namespace KexEdit.UI {
         public Texture2D SlideHorizontalCursorTexture;
         public Texture2D SlideVerticalCursorTexture;
         public Texture2D DropdownTexture;
+        public Texture2D EyeTexture;
+        public Texture2D EyeXTexture;
         public Shader LineGizmoShader;
 
         public static UIService Instance { get; private set; }

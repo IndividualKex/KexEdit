@@ -95,7 +95,6 @@ namespace KexEdit {
                     float segmentT = (t - start.Time) / (end.Time - start.Time);
                     return math.lerp(start.Value, end.Value, segmentT);
                 case InterpolationType.Bezier:
-                case InterpolationType.ContinuousBezier:
                     return EvaluateBezier2D(start, end, t);
                 default:
                     return start.Value;
@@ -137,7 +136,7 @@ namespace KexEdit {
 
                 if (math.abs(bezierTimeDerivative) < 1e-9f) break;
 
-                u = u - timeDiff / bezierTimeDerivative;
+                u -= timeDiff / bezierTimeDerivative;
                 u = math.clamp(u, 0f, 1f);
             }
 
@@ -167,7 +166,6 @@ namespace KexEdit {
                 case InterpolationType.Linear:
                     return math.lerp(start.Value, end.Value, segmentT);
                 case InterpolationType.Bezier:
-                case InterpolationType.ContinuousBezier:
                     // Convert segmentT back to actual time for 2D bezier evaluation
                     float targetTime = start.Time + segmentT * (end.Time - start.Time);
                     return EvaluateBezier2D(start, end, targetTime);

@@ -21,6 +21,7 @@ Add smooth acceleration to your track with velocity overrides.
 1. **Set Starting Speed** - Click keyframe button, enter `0.1` m/s at time 0
 2. **Set Launch Speed** - Add keyframe near section end with `30` m/s
 3. **View Curve** - Toggle Curve View button to see acceleration curve
+4. **Edit Keyframes** - Double-click keyframes to open edit panel for precise time, value, and easing control
 
 ## Creating a Hill (Normal Force Control)
 

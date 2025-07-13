@@ -37,18 +37,21 @@ When a node with controllable properties is selected, the Timeline displays:
 
 ### View Controls
 
-| Input                           | Action              | Notes                                  |
-| ------------------------------- | ------------------- | -------------------------------------- |
-| `Toggle Curve View Button`      | Switch View Mode    | Toggle between dope sheet and curves   |
-| `Right-click Toggle Curve View` | Curve Visualization | Enable/disable read-only curve display |
+| Input                           | Action              | Notes                                                    |
+| ------------------------------- | ------------------- | -------------------------------------------------------- |
+| `Toggle Curve View Button`      | Switch View Mode    | Toggle between dope sheet and curve editor               |
+| `Eye Icon (Curve View)`         | Toggle Visibility   | Show/hide individual property curves in curve view       |
+| `Right-click Toggle Curve View` | Curve Visualization | Enable/disable read-only curve display (legacy behavior) |
 
 ## Keyframe Editing
+
+### Basic Operations
 
 | Input           | Action       | Notes                                     |
 | --------------- | ------------ | ----------------------------------------- |
 | `I`             | Insert       | Add keyframe at playhead                  |
 | `Left Click`    | Select       | Select keyframe                           |
-| `Double Click`  | Edit         | Edit keyframe value                       |
+| `Double Click`  | Edit         | Open keyframe edit dialog                 |
 | `Shift + Click` | Multi-Select | Add to selection                          |
 | `Drag`          | Move         | Reposition keyframe                       |
 | `Delete`        | Remove       | Delete selected keyframes                 |
@@ -56,16 +59,64 @@ When a node with controllable properties is selected, the Timeline displays:
 | `Box Select`    | Multi-Select | Drag to select multiple                   |
 | `Right Click`   | Context Menu | Optimize, change interpolation type, etc. |
 
+### Curve View Controls
+
+| Input                | Action           | Notes                                     |
+| -------------------- | ---------------- | ----------------------------------------- |
+| `Drag Bezier Handle` | Adjust Curve     | Fine-tune curve shape and easing          |
+| `Shift + Drag`       | Constrain Motion | Lock to horizontal or vertical movement   |
+| `Double Click`       | Detailed Edit    | Open advanced keyframe editor with easing |
+
+## Keyframe Edit Dialog
+
+Double-clicking a keyframe opens a detailed editor with advanced options:
+
+### Properties
+
+-   **Time/Distance**: Precise keyframe position
+-   **Value**: Exact property value with units
+-   **Interpolation**: Choose between Constant, Linear, and Bezier
+
+### Easing Presets (Bezier only)
+
+-   **Sine**: Gentle acceleration/deceleration
+-   **Quadratic**: Moderate ease-in/out
+-   **Cubic**: Standard animation easing
+-   **Quartic**: Strong ease-in/out
+-   **Quintic**: Very strong ease-in/out
+-   **Exponential**: Sharp acceleration curves
+
+### Manual Bezier Controls
+
+-   **In/Out Weights**: Control handle length (0.0 to 1.0)
+-   **In/Out Tangents**: Control handle angle (-∞ to +∞)
+-   **Auto-detection**: Shows current easing type if it matches a preset
+
 ## Animation Properties
 
 ### Interpolation Types
 
-| Type            | Description             | Visual                                          |
-| --------------- | ----------------------- | ----------------------------------------------- |
-| **Constant**    | Step changes            | Flat line segments                              |
-| **Linear**      | Straight transitions    | Straight line slopes                            |
-| **Bezier**      | Smooth curves           | Curved transitions                              |
-| **Auto Bezier** | (Default) Smooth curves | Curved transitions with mirrored Bézier handles |
+| Type            | Description             | Visual                                          | Keyframe Shape |
+| --------------- | ----------------------- | ----------------------------------------------- | -------------- |
+| **Constant**    | Step changes            | Flat line segments                              | Square         |
+| **Linear**      | Straight transitions    | Straight line slopes                            | Diamond        |
+| **Bezier**      | Smooth curves           | Curved transitions with interactive handles     | Circle         |
+| **Auto Bezier** | (Default) Smooth curves | Curved transitions with mirrored Bézier handles | Circle         |
+
+### View Modes
+
+#### Dope Sheet View
+- **Row-based layout**: Each property occupies a horizontal row
+- **Time-focused editing**: Primarily for timing adjustments
+- **Compact display**: Shows many properties at once
+- **Keyframe shapes**: Different shapes indicate interpolation type
+
+#### Curve View
+- **Graph-based layout**: Properties displayed as curves on a value/time graph
+- **Precise curve editing**: Direct manipulation of bezier handles
+- **Visual curve shapes**: See the actual animation curves
+- **Individual visibility**: Toggle curves on/off with eye icons
+- **Value-focused editing**: Fine-tune animation curves and easing
 
 ## Property Types
 

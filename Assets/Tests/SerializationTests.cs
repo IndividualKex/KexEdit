@@ -123,7 +123,7 @@ public class SerializationTests {
     public void TestEmptyGraphSerialization() {
         // Test full empty graph serialization
         var graph = new SerializedGraph {
-            Version = 1,
+            Version = SerializationVersion.CURRENT,
             Nodes = new NativeArray<SerializedNode>(0, Allocator.Temp),
             Edges = new NativeArray<SerializedEdge>(0, Allocator.Temp)
         };
@@ -240,5 +240,94 @@ public class SerializationTests {
         Assert.IsFalse((readFlags2 & NodeFieldFlags.HasRender) != 0);
 
         Assert.AreEqual(NodeFieldFlags.None, readFlags3);
+    }
+
+    [Test]
+    public void TestMigrationFromVersion1() {
+        // Test migration of a pre-HandleType file
+        string testFilePath = "Assets/Tests/Assets/shuttle.kex";
+
+        Assert.IsTrue(System.IO.File.Exists(testFilePath), "Test file shuttle.kex not found");
+
+        byte[] fileData = System.IO.File.ReadAllBytes(testFilePath);
+        Assert.IsTrue(fileData.Length > 0, "Test file is empty");
+
+        Debug.Log($"Loaded test file: {fileData.Length} bytes");
+
+        try {
+            // Create buffer and deserialize
+            var buffer = new NativeArray<byte>(fileData.Length, Allocator.Temp);
+            buffer.CopyFrom(fileData);
+
+            var graph = new SerializedGraph();
+
+            try {
+                int bytesRead = GraphSerializer.Deserialize(ref graph, ref buffer);
+                Debug.Log($"Deserialized {bytesRead} bytes, version: {graph.Version}");
+
+                // Should have migrated to current version
+                Assert.AreEqual(SerializationVersion.CURRENT, graph.Version);
+
+                // Check that we have some nodes (shuttle.kex should contain data)
+                Assert.IsTrue(graph.Nodes.Length > 0, "Expected nodes in shuttle.kex");
+
+                Debug.Log($"Successfully migrated {graph.Nodes.Length} nodes");
+
+                // Check that keyframes were migrated properly
+                bool foundKeyframes = false;
+                for (int i = 0; i < graph.Nodes.Length; i++) {
+                    var node = graph.Nodes[i];
+                    if (node.RollSpeedKeyframes.Length > 0) {
+                        foundKeyframes = true;
+                        var keyframe = node.RollSpeedKeyframes[0].Value;
+
+                        // Should have valid interpolation types (no value 3)
+                        Assert.IsTrue((int)keyframe.InInterpolation <= 2, $"Invalid InInterpolation: {(int)keyframe.InInterpolation}");
+                        Assert.IsTrue((int)keyframe.OutInterpolation <= 2, $"Invalid OutInterpolation: {(int)keyframe.OutInterpolation}");
+
+                        Debug.Log($"Keyframe interpolation: In={keyframe.InInterpolation}, Out={keyframe.OutInterpolation}, Handle={keyframe.HandleType}");
+                        break;
+                    }
+                }
+
+                if (foundKeyframes) {
+                    Debug.Log("Successfully found and validated migrated keyframes");
+                }
+                else {
+                    Debug.Log("No keyframes found to validate");
+                }
+            }
+            finally {
+                graph.Dispose();
+                buffer.Dispose();
+            }
+        }
+        catch (System.Exception ex) {
+            Assert.Fail($"Migration failed: {ex.Message}");
+        }
+    }
+
+    [Test]
+    public void TestKeyframeLockingFlags() {
+        var keyframe = KexEdit.Keyframe.Default;
+
+        Assert.IsFalse(keyframe.IsTimeLocked);
+        Assert.IsFalse(keyframe.IsValueLocked);
+
+        var timeLockedKeyframe = keyframe.WithTimeLock(true);
+        Assert.IsTrue(timeLockedKeyframe.IsTimeLocked);
+        Assert.IsFalse(timeLockedKeyframe.IsValueLocked);
+
+        var valueLockedKeyframe = keyframe.WithValueLock(true);
+        Assert.IsFalse(valueLockedKeyframe.IsTimeLocked);
+        Assert.IsTrue(valueLockedKeyframe.IsValueLocked);
+
+        var bothLockedKeyframe = keyframe.WithTimeLock(true).WithValueLock(true);
+        Assert.IsTrue(bothLockedKeyframe.IsTimeLocked);
+        Assert.IsTrue(bothLockedKeyframe.IsValueLocked);
+
+        var unlockedKeyframe = bothLockedKeyframe.WithTimeLock(false).WithValueLock(false);
+        Assert.IsFalse(unlockedKeyframe.IsTimeLocked);
+        Assert.IsFalse(unlockedKeyframe.IsValueLocked);
     }
 }
