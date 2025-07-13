@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -7,6 +9,15 @@ using static KexEdit.UI.Timeline.Constants;
 
 namespace KexEdit.UI.Timeline {
     public static class Extensions {
+        private static readonly Dictionary<EasingType, string> s_EasingStringCache = new() {
+            { EasingType.Sine, "Sine" },
+            { EasingType.Quadratic, "Quadratic" },
+            { EasingType.Cubic, "Cubic" },
+            { EasingType.Quartic, "Quartic" },
+            { EasingType.Quintic, "Quintic" },
+            { EasingType.Exponential, "Exponential" },
+        };
+
         public static float TimeToPixel(this TimelineData data, float time) {
             float startTime = data.Offset / (data.Zoom * RESOLUTION);
             return (time - startTime) * data.Zoom * RESOLUTION + LEFT_PADDING;
@@ -102,13 +113,19 @@ namespace KexEdit.UI.Timeline {
                 float x = data.TimeToPixel(keyframe.Time);
                 float y = bounds.ValueToPixel(keyframe.Value, rect.height);
                 if (!rect.Contains(new Vector2(x, y))) continue;
-                painter.fillColor = keyframe.Selected ? s_BlueOutline : s_TextColor;
+
+                Color keyframeColor = keyframe.Selected ? s_BlueOutline : s_TextColor;
+                painter.fillColor = keyframeColor;
                 painter.BeginPath();
                 painter.MoveTo(new Vector2(x - halfSize, y - halfSize));
                 painter.LineTo(new Vector2(x + halfSize, y - halfSize));
                 painter.LineTo(new Vector2(x + halfSize, y + halfSize));
                 painter.LineTo(new Vector2(x - halfSize, y + halfSize));
                 painter.Fill();
+
+                if (keyframe.IsTimeLocked || keyframe.IsValueLocked) {
+                    painter.DrawKeyframeLockBorder(x, y, halfSize, keyframe.IsTimeLocked, keyframe.IsValueLocked, keyframeColor);
+                }
             }
         }
 
@@ -236,8 +253,7 @@ namespace KexEdit.UI.Timeline {
                 Vector2 pos = new(x, y);
 
                 if (
-                    (keyframe.OutInterpolation == InterpolationType.Bezier ||
-                    keyframe.OutInterpolation == InterpolationType.ContinuousBezier) &&
+                    keyframe.OutInterpolation == InterpolationType.Bezier &&
                     i < propertyData.Keyframes.Count - 1
                 ) {
                     var nextKeyframe = propertyData.Keyframes[i + 1];
@@ -248,8 +264,7 @@ namespace KexEdit.UI.Timeline {
                 }
 
                 if (
-                    (keyframe.InInterpolation == InterpolationType.Bezier ||
-                    keyframe.InInterpolation == InterpolationType.ContinuousBezier) &&
+                    keyframe.InInterpolation == InterpolationType.Bezier &&
                     i > 0
                 ) {
                     var prevKeyframe = propertyData.Keyframes[i - 1];
@@ -312,7 +327,6 @@ namespace KexEdit.UI.Timeline {
                     painter.DrawLinearCurve(data, bounds, rect, start, end);
                     break;
                 case InterpolationType.Bezier:
-                case InterpolationType.ContinuousBezier:
                     painter.DrawBezierCurve(data, bounds, rect, start, end);
                     break;
             }
@@ -544,6 +558,69 @@ namespace KexEdit.UI.Timeline {
                     code1 = GetOutCode(clippedEnd);
                 }
             }
+        }
+
+        public static void DrawKeyframeLockBorder(
+            this Painter2D painter,
+            float x,
+            float y,
+            float halfSize,
+            bool isTimeLocked,
+            bool isValueLocked,
+            Color borderColor
+        ) {
+            painter.strokeColor = borderColor;
+            painter.lineWidth = 1.5f;
+            painter.BeginPath();
+
+            const float padding = 2f;
+            float left = x - halfSize - padding;
+            float right = x + halfSize + padding;
+            float top = y - halfSize - padding;
+            float bottom = y + halfSize + padding;
+
+            if (isTimeLocked && isValueLocked) {
+                painter.MoveTo(new Vector2(left, top));
+                painter.LineTo(new Vector2(right, top));
+                painter.LineTo(new Vector2(right, bottom));
+                painter.LineTo(new Vector2(left, bottom));
+                painter.LineTo(new Vector2(left, top));
+            }
+            else if (isValueLocked) {
+                painter.MoveTo(new Vector2(left, top));
+                painter.LineTo(new Vector2(right, top));
+                painter.MoveTo(new Vector2(left, bottom));
+                painter.LineTo(new Vector2(right, bottom));
+            }
+            else if (isTimeLocked) {
+                painter.MoveTo(new Vector2(left, top));
+                painter.LineTo(new Vector2(left, bottom));
+                painter.MoveTo(new Vector2(right, top));
+                painter.LineTo(new Vector2(right, bottom));
+            }
+
+            painter.Stroke();
+        }
+
+        public static string GetDisplayName(this EasingType easingType) {
+            return s_EasingStringCache[easingType];
+        }
+
+        public static IEnumerable<EasingType> EnumerateEasingTypes() {
+            return s_EasingStringCache.Keys;
+        }
+
+        public static KeyframeEditDialog ShowKeyframeEditDialog(
+            this VisualElement element,
+            KeyframeData keyframe,
+            DurationType durationType,
+            Action<Keyframe> onApply
+        ) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new KeyframeEditDialog(keyframe, durationType, onApply, KexTime.Unpause);
+            root.Add(dialog);
+            return dialog;
         }
     }
 }

@@ -15,7 +15,8 @@ namespace KexEdit.UI.Serialization {
 
     public static class SerializationVersion {
         public const int INITIAL = 1;
-        public const int CURRENT = INITIAL;
+        public const int PRECISION_MIGRATION = 2;
+        public const int CURRENT = PRECISION_MIGRATION;
     }
 
     [Flags]

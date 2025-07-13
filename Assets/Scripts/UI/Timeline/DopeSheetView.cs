@@ -13,6 +13,7 @@ namespace KexEdit.UI.Timeline {
         private Dictionary<uint, float> _startTimes = new();
         private Vector2 _startMousePosition;
         private Vector2 _lastMouseDownPosition;
+        private KeyframeData _draggedKeyframe;
         private bool _dragging;
         private bool _boxSelecting;
         private bool _moved;
@@ -82,7 +83,8 @@ namespace KexEdit.UI.Timeline {
                 foreach (var keyframe in propertyData.Keyframes) {
                     float x = data.TimeToPixel(keyframe.Time);
 
-                    painter.fillColor = keyframe.Selected ? s_BlueOutline : s_TextColor;
+                    Color keyframeColor = keyframe.Selected ? s_BlueOutline : s_TextColor;
+                    painter.fillColor = keyframeColor;
                     painter.BeginPath();
 
                     switch (keyframe.OutInterpolation) {
@@ -99,13 +101,16 @@ namespace KexEdit.UI.Timeline {
                             painter.LineTo(new Vector2(x - halfSize, y));
                             break;
                         case InterpolationType.Bezier:
-                        case InterpolationType.ContinuousBezier:
                         default:
                             painter.Arc(new Vector2(x, y), halfSize, 0, 360);
                             break;
                     }
 
                     painter.Fill();
+
+                    if (keyframe.IsTimeLocked || keyframe.IsValueLocked) {
+                        painter.DrawKeyframeLockBorder(x, y, halfSize, keyframe.IsTimeLocked, keyframe.IsValueLocked, keyframeColor);
+                    }
                 }
             }
         }
@@ -119,7 +124,7 @@ namespace KexEdit.UI.Timeline {
             bool hasKeyframe = TryGetKeyframeAtPosition(evt.localMousePosition, out KeyframeData keyframe);
             if (evt.button == 0) {
                 if (hasKeyframe) {
-                    ClickKeyframe(keyframe, evt.shiftKey);
+                    _draggedKeyframe = keyframe;
                     _startMousePosition = evt.localMousePosition;
                     _dragging = true;
                     _moved = false;
@@ -136,9 +141,13 @@ namespace KexEdit.UI.Timeline {
                 evt.StopPropagation();
             }
             else if (evt.button == 1 && !evt.altKey) {
-                if (hasKeyframe) {
-                    ClickKeyframe(keyframe, evt.shiftKey);
+                if (hasKeyframe && !keyframe.Value.Selected) {
+                    var selectEvent = this.GetPooled<KeyframeClickEvent>();
+                    selectEvent.Keyframe = keyframe;
+                    selectEvent.ShiftKey = false;
+                    this.Send(selectEvent);
                 }
+                
                 var e = this.GetPooled<ViewRightClickEvent>();
                 e.MousePosition = evt.localMousePosition;
                 this.Send(e);
@@ -155,6 +164,12 @@ namespace KexEdit.UI.Timeline {
 
                 if (!_moved && Mathf.Abs(timeDelta) > 1e-3f) {
                     _moved = true;
+                    if (!_draggedKeyframe.Value.Selected) {
+                        var selectEvent = this.GetPooled<KeyframeClickEvent>();
+                        selectEvent.Keyframe = _draggedKeyframe;
+                        selectEvent.ShiftKey = false;
+                        this.Send(selectEvent);
+                    }
                     StoreKeyframes();
                     Undo.Record();
                 }
@@ -198,12 +213,24 @@ namespace KexEdit.UI.Timeline {
         private void OnClick(ClickEvent evt) {
             if (!_data.Active) return;
 
-            if (evt.clickCount == 2) {
-                bool hasKeyframe = TryGetKeyframeAtPosition(_lastMouseDownPosition, out KeyframeData keyframe);
-                if (hasKeyframe) {
+            if (_moved) {
+                _moved = false;
+                return;
+            }
+
+            bool hasKeyframe = TryGetKeyframeAtPosition(_lastMouseDownPosition, out KeyframeData keyframe);
+            if (hasKeyframe) {
+                if (evt.clickCount == 2 && !evt.shiftKey) {
                     var e = this.GetPooled<KeyframeDoubleClickEvent>();
                     e.Keyframe = keyframe;
                     e.MousePosition = _lastMouseDownPosition;
+                    this.Send(e);
+                    evt.StopPropagation();
+                }
+                else if (evt.clickCount == 1) {
+                    var e = this.GetPooled<KeyframeClickEvent>();
+                    e.Keyframe = keyframe;
+                    e.ShiftKey = evt.shiftKey;
                     this.Send(e);
                     evt.StopPropagation();
                 }
@@ -211,6 +238,8 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void ClickKeyframe(KeyframeData keyframe, bool shiftKey) {
+            if (shiftKey && keyframe.Value.Selected) return;
+
             var e = this.GetPooled<KeyframeClickEvent>();
             e.Keyframe = keyframe;
             e.ShiftKey = shiftKey;

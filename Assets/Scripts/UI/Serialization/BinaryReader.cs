@@ -30,6 +30,9 @@ namespace KexEdit.UI.Serialization {
 
         public void ReadArray<T>(out NativeArray<T> output, Allocator allocator) where T : unmanaged {
             int length = Read<int>();
+            if (length < 0) {
+                throw new System.InvalidOperationException($"Invalid array length: {length}");
+            }
             output = new(length, allocator);
             if (length > 0) {
                 var bytes = new NativeSlice<T>(output).SliceConvert<byte>();
