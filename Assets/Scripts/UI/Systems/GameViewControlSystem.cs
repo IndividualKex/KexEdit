@@ -37,14 +37,14 @@ namespace KexEdit.UI {
 
             _gameView.RegisterCallback<MouseDownEvent>(OnGameViewMouseDown);
 
-            OrbitCameraController.OnSpeedMultiplierChanged += OnSpeedMultiplierChanged;
+            OrbitCameraSystem.OnSpeedMultiplierChanged += OnSpeedMultiplierChanged;
 
             EditOperationsSystem.RegisterHandler(this);
         }
 
         protected override void OnDestroy() {
             EditOperationsSystem.UnregisterHandler(this);
-            OrbitCameraController.OnSpeedMultiplierChanged -= OnSpeedMultiplierChanged;
+            OrbitCameraSystem.OnSpeedMultiplierChanged -= OnSpeedMultiplierChanged;
             base.OnDestroy();
         }
 
@@ -94,7 +94,7 @@ namespace KexEdit.UI {
                                   Keyboard.current.leftCommandKey.isPressed ||
                                   Keyboard.current.rightCommandKey.isPressed;
 
-            if (altOrCmdPressed || OrbitCameraController.IsRideCameraActive || evt.button != 0) return;
+            if (altOrCmdPressed || OrbitCameraSystem.IsRideCameraActive || evt.button != 0) return;
 
             bool shiftPressed = Keyboard.current.shiftKey.isPressed;
             var collisionWorld = SystemAPI.GetSingleton<PhysicsWorldSingleton>().CollisionWorld;
@@ -186,7 +186,7 @@ namespace KexEdit.UI {
         }
 
         public void ResetGameViewState() {
-            OrbitCameraController.Instance.ResetState();
+            OrbitCameraSystem.ResetState();
         }
 
         public bool CanCopy() => false;
@@ -206,7 +206,7 @@ namespace KexEdit.UI {
 
         public void Focus() {
             if (TryGetSelectionBounds(out var bounds)) {
-                OrbitCameraController.Focus(bounds);
+                OrbitCameraSystem.Focus(bounds);
             }
         }
 

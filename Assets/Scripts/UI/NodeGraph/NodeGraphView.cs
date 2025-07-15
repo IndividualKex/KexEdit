@@ -354,6 +354,11 @@ namespace KexEdit.UI.NodeGraph {
                 _data.Pan += delta;
                 _content.transform.position = _data.Pan;
                 _startMousePosition = evt.localMousePosition;
+
+                var e = this.GetPooled<NodeGraphPanChangeEvent>();
+                e.Pan = _data.Pan;
+                this.Send(e);
+
                 evt.StopPropagation();
             }
         }
@@ -386,6 +391,15 @@ namespace KexEdit.UI.NodeGraph {
             _content.transform.scale = new Vector3(_data.Zoom, _data.Zoom, 1f);
             _data.Pan = mousePos - contentSpaceMousePos * _data.Zoom;
             _content.transform.position = _data.Pan;
+
+            var zoomEvent = this.GetPooled<NodeGraphZoomChangeEvent>();
+            zoomEvent.Zoom = _data.Zoom;
+            this.Send(zoomEvent);
+
+            var panEvent = this.GetPooled<NodeGraphPanChangeEvent>();
+            panEvent.Pan = _data.Pan;
+            this.Send(panEvent);
+
             evt.StopPropagation();
         }
 
