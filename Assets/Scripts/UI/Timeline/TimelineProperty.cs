@@ -205,14 +205,16 @@ namespace KexEdit.UI.Timeline {
                 dataSourcePath = new PropertyPath(nameof(PropertyData.IsAlt)),
                 bindingMode = BindingMode.ToTarget
             };
-            altBinding.sourceToUiConverters.AddConverter((ref bool value) => new StyleColor(value ? s_AltDarkBackgroundColor : s_DarkBackgroundColor));
+            altBinding.sourceToUiConverters.AddConverter((ref bool value) =>
+                new StyleColor(value ? s_AltDarkBackgroundColor : s_DarkBackgroundColor));
             SetBinding("style.backgroundColor", altBinding);
 
             var selectedBinding = new DataBinding {
                 dataSourcePath = new PropertyPath(nameof(PropertyData.Selected)),
                 bindingMode = BindingMode.ToTarget
             };
-            selectedBinding.sourceToUiConverters.AddConverter((ref bool value) => new StyleFloat(value ? 1f : 0f));
+            selectedBinding.sourceToUiConverters.AddConverter((ref bool value) => 
+                new StyleFloat(value ? 1f : 0f));
             selectedOverlay.SetBinding("style.opacity", selectedBinding);
 
             var displayBinding = new DataBinding {

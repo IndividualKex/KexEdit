@@ -59,4 +59,13 @@ namespace KexEdit.UI {
         KilometersPerHour,
         MilesPerHour,
     }
+
+    public enum KeyframeFieldType {
+        Value,
+        Time,
+        InWeight,
+        InTangent,
+        OutWeight,
+        OutTangent
+    }
 }

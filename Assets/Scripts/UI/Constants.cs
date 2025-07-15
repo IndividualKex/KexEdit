@@ -64,5 +64,7 @@ namespace KexEdit.UI {
         public const float RESISTANCE_UI_TO_PHYSICS_SCALE = 1e-6f;
         public const float RESISTANCE_PHYSICS_TO_UI_SCALE = 1e6f;
         public const float NODE_GRID_SIZE = 24f;
+
+        public const float DEFAULT_RIDE_CAMERA_HEIGHT = 1.4f;
     }
 }

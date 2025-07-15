@@ -465,6 +465,14 @@ namespace KexEdit.UI {
             return dialog;
         }
 
+        public static PreferencesDialog ShowPreferencesDialog(this VisualElement element) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new PreferencesDialog(KexTime.Unpause);
+            root.Add(dialog);
+            return dialog;
+        }
+
         public static FloatField ShowFloatFieldEditor(
             this VisualElement element,
             Vector2 position,

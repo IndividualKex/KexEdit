@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -46,7 +47,7 @@ namespace KexEdit.UI.Timeline {
                     painter.Fill();
                 }
 
-                float maxX = _data.TimeToPixel(_data.Duration);
+                float maxX = math.max(0, _data.TimeToPixel(_data.Duration));
                 if (maxX < rect.width) {
                     painter.fillColor = s_DarkenColor;
                     painter.BeginPath();

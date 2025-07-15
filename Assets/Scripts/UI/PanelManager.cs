@@ -11,10 +11,13 @@ namespace KexEdit.UI {
             bottom.Add(new ResizeHandle(ResizeHandle.ResizeMode.Vertical));
 
             var topLeft = root.Q<VisualElement>("TopLeftPanel");
-            topLeft.Add(new ResizeHandle(ResizeHandle.ResizeMode.Horizontal));
+            topLeft.Add(new ResizeHandle(ResizeHandle.ResizeMode.HorizontalRight));
 
             var outliner = root.Q<TimelineOutliner>();
-            outliner.Add(new ResizeHandle(ResizeHandle.ResizeMode.Horizontal));
+            outliner.Add(new ResizeHandle(ResizeHandle.ResizeMode.HorizontalRight));
+
+            var keyframeEditor = root.Q<KeyframeEditor>();
+            keyframeEditor.Add(new ResizeHandle(ResizeHandle.ResizeMode.HorizontalLeft));
         }
     }
 }

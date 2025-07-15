@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -111,5 +112,13 @@ namespace KexEdit.UI.NodeGraph {
     public class PriorityChangeEvent : NodeGraphEvent<PriorityChangeEvent> {
         public Entity Node;
         public int Priority;
+    }
+
+    public class NodeGraphPanChangeEvent : NodeGraphEvent<NodeGraphPanChangeEvent> {
+        public float2 Pan;
+    }
+
+    public class NodeGraphZoomChangeEvent : NodeGraphEvent<NodeGraphZoomChangeEvent> {
+        public float Zoom;
     }
 }

@@ -1,3 +1,4 @@
+using Unity.Properties;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
@@ -7,12 +8,14 @@ namespace KexEdit.UI.Timeline {
         private TimelineOutliner _outliner;
         private VisualElement _divider;
         private TimelineView _view;
+        private VisualElement _editorDivider;
+        private KeyframeEditor _keyframeEditor;
 
         public TimelineView View => _view;
 
         public Timeline() {
             style.position = Position.Absolute;
-            style.flexDirection = FlexDirection.RowReverse;
+            style.flexDirection = FlexDirection.Row;
             style.alignItems = Align.Stretch;
             style.left = 0;
             style.bottom = 0;
@@ -28,8 +31,8 @@ namespace KexEdit.UI.Timeline {
             style.marginBottom = 0f;
             style.backgroundColor = s_DarkBackgroundColor;
 
-            _view = new TimelineView();
-            Add(_view);
+            _outliner = new TimelineOutliner();
+            Add(_outliner);
 
             _divider = new VisualElement() {
                 style = {
@@ -49,8 +52,38 @@ namespace KexEdit.UI.Timeline {
             };
             Add(_divider);
 
-            _outliner = new TimelineOutliner();
-            Add(_outliner);
+            _view = new TimelineView();
+            Add(_view);
+
+            _editorDivider = new VisualElement() {
+                style = {
+                    position = Position.Relative,
+                    flexGrow = 0,
+                    width = 1f,
+                    backgroundColor = s_DividerColor,
+                    paddingLeft = 0f,
+                    paddingRight = 0f,
+                    paddingTop = 0f,
+                    paddingBottom = 0f,
+                    marginLeft = 0f,
+                    marginRight = 0f,
+                    marginTop = 0f,
+                    marginBottom = 0f
+                }
+            };
+            Add(_editorDivider);
+
+            _keyframeEditor = new KeyframeEditor();
+            Add(_keyframeEditor);
+
+            var displayBinding = new DataBinding {
+                dataSourcePath = new PropertyPath(nameof(TimelineData.EnableKeyframeEditor)),
+                bindingMode = BindingMode.ToTarget
+            };
+            displayBinding.sourceToUiConverters.AddConverter((ref bool value) =>
+                (StyleEnum<DisplayStyle>)(value ? DisplayStyle.Flex : DisplayStyle.None));
+            _editorDivider.SetBinding("style.display", displayBinding);
+            _keyframeEditor.SetBinding("style.display", displayBinding);
         }
 
         public void Initialize(TimelineData data) {
@@ -58,10 +91,12 @@ namespace KexEdit.UI.Timeline {
 
             _outliner.Initialize(data);
             _view.Initialize(data);
+            _keyframeEditor.Initialize(data);
         }
 
         public void Draw() {
             _view.Draw();
+            _keyframeEditor.Draw();
         }
     }
 }

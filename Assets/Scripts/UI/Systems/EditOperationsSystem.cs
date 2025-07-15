@@ -25,6 +25,10 @@ namespace KexEdit.UI {
         private void UpdateActiveHandler() {
             if (_menuInteractionActive) return;
             Vector2 mousePosition = Mouse.current.position.ReadValue();
+
+            float uiScale = UIScaleSystem.Instance.CurrentScale;
+            mousePosition /= uiScale;
+
             mousePosition.y = _root.worldBound.height - mousePosition.y;
             foreach (var handler in _handlers) {
                 if (!handler.IsInBounds(mousePosition)) continue;

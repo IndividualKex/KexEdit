@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using Unity.Collections;
+using Unity.Mathematics;
 
 namespace KexEdit.UI.Serialization {
     /*
@@ -16,7 +17,8 @@ namespace KexEdit.UI.Serialization {
     public static class SerializationVersion {
         public const int INITIAL = 1;
         public const int PRECISION_MIGRATION = 2;
-        public const int CURRENT = PRECISION_MIGRATION;
+        public const int UI_STATE_SERIALIZATION = 3;
+        public const int CURRENT = UI_STATE_SERIALIZATION;
     }
 
     [Flags]
@@ -40,8 +42,71 @@ namespace KexEdit.UI.Serialization {
         Reserved9 = 1 << 15,
     }
 
+    public struct SerializedUIState {
+        public float TimelineOffset;
+        public float TimelineZoom;
+        public float NodeGraphPanX;
+        public float NodeGraphPanY;
+        public float NodeGraphZoom;
+        public float CameraPositionX;
+        public float CameraPositionY;
+        public float CameraPositionZ;
+        public float CameraTargetPositionX;
+        public float CameraTargetPositionY;
+        public float CameraTargetPositionZ;
+        public float CameraDistance;
+        public float CameraTargetDistance;
+        public float CameraPitch;
+        public float CameraTargetPitch;
+        public float CameraYaw;
+        public float CameraTargetYaw;
+        public float CameraSpeedMultiplier;
+
+        public static SerializedUIState FromState(UIState state) {
+            return new SerializedUIState {
+                TimelineOffset = state.TimelineOffset,
+                TimelineZoom = state.TimelineZoom,
+                NodeGraphPanX = state.NodeGraphPan.x,
+                NodeGraphPanY = state.NodeGraphPan.y,
+                NodeGraphZoom = state.NodeGraphZoom,
+                CameraPositionX = state.CameraPosition.x,
+                CameraPositionY = state.CameraPosition.y,
+                CameraPositionZ = state.CameraPosition.z,
+                CameraTargetPositionX = state.CameraTargetPosition.x,
+                CameraTargetPositionY = state.CameraTargetPosition.y,
+                CameraTargetPositionZ = state.CameraTargetPosition.z,
+                CameraDistance = state.CameraDistance,
+                CameraTargetDistance = state.CameraTargetDistance,
+                CameraPitch = state.CameraPitch,
+                CameraTargetPitch = state.CameraTargetPitch,
+                CameraYaw = state.CameraYaw,
+                CameraTargetYaw = state.CameraTargetYaw,
+                CameraSpeedMultiplier = state.CameraSpeedMultiplier
+            };
+        }
+
+        public UIState ToState() {
+            return new UIState {
+                TimelineOffset = TimelineOffset,
+                TimelineZoom = TimelineZoom,
+                NodeGraphPan = new float2(NodeGraphPanX, NodeGraphPanY),
+                NodeGraphZoom = NodeGraphZoom,
+                CameraPosition = new float3(CameraPositionX, CameraPositionY, CameraPositionZ),
+                CameraTargetPosition = new float3(CameraTargetPositionX, CameraTargetPositionY, CameraTargetPositionZ),
+                CameraDistance = CameraDistance,
+                CameraTargetDistance = CameraTargetDistance,
+                CameraPitch = CameraPitch,
+                CameraTargetPitch = CameraTargetPitch,
+                CameraYaw = CameraYaw,
+                CameraTargetYaw = CameraTargetYaw,
+                CameraSpeedMultiplier = CameraSpeedMultiplier
+            };
+        }
+    }
+
     public struct SerializedGraph : IDisposable {
         public int Version;
+        public SerializedUIState UIState;
         public NativeArray<SerializedNode> Nodes;
         public NativeArray<SerializedEdge> Edges;
 
