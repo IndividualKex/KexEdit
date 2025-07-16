@@ -34,11 +34,18 @@ namespace KexEdit.UI.NodeGraph {
             _portQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Port>()
                 .Build(EntityManager);
+
+            RequireForUpdate<UIState>();
         }
 
         protected override void OnStartRunning() {
             var root = UIService.Instance.UIDocument.rootVisualElement;
             _view = root.Q<NodeGraphView>();
+            
+            var uiState = SystemAPI.GetSingleton<UIState>();
+            _data.Pan = uiState.NodeGraphPan;
+            _data.Zoom = uiState.NodeGraphZoom;
+            
             _view.Initialize(_data);
 
             _view.RegisterCallback<ViewRightClickEvent>(OnViewRightClick);
@@ -58,6 +65,8 @@ namespace KexEdit.UI.NodeGraph {
             _view.RegisterCallback<DurationTypeChangeEvent>(OnDurationTypeChange);
             _view.RegisterCallback<RenderToggleChangeEvent>(OnRenderToggleChange);
             _view.RegisterCallback<PriorityChangeEvent>(OnPriorityChange);
+            _view.RegisterCallback<NodeGraphPanChangeEvent>(OnNodeGraphPanChange);
+            _view.RegisterCallback<NodeGraphZoomChangeEvent>(OnNodeGraphZoomChange);
 
             EditOperationsSystem.RegisterHandler(this);
         }
@@ -68,11 +77,18 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         protected override void OnUpdate() {
+            SyncUIState();
             InitializeNodes();
             InitializeEdges();
             UpdateNodes();
             UpdateEdges();
             _view.Draw();
+        }
+
+        private void SyncUIState() {
+            var uiState = SystemAPI.GetSingleton<UIState>();
+            _data.Pan = uiState.NodeGraphPan;
+            _data.Zoom = uiState.NodeGraphZoom;
         }
 
         private void InitializeNodes() {
@@ -1170,7 +1186,8 @@ namespace KexEdit.UI.NodeGraph {
             if (selectedCount > 0) {
                 center /= selectedCount;
                 var viewCenter = new Vector2(_view.resolvedStyle.width, _view.resolvedStyle.height) * 0.5f;
-                _data.Pan = viewCenter - (center * _data.Zoom);
+                ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+                uiState.NodeGraphPan = viewCenter - (center * _data.Zoom);
             }
 
             portToPos.Dispose();
@@ -1325,8 +1342,9 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         public void ResetState() {
-            _data.Pan = Vector2.zero;
-            _data.Zoom = 1f;
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.NodeGraphPan = float2.zero;
+            uiState.NodeGraphZoom = 1f;
         }
 
         public bool CanCopy() => _data.HasSelectedNodes;
@@ -1388,6 +1406,16 @@ namespace KexEdit.UI.NodeGraph {
 
         public bool IsInBounds(Vector2 mousePosition) {
             return _view.worldBound.Contains(mousePosition);
+        }
+
+        private void OnNodeGraphPanChange(NodeGraphPanChangeEvent evt) {
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.NodeGraphPan = evt.Pan;
+        }
+
+        private void OnNodeGraphZoomChange(NodeGraphZoomChangeEvent evt) {
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.NodeGraphZoom = evt.Zoom;
         }
     }
 }

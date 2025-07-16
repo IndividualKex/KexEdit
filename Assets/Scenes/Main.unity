@@ -310,6 +310,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   UIDocument: {fileID: 690885149}
+  CinemachineCamera: {fileID: 1537195314}
+  RideCamera: {fileID: 758528366}
+  DefaultCullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  RideCullingMask:
+    serializedVersion: 2
+    m_Bits: 55
   CurveButtonTexture: {fileID: 6192944022281365145, guid: 5253b0b1cbc3c8044bdebaf9aeed89aa, type: 3}
   TextCursorTexture: {fileID: 2800000, guid: 53bc9cee79cd0a44bba67d927228f176, type: 3}
   SlideHorizontalCursorTexture: {fileID: 2800000, guid: 51a42264503d2f84c945d572aeb70c9c, type: 3}
@@ -878,7 +886,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1537195313}
   - component: {fileID: 1537195314}
-  - component: {fileID: 1537195315}
   m_Layer: 0
   m_Name: CinemachineCamera
   m_TagString: Untagged
@@ -944,39 +951,6 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
---- !u!114 &1537195315
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1537195312}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 305af2ad4f21f7648af8f1485853409f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  CinemachineCamera: {fileID: 1537195314}
-  RideCamera: {fileID: 758528366}
-  DefaultCullingMask:
-    serializedVersion: 2
-    m_Bits: 65
-  RideCullingMask:
-    serializedVersion: 2
-    m_Bits: 1
-  UIDocument: {fileID: 690885149}
-  OrbitSpeed: 35
-  ZoomSpeed: 0.12
-  MinDistance: 1
-  MaxDistance: 1000
-  Dampening: 50
-  PanSpeed: 1
-  FreeLookSpeed: 15
-  MovementSpeed: 50
-  FastMovementMultiplier: 3
-  MinSpeedMultiplier: 0.1
-  MaxSpeedMultiplier: 10
-  SpeedMultiplierStep: 0.1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

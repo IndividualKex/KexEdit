@@ -124,6 +124,20 @@ public class SerializationTests {
         // Test full empty graph serialization
         var graph = new SerializedGraph {
             Version = SerializationVersion.CURRENT,
+            UIState = new SerializedUIState {
+                TimelineOffset = 100f,
+                TimelineZoom = 1.5f,
+                NodeGraphPanX = 50f,
+                NodeGraphPanY = -25f,
+                NodeGraphZoom = 2f,
+                CameraTargetPositionX = 10f,
+                CameraTargetPositionY = 5f,
+                CameraTargetPositionZ = -15f,
+                CameraTargetDistance = 20f,
+                CameraTargetPitch = 30f,
+                CameraTargetYaw = 45f,
+                CameraSpeedMultiplier = 2.5f
+            },
             Nodes = new NativeArray<SerializedNode>(0, Allocator.Temp),
             Edges = new NativeArray<SerializedEdge>(0, Allocator.Temp)
         };
@@ -153,6 +167,20 @@ public class SerializationTests {
                     Assert.AreEqual(graph.Nodes.Length, deserializedGraph.Nodes.Length);
                     Assert.AreEqual(graph.Edges.Length, deserializedGraph.Edges.Length);
                     Assert.AreEqual(serializedSize, deserializedSize);
+
+                    // Verify UI state
+                    Assert.AreEqual(graph.UIState.TimelineOffset, deserializedGraph.UIState.TimelineOffset, 0.001f);
+                    Assert.AreEqual(graph.UIState.TimelineZoom, deserializedGraph.UIState.TimelineZoom, 0.001f);
+                    Assert.AreEqual(graph.UIState.NodeGraphPanX, deserializedGraph.UIState.NodeGraphPanX, 0.001f);
+                    Assert.AreEqual(graph.UIState.NodeGraphPanY, deserializedGraph.UIState.NodeGraphPanY, 0.001f);
+                    Assert.AreEqual(graph.UIState.NodeGraphZoom, deserializedGraph.UIState.NodeGraphZoom, 0.001f);
+                    Assert.AreEqual(graph.UIState.CameraTargetPositionX, deserializedGraph.UIState.CameraTargetPositionX, 0.001f);
+                    Assert.AreEqual(graph.UIState.CameraTargetPositionY, deserializedGraph.UIState.CameraTargetPositionY, 0.001f);
+                    Assert.AreEqual(graph.UIState.CameraTargetPositionZ, deserializedGraph.UIState.CameraTargetPositionZ, 0.001f);
+                    Assert.AreEqual(graph.UIState.CameraTargetDistance, deserializedGraph.UIState.CameraTargetDistance, 0.001f);
+                    Assert.AreEqual(graph.UIState.CameraTargetPitch, deserializedGraph.UIState.CameraTargetPitch, 0.001f);
+                    Assert.AreEqual(graph.UIState.CameraTargetYaw, deserializedGraph.UIState.CameraTargetYaw, 0.001f);
+                    Assert.AreEqual(graph.UIState.CameraSpeedMultiplier, deserializedGraph.UIState.CameraSpeedMultiplier, 0.001f);
                 }
                 finally {
                     deserializedGraph.Dispose();
@@ -268,6 +296,20 @@ public class SerializationTests {
                 // Should have migrated to current version
                 Assert.AreEqual(SerializationVersion.CURRENT, graph.Version);
 
+                // Verify UI state has default values for migrated files
+                Assert.AreEqual(0f, graph.UIState.TimelineOffset, 0.001f);
+                Assert.AreEqual(1f, graph.UIState.TimelineZoom, 0.001f);
+                Assert.AreEqual(0f, graph.UIState.NodeGraphPanX, 0.001f);
+                Assert.AreEqual(0f, graph.UIState.NodeGraphPanY, 0.001f);
+                Assert.AreEqual(1f, graph.UIState.NodeGraphZoom, 0.001f);
+                Assert.AreEqual(0f, graph.UIState.CameraTargetPositionX, 0.001f);
+                Assert.AreEqual(0f, graph.UIState.CameraTargetPositionY, 0.001f);
+                Assert.AreEqual(0f, graph.UIState.CameraTargetPositionZ, 0.001f);
+                Assert.AreEqual(10f, graph.UIState.CameraTargetDistance, 0.001f);
+                Assert.AreEqual(0f, graph.UIState.CameraTargetPitch, 0.001f);
+                Assert.AreEqual(0f, graph.UIState.CameraTargetYaw, 0.001f);
+                Assert.AreEqual(1f, graph.UIState.CameraSpeedMultiplier, 0.001f);
+
                 // Check that we have some nodes (shuttle.kex should contain data)
                 Assert.IsTrue(graph.Nodes.Length > 0, "Expected nodes in shuttle.kex");
 
@@ -304,6 +346,66 @@ public class SerializationTests {
         }
         catch (System.Exception ex) {
             Assert.Fail($"Migration failed: {ex.Message}");
+        }
+    }
+
+    [Test]
+    public void TestUIStateSerialization() {
+        // Test UI state serialization specifically
+        var buffer = new NativeArray<byte>(256, Allocator.Temp);
+
+        var writer = new BinaryWriter(buffer);
+
+        // Write version
+        writer.Write(SerializationVersion.UI_STATE_SERIALIZATION);
+
+        // Write UI state
+        writer.Write(123.45f);  // TimelineOffset
+        writer.Write(2.5f);     // TimelineZoom
+        writer.Write(-50.25f);  // NodeGraphPanX
+        writer.Write(75.75f);   // NodeGraphPanY
+        writer.Write(1.25f);    // NodeGraphZoom
+        writer.Write(10.5f);    // CameraTargetPositionX
+        writer.Write(-5.25f);   // CameraTargetPositionY
+        writer.Write(15.75f);   // CameraTargetPositionZ
+        writer.Write(25.0f);    // CameraTargetDistance
+        writer.Write(45.0f);    // CameraTargetPitch
+        writer.Write(90.0f);    // CameraTargetYaw
+        writer.Write(3.5f);     // CameraSpeedMultiplier
+
+        // Write empty node/edge counts
+        writer.Write(0);        // Node count
+        writer.Write(0);        // Edge count (handled by WriteArray for empty)
+
+        Debug.Log($"Written UI state data, position: {writer.Position}");
+
+        // Read back
+        var reader = new BinaryReader(buffer);
+        var graph = new SerializedGraph();
+
+        try {
+            int bytesRead = GraphSerializer.Deserialize(ref graph, ref buffer);
+            Debug.Log($"Read UI state data, bytes: {bytesRead}");
+
+            // Verify all UI state values
+            Assert.AreEqual(123.45f, graph.UIState.TimelineOffset, 0.001f);
+            Assert.AreEqual(2.5f, graph.UIState.TimelineZoom, 0.001f);
+            Assert.AreEqual(-50.25f, graph.UIState.NodeGraphPanX, 0.001f);
+            Assert.AreEqual(75.75f, graph.UIState.NodeGraphPanY, 0.001f);
+            Assert.AreEqual(1.25f, graph.UIState.NodeGraphZoom, 0.001f);
+            Assert.AreEqual(10.5f, graph.UIState.CameraTargetPositionX, 0.001f);
+            Assert.AreEqual(-5.25f, graph.UIState.CameraTargetPositionY, 0.001f);
+            Assert.AreEqual(15.75f, graph.UIState.CameraTargetPositionZ, 0.001f);
+            Assert.AreEqual(25.0f, graph.UIState.CameraTargetDistance, 0.001f);
+            Assert.AreEqual(45.0f, graph.UIState.CameraTargetPitch, 0.001f);
+            Assert.AreEqual(90.0f, graph.UIState.CameraTargetYaw, 0.001f);
+            Assert.AreEqual(3.5f, graph.UIState.CameraSpeedMultiplier, 0.001f);
+
+            Debug.Log("UI state serialization test passed");
+        }
+        finally {
+            graph.Dispose();
+            buffer.Dispose();
         }
     }
 

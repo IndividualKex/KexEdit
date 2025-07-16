@@ -38,6 +38,8 @@ namespace KexEdit.UI.Serialization {
             _portQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Port>()
                 .Build(EntityManager);
+
+            RequireForUpdate<UIState>();
         }
 
         protected override void OnUpdate() { }
@@ -84,6 +86,9 @@ namespace KexEdit.UI.Serialization {
 
         public byte[] SerializeGraph() {
             SerializedGraph graph = new();
+
+            var uiState = SystemAPI.GetSingleton<UIState>();
+            graph.UIState = SerializedUIState.FromState(uiState);
 
             using var nodeEntities = _nodeQuery.ToEntityArray(Allocator.Temp);
             graph.Nodes = new(nodeEntities.Length, Allocator.Temp);
@@ -139,6 +144,9 @@ namespace KexEdit.UI.Serialization {
             SerializedGraph serializedGraph = new();
             GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
             buffer.Dispose();
+
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState = serializedGraph.UIState.ToState();
 
             ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var node in serializedGraph.Nodes) {

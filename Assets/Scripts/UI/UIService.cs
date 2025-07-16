@@ -1,9 +1,14 @@
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace KexEdit.UI {
     public class UIService : MonoBehaviour {
         public UIDocument UIDocument;
+        public CinemachineCamera CinemachineCamera;
+        public CinemachineCamera RideCamera;
+        public UnityEngine.LayerMask DefaultCullingMask;
+        public UnityEngine.LayerMask RideCullingMask;
         public Texture2D CurveButtonTexture;
         public Texture2D TextCursorTexture;
         public Texture2D SlideHorizontalCursorTexture;
