@@ -5,7 +5,7 @@ namespace KexEdit {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class MeshLoadingSystem : SystemBase {
         protected override void OnUpdate() {
-            foreach (var (meshReference, entity) in SystemAPI.Query<MeshReference>().WithEntityAccess()) {
+            foreach (var (meshReference, render, entity) in SystemAPI.Query<MeshReference, Render>().WithEntityAccess()) {
                 if (meshReference.Loaded || meshReference.FilePath.IsEmpty || meshReference.Value != null) continue;
                 meshReference.Loaded = true;
                 string filePath = meshReference.FilePath.ToString();
@@ -13,12 +13,14 @@ namespace KexEdit {
                     ImportManager.ImportGltfFileAsync(filePath, managedMesh => {
                         meshReference.Value = managedMesh;
                         managedMesh.Node = entity;
+                        managedMesh.gameObject.SetActive(render.Value);
                     });
                 }
                 else if (filePath.EndsWith(".obj")) {
                     ImportManager.ImportObjFile(filePath, managedMesh => {
                         meshReference.Value = managedMesh;
                         managedMesh.Node = entity;
+                        managedMesh.gameObject.SetActive(render.Value);
                     });
                 }
                 else {

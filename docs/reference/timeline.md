@@ -47,17 +47,18 @@ When a node with controllable properties is selected, the Timeline displays:
 
 ### Basic Operations
 
-| Input           | Action       | Notes                                     |
-| --------------- | ------------ | ----------------------------------------- |
-| `I`             | Insert       | Add keyframe at playhead                  |
-| `Left Click`    | Select       | Select keyframe                           |
-| `Double Click`  | Edit         | Toggle keyframe edit panel                |
-| `Shift + Click` | Multi-Select | Add to selection                          |
-| `Drag`          | Move         | Reposition keyframe                       |
-| `Delete`        | Remove       | Delete selected keyframes                 |
-| `Ctrl+C/V`      | Copy/Paste   | Duplicate keyframes                       |
-| `Box Select`    | Multi-Select | Drag to select multiple                   |
-| `Right Click`   | Context Menu | Optimize, change interpolation type, etc. |
+| Input           | Action       | Notes                                    |
+| --------------- | ------------ | ---------------------------------------- |
+| `I`             | Insert       | Add keyframe at playhead                 |
+| `Left Click`    | Select       | Select keyframe                          |
+| `Double Click`  | Edit         | Toggle keyframe edit panel               |
+| `V`             | Set Value    | Quick value editor for selected keyframe |
+| `Shift + Click` | Multi-Select | Add to selection                         |
+| `Drag`          | Move         | Reposition keyframe                      |
+| `Delete`        | Remove       | Delete selected keyframes                |
+| `Ctrl+C/V`      | Copy/Paste   | Duplicate keyframes                      |
+| `Box Select`    | Multi-Select | Drag to select multiple                  |
+| `Right Click`   | Context Menu | Edit, Optimize, etc.                     |
 
 ### Curve View Controls
 
