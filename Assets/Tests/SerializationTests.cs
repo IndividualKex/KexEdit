@@ -302,12 +302,12 @@ public class SerializationTests {
                 Assert.AreEqual(0f, graph.UIState.NodeGraphPanX, 0.001f);
                 Assert.AreEqual(0f, graph.UIState.NodeGraphPanY, 0.001f);
                 Assert.AreEqual(1f, graph.UIState.NodeGraphZoom, 0.001f);
-                Assert.AreEqual(0f, graph.UIState.CameraTargetPositionX, 0.001f);
-                Assert.AreEqual(0f, graph.UIState.CameraTargetPositionY, 0.001f);
-                Assert.AreEqual(0f, graph.UIState.CameraTargetPositionZ, 0.001f);
-                Assert.AreEqual(10f, graph.UIState.CameraTargetDistance, 0.001f);
-                Assert.AreEqual(0f, graph.UIState.CameraTargetPitch, 0.001f);
-                Assert.AreEqual(0f, graph.UIState.CameraTargetYaw, 0.001f);
+                Assert.AreEqual(6f, graph.UIState.CameraTargetPositionX, 0.001f);
+                Assert.AreEqual(6f, graph.UIState.CameraTargetPositionY, 0.001f);
+                Assert.AreEqual(6f, graph.UIState.CameraTargetPositionZ, 0.001f);
+                Assert.AreEqual(10.39230484541326f, graph.UIState.CameraTargetDistance, 0.001f);
+                Assert.AreEqual(30f, graph.UIState.CameraTargetPitch, 0.001f);
+                Assert.AreEqual(-135f, graph.UIState.CameraTargetYaw, 0.001f);
                 Assert.AreEqual(1f, graph.UIState.CameraSpeedMultiplier, 0.001f);
 
                 // Check that we have some nodes (shuttle.kex should contain data)

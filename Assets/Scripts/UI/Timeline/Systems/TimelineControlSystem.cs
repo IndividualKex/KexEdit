@@ -54,11 +54,11 @@ namespace KexEdit.UI.Timeline {
         protected override void OnStartRunning() {
             var root = UIService.Instance.UIDocument.rootVisualElement;
             _timeline = root.Q<Timeline>();
-            
+
             var uiState = SystemAPI.GetSingleton<UIState>();
             _data.Offset = uiState.TimelineOffset;
             _data.Zoom = uiState.TimelineZoom;
-            
+
             _timeline.Initialize(_data);
 
             _timeline.RegisterCallback<CurveButtonClickEvent>(OnCurveButtonClick);
@@ -75,6 +75,7 @@ namespace KexEdit.UI.Timeline {
             _timeline.RegisterCallback<ViewRightClickEvent>(OnViewRightClick);
             _timeline.RegisterCallback<SetKeyframeEvent>(OnSetKeyframe);
             _timeline.RegisterCallback<SetKeyframeAtTimeEvent>(OnSetKeyframeAtTime);
+            _timeline.RegisterCallback<SetKeyframeValueEvent>(OnSetKeyframeValue);
             _timeline.RegisterCallback<JumpToKeyframeEvent>(OnJumpToKeyframe);
             _timeline.RegisterCallback<KeyframeButtonClickEvent>(OnKeyframeButtonClick);
             _timeline.RegisterCallback<DragKeyframesEvent>(OnDragKeyframes);
@@ -1030,7 +1031,6 @@ namespace KexEdit.UI.Timeline {
                         _data.EnableKeyframeEditor = !_data.EnableKeyframeEditor;
                         Preferences.KeyframeEditor = _data.EnableKeyframeEditor;
                     }, isChecked: _data.EnableKeyframeEditor);
-                    menu.AddSeparator();
                     menu.AddSubmenu("Optimize", submenu => {
                         submenu.AddItem("Roll", () => {
                             Undo.Record();
@@ -1082,6 +1082,11 @@ namespace KexEdit.UI.Timeline {
                     menu.AddSeparator();
                 }
 
+                menu.AddItem("Set Value", () => {
+                    var keyframe = GetSelectedKeyframe();
+                    ShowKeyframeValueEditor(keyframe, evt.MousePosition);
+                }, "V");
+                menu.AddSeparator();
                 menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", EditOperationsSystem.HandleCut, "Ctrl+X", enabled: canCut && hasSelection);
                 menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", EditOperationsSystem.HandleCopy, "Ctrl+C", enabled: canCopy && hasSelection);
                 menu.AddPlatformItem(canPaste ? "Paste" : "Cannot Paste", EditOperationsSystem.HandlePaste, "Ctrl+V", enabled: canPaste);
@@ -1354,6 +1359,10 @@ namespace KexEdit.UI.Timeline {
                 UnityEngine.Debug.LogError($"No keyframe found for type {evt.Type} with ID {evt.KeyframeId}");
             }
             MarkTrackDirty();
+        }
+
+        private void OnSetKeyframeValue(SetKeyframeValueEvent evt) {
+            ShowKeyframeValueEditor(evt.Keyframe, evt.MousePosition);
         }
 
         private void ResetKeyframe() {

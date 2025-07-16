@@ -1074,6 +1074,10 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.AddBuffer<ResistanceKeyframe>(entity);
             }
 
+            if (type == NodeType.Mesh) {
+                ecb.AddComponent<Render>(entity, true);
+            }
+
             if (type == NodeType.ForceSection ||
                 type == NodeType.GeometricSection) {
                 ecb.AddComponent(entity, new Duration {

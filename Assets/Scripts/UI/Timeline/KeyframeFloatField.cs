@@ -1,4 +1,5 @@
 using Unity.Mathematics;
+using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
@@ -11,6 +12,7 @@ namespace KexEdit.UI.Timeline {
         private TimelineData _data;
         private float _startPosition;
         private float _startValue;
+        private float _lastScrollTime;
         private bool _dragging;
         private bool _moved;
 
@@ -43,6 +45,7 @@ namespace KexEdit.UI.Timeline {
             _label.RegisterCallback<MouseMoveEvent>(OnMouseMove);
             _label.RegisterCallback<MouseUpEvent>(OnMouseUp);
             _field.RegisterCallback<ChangeEvent<float>>(OnFieldValueChanged);
+            _field.RegisterCallback<WheelEvent>(OnFieldScroll);
         }
 
         public void Initialize(TimelineData data) {
@@ -181,6 +184,35 @@ namespace KexEdit.UI.Timeline {
         private void OnFieldValueChanged(ChangeEvent<float> evt) {
             Undo.Record();
             SetInternalValue(evt.newValue);
+        }
+
+        private void OnFieldScroll(WheelEvent evt) {
+            float scrollAmount = evt.shiftKey ? 0.01f : 0.1f;
+            float delta = evt.delta.y > 0 ? -scrollAmount : scrollAmount;
+            float newValue = _field.value + delta;
+
+            newValue = ApplyFieldConstraints(newValue);
+            float roundedValue = math.round(newValue * 1e3f) / 1e3f;
+
+            if (math.abs(roundedValue - _field.value) > 1e-6f) {
+                float currentTime = Time.realtimeSinceStartup;
+                if (currentTime - _lastScrollTime > 0.5f) {
+                    Undo.Record();
+                }
+                _lastScrollTime = currentTime;
+
+                _field.SetValueWithoutNotify(roundedValue);
+                SetInternalValue(roundedValue);
+            }
+
+            evt.StopPropagation();
+        }
+
+        private float ApplyFieldConstraints(float value) {
+            return _fieldType switch {
+                KeyframeFieldType.InWeight or KeyframeFieldType.OutWeight => math.clamp(value, 0.01f, 2f),
+                _ => value,
+            };
         }
     }
 }
