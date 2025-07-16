@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -608,19 +607,6 @@ namespace KexEdit.UI.Timeline {
 
         public static IEnumerable<EasingType> EnumerateEasingTypes() {
             return s_EasingStringCache.Keys;
-        }
-
-        public static KeyframeEditDialog ShowKeyframeEditDialog(
-            this VisualElement element,
-            KeyframeData keyframe,
-            DurationType durationType,
-            Action<Keyframe> onApply
-        ) {
-            var root = element.panel.visualTree.Q<TemplateContainer>();
-            KexTime.Pause();
-            var dialog = new KeyframeEditDialog(keyframe, durationType, onApply, KexTime.Unpause);
-            root.Add(dialog);
-            return dialog;
         }
     }
 }

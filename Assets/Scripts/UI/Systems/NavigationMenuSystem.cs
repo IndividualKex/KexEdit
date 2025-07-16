@@ -138,6 +138,8 @@ namespace KexEdit.UI {
                     });
                 });
                 menu.AddSeparator();
+                menu.AddItem("Preferences", ShowPreferences);
+                menu.AddSeparator();
                 menu.AddItem("Quit", QuitWithConfirmation);
             });
         }
@@ -166,6 +168,9 @@ namespace KexEdit.UI {
 
         private void AddViewMenu(MenuBar menuBar) {
             menuBar.AddMenu("View", menu => {
+                menu.AddItem("Ride Camera", () => OrbitCameraSystem.ToggleRideCamera(), "R",
+                    isChecked: OrbitCameraSystem.IsRideCameraActive);
+                menu.AddSeparator();
                 menu.AddItem("Zoom In", () => UIScaleSystem.Instance?.ZoomIn(), "Ctrl++".ToPlatformShortcut());
                 menu.AddItem("Zoom Out", () => UIScaleSystem.Instance?.ZoomOut(), "Ctrl+-".ToPlatformShortcut());
                 menu.AddItem("Reset Zoom", () => UIScaleSystem.Instance?.ResetZoom());
@@ -201,6 +206,10 @@ namespace KexEdit.UI {
 
         private void ShowExportDialog() {
             _root.ShowExportDialog(metersPerNode => NoLimits2Exporter.ExportTrack(metersPerNode));
+        }
+
+        private void ShowPreferences() {
+            _root.ShowPreferencesDialog();
         }
 
         private void ToggleNodeGridSnapping() {

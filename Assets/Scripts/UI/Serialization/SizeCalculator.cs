@@ -5,6 +5,21 @@ namespace KexEdit.UI.Serialization {
     public static class SizeCalculator {
         public static int CalculateSize(ref SerializedGraph graph) {
             int size = sizeof(int); // Version
+            
+            // UI State (12 floats)
+            size += sizeof(float); // TimelineOffset
+            size += sizeof(float); // TimelineZoom
+            size += sizeof(float); // NodeGraphPanX
+            size += sizeof(float); // NodeGraphPanY
+            size += sizeof(float); // NodeGraphZoom
+            size += sizeof(float); // CameraTargetPositionX
+            size += sizeof(float); // CameraTargetPositionY
+            size += sizeof(float); // CameraTargetPositionZ
+            size += sizeof(float); // CameraTargetDistance
+            size += sizeof(float); // CameraTargetPitch
+            size += sizeof(float); // CameraTargetYaw
+            size += sizeof(float); // CameraSpeedMultiplier
+            
             size += sizeof(int); // Node count
 
             for (int i = 0; i < graph.Nodes.Length; i++) {

@@ -25,7 +25,10 @@ namespace KexEdit.UI.Timeline {
         private EntityQuery _nodeQuery;
 
         protected override void OnCreate() {
-            _data = new TimelineData();
+            _data = new TimelineData {
+                EnableKeyframeEditor = Preferences.KeyframeEditor
+            };
+
             foreach (PropertyType propertyType in System.Enum.GetValues(typeof(PropertyType))) {
                 _data.OrderedProperties.Add(propertyType);
                 _data.Properties.Add(propertyType, new PropertyData {
@@ -45,11 +48,17 @@ namespace KexEdit.UI.Timeline {
                 .Build(EntityManager);
 
             RequireForUpdate(_playheadQuery);
+            RequireForUpdate<UIState>();
         }
 
         protected override void OnStartRunning() {
             var root = UIService.Instance.UIDocument.rootVisualElement;
             _timeline = root.Q<Timeline>();
+            
+            var uiState = SystemAPI.GetSingleton<UIState>();
+            _data.Offset = uiState.TimelineOffset;
+            _data.Zoom = uiState.TimelineZoom;
+            
             _timeline.Initialize(_data);
 
             _timeline.RegisterCallback<CurveButtonClickEvent>(OnCurveButtonClick);
@@ -65,12 +74,15 @@ namespace KexEdit.UI.Timeline {
             _timeline.RegisterCallback<ViewClickEvent>(OnViewClick);
             _timeline.RegisterCallback<ViewRightClickEvent>(OnViewRightClick);
             _timeline.RegisterCallback<SetKeyframeEvent>(OnSetKeyframe);
+            _timeline.RegisterCallback<SetKeyframeAtTimeEvent>(OnSetKeyframeAtTime);
             _timeline.RegisterCallback<JumpToKeyframeEvent>(OnJumpToKeyframe);
             _timeline.RegisterCallback<KeyframeButtonClickEvent>(OnKeyframeButtonClick);
             _timeline.RegisterCallback<DragKeyframesEvent>(OnDragKeyframes);
             _timeline.RegisterCallback<DragBezierHandleEvent>(OnDragBezierHandle);
             _timeline.RegisterCallback<SelectKeyframesEvent>(OnSelectKeyframes);
             _timeline.RegisterCallback<AddKeyframeEvent>(OnAddKeyframe);
+            _timeline.RegisterCallback<TimelineOffsetChangeEvent>(OnTimelineOffsetChange);
+            _timeline.RegisterCallback<TimelineZoomChangeEvent>(OnTimelineZoomChange);
 
             EditOperationsSystem.RegisterHandler(this);
         }
@@ -81,11 +93,18 @@ namespace KexEdit.UI.Timeline {
         }
 
         protected override void OnUpdate() {
+            SyncUIState();
             UpdateActive();
             SyncWithPlayback();
             UpdatePlayhead();
             UpdateTimelineData();
             _timeline.Draw();
+        }
+
+        private void SyncUIState() {
+            var uiState = SystemAPI.GetSingleton<UIState>();
+            _data.Offset = uiState.TimelineOffset;
+            _data.Zoom = uiState.TimelineZoom;
         }
 
         private void UpdateActive() {
@@ -169,7 +188,10 @@ namespace KexEdit.UI.Timeline {
         private void UpdateTimelineData() {
             UpdateProperties();
 
-            if (!_data.Active) return;
+            if (!_data.Active) {
+                _data.HasEditingKeyframe = false;
+                return;
+            }
 
             _data.DisplayName = GetDisplayName();
             _data.Duration = GetDuration();
@@ -223,6 +245,23 @@ namespace KexEdit.UI.Timeline {
                         propertyData.SelectedKeyframeCount++;
                     }
                 }
+            }
+            bool hasSelectedKeyframe = _data.SelectedKeyframeCount == 1;
+            KeyframeData? editingKeyframeData = hasSelectedKeyframe ? GetSelectedKeyframe() : null;
+            _data.HasEditingKeyframe = _data.EnableKeyframeEditor && editingKeyframeData.HasValue;
+            if (_data.HasEditingKeyframe) {
+                KeyframeData editingKeyframe = editingKeyframeData.Value;
+                _data.EditingKeyframeType = editingKeyframe.Type;
+                _data.EditingKeyframeInInterpolation = editingKeyframe.Value.InInterpolation;
+                _data.EditingKeyframeOutInterpolation = editingKeyframe.Value.OutInterpolation;
+                _data.EditingKeyframeHandleType = editingKeyframe.Value.HandleType;
+                _data.EditingKeyframeId = editingKeyframe.Value.Id;
+                _data.EditingKeyframeValue = editingKeyframe.Value.Value;
+                _data.EditingKeyframeTime = editingKeyframe.Value.Time;
+                _data.EditingKeyframeInWeight = editingKeyframe.Value.InWeight;
+                _data.EditingKeyframeInTangent = editingKeyframe.Value.InTangent;
+                _data.EditingKeyframeOutWeight = editingKeyframe.Value.OutWeight;
+                _data.EditingKeyframeOutTangent = editingKeyframe.Value.OutTangent;
             }
         }
 
@@ -711,7 +750,7 @@ namespace KexEdit.UI.Timeline {
             _data.ViewMode = _data.ViewMode == TimelineViewMode.DopeSheet ?
                 TimelineViewMode.Curve :
                 TimelineViewMode.DopeSheet;
-            
+
             foreach (var (type, propertyData) in _data.Properties) {
                 propertyData.ViewMode = _data.ViewMode;
             }
@@ -861,7 +900,8 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void OnKeyframeDoubleClick(KeyframeDoubleClickEvent evt) {
-            ShowKeyframeEditDialog(evt.Keyframe);
+            _data.EnableKeyframeEditor = !_data.EnableKeyframeEditor;
+            Preferences.KeyframeEditor = _data.EnableKeyframeEditor;
         }
 
         private void ShowKeyframeValueEditor(KeyframeData keyframe, UnityEngine.Vector2 position) {
@@ -987,9 +1027,9 @@ namespace KexEdit.UI.Timeline {
 
                 if (hasSelection && !hasMultiSelection) {
                     menu.AddItem("Edit", () => {
-                        var selectedKeyframe = GetSelectedKeyframe();
-                        ShowKeyframeEditDialog(selectedKeyframe);
-                    });
+                        _data.EnableKeyframeEditor = !_data.EnableKeyframeEditor;
+                        Preferences.KeyframeEditor = _data.EnableKeyframeEditor;
+                    }, isChecked: _data.EnableKeyframeEditor);
                     menu.AddSeparator();
                     menu.AddSubmenu("Optimize", submenu => {
                         submenu.AddItem("Roll", () => {
@@ -1287,6 +1327,32 @@ namespace KexEdit.UI.Timeline {
                 UpdateSelectionState();
             }
 
+            MarkTrackDirty();
+        }
+
+        private void OnSetKeyframeAtTime(SetKeyframeAtTimeEvent evt) {
+            var adapter = PropertyAdapter.GetAdapter(evt.Type);
+            var keyframe = FindKeyframeById(adapter, evt.KeyframeId);
+            if (keyframe.Id != 0) {
+                var updatedKeyframe = new Keyframe {
+                    Id = keyframe.Id,
+                    Time = evt.Time,
+                    Value = evt.Value,
+                    InInterpolation = evt.InInterpolation,
+                    OutInterpolation = evt.OutInterpolation,
+                    HandleType = keyframe.HandleType,
+                    Flags = keyframe.Flags,
+                    InTangent = evt.InTangent,
+                    OutTangent = evt.OutTangent,
+                    InWeight = evt.InWeight,
+                    OutWeight = evt.OutWeight,
+                    Selected = keyframe.Selected
+                };
+                adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+            }
+            else {
+                UnityEngine.Debug.LogError($"No keyframe found for type {evt.Type} with ID {evt.KeyframeId}");
+            }
             MarkTrackDirty();
         }
 
@@ -1920,13 +1986,14 @@ namespace KexEdit.UI.Timeline {
             MarkTrackDirty();
         }
 
-        private void ShowKeyframeEditDialog(KeyframeData keyframe) {
-            _timeline.ShowKeyframeEditDialog(keyframe, _data.DurationType, updatedKeyframe => {
-                Undo.Record();
-                var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
-                adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
-                MarkTrackDirty();
-            });
+        private void OnTimelineOffsetChange(TimelineOffsetChangeEvent evt) {
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.TimelineOffset = evt.Offset;
+        }
+
+        private void OnTimelineZoomChange(TimelineZoomChangeEvent evt) {
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.TimelineZoom = evt.Zoom;
         }
     }
 }

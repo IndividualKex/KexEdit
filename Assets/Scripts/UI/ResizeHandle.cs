@@ -22,6 +22,12 @@ namespace KexEdit.UI {
                 style.top = -SIZE / 2f;
                 style.height = SIZE;
             }
+            else if (_mode == ResizeMode.HorizontalLeft) {
+                style.top = 0f;
+                style.bottom = 0f;
+                style.left = -SIZE / 2f;
+                style.width = SIZE;
+            }
             else {
                 style.top = 0f;
                 style.bottom = 0f;
@@ -56,7 +62,17 @@ namespace KexEdit.UI {
 
             var target = parent;
             var delta = evt.mousePosition - _startMouse;
-            float x = _mode == ResizeMode.Vertical ? -delta.y : delta.x;
+            float x;
+            if (_mode == ResizeMode.Vertical) {
+                x = -delta.y;
+            }
+            else if (_mode == ResizeMode.HorizontalLeft) {
+                x = -delta.x;
+            }
+            else {
+                x = delta.x;
+            }
+
             float size = Mathf.Max(MIN_SIZE, _startSize + x);
             if (_mode == ResizeMode.Vertical) {
                 target.style.height = size;
@@ -76,7 +92,8 @@ namespace KexEdit.UI {
         }
 
         public enum ResizeMode {
-            Horizontal,
+            HorizontalLeft,
+            HorizontalRight,
             Vertical
         }
     }

@@ -1,5 +1,6 @@
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Mathematics;
 
 namespace KexEdit.UI.Serialization {
     [System.Serializable]
@@ -58,6 +59,20 @@ namespace KexEdit.UI.Serialization {
             int startPos = writer.Position;
 
             writer.Write(SerializationVersion.CURRENT);
+
+            writer.Write(graph.UIState.TimelineOffset);
+            writer.Write(graph.UIState.TimelineZoom);
+            writer.Write(graph.UIState.NodeGraphPanX);
+            writer.Write(graph.UIState.NodeGraphPanY);
+            writer.Write(graph.UIState.NodeGraphZoom);
+            writer.Write(graph.UIState.CameraTargetPositionX);
+            writer.Write(graph.UIState.CameraTargetPositionY);
+            writer.Write(graph.UIState.CameraTargetPositionZ);
+            writer.Write(graph.UIState.CameraTargetDistance);
+            writer.Write(graph.UIState.CameraTargetPitch);
+            writer.Write(graph.UIState.CameraTargetYaw);
+            writer.Write(graph.UIState.CameraSpeedMultiplier);
+
             writer.Write(graph.Nodes.Length);
 
             for (int i = 0; i < graph.Nodes.Length; i++) {
@@ -72,6 +87,46 @@ namespace KexEdit.UI.Serialization {
         [BurstCompile]
         private static int DeserializeBinary(ref SerializedGraph graph, ref BinaryReader reader) {
             int fileVersion = reader.Read<int>();
+
+            if (fileVersion >= SerializationVersion.UI_STATE_SERIALIZATION) {
+                graph.UIState.TimelineOffset = reader.Read<float>();
+                graph.UIState.TimelineZoom = reader.Read<float>();
+                graph.UIState.NodeGraphPanX = reader.Read<float>();
+                graph.UIState.NodeGraphPanY = reader.Read<float>();
+                graph.UIState.NodeGraphZoom = reader.Read<float>();
+                graph.UIState.CameraTargetPositionX = reader.Read<float>();
+                graph.UIState.CameraTargetPositionY = reader.Read<float>();
+                graph.UIState.CameraTargetPositionZ = reader.Read<float>();
+                graph.UIState.CameraTargetDistance = reader.Read<float>();
+                graph.UIState.CameraTargetPitch = reader.Read<float>();
+                graph.UIState.CameraTargetYaw = reader.Read<float>();
+                graph.UIState.CameraSpeedMultiplier = reader.Read<float>();
+            }
+            else {
+                float3 defaultPosition = new(6f, 6f, 6f);
+                float3 defaultEuler = new(30f, -135f, 0f);
+                graph.UIState = new SerializedUIState {
+                    TimelineOffset = 0f,
+                    TimelineZoom = 1f,
+                    NodeGraphPanX = 0f,
+                    NodeGraphPanY = 0f,
+                    NodeGraphZoom = 1f,
+                    CameraPositionX = defaultPosition.x,
+                    CameraPositionY = defaultPosition.y,
+                    CameraPositionZ = defaultPosition.z,
+                    CameraTargetPositionX = defaultPosition.x,
+                    CameraTargetPositionY = defaultPosition.y,
+                    CameraTargetPositionZ = defaultPosition.z,
+                    CameraDistance = math.length(defaultPosition),
+                    CameraTargetDistance = math.length(defaultPosition),
+                    CameraPitch = defaultEuler.x,
+                    CameraTargetPitch = defaultEuler.x,
+                    CameraYaw = defaultEuler.y,
+                    CameraTargetYaw = defaultEuler.y,
+                    CameraSpeedMultiplier = 1f
+                };
+            }
+
             int nodeCount = reader.Read<int>();
             graph.Nodes = new(nodeCount, Allocator.Temp);
 

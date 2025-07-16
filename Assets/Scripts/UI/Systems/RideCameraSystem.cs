@@ -3,7 +3,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
-using static KexEdit.Constants;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
@@ -28,7 +27,7 @@ namespace KexEdit.UI {
                 );
                 float3 offset = math.mul(rotation, new float3(
                     0f,
-                    HEART_BASE + 0.3f,
+                    Preferences.RideCameraHeight,
                     0f
                 ));
                 _rideCamera.transform.SetPositionAndRotation(transform.Position + offset, rotation);

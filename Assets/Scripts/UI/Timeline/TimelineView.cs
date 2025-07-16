@@ -3,6 +3,7 @@ using UnityEngine.UIElements;
 using Unity.Properties;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.Timeline.Constants;
+using Unity.Mathematics;
 
 namespace KexEdit.UI.Timeline {
     public class TimelineView : VisualElement {
@@ -131,7 +132,7 @@ namespace KexEdit.UI.Timeline {
                 painter.Fill();
             }
 
-            float maxX = _data.TimeToPixel(_data.Duration);
+            float maxX = math.max(0, _data.TimeToPixel(_data.Duration));
             if (maxX < rect.width) {
                 painter.fillColor = s_DarkenColor;
                 painter.BeginPath();
@@ -163,6 +164,11 @@ namespace KexEdit.UI.Timeline {
                 _data.Offset -= delta.x;
                 _data.ClampOffset();
                 _prevMousePosition = evt.localMousePosition;
+
+                var e = this.GetPooled<TimelineOffsetChangeEvent>();
+                e.Offset = _data.Offset;
+                this.Send(e);
+
                 evt.StopPropagation();
             }
         }
@@ -183,6 +189,10 @@ namespace KexEdit.UI.Timeline {
                 const float panSpeed = 15f;
                 _data.Offset += evt.delta.y * panSpeed;
                 _data.ClampOffset();
+                
+                var e = this.GetPooled<TimelineOffsetChangeEvent>();
+                e.Offset = _data.Offset;
+                this.Send(e);
             }
             else {
                 float zoomMultiplier = 1f - evt.delta.y * ZOOM_SPEED;
@@ -196,6 +206,14 @@ namespace KexEdit.UI.Timeline {
                     float mouseTime = _data.PixelToTime(evt.localMousePosition.x);
                     _data.Offset = mouseTime * RESOLUTION * (newZoom - oldZoom) + _data.Offset;
                     _data.ClampOffset();
+                    
+                    var zoomEvent = this.GetPooled<TimelineZoomChangeEvent>();
+                    zoomEvent.Zoom = _data.Zoom;
+                    this.Send(zoomEvent);
+                    
+                    var offsetEvent = this.GetPooled<TimelineOffsetChangeEvent>();
+                    offsetEvent.Offset = _data.Offset;
+                    this.Send(offsetEvent);
                 }
             }
 

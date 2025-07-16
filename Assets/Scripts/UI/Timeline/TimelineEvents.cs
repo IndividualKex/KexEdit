@@ -98,6 +98,19 @@ namespace KexEdit.UI.Timeline {
         public float Value;
     }
 
+    public class SetKeyframeAtTimeEvent : TimelineEvent<SetKeyframeAtTimeEvent> {
+        public PropertyType Type;
+        public InterpolationType InInterpolation = InterpolationType.Bezier;
+        public InterpolationType OutInterpolation = InterpolationType.Bezier;
+        public uint KeyframeId;
+        public float Time;
+        public float Value;
+        public float InWeight = 0.36f;
+        public float InTangent = 0f;
+        public float OutWeight = 0.36f;
+        public float OutTangent = 0f;
+    }
+
     public class KeyframeButtonClickEvent : TimelineEvent<KeyframeButtonClickEvent> {
         public PropertyType Type;
     }
@@ -132,5 +145,13 @@ namespace KexEdit.UI.Timeline {
 
     public class SelectKeyframesEvent : TimelineEvent<SelectKeyframesEvent> {
         public List<KeyframeData> Keyframes;
+    }
+
+    public class TimelineOffsetChangeEvent : TimelineEvent<TimelineOffsetChangeEvent> {
+        public float Offset;
+    }
+
+    public class TimelineZoomChangeEvent : TimelineEvent<TimelineZoomChangeEvent> {
+        public float Zoom;
     }
 }

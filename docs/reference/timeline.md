@@ -51,7 +51,7 @@ When a node with controllable properties is selected, the Timeline displays:
 | --------------- | ------------ | ----------------------------------------- |
 | `I`             | Insert       | Add keyframe at playhead                  |
 | `Left Click`    | Select       | Select keyframe                           |
-| `Double Click`  | Edit         | Open keyframe edit dialog                 |
+| `Double Click`  | Edit         | Toggle keyframe edit panel                |
 | `Shift + Click` | Multi-Select | Add to selection                          |
 | `Drag`          | Move         | Reposition keyframe                       |
 | `Delete`        | Remove       | Delete selected keyframes                 |
@@ -61,11 +61,11 @@ When a node with controllable properties is selected, the Timeline displays:
 
 ### Curve View Controls
 
-| Input                | Action           | Notes                                     |
-| -------------------- | ---------------- | ----------------------------------------- |
-| `Drag Bezier Handle` | Adjust Curve     | Fine-tune curve shape and easing          |
-| `Shift + Drag`       | Constrain Motion | Lock to horizontal or vertical movement   |
-| `Double Click`       | Detailed Edit    | Open advanced keyframe editor with easing |
+| Input                | Action           | Notes                                   |
+| -------------------- | ---------------- | --------------------------------------- |
+| `Drag Bezier Handle` | Adjust Curve     | Fine-tune curve shape and easing        |
+| `Shift + Drag`       | Constrain Motion | Lock to horizontal or vertical movement |
+| `Double Click`       | Detailed Edit    | Toggle keyframe edit panel              |
 
 ## Keyframe Edit Dialog
 
@@ -106,17 +106,19 @@ Double-clicking a keyframe opens a detailed editor with advanced options:
 ### View Modes
 
 #### Dope Sheet View
-- **Row-based layout**: Each property occupies a horizontal row
-- **Time-focused editing**: Primarily for timing adjustments
-- **Compact display**: Shows many properties at once
-- **Keyframe shapes**: Different shapes indicate interpolation type
+
+-   **Row-based layout**: Each property occupies a horizontal row
+-   **Time-focused editing**: Primarily for timing adjustments
+-   **Compact display**: Shows many properties at once
+-   **Keyframe shapes**: Different shapes indicate interpolation type
 
 #### Curve View
-- **Graph-based layout**: Properties displayed as curves on a value/time graph
-- **Precise curve editing**: Direct manipulation of bezier handles
-- **Visual curve shapes**: See the actual animation curves
-- **Individual visibility**: Toggle curves on/off with eye icons
-- **Value-focused editing**: Fine-tune animation curves and easing
+
+-   **Graph-based layout**: Properties displayed as curves on a value/time graph
+-   **Precise curve editing**: Direct manipulation of bezier handles
+-   **Visual curve shapes**: See the actual animation curves
+-   **Individual visibility**: Toggle curves on/off with eye icons
+-   **Value-focused editing**: Fine-tune animation curves and easing
 
 ## Property Types
 

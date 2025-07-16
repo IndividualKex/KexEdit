@@ -47,11 +47,18 @@ namespace KexEdit.UI {
                 if (graphData == null || graphData.Length == 0) return;
 
                 SerializationSystem.Instance.DeserializeGraph(graphData);
-                CurrentFilePath = filePath;
+
+                if (filePath.EndsWith(".kex1")) {
+                    string fileName = Path.GetFileName(filePath);
+                    CurrentFilePath = fileName == "untitled.kex1" ? null :
+                        Path.Combine(Application.persistentDataPath, "Tracks", fileName[..^1]);
+                }
+                else {
+                    CurrentFilePath = filePath;
+                }
+
                 Undo.Clear();
                 HasUnsavedChanges = false;
-
-                Preferences.AddRecentFile(filePath);
                 FilePathChanged?.Invoke(CurrentFilePath);
                 UnsavedChangesChanged?.Invoke(false);
             }
@@ -76,7 +83,6 @@ namespace KexEdit.UI {
                     FilePathChanged?.Invoke(CurrentFilePath);
                 }
 
-                Preferences.AddRecentFile(targetPath);
                 HasUnsavedChanges = false;
                 UnsavedChangesChanged?.Invoke(false);
             }
@@ -159,12 +165,7 @@ namespace KexEdit.UI {
 
                 if (mostRecentFile != null) {
                     Debug.Log($"Found most recent valid file: {mostRecentFile}");
-                    if (mostRecentFile.EndsWith(".kex1")) {
-                        OpenRecoveryFile(mostRecentFile);
-                    }
-                    else {
-                        OpenProject(mostRecentFile);
-                    }
+                    OpenProject(mostRecentFile);
                     return;
                 }
             }
@@ -229,28 +230,6 @@ namespace KexEdit.UI {
             }
             catch {
                 return false;
-            }
-        }
-
-        private static void OpenRecoveryFile(string recoveryFilePath) {
-            try {
-                byte[] graphData = FileManager.LoadGraph(recoveryFilePath);
-                if (graphData == null || graphData.Length == 0) return;
-
-                SerializationSystem.Instance.DeserializeGraph(graphData);
-
-                string fileName = Path.GetFileName(recoveryFilePath);
-                CurrentFilePath = fileName == "untitled.kex1" ? null :
-                    Path.Combine(Application.persistentDataPath, "Tracks", fileName[..^1]);
-
-                Undo.Clear();
-                HasUnsavedChanges = false;
-                FilePathChanged?.Invoke(CurrentFilePath);
-                UnsavedChangesChanged?.Invoke(false);
-            }
-            catch (Exception ex) {
-                Debug.LogError($"Failed to open recovery file: {ex.Message}");
-                throw;
             }
         }
     }

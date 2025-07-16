@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using UnityEngine;
 
 namespace KexEdit {
     [Serializable]
@@ -8,10 +7,6 @@ namespace KexEdit {
         private static InterpolationType _defaultInInterpolation = InterpolationType.Bezier;
         private static InterpolationType _defaultOutInterpolation = InterpolationType.Bezier;
         private static HandleType _defaultHandleType = HandleType.Aligned;
-        private static bool _defaultsLoaded = false;
-
-        private const string PREF_DEFAULT_IN_INTERPOLATION = "Keyframe_DefaultInInterpolation";
-        private const string PREF_DEFAULT_OUT_INTERPOLATION = "Keyframe_DefaultOutInterpolation";
 
         public uint Id;
         public float Time;
@@ -31,32 +26,9 @@ namespace KexEdit {
         public bool IsTimeLocked => (Flags & KeyframeFlags.LockTime) != 0;
         public bool IsValueLocked => (Flags & KeyframeFlags.LockValue) != 0;
 
-        static Keyframe() {
-            LoadDefaults();
-        }
-
-        private static void LoadDefaults() {
-            if (_defaultsLoaded) return;
-            
-            int inValue = PlayerPrefs.GetInt(PREF_DEFAULT_IN_INTERPOLATION, (int)InterpolationType.Bezier);
-            int outValue = PlayerPrefs.GetInt(PREF_DEFAULT_OUT_INTERPOLATION, (int)InterpolationType.Bezier);
-            
-            _defaultInInterpolation = Enum.IsDefined(typeof(InterpolationType), inValue) 
-                ? (InterpolationType)inValue 
-                : InterpolationType.Bezier;
-            _defaultOutInterpolation = Enum.IsDefined(typeof(InterpolationType), outValue) 
-                ? (InterpolationType)outValue 
-                : InterpolationType.Bezier;
-                
-            _defaultsLoaded = true;
-        }
-
         public static void SetDefaultInterpolation(InterpolationType inType, InterpolationType outType) {
             _defaultInInterpolation = inType;
             _defaultOutInterpolation = outType;
-            PlayerPrefs.SetInt(PREF_DEFAULT_IN_INTERPOLATION, (int)inType);
-            PlayerPrefs.SetInt(PREF_DEFAULT_OUT_INTERPOLATION, (int)outType);
-            PlayerPrefs.Save();
         }
 
         public static Keyframe Default => new() {
