@@ -7,8 +7,19 @@ using UnityEngine.UIElements;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
     public partial class VideoControlSystem : SystemBase {
+        public static VideoControlSystem Instance { get; private set; }
+
+        private const float ControlsHideDelay = 3f;
+
         private VideoControlData _data;
         private VideoControls _videoControls;
+        private Vector2 _lastMousePosition;
+
+        public static bool IsFullscreen => Instance?._data.IsFullscreen ?? false;
+
+        public VideoControlSystem() {
+            Instance = this;
+        }
 
         protected override void OnStartRunning() {
             var root = UIService.Instance.UIDocument.rootVisualElement;
@@ -19,15 +30,24 @@ namespace KexEdit.UI {
             _videoControls = new VideoControls(_data);
             gameView.Add(_videoControls);
 
+            _lastMousePosition = Mouse.current.position.ReadValue();
+
             _videoControls.TogglePlayPause += TogglePlayPause;
             _videoControls.SetProgress += SetProgress;
+            _videoControls.ToggleFullscreen += ToggleFullscreen;
         }
 
         protected override void OnUpdate() {
             _videoControls.Draw();
 
+            UpdateMouseTracking();
+
             if (Keyboard.current.spaceKey.wasPressedThisFrame) {
                 TogglePlayPause();
+            }
+
+            if (Keyboard.current.escapeKey.wasPressedThisFrame && _data.IsFullscreen) {
+                ToggleFullscreen();
             }
 
             var rootEntity = SystemAPI.HasSingleton<NodeGraphRoot>() ?
@@ -60,6 +80,62 @@ namespace KexEdit.UI {
             }
             else {
                 KexTime.Pause();
+            }
+        }
+
+        private void UpdateMouseTracking() {
+            Vector2 currentMousePosition = Mouse.current.position.ReadValue();
+            bool hasMouseMoved = Vector2.Distance(currentMousePosition, _lastMousePosition) > 1f;
+
+            if (hasMouseMoved) {
+                _data.MouseIdleTimer = 0f;
+                _data.IsControlsVisible = true;
+                _lastMousePosition = currentMousePosition;
+                
+                if (_data.IsFullscreen) {
+                    UnityEngine.Cursor.visible = true;
+                }
+            }
+            else if (_data.IsFullscreen && !Mouse.current.leftButton.isPressed) {
+                _data.MouseIdleTimer += UnityEngine.Time.unscaledDeltaTime;
+
+                if (_data.MouseIdleTimer >= ControlsHideDelay) {
+                    _data.IsControlsVisible = false;
+                    UnityEngine.Cursor.visible = false;
+                }
+            }
+
+            if (!_data.IsFullscreen) {
+                _data.IsControlsVisible = true;
+                _data.MouseIdleTimer = 0f;
+                UnityEngine.Cursor.visible = true;
+            }
+        }
+
+        public void ToggleFullscreen() {
+            _data.IsFullscreen = !_data.IsFullscreen;
+
+            var root = UIService.Instance.UIDocument.rootVisualElement;
+            var topPanel = root.Q<VisualElement>("Top");
+            var topLeftPanel = root.Q<VisualElement>("TopLeftPanel");
+            var bottomPanel = root.Q<VisualElement>("Bottom");
+
+            if (_data.IsFullscreen) {
+                topPanel.style.display = DisplayStyle.None;
+                topLeftPanel.style.display = DisplayStyle.None;
+                bottomPanel.style.display = DisplayStyle.None;
+                _data.IsControlsVisible = true;
+                _data.MouseIdleTimer = 0f;
+                UnityEngine.Cursor.visible = true;
+                NotificationSystem.ShowNotification("To exit full screen, press Esc");
+            }
+            else {
+                topPanel.style.display = DisplayStyle.Flex;
+                topLeftPanel.style.display = DisplayStyle.Flex;
+                bottomPanel.style.display = DisplayStyle.Flex;
+                _data.IsControlsVisible = true;
+                _data.MouseIdleTimer = 0f;
+                UnityEngine.Cursor.visible = true;
             }
         }
 

@@ -3,5 +3,8 @@ namespace KexEdit.UI {
         public float TotalLength;
         public float Progress;
         public bool IsPlaying;
+        public bool IsFullscreen;
+        public bool IsControlsVisible = true;
+        public float MouseIdleTimer;
     }
 }

@@ -2,6 +2,8 @@ using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System;
+using System.Collections.Generic;
+using static KexEdit.Constants;
 using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI {
@@ -13,12 +15,14 @@ namespace KexEdit.UI {
         private VisualElement _playhead;
         private Label _playButtonLabel;
         private Label _timeLabel;
+        private VisualElement _fullscreenButton;
 
         private VideoControlData _data;
         private bool _isDragging;
 
         public event Action TogglePlayPause;
         public event Action<float> SetProgress;
+        public event Action ToggleFullscreen;
 
         public VideoControls(VideoControlData data) {
             _data = data;
@@ -36,6 +40,9 @@ namespace KexEdit.UI {
             style.paddingRight = 8f;
             style.paddingTop = 4f;
             style.paddingBottom = 4f;
+            style.transitionProperty = new List<StylePropertyName> { "bottom" };
+            style.transitionDuration = new List<TimeValue> { new(300, TimeUnit.Millisecond) };
+            style.transitionTimingFunction = new List<EasingFunction> { EasingMode.EaseOutCubic };
 
             _playButton = new VisualElement {
                 style = {
@@ -132,6 +139,32 @@ namespace KexEdit.UI {
 
             Add(_timeLabel);
 
+            _fullscreenButton = new VisualElement {
+                style = {
+                    width = 14f,
+                    height = 14f,
+                    backgroundColor = s_DarkBackgroundColor,
+                    marginLeft = 16f,
+                    backgroundImage = new StyleBackground(UIService.Instance.MaximizeTexture),
+                    unityBackgroundImageTintColor = new Color(0.8f, 0.8f, 0.8f, 1f),
+                }
+            };
+
+            _fullscreenButton.style.transitionProperty = new List<StylePropertyName> { "transform" };
+            _fullscreenButton.style.transitionDuration = new List<TimeValue> { new(100, TimeUnit.Millisecond) };
+            _fullscreenButton.style.transitionTimingFunction = new List<EasingFunction> { EasingMode.EaseOutCubic };
+
+            _fullscreenButton.RegisterCallback<MouseEnterEvent>(_ => _fullscreenButton.transform.scale = new Vector2(1.1f, 1.1f));
+            _fullscreenButton.RegisterCallback<MouseLeaveEvent>(_ => _fullscreenButton.transform.scale = new Vector2(1f, 1f));
+            _fullscreenButton.RegisterCallback<MouseDownEvent>(evt => {
+                if (evt.button == 0) {
+                    ToggleFullscreen?.Invoke();
+                    evt.StopPropagation();
+                }
+            });
+
+            Add(_fullscreenButton);
+
             _progressContainer.RegisterCallback<MouseDownEvent>(OnMouseDown);
             _progressContainer.RegisterCallback<MouseMoveEvent>(OnMouseMove);
             _progressContainer.RegisterCallback<MouseUpEvent>(OnMouseUp);
@@ -151,7 +184,7 @@ namespace KexEdit.UI {
                 bindingMode = BindingMode.ToTarget,
             };
             playingBinding.sourceToUiConverters.AddConverter((ref bool value) => value ? "■" : "▶");
-            playingBinding.sourceToUiConverters.AddConverter((ref bool value) => 
+            playingBinding.sourceToUiConverters.AddConverter((ref bool value) =>
                 new StyleLength(value ? 0f : 1f));
 
             SetBinding("style.display", displayBinding);
@@ -162,9 +195,25 @@ namespace KexEdit.UI {
                 dataSourcePath = new PropertyPath(nameof(_data.Progress)),
                 bindingMode = BindingMode.ToTarget,
             };
-            progressBinding.sourceToUiConverters.AddConverter((ref float value) => 
+            progressBinding.sourceToUiConverters.AddConverter((ref float value) =>
                 new StyleLength(Length.Percent(value * 100f)));
             _playhead.SetBinding("style.left", progressBinding);
+
+            var fullscreenBinding = new DataBinding {
+                dataSourcePath = new PropertyPath(nameof(_data.IsFullscreen)),
+                bindingMode = BindingMode.ToTarget,
+            };
+            fullscreenBinding.sourceToUiConverters.AddConverter((ref bool value) =>
+                new StyleBackground(value ? UIService.Instance.MinimizeTexture : UIService.Instance.MaximizeTexture));
+            _fullscreenButton.SetBinding("style.backgroundImage", fullscreenBinding);
+
+            var controlsVisibilityBinding = new DataBinding {
+                dataSourcePath = new PropertyPath(nameof(_data.IsControlsVisible)),
+                bindingMode = BindingMode.ToTarget,
+            };
+            controlsVisibilityBinding.sourceToUiConverters.AddConverter((ref bool value) =>
+                new StyleLength(value ? 0f : -32f));
+            SetBinding("style.bottom", controlsVisibilityBinding);
         }
 
         public void Draw() {
@@ -204,7 +253,10 @@ namespace KexEdit.UI {
             _timeLabel.MarkDirtyRepaint();
         }
 
-        private unsafe string FormatTimeRange(float currentSeconds, float totalSeconds) {
+        private unsafe string FormatTimeRange(float currentPoints, float totalPoints) {
+            float currentSeconds = currentPoints / HZ;
+            float totalSeconds = totalPoints / HZ;
+            
             Span<char> buffer = stackalloc char[32];
 
             int currentMinutes = Mathf.FloorToInt(currentSeconds / 60f);

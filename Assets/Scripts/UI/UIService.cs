@@ -16,7 +16,9 @@ namespace KexEdit.UI {
         public Texture2D DropdownTexture;
         public Texture2D EyeTexture;
         public Texture2D EyeXTexture;
-        public Shader LineGizmoShader;
+        public Texture2D MaximizeTexture;
+        public Texture2D MinimizeTexture;
+        public Material GridMaterial;
 
         public static UIService Instance { get; private set; }
         public static UnityEngine.UIElements.Cursor TextCursor { get; private set; }

@@ -11,41 +11,49 @@ namespace KexEdit {
         protected override void OnCreate() {
             _bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
 
-            RequireForUpdate<TrackMeshConfig>();
-            RequireForUpdate<TrackMeshConfigManaged>();
-            RequireForUpdate<TrackMeshData>();
+            RequireForUpdate<TrackMeshGlobalSettings>();
+            RequireForUpdate<TrackMeshGizmoSettings>();
+            RequireForUpdate<PreferencesSingleton>();
         }
 
         protected override void OnUpdate() {
-            var config = SystemAPI.ManagedAPI.GetSingleton<TrackMeshConfig>();
-            var configManaged = SystemAPI.ManagedAPI.GetSingleton<TrackMeshConfigManaged>();
+            var globalSettings = SystemAPI.ManagedAPI.GetSingleton<TrackMeshGlobalSettings>();
+            var gizmoSettings = SystemAPI.ManagedAPI.GetSingleton<TrackMeshGizmoSettings>();
+            var settings = SystemAPI.ManagedAPI.GetSingleton<TrackStyleSettings>();
 
-            foreach (var data in SystemAPI.Query<TrackMeshData>()) {
-                if (!SystemAPI.HasBuffer<TrackPoint>(data.Entity)) continue;
+            foreach (var (style, segment, section, entity) in SystemAPI.Query<TrackStyle, Segment, SectionReference>().WithEntityAccess()) {
+                if (!SystemAPI.HasBuffer<TrackPoint>(entity)) continue;
 
-                var points = SystemAPI.GetBuffer<TrackPoint>(data.Entity);
+                var points = SystemAPI.GetBuffer<TrackPoint>(entity);
                 if (points.Length == 0) continue;
 
-                data.CurrentBuffers ??= new MeshBuffers(
+
+                style.CurrentBuffers ??= new MeshBuffers(
                     1,
-                    configManaged.DuplicationMeshes,
-                    configManaged.ExtrusionMeshes,
-                    configManaged.DuplicationGizmos,
-                    configManaged.ExtrusionGizmos
+                    style.DuplicationMeshes,
+                    style.ExtrusionMeshes,
+                    style.StartCapMeshes,
+                    style.EndCapMeshes,
+                    gizmoSettings.DuplicationGizmos,
+                    gizmoSettings.ExtrusionGizmos
                 );
 
-                if (data.ComputeFence == null) {
-                    Build(config, configManaged, data);
+                if (style.ComputeFence == null) {
+                    Build(globalSettings, style, gizmoSettings, entity);
                 }
 
-                if (data.ComputeFence != null && data.ComputeFence.Value.done) {
-                    if (data.NextBuffers != null) {
-                        (data.CurrentBuffers, data.NextBuffers) = (data.NextBuffers, data.CurrentBuffers);
+                if (style.ComputeFence != null && style.ComputeFence.Value.done) {
+                    if (style.NextBuffers != null) {
+                        (style.CurrentBuffers, style.NextBuffers) = (style.NextBuffers, style.CurrentBuffers);
                     }
-                    data.ComputeFence = null;
+                    style.ComputeFence = null;
                 }
 
-                foreach (var buffer in data.CurrentBuffers.DuplicationBuffers) {
+                if (style.CurrentBuffers.Count <= 1 ||
+                    !SystemAPI.HasComponent<RenderedStyleHash>(section) ||
+                    segment.StyleHash != SystemAPI.GetComponent<RenderedStyleHash>(section)) continue;
+
+                foreach (var buffer in style.CurrentBuffers.DuplicationBuffers) {
                     var rp = new RenderParams(buffer.Settings.Material) {
                         worldBounds = _bounds,
                         matProps = buffer.MatProps
@@ -58,7 +66,7 @@ namespace KexEdit {
                     );
                 }
 
-                foreach (var buffer in data.CurrentBuffers.ExtrusionBuffers) {
+                foreach (var buffer in style.CurrentBuffers.ExtrusionBuffers) {
                     var rp = new RenderParams(buffer.Settings.Material) {
                         worldBounds = _bounds,
                         matProps = buffer.MatProps
@@ -71,66 +79,103 @@ namespace KexEdit {
                     );
                 }
 
-                foreach (var buffer in data.CurrentBuffers.DuplicationGizmoBuffers) {
-                    var rp = new RenderParams(buffer.Settings.Material) {
+
+                foreach (var buffer in style.CurrentBuffers.StartCapBuffers) {
+                    var rp = new RenderParams(buffer.Material) {
                         worldBounds = _bounds,
                         matProps = buffer.MatProps
                     };
 
-                    Graphics.RenderPrimitives(
+                    Graphics.RenderMeshIndirect(
                         rp,
-                        MeshTopology.Lines,
-                        buffer.DuplicationVerticesBuffer.count
+                        buffer.Mesh,
+                        buffer.CapBuffer
                     );
                 }
 
-                foreach (var buffer in data.CurrentBuffers.ExtrusionGizmoBuffers) {
-                    var rp = new RenderParams(buffer.Settings.Material) {
+                foreach (var buffer in style.CurrentBuffers.EndCapBuffers) {
+                    var rp = new RenderParams(buffer.Material) {
                         worldBounds = _bounds,
                         matProps = buffer.MatProps
                     };
 
-                    Graphics.RenderPrimitives(
+                    Graphics.RenderMeshIndirect(
                         rp,
-                        MeshTopology.LineStrip,
-                        buffer.ExtrusionVerticesBuffer.count
+                        buffer.Mesh,
+                        buffer.CapBuffer
                     );
+                }
+
+                var preferences = SystemAPI.GetSingleton<PreferencesSingleton>();
+                if (preferences.ShowGizmos) {
+                    foreach (var buffer in style.CurrentBuffers.DuplicationGizmoBuffers) {
+                        var rp = new RenderParams(buffer.Settings.Material) {
+                            worldBounds = _bounds,
+                            matProps = buffer.MatProps
+                        };
+
+                        Graphics.RenderPrimitives(
+                            rp,
+                            MeshTopology.Lines,
+                            buffer.DuplicationVerticesBuffer.count
+                        );
+                    }
+
+                    foreach (var buffer in style.CurrentBuffers.ExtrusionGizmoBuffers) {
+                        var rp = new RenderParams(buffer.Settings.Material) {
+                            worldBounds = _bounds,
+                            matProps = buffer.MatProps
+                        };
+
+                        Graphics.RenderPrimitives(
+                            rp,
+                            MeshTopology.LineStrip,
+                            buffer.ExtrusionVerticesBuffer.count
+                        );
+                    }
                 }
             }
         }
 
-        private void Build(TrackMeshConfig config, TrackMeshConfigManaged configManaged, TrackMeshData data) {
-            var points = SystemAPI.GetBuffer<TrackPoint>(data.Entity);
+        private void Build(
+            TrackMeshGlobalSettings globalSettings,
+            TrackStyle style,
+            TrackMeshGizmoSettings gizmoSettings,
+            Entity entity
+        ) {
+            var points = SystemAPI.GetBuffer<TrackPoint>(entity);
 
             float selected = 0f;
-            if (SystemAPI.HasComponent<SelectedBlend>(data.Entity)) {
-                selected = SystemAPI.GetComponent<SelectedBlend>(data.Entity).Value;
+            if (SystemAPI.HasComponent<SelectedBlend>(entity)) {
+                selected = SystemAPI.GetComponent<SelectedBlend>(entity).Value;
             }
 
             if (points.Length == 0) return;
 
-            if (data.NextBuffers == null || data.NextBuffers.PointsBuffer.count != points.Length) {
-                data.NextBuffers?.Dispose();
-                data.NextBuffers = new MeshBuffers(
+            if (style.NextBuffers == null || style.NextBuffers.PointsBuffer.count != points.Length) {
+                style.NextBuffers?.Dispose();
+                style.NextBuffers = new MeshBuffers(
                     points.Length,
-                    configManaged.DuplicationMeshes,
-                    configManaged.ExtrusionMeshes,
-                    configManaged.DuplicationGizmos,
-                    configManaged.ExtrusionGizmos
+                    style.DuplicationMeshes,
+                    style.ExtrusionMeshes,
+                    style.StartCapMeshes,
+                    style.EndCapMeshes,
+                    gizmoSettings.DuplicationGizmos,
+                    gizmoSettings.ExtrusionGizmos
                 );
             }
 
-            data.NextBuffers.PointsBuffer.SetData(points.AsNativeArray(), 0, 0, points.Length);
+            style.NextBuffers.PointsBuffer.SetData(points.AsNativeArray(), 0, 0, points.Length);
 
-            var compute = config.Compute;
+            var compute = globalSettings.Compute;
 
             // Visualization
             int visualizationKernel = compute.FindKernel("VisualizationKernel");
 
-            compute.SetBuffer(visualizationKernel, "_Points", data.NextBuffers.PointsBuffer);
+            compute.SetBuffer(visualizationKernel, "_Points", style.NextBuffers.PointsBuffer);
             compute.SetFloat("_Count", points.Length);
 
-            compute.SetBuffer(visualizationKernel, "_VisualizationData", data.NextBuffers.VisualizationDataBuffer);
+            compute.SetBuffer(visualizationKernel, "_VisualizationData", style.NextBuffers.VisualizationDataBuffer);
             compute.SetFloat("_Selected", selected);
 
             compute.GetKernelThreadGroupSizes(visualizationKernel, out uint threadGroupSize, out _, out _);
@@ -141,13 +186,14 @@ namespace KexEdit {
             // Duplication
             int duplicationKernel = compute.FindKernel("DuplicationKernel");
 
-            for (int i = 0; i < data.NextBuffers.DuplicationBuffers.Count; i++) {
-                compute.SetBuffer(duplicationKernel, "_Points", data.NextBuffers.PointsBuffer);
+            for (int i = 0; i < style.NextBuffers.DuplicationBuffers.Count; i++) {
+                compute.SetBuffer(duplicationKernel, "_Points", style.NextBuffers.PointsBuffer);
                 compute.SetFloat("_Count", points.Length);
 
-                compute.SetBuffer(duplicationKernel, "_Matrices", data.NextBuffers.DuplicationBuffers[i].MatricesBuffer);
-                compute.SetBuffer(duplicationKernel, "_DuplicationVisualizationIndices", data.NextBuffers.DuplicationBuffers[i].VisualizationIndicesBuffer);
-                compute.SetFloat("_Step", data.NextBuffers.DuplicationBuffers[i].Settings.Step);
+                compute.SetBuffer(duplicationKernel, "_Matrices", style.NextBuffers.DuplicationBuffers[i].MatricesBuffer);
+                compute.SetBuffer(duplicationKernel, "_DuplicationVisualizationIndices", style.NextBuffers.DuplicationBuffers[i].VisualizationIndicesBuffer);
+                compute.SetFloat("_Step", style.NextBuffers.DuplicationBuffers[i].Settings.Step);
+                compute.SetFloat("_Offset", style.NextBuffers.DuplicationBuffers[i].Settings.Offset);
 
                 compute.GetKernelThreadGroupSizes(duplicationKernel, out threadGroupSize, out _, out _);
                 threadGroups = (int)math.ceil(points.Length / (float)threadGroupSize);
@@ -158,50 +204,50 @@ namespace KexEdit {
             // Extrusion
             int extrusionKernel = compute.FindKernel("ExtrusionKernel");
 
-            for (int i = 0; i < data.NextBuffers.ExtrusionBuffers.Count; i++) {
-                compute.SetBuffer(extrusionKernel, "_Points", data.NextBuffers.PointsBuffer);
+            for (int i = 0; i < style.NextBuffers.ExtrusionBuffers.Count; i++) {
+                compute.SetBuffer(extrusionKernel, "_Points", style.NextBuffers.PointsBuffer);
                 compute.SetFloat("_Count", points.Length);
 
                 compute.SetBuffer(
                     extrusionKernel,
                     "_CrossSectionVertices",
-                    data.NextBuffers.ExtrusionBuffers[i].CrossSectionVerticesBuffer
+                    style.NextBuffers.ExtrusionBuffers[i].CrossSectionVerticesBuffer
                 );
                 compute.SetBuffer(
                     extrusionKernel,
                     "_CrossSectionNormals",
-                    data.NextBuffers.ExtrusionBuffers[i].CrossSectionNormalsBuffer
+                    style.NextBuffers.ExtrusionBuffers[i].CrossSectionNormalsBuffer
                 );
                 compute.SetBuffer(
                     extrusionKernel,
                     "_CrossSectionTriangulation",
-                    data.NextBuffers.ExtrusionBuffers[i].CrossSectionTriangulationBuffer
+                    style.NextBuffers.ExtrusionBuffers[i].CrossSectionTriangulationBuffer
                 );
 
                 compute.SetBuffer(
                     extrusionKernel,
                     "_ExtrusionVertices",
-                    data.NextBuffers.ExtrusionBuffers[i].ExtrusionVerticesBuffer
+                    style.NextBuffers.ExtrusionBuffers[i].ExtrusionVerticesBuffer
                 );
                 compute.SetBuffer(
                     extrusionKernel,
                     "_ExtrusionNormals",
-                    data.NextBuffers.ExtrusionBuffers[i].ExtrusionNormalsBuffer
+                    style.NextBuffers.ExtrusionBuffers[i].ExtrusionNormalsBuffer
                 );
                 compute.SetBuffer(
                     extrusionKernel,
                     "_ExtrusionIndices",
-                    data.NextBuffers.ExtrusionBuffers[i].ExtrusionIndicesBuffer
+                    style.NextBuffers.ExtrusionBuffers[i].ExtrusionIndicesBuffer
                 );
 
                 compute.SetBuffer(
                     extrusionKernel,
                     "_ExtrusionVisualizationIndices",
-                    data.NextBuffers.ExtrusionBuffers[i].VisualizationIndicesBuffer
+                    style.NextBuffers.ExtrusionBuffers[i].VisualizationIndicesBuffer
                 );
 
-                compute.SetFloat("_CrossSectionVerticesLength", data.NextBuffers.ExtrusionBuffers[i].CrossSectionVerticesBuffer.count);
-                compute.SetFloat("_CrossSectionTriangulationLength", data.NextBuffers.ExtrusionBuffers[i].CrossSectionTriangulationBuffer.count);
+                compute.SetFloat("_CrossSectionVerticesLength", style.NextBuffers.ExtrusionBuffers[i].CrossSectionVerticesBuffer.count);
+                compute.SetFloat("_CrossSectionTriangulationLength", style.NextBuffers.ExtrusionBuffers[i].CrossSectionTriangulationBuffer.count);
 
                 compute.GetKernelThreadGroupSizes(extrusionKernel, out threadGroupSize, out _, out _);
                 threadGroups = (int)math.ceil(points.Length / (float)threadGroupSize);
@@ -212,17 +258,17 @@ namespace KexEdit {
             // Duplication Gizmos
             int duplicationGizmoKernel = compute.FindKernel("DuplicationGizmoKernel");
 
-            for (int i = 0; i < data.NextBuffers.DuplicationGizmoBuffers.Count; i++) {
-                compute.SetBuffer(duplicationGizmoKernel, "_Points", data.NextBuffers.PointsBuffer);
+            for (int i = 0; i < style.NextBuffers.DuplicationGizmoBuffers.Count; i++) {
+                compute.SetBuffer(duplicationGizmoKernel, "_Points", style.NextBuffers.PointsBuffer);
                 compute.SetFloat("_Count", points.Length);
 
                 compute.SetBuffer(
                     duplicationGizmoKernel,
                     "_DuplicationGizmoVertices",
-                    data.NextBuffers.DuplicationGizmoBuffers[i].DuplicationVerticesBuffer
+                    style.NextBuffers.DuplicationGizmoBuffers[i].DuplicationVerticesBuffer
                 );
-                compute.SetFloat("_DuplicationGizmoStartHeart", data.NextBuffers.DuplicationGizmoBuffers[i].Settings.StartHeart);
-                compute.SetFloat("_DuplicationGizmoEndHeart", data.NextBuffers.DuplicationGizmoBuffers[i].Settings.EndHeart);
+                compute.SetFloat("_DuplicationGizmoStartHeart", style.NextBuffers.DuplicationGizmoBuffers[i].Settings.StartHeart);
+                compute.SetFloat("_DuplicationGizmoEndHeart", style.NextBuffers.DuplicationGizmoBuffers[i].Settings.EndHeart);
 
                 compute.GetKernelThreadGroupSizes(duplicationGizmoKernel, out threadGroupSize, out _, out _);
                 threadGroups = (int)math.ceil(points.Length / (float)threadGroupSize);
@@ -233,16 +279,16 @@ namespace KexEdit {
             // Extrusion Gizmos
             int extrusionGizmoKernel = compute.FindKernel("ExtrusionGizmoKernel");
 
-            for (int i = 0; i < data.NextBuffers.ExtrusionGizmoBuffers.Count; i++) {
-                compute.SetBuffer(extrusionGizmoKernel, "_Points", data.NextBuffers.PointsBuffer);
+            for (int i = 0; i < style.NextBuffers.ExtrusionGizmoBuffers.Count; i++) {
+                compute.SetBuffer(extrusionGizmoKernel, "_Points", style.NextBuffers.PointsBuffer);
                 compute.SetFloat("_Count", points.Length);
 
                 compute.SetBuffer(
                     extrusionGizmoKernel,
                     "_ExtrusionGizmoVertices",
-                    data.NextBuffers.ExtrusionGizmoBuffers[i].ExtrusionVerticesBuffer
+                    style.NextBuffers.ExtrusionGizmoBuffers[i].ExtrusionVerticesBuffer
                 );
-                compute.SetFloat("_ExtrusionGizmoHeart", data.NextBuffers.ExtrusionGizmoBuffers[i].Settings.Heart);
+                compute.SetFloat("_ExtrusionGizmoHeart", style.NextBuffers.ExtrusionGizmoBuffers[i].Settings.Heart);
 
                 compute.GetKernelThreadGroupSizes(extrusionGizmoKernel, out threadGroupSize, out _, out _);
                 threadGroups = (int)math.ceil(points.Length / (float)threadGroupSize);
@@ -250,7 +296,39 @@ namespace KexEdit {
                 compute.Dispatch(extrusionGizmoKernel, threadGroups, 1, 1);
             }
 
-            data.ComputeFence = AsyncGPUReadback.Request(data.NextBuffers.PointsBuffer);
+            // Start Caps
+            int startCapKernel = compute.FindKernel("StartCapKernel");
+
+            for (int i = 0; i < style.NextBuffers.StartCapBuffers.Count; i++) {
+                compute.SetBuffer(startCapKernel, "_Points", style.NextBuffers.PointsBuffer);
+                compute.SetFloat("_Count", points.Length);
+
+                compute.SetBuffer(startCapKernel, "_Matrices", style.NextBuffers.StartCapBuffers[i].MatricesBuffer);
+                compute.SetBuffer(startCapKernel, "_CapVisualizationIndices", style.NextBuffers.StartCapBuffers[i].VisualizationIndicesBuffer);
+
+                compute.GetKernelThreadGroupSizes(startCapKernel, out threadGroupSize, out _, out _);
+                threadGroups = 1;
+
+                compute.Dispatch(startCapKernel, threadGroups, 1, 1);
+            }
+
+            // End Caps
+            int endCapKernel = compute.FindKernel("EndCapKernel");
+
+            for (int i = 0; i < style.NextBuffers.EndCapBuffers.Count; i++) {
+                compute.SetBuffer(endCapKernel, "_Points", style.NextBuffers.PointsBuffer);
+                compute.SetFloat("_Count", points.Length);
+
+                compute.SetBuffer(endCapKernel, "_Matrices", style.NextBuffers.EndCapBuffers[i].MatricesBuffer);
+                compute.SetBuffer(endCapKernel, "_CapVisualizationIndices", style.NextBuffers.EndCapBuffers[i].VisualizationIndicesBuffer);
+
+                compute.GetKernelThreadGroupSizes(endCapKernel, out threadGroupSize, out _, out _);
+                threadGroups = 1;
+
+                compute.Dispatch(endCapKernel, threadGroups, 1, 1);
+            }
+
+            style.ComputeFence = AsyncGPUReadback.Request(style.NextBuffers.PointsBuffer);
         }
     }
 }

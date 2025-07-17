@@ -9,6 +9,8 @@ namespace KexEdit {
         public ComputeBuffer VisualizationDataBuffer;
         public List<DuplicationMeshBuffers> DuplicationBuffers = new();
         public List<ExtrusionMeshBuffers> ExtrusionBuffers = new();
+        public List<CapMeshBuffers> StartCapBuffers = new();
+        public List<CapMeshBuffers> EndCapBuffers = new();
         public List<DuplicationGizmoBuffers> DuplicationGizmoBuffers = new();
         public List<ExtrusionGizmoBuffers> ExtrusionGizmoBuffers = new();
         public int Count;
@@ -17,6 +19,8 @@ namespace KexEdit {
             int count,
             List<DuplicationMeshSettings> duplicationMeshes,
             List<ExtrusionMeshSettings> extrusionMeshes,
+            List<CapMeshSettings> startCapMeshes,
+            List<CapMeshSettings> endCapMeshes,
             List<DuplicationGizmoSettings> duplicationGizmos,
             List<ExtrusionGizmoSettings> extrusionGizmos
         ) {
@@ -33,6 +37,16 @@ namespace KexEdit {
             foreach (var settings in extrusionMeshes) {
                 var buffer = new ExtrusionMeshBuffers(this, settings);
                 ExtrusionBuffers.Add(buffer);
+            }
+
+            foreach (var settings in startCapMeshes) {
+                var buffer = new CapMeshBuffers(this, settings.Mesh, settings.Material, 1);
+                StartCapBuffers.Add(buffer);
+            }
+
+            foreach (var settings in endCapMeshes) {
+                var buffer = new CapMeshBuffers(this, settings.Mesh, settings.Material, 1);
+                EndCapBuffers.Add(buffer);
             }
 
             foreach (var settings in duplicationGizmos) {
@@ -59,6 +73,16 @@ namespace KexEdit {
                 buffer?.Dispose();
             }
             ExtrusionBuffers.Clear();
+
+            foreach (var buffer in StartCapBuffers) {
+                buffer?.Dispose();
+            }
+            StartCapBuffers.Clear();
+
+            foreach (var buffer in EndCapBuffers) {
+                buffer?.Dispose();
+            }
+            EndCapBuffers.Clear();
 
             foreach (var buffer in DuplicationGizmoBuffers) {
                 buffer?.Dispose();

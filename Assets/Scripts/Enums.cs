@@ -69,6 +69,7 @@ namespace KexEdit {
         Heart,
         Friction,
         Resistance,
+        TrackStyle,
     }
 
     [Flags]
@@ -78,7 +79,8 @@ namespace KexEdit {
         Heart = 1 << 1,          // 0x02  
         Friction = 1 << 2,       // 0x04
         Resistance = 1 << 3,     // 0x08
-        All = FixedVelocity | Heart | Friction | Resistance
+        TrackStyle = 1 << 4,     // 0x10
+        All = FixedVelocity | Heart | Friction | Resistance | TrackStyle
     }
 
     [Flags]
@@ -107,5 +109,16 @@ namespace KexEdit {
         Reserved4 = 1 << 5,   // 0x20
         Reserved5 = 1 << 6,   // 0x40
         Reserved6 = 1 << 7,   // 0x80
+    }
+
+    public enum VisualizationMode {
+        None,
+        Velocity,
+        NormalForce,
+        LateralForce,
+        RollSpeed,
+        PitchSpeed,
+        YawSpeed,
+        Curvature,
     }
 }

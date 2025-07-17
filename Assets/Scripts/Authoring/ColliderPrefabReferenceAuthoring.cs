@@ -2,6 +2,7 @@ using UnityEngine;
 using Unity.Entities;
 
 namespace KexEdit {
+
     public class ColliderPrefabReferenceAuthoring : MonoBehaviour {
         public GameObject Prefab;
 

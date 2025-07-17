@@ -7,7 +7,7 @@ namespace KexEdit.UI.Timeline {
         public static readonly Color s_LateralForceColor = new(0.4f, 0.85f, 0.4f);     // Green
         public static readonly Color s_PitchSpeedColor = new(0.4f, 0.8f, 0.85f);       // Cyan
         public static readonly Color s_YawSpeedColor = new(0.8f, 0.8f, 0.4f);          // Yellow
-        public static readonly Color s_FixedVelocityColor = new(0.8f, 0.8f, 0.8f);     // White
+        public static readonly Color s_DefaultColor = new(0.8f, 0.8f, 0.8f);           // White
 
         public static readonly string s_RollSpeedName = "Roll Speed";
         public static readonly string s_NormalForceName = "Normal Force";
@@ -18,6 +18,7 @@ namespace KexEdit.UI.Timeline {
         public static readonly string s_HeartName = "Heart";
         public static readonly string s_FrictionName = "Friction";
         public static readonly string s_ResistanceName = "Resistance";
+        public static readonly string s_TrackStyleName = "Track Style";
 
         public const float RESOLUTION = 240f;
         public const float LEFT_PADDING = 32f;

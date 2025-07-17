@@ -1,20 +1,14 @@
-using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class MeshUpdateSystem : SystemBase {
-        private HashSet<ManagedMesh> _managedMeshes = new();
-
         protected override void OnUpdate() {
-            _managedMeshes.Clear();
+            foreach (var (mesh, anchor, render, dirtyRW) in SystemAPI.Query<MeshReference, Anchor, Render, RefRW<Dirty>>()) {
+                if (mesh.Value == null) continue;
 
-            foreach (var (meshReference, anchor, render, dirtyRW) in SystemAPI.Query<MeshReference, Anchor, Render, RefRW<Dirty>>()) {
-                if (meshReference.Value == null) continue;
-                _managedMeshes.Add(meshReference.Value);
-
-                meshReference.Value.gameObject.SetActive(render.Value);
+                mesh.Value.gameObject.SetActive(render.Value);
 
                 if (!render.Value) continue;
 
@@ -30,13 +24,8 @@ namespace KexEdit {
                 );
                 Vector3 scale = Vector3.one * anchor.Value.NormalForce;
 
-                meshReference.Value.transform.SetPositionAndRotation(position, rotation);
-                meshReference.Value.transform.localScale = scale;
-            }
-
-            foreach (var managedMesh in GameObject.FindObjectsByType<ManagedMesh>(FindObjectsSortMode.None)) {
-                if (_managedMeshes.Contains(managedMesh)) continue;
-                GameObject.Destroy(managedMesh.gameObject);
+                mesh.Value.transform.SetPositionAndRotation(position, rotation);
+                mesh.Value.transform.localScale = scale;
             }
         }
     }

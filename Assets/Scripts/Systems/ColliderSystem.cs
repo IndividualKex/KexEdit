@@ -24,10 +24,15 @@ namespace KexEdit {
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             Entity updateEntity = Entity.Null;
-            foreach (var (trackHash, colliderHash, entity) in SystemAPI.Query<TrackHash, RefRW<ColliderHash>>().WithEntityAccess()) {
+            Entity sectionEntity = Entity.Null;
+            foreach (var (trackHash, colliderHash, section, entity) in SystemAPI
+                .Query<TrackHash, RefRW<ColliderHash>, SectionReference>()
+                .WithEntityAccess()
+            ) {
                 if (colliderHash.ValueRO == trackHash.Value) continue;
                 colliderHash.ValueRW = trackHash.Value;
                 updateEntity = entity;
+                sectionEntity = section;
                 break;
             }
 
@@ -51,6 +56,7 @@ namespace KexEdit {
             new CreateJob {
                 Ecb = ecb,
                 Entity = updateEntity,
+                SectionEntity = sectionEntity,
                 ColliderReferenceBuffer = colliderReferenceBuffer,
                 TrackPointBuffer = trackPointBuffer,
                 ColliderEntities = colliderEntities,
@@ -77,6 +83,7 @@ namespace KexEdit {
         private struct CreateJob : IJob {
             public EntityCommandBuffer Ecb;
             public Entity Entity;
+            public Entity SectionEntity;
             public DynamicBuffer<ColliderReference> ColliderReferenceBuffer;
             public DynamicBuffer<TrackPoint> TrackPointBuffer;
             public NativeArray<Entity> ColliderEntities;
@@ -91,7 +98,8 @@ namespace KexEdit {
                         Rotation = rotation,
                         Scale = 1f,
                     });
-                    Ecb.SetComponent<NodeReference>(colliderEntity, Entity);
+                    Ecb.SetComponent<NodeReference>(colliderEntity, SectionEntity);
+                    Ecb.SetComponent<SegmentReference>(colliderEntity, Entity);
                     ColliderReferenceBuffer.Add(colliderEntity);
                 }
             }

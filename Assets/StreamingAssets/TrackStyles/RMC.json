@@ -1,0 +1,47 @@
+{
+    "Name": "RMC Hybrid",
+    "Colors": [
+        {
+            "r": 0.55,
+            "g": 0.15,
+            "b": 0.15,
+            "a": 1.0
+        },
+        {
+            "r": 0.3,
+            "g": 0.3,
+            "b": 0.3,
+            "a": 1.0
+        }
+    ],
+    "Styles": [
+        {
+            "Spacing": 0.5,
+            "DuplicationMeshes": [
+                {
+                    "MeshPath": "RMCTie.obj",
+                    "Step": 2,
+                    "ColorIndex": 1
+                }
+            ],
+            "ExtrusionMeshes": [
+                {
+                    "MeshPath": "RMCRail.obj",
+                    "ColorIndex": 0
+                }
+            ],
+            "StartCapMeshes": [
+                {
+                    "MeshPath": "RMCRail_StartCap.obj",
+                    "ColorIndex": 0
+                }
+            ],
+            "EndCapMeshes": [
+                {
+                    "MeshPath": "RMCRail_EndCap.obj",
+                    "ColorIndex": 0
+                }
+            ]
+        }
+    ]
+}
