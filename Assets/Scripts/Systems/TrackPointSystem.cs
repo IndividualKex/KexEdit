@@ -30,12 +30,12 @@ namespace KexEdit {
             _pointLookup.Update(ref state);
             _trackPointLookup.Update(ref state);
 
-            var trackMeshConfig = SystemAPI.GetSingleton<TrackMeshSettings>();
+            var settings = SystemAPI.GetSingleton<TrackMeshSettings>();
 
             state.Dependency = new Job {
                 PointLookup = _pointLookup,
                 TrackPointLookup = _trackPointLookup,
-                Spacing = trackMeshConfig.Spacing,
+                Spacing = settings.Spacing,
                 Step = 2,
             }.ScheduleParallel(_query, state.Dependency);
         }
@@ -88,6 +88,7 @@ namespace KexEdit {
                         float3 normal = -math.normalize(math.cross(direction, lateral));
                         float velocity = math.lerp(p0.Velocity, p1.Velocity, t);
                         float distance = math.lerp(p0.TotalLength, p1.TotalLength, t) - startLength;
+                        float heart = math.lerp(p0.Heart, p1.Heart, t);
                         float time = (i + t) / HZ;
 
                         trackPoints.Add(new TrackPoint {
@@ -96,6 +97,7 @@ namespace KexEdit {
                             Normal = normal,
                             Velocity = velocity,
                             Distance = distance,
+                            Heart = heart,
                             Time = time,
                         });
 
@@ -116,6 +118,7 @@ namespace KexEdit {
                     Normal = lastNormal,
                     Velocity = last.Velocity,
                     Distance = last.TotalLength - startLength,
+                    Heart = last.Heart,
                     Time = points.Length / HZ,
                 });
 

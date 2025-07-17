@@ -175,12 +175,30 @@ namespace KexEdit.UI {
                 menu.AddItem("Zoom Out", () => UIScaleSystem.Instance?.ZoomOut(), "Ctrl+-".ToPlatformShortcut());
                 menu.AddItem("Reset Zoom", () => UIScaleSystem.Instance?.ResetZoom());
                 menu.AddSeparator();
+                menu.AddSubmenu("Track Mesh", submenu => {
+                    var availableConfigs = TrackMeshConfigManager.GetAvailableConfigsWithNames();
+                    string currentConfigName = TrackMeshPreferences.CurrentTrackMesh;
+                    if (availableConfigs.Length > 0) {
+                        foreach (var configInfo in availableConfigs) {
+                            bool isCurrentConfig = configInfo.FileName == currentConfigName;
+                            submenu.AddItem(configInfo.DisplayName, () => TrackMeshConfigManager.LoadConfig(configInfo.FileName), isChecked: isCurrentConfig);
+                        }
+                        submenu.AddSeparator();
+                    }
+                    submenu.AddItem("Open Folder", TrackMeshConfigManager.OpenTrackMeshFolder);
+                });
+                menu.AddSeparator();
+                menu.AddItem("Gizmos", ToggleShowGizmos, "F1",
+                    isChecked: Preferences.ShowGizmos);
                 menu.AddItem("Grid", () => GridSystem.Instance?.ToggleGrid(), "F2",
                     isChecked: GridSystem.Instance?.ShowGrid == true);
                 menu.AddItem("Stats", ToggleShowStats, "F3",
                     isChecked: Preferences.ShowStats);
                 menu.AddItem("Node Grid", ToggleNodeGridSnapping, "F4",
                     isChecked: Preferences.NodeGridSnapping);
+                menu.AddSeparator();
+                menu.AddItem("Velocity Visualization", ToggleVelocityVisualization, "Ctrl+F1".ToPlatformShortcut(),
+                    isChecked: VelocityVisualizationSystem.ShowVelocity);
             });
         }
 
@@ -224,14 +242,25 @@ namespace KexEdit.UI {
             Preferences.ShowStats = !Preferences.ShowStats;
         }
 
+        private void ToggleShowGizmos() {
+            Preferences.ShowGizmos = !Preferences.ShowGizmos;
+        }
+
+        private void ToggleVelocityVisualization() {
+            VelocityVisualizationSystem.Toggle();
+        }
+
         protected override void OnUpdate() {
             var kb = Keyboard.current;
 
-            if (kb.f2Key.wasPressedThisFrame) GridSystem.Instance?.ToggleGrid();
-            else if (kb.f3Key.wasPressedThisFrame) ToggleShowStats();
-            else if (kb.f4Key.wasPressedThisFrame) ToggleNodeGridSnapping();
-            else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
-            else if (kb.tKey.wasPressedThisFrame) ToggleSyncPlayback();
+            if (!kb.ctrlKey.isPressed && !kb.leftCommandKey.isPressed) {
+                if (kb.f1Key.wasPressedThisFrame) ToggleShowGizmos();
+                else if (kb.f2Key.wasPressedThisFrame) GridSystem.Instance?.ToggleGrid();
+                else if (kb.f3Key.wasPressedThisFrame) ToggleShowStats();
+                else if (kb.f4Key.wasPressedThisFrame) ToggleNodeGridSnapping();
+                else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
+                else if (kb.tKey.wasPressedThisFrame) ToggleSyncPlayback();
+            }
 
             if (kb.ctrlKey.isPressed || kb.leftCommandKey.isPressed) {
                 if (kb.zKey.wasPressedThisFrame) {
@@ -249,6 +278,7 @@ namespace KexEdit.UI {
                 else if (kb.hKey.wasPressedThisFrame) ShowControls();
                 else if (kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomIn();
                 else if (kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomOut();
+                else if (kb.f1Key.wasPressedThisFrame) ToggleVelocityVisualization();
             }
         }
 

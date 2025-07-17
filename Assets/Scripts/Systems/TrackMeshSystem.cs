@@ -11,14 +11,18 @@ namespace KexEdit {
         protected override void OnCreate() {
             _bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
 
-            RequireForUpdate<TrackMeshConfig>();
-            RequireForUpdate<TrackMeshConfigManaged>();
+            RequireForUpdate<TrackMeshGlobalSettings>();
+            RequireForUpdate<TrackMeshSettings>();
+            RequireForUpdate<TrackMeshSettingsManaged>();
+            RequireForUpdate<TrackMeshGizmoSettings>();
             RequireForUpdate<TrackMeshData>();
         }
 
         protected override void OnUpdate() {
-            var config = SystemAPI.ManagedAPI.GetSingleton<TrackMeshConfig>();
-            var configManaged = SystemAPI.ManagedAPI.GetSingleton<TrackMeshConfigManaged>();
+            var globalSettings = SystemAPI.ManagedAPI.GetSingleton<TrackMeshGlobalSettings>();
+            var settings = SystemAPI.ManagedAPI.GetSingleton<TrackMeshSettingsManaged>();
+            var gizmoSettings = SystemAPI.ManagedAPI.GetSingleton<TrackMeshGizmoSettings>();
+            var settingsVersion = SystemAPI.GetSingleton<TrackMeshSettings>().Version;
 
             foreach (var data in SystemAPI.Query<TrackMeshData>()) {
                 if (!SystemAPI.HasBuffer<TrackPoint>(data.Entity)) continue;
@@ -26,16 +30,25 @@ namespace KexEdit {
                 var points = SystemAPI.GetBuffer<TrackPoint>(data.Entity);
                 if (points.Length == 0) continue;
 
+                if (data.Version != settingsVersion) {
+                    data.CurrentBuffers?.Dispose();
+                    data.NextBuffers?.Dispose();
+                    data.CurrentBuffers = null;
+                    data.NextBuffers = null;
+                    data.ComputeFence = null;
+                    data.Version = settingsVersion;
+                }
+
                 data.CurrentBuffers ??= new MeshBuffers(
                     1,
-                    configManaged.DuplicationMeshes,
-                    configManaged.ExtrusionMeshes,
-                    configManaged.DuplicationGizmos,
-                    configManaged.ExtrusionGizmos
+                    settings.DuplicationMeshes,
+                    settings.ExtrusionMeshes,
+                    gizmoSettings.DuplicationGizmos,
+                    gizmoSettings.ExtrusionGizmos
                 );
 
                 if (data.ComputeFence == null) {
-                    Build(config, configManaged, data);
+                    Build(globalSettings, settings, gizmoSettings, data);
                 }
 
                 if (data.ComputeFence != null && data.ComputeFence.Value.done) {
@@ -71,35 +84,42 @@ namespace KexEdit {
                     );
                 }
 
-                foreach (var buffer in data.CurrentBuffers.DuplicationGizmoBuffers) {
-                    var rp = new RenderParams(buffer.Settings.Material) {
-                        worldBounds = _bounds,
-                        matProps = buffer.MatProps
-                    };
+                if (UI.Preferences.ShowGizmos) {
+                    foreach (var buffer in data.CurrentBuffers.DuplicationGizmoBuffers) {
+                        var rp = new RenderParams(buffer.Settings.Material) {
+                            worldBounds = _bounds,
+                            matProps = buffer.MatProps
+                        };
 
-                    Graphics.RenderPrimitives(
-                        rp,
-                        MeshTopology.Lines,
-                        buffer.DuplicationVerticesBuffer.count
-                    );
-                }
+                        Graphics.RenderPrimitives(
+                            rp,
+                            MeshTopology.Lines,
+                            buffer.DuplicationVerticesBuffer.count
+                        );
+                    }
 
-                foreach (var buffer in data.CurrentBuffers.ExtrusionGizmoBuffers) {
-                    var rp = new RenderParams(buffer.Settings.Material) {
-                        worldBounds = _bounds,
-                        matProps = buffer.MatProps
-                    };
+                    foreach (var buffer in data.CurrentBuffers.ExtrusionGizmoBuffers) {
+                        var rp = new RenderParams(buffer.Settings.Material) {
+                            worldBounds = _bounds,
+                            matProps = buffer.MatProps
+                        };
 
-                    Graphics.RenderPrimitives(
-                        rp,
-                        MeshTopology.LineStrip,
-                        buffer.ExtrusionVerticesBuffer.count
-                    );
+                        Graphics.RenderPrimitives(
+                            rp,
+                            MeshTopology.LineStrip,
+                            buffer.ExtrusionVerticesBuffer.count
+                        );
+                    }
                 }
             }
         }
 
-        private void Build(TrackMeshConfig config, TrackMeshConfigManaged configManaged, TrackMeshData data) {
+        private void Build(
+            TrackMeshGlobalSettings globalSettings,
+            TrackMeshSettingsManaged settings,
+            TrackMeshGizmoSettings gizmoSettings,
+            TrackMeshData data
+        ) {
             var points = SystemAPI.GetBuffer<TrackPoint>(data.Entity);
 
             float selected = 0f;
@@ -113,16 +133,16 @@ namespace KexEdit {
                 data.NextBuffers?.Dispose();
                 data.NextBuffers = new MeshBuffers(
                     points.Length,
-                    configManaged.DuplicationMeshes,
-                    configManaged.ExtrusionMeshes,
-                    configManaged.DuplicationGizmos,
-                    configManaged.ExtrusionGizmos
+                    settings.DuplicationMeshes,
+                    settings.ExtrusionMeshes,
+                    gizmoSettings.DuplicationGizmos,
+                    gizmoSettings.ExtrusionGizmos
                 );
             }
 
             data.NextBuffers.PointsBuffer.SetData(points.AsNativeArray(), 0, 0, points.Length);
 
-            var compute = config.Compute;
+            var compute = globalSettings.Compute;
 
             // Visualization
             int visualizationKernel = compute.FindKernel("VisualizationKernel");

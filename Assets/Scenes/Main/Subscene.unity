@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 77484092}
   - component: {fileID: 77484093}
   m_Layer: 0
-  m_Name: GlobalTrackMeshData
+  m_Name: TrackMeshGlobalSettings
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -160,10 +160,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 77484090}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f096b346dede36d4083b1b0ef2d8ea90, type: 3}
+  m_Script: {fileID: 11500000, guid: 7010b349989391642a4772f50762cb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   TrackMeshCompute: {fileID: 7200000, guid: 51468370bad53ac4da26080c3891382e, type: 3}
+  DuplicationGizmos: []
+  ExtrusionGizmos:
+  - Heart: 0
+    Color: {r: 1, g: 0, b: 0, a: 1}
   DuplicationMaterial: {fileID: 2100000, guid: 079b466813203444082aa1cf502390a3, type: 2}
   ExtrusionMaterial: {fileID: 2100000, guid: daf02bdaa52b3f84d819592a6948ff8c, type: 2}
   DuplicationGizmoMaterial: {fileID: 2100000, guid: 346a860e4fa68b946a6dbc90856daffb, type: 2}
@@ -187,11 +191,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1461dd7ab970bf449ac8f8015f18dc5e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.03
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1461dd7ab970bf449ac8f8015f18dc5e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1461dd7ab970bf449ac8f8015f18dc5e, type: 3}
       propertyPath: m_LocalPosition.z
@@ -691,7 +695,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1461dd7ab970bf449ac8f8015f18dc5e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1461dd7ab970bf449ac8f8015f18dc5e, type: 3}
       propertyPath: m_LocalPosition.z

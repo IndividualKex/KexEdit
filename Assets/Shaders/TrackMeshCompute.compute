@@ -10,6 +10,7 @@ struct Point {
     float3 Normal;
     float Velocity;
     float Distance;
+    float Heart;
     float Time;
 };
 
@@ -139,8 +140,8 @@ void DuplicationGizmoKernel(uint3 id : SV_DispatchThreadID) {
 
     Point p = _Points[idx];
 
-    float3 p1 = p.Position + p.Normal * _DuplicationGizmoStartHeart;
-    float3 p2 = p.Position + p.Normal * _DuplicationGizmoEndHeart;
+    float3 p1 = p.Position + p.Normal * (p.Heart - _DuplicationGizmoStartHeart);
+    float3 p2 = p.Position + p.Normal * (p.Heart - _DuplicationGizmoEndHeart);
 
     _DuplicationGizmoVertices[idx * 2] = p1;
     _DuplicationGizmoVertices[idx * 2 + 1] = p2;
@@ -154,7 +155,7 @@ void ExtrusionGizmoKernel(uint3 id : SV_DispatchThreadID) {
     
     Point p = _Points[idx];
 
-    float3 pos = p.Position + p.Normal * _ExtrusionGizmoHeart;
+    float3 pos = p.Position + p.Normal * (p.Heart - _ExtrusionGizmoHeart);
 
     _ExtrusionGizmoVertices[idx] = pos;
 }

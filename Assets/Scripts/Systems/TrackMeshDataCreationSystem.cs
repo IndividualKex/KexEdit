@@ -13,9 +13,11 @@ namespace KexEdit {
                 .Build(EntityManager);
 
             RequireForUpdate(_query);
+            RequireForUpdate<TrackMeshSettings>();
         }
 
         protected override void OnUpdate() {
+            var settings = SystemAPI.GetSingleton<TrackMeshSettings>();
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
             var entities = _query.ToEntityArray(Allocator.Temp);
@@ -26,7 +28,8 @@ namespace KexEdit {
                 var entity = entities[i];
                 var trackMeshDataEntity = ecb.CreateEntity();
                 ecb.AddComponent(trackMeshDataEntity, new TrackMeshData {
-                    Entity = entity
+                    Entity = entity,
+                    Version = settings.Version
                 });
                 ecb.AddComponent<HasTrackMeshDataTag>(entity);
                 ecb.SetName(trackMeshDataEntity, "TrackMeshData");

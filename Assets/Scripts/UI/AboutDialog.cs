@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
@@ -31,16 +32,22 @@ namespace KexEdit.UI {
                     borderTopWidth = 1f, borderRightWidth = 1f, borderBottomWidth = 1f, borderLeftWidth = 1f,
                     borderTopColor = s_BorderColor, borderRightColor = s_BorderColor,
                     borderBottomColor = s_BorderColor, borderLeftColor = s_BorderColor,
-                    paddingTop = 24f, paddingRight = 24f, paddingBottom = 24f, paddingLeft = 24f,
-                    minWidth = 320f,
-                    alignItems = Align.Center
+                    paddingTop = 20f, paddingRight = 20f, paddingBottom = 20f, paddingLeft = 20f,
+                    minWidth = 320f
                 }
             };
 
             var title = new Label($"{Application.productName}") {
                 style = {
                     fontSize = 16, unityFontStyleAndWeight = FontStyle.Bold,
-                    color = s_TextColor, marginBottom = 20f, unityTextAlign = TextAnchor.UpperCenter
+                    color = s_TextColor, marginBottom = 16f, unityTextAlign = TextAnchor.UpperCenter
+                }
+            };
+
+            var infoContainer = new VisualElement {
+                style = {
+                    alignItems = Align.Center,
+                    marginBottom = 20f
                 }
             };
 
@@ -48,14 +55,8 @@ namespace KexEdit.UI {
                 style = {
                     fontSize = 12,
                     color = new Color(s_TextColor.r * 0.85f, s_TextColor.g * 0.85f, s_TextColor.b * 0.85f, 1f),
-                    marginBottom = 16f, unityTextAlign = TextAnchor.UpperCenter
-                }
-            };
-
-            var linkContainer = new VisualElement {
-                style = {
-                    alignItems = Align.Center,
-                    marginBottom = 20f
+                    marginBottom = 4f,
+                    unityTextAlign = TextAnchor.MiddleCenter
                 }
             };
 
@@ -63,8 +64,7 @@ namespace KexEdit.UI {
                 style = {
                     fontSize = 11,
                     color = new Color(0.4f, 0.8f, 1f, 1f),
-                    unityTextAlign = TextAnchor.MiddleCenter,
-                    paddingTop = 4f, paddingRight = 8f, paddingBottom = 4f, paddingLeft = 8f
+                    unityTextAlign = TextAnchor.MiddleCenter
                 }
             };
 
@@ -82,12 +82,16 @@ namespace KexEdit.UI {
                 Application.OpenURL(linkUrl);
             });
 
-            linkContainer.Add(linkLabel);
+            infoContainer.Add(version);
+            infoContainer.Add(linkLabel);
+
+            var creditsContainer = CreateCreditsSection();
 
             var closeButton = new Label("Close") {
                 style = {
                     paddingTop = 8f, paddingRight = 16f, paddingBottom = 8f, paddingLeft = 16f,
                     backgroundColor = s_BackgroundColor, color = s_TextColor,
+                    alignSelf = Align.Center,
                     unityTextAlign = TextAnchor.MiddleCenter
                 }
             };
@@ -98,8 +102,8 @@ namespace KexEdit.UI {
             closeButton.RegisterCallback<MouseDownEvent>(_ => { Close(); });
 
             _panel.Add(title);
-            _panel.Add(version);
-            _panel.Add(linkContainer);
+            _panel.Add(infoContainer);
+            _panel.Add(creditsContainer);
             _panel.Add(closeButton);
             Add(_panel);
 
@@ -123,6 +127,69 @@ namespace KexEdit.UI {
             });
 
             schedule.Execute(() => { _panel.style.opacity = 1f; });
+        }
+
+        private VisualElement CreateCreditsSection() {
+            var creditsContainer = new VisualElement {
+                style = {
+                    width = Length.Percent(100),
+                    marginBottom = 12f,
+                    alignItems = Align.Center
+                }
+            };
+
+            var creditsData = LoadCreditsData();
+
+            foreach (var category in creditsData.Credits) {
+                var categoryContainer = new VisualElement {
+                    style = {
+                        marginBottom = 12f,
+                        alignItems = Align.Center
+                    }
+                };
+
+                var categoryLabel = new Label(category.Category) {
+                    style = {
+                        fontSize = 12,
+                        unityFontStyleAndWeight = FontStyle.Bold,
+                        color = s_TextColor,
+                        marginBottom = 4f,
+                        unityTextAlign = TextAnchor.MiddleCenter
+                    }
+                };
+
+                var namesContainer = new VisualElement {
+                    style = {
+                        flexDirection = FlexDirection.Column,
+                        alignItems = Align.Center
+                    }
+                };
+
+                foreach (var name in category.Names) {
+                    var nameLabel = new Label(name) {
+                        style = {
+                            fontSize = 11,
+                            color = new Color(s_TextColor.r * 0.9f, s_TextColor.g * 0.9f, s_TextColor.b * 0.9f, 1f),
+                            marginBottom = 2f,
+                            unityTextAlign = TextAnchor.MiddleCenter
+                        }
+                    };
+
+                    namesContainer.Add(nameLabel);
+                }
+
+                categoryContainer.Add(categoryLabel);
+                categoryContainer.Add(namesContainer);
+                creditsContainer.Add(categoryContainer);
+            }
+
+            return creditsContainer;
+        }
+
+        private CreditsData LoadCreditsData() {
+            string creditsPath = Path.Combine(Application.streamingAssetsPath, "credits.json");
+            string creditsText = File.ReadAllText(creditsPath);
+            return JsonUtility.FromJson<CreditsData>(creditsText);
         }
 
         private void Close() {

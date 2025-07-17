@@ -14,6 +14,7 @@ namespace KexEdit.UI {
         private const string PREF_SHOW_STATS = "ShowStats";
         private const string PREF_SYNC_PLAYBACK = "SyncPlayback";
         private const string PREF_KEYFRAME_EDITOR = "KeyframeEditor";
+        private const string PREF_SHOW_GIZMOS = "ShowGizmos";
 
         private static DistanceUnitsType s_DistanceUnits;
         private static AngleUnitsType s_AngleUnits;
@@ -26,6 +27,7 @@ namespace KexEdit.UI {
         private static bool s_ShowStats;
         private static bool s_SyncPlayback;
         private static bool s_KeyframeEditor;
+        private static bool s_ShowGizmos;
 
         static Preferences() {
             LoadPreferences();
@@ -112,6 +114,16 @@ namespace KexEdit.UI {
             }
         }
 
+        public static bool ShowGizmos {
+            get => s_ShowGizmos;
+            set {
+                s_ShowGizmos = value;
+                PlayerPrefs.SetInt(PREF_SHOW_GIZMOS, value ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+        }
+
+
         public static float RideCameraHeight {
             get => s_RideCameraHeight;
             set {
@@ -141,6 +153,7 @@ namespace KexEdit.UI {
             s_ShowStats = PlayerPrefs.GetInt(PREF_SHOW_STATS, 0) == 1;
             s_SyncPlayback = PlayerPrefs.GetInt(PREF_SYNC_PLAYBACK, 0) == 1;
             s_KeyframeEditor = PlayerPrefs.GetInt(PREF_KEYFRAME_EDITOR, 0) == 1;
+            s_ShowGizmos = PlayerPrefs.GetInt(PREF_SHOW_GIZMOS, 0) == 1;
         }
     }
 }

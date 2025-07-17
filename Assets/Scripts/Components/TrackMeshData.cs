@@ -5,6 +5,7 @@ using System;
 namespace KexEdit {
     public class TrackMeshData : IComponentData, IDisposable {
         public Entity Entity;
+        public int Version;
 
         public AsyncGPUReadbackRequest? ComputeFence;
         public MeshBuffers CurrentBuffers;

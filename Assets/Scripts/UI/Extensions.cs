@@ -85,6 +85,7 @@ namespace KexEdit.UI {
             ["Ctrl+H"] = "Cmd+H",
             ["Ctrl++"] = "Cmd++",
             ["Ctrl+-"] = "Cmd+-",
+            ["Ctrl+F1"] = "Cmd+F1",
             ["Alt+A"] = "Option+A",
             ["Alt + Mouse Drag"] = "Option + Mouse Drag",
             ["Alt + Right Mouse Drag"] = "Option + Right Mouse Drag"

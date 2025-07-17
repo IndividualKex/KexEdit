@@ -13,6 +13,7 @@
 -   **[Optimizer](user-guide/optimizer.md)** - Roll-to-zero and rotation optimization
 -   **[Complete Circuits](user-guide/complete-circuits.md)** - Bridge nodes for closed loops
 -   **[Shuttle Coasters](user-guide/shuttle-coasters.md)** - Copy Path, Reverse, and Reverse Path nodes
+-   **[Custom Track Meshes](user-guide/custom-track-meshes.md)** - Custom track visual styles
 
 ## Reference
 

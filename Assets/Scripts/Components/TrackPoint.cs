@@ -8,6 +8,7 @@ namespace KexEdit {
         public float3 Normal;
         public float Velocity;
         public float Distance;
+        public float Heart;
         public float Time;
     }
 }

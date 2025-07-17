@@ -94,6 +94,7 @@ namespace KexEdit.UI {
             _gridMaterial.renderQueue = 3000;
 
             _gridMaterial.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            _gridMaterial.EnableKeyword("_ENABLE_VIEW_FADE");
         }
 
         private void GenerateGridMesh(Vector3 center = default) {

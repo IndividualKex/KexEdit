@@ -1,0 +1,29 @@
+{
+    "Name": "Intamin Blitz",
+    "Spacing": 0.4,
+    "DuplicationMeshes": [
+        {
+            "MeshPath": "IntaminBlitzTie.obj",
+            "Step": 4,
+            "Color": {
+                "r": 0.5,
+                "g": 0.2,
+                "b": 0.2,
+                "a": 1.0
+            },
+            "TexturePath": ""
+        }
+    ],
+    "ExtrusionMeshes": [
+        {
+            "MeshPath": "IntaminBlitzRail.obj",
+            "Color": {
+                "r": 0.5,
+                "g": 0.2,
+                "b": 0.2,
+                "a": 1.0
+            },
+            "TexturePath": ""
+        }
+    ]
+}

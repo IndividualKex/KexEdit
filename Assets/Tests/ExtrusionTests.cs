@@ -7,7 +7,7 @@ using KexEdit.UI;
 public class ExtrusionTests {
     [Test]
     public void TestDefaultRailConversion() {
-        string sourcePath = Path.Combine(Application.streamingAssetsPath, "DefaultRail.obj");
+        string sourcePath = Path.Combine(Application.streamingAssetsPath, "TrackMesh", "DefaultRail.obj");
         var sourceMesh = ImportManager.ParseObjFile(sourcePath);
         var expectedMesh = Resources.Load<Mesh>("FallbackRail");
 

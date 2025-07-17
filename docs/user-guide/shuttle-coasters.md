@@ -45,4 +45,8 @@ Add a vertical spike that the cart doesn't follow but affects the track shape.
 
 ---
 
+**Next**: [Advanced Techniques - Custom Track Meshes](custom-track-meshes.md)
+
+---
+
 [← Back to Documentation](../)
