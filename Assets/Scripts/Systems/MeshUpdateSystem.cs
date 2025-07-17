@@ -10,9 +10,13 @@ namespace KexEdit {
         protected override void OnUpdate() {
             _managedMeshes.Clear();
 
-            foreach (var (meshReference, anchor, dirtyRW) in SystemAPI.Query<MeshReference, Anchor, RefRW<Dirty>>()) {
+            foreach (var (meshReference, anchor, render, dirtyRW) in SystemAPI.Query<MeshReference, Anchor, Render, RefRW<Dirty>>()) {
                 if (meshReference.Value == null) continue;
                 _managedMeshes.Add(meshReference.Value);
+
+                meshReference.Value.gameObject.SetActive(render.Value);
+
+                if (!render.Value) continue;
 
                 ref bool dirty = ref dirtyRW.ValueRW.Value;
                 if (!dirty) continue;

@@ -101,6 +101,7 @@ namespace KexEdit.UI.Timeline {
             RegisterCallback<MouseMoveEvent>(OnMouseMove);
             RegisterCallback<MouseUpEvent>(OnMouseUp);
             RegisterCallback<WheelEvent>(OnWheel);
+            RegisterCallback<KeyDownEvent>(OnKeyDown);
         }
 
         public void Draw() {
@@ -218,6 +219,35 @@ namespace KexEdit.UI.Timeline {
             }
 
             evt.StopPropagation();
+        }
+
+        private void OnKeyDown(KeyDownEvent evt) {
+            if (!_data.Active) return;
+
+            if (evt.keyCode == KeyCode.V && _data.SelectedKeyframeCount == 1) {
+                int propertyIndex = 0;
+                foreach (var propertyType in _data.OrderedProperties) {
+                    var propertyData = _data.Properties[propertyType];
+                    if (!propertyData.Visible) continue;
+                    
+                    foreach (var keyframe in propertyData.Keyframes) {
+                        if (!keyframe.Selected) continue;
+                        var keyframeData = new KeyframeData(propertyType, keyframe);
+                        
+                        float x = _data.TimeToPixel(keyframe.Time);
+                        float y = (Constants.ROW_HEIGHT * propertyIndex) + (Constants.ROW_HEIGHT / 2f);
+                        var keyframePosition = new Vector2(x, y);
+                        
+                        var e = this.GetPooled<SetKeyframeValueEvent>();
+                        e.Keyframe = keyframeData;
+                        e.MousePosition = keyframePosition;
+                        this.Send(e);
+                        evt.StopPropagation();
+                        return;
+                    }
+                    propertyIndex++;
+                }
+            }
         }
     }
 }

@@ -11,7 +11,7 @@ namespace KexEdit.UI {
     public static class ImportManager {
         public static void ShowImportDialog(VisualElement root, Action<string> onSuccess = null) {
             var extensions = new ExtensionFilter[] {
-                new("Mesh", "glb", "gltf"),
+                new("glTF", "glb", "gltf"),
                 new("OBJ", "obj"),
                 new("All Files", "*")
             };

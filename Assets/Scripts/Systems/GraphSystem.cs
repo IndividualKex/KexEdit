@@ -73,7 +73,11 @@ namespace KexEdit {
                     }
                     else if (type == PortType.Position) {
                         float3 position = SystemAPI.GetComponent<PositionPort>(inputPort);
-                        anchor.Value.SetPosition(position);
+                        if (SystemAPI.GetComponent<Node>(nodeEntity).Type == NodeType.Mesh) {
+                            anchor.Value.Position = position;
+                        } else {
+                            anchor.Value.SetPosition(position);
+                        }
                     }
                     else if (type == PortType.Roll) {
                         float roll = SystemAPI.GetComponent<RollPort>(inputPort);

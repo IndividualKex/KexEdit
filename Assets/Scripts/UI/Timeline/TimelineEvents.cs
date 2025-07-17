@@ -98,6 +98,11 @@ namespace KexEdit.UI.Timeline {
         public float Value;
     }
 
+    public class SetKeyframeValueEvent : TimelineEvent<SetKeyframeValueEvent> {
+        public KeyframeData Keyframe;
+        public Vector2 MousePosition;
+    }
+
     public class SetKeyframeAtTimeEvent : TimelineEvent<SetKeyframeAtTimeEvent> {
         public PropertyType Type;
         public InterpolationType InInterpolation = InterpolationType.Bezier;
