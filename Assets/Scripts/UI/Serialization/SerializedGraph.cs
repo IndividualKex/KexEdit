@@ -18,7 +18,8 @@ namespace KexEdit.UI.Serialization {
         public const int INITIAL = 1;
         public const int PRECISION_MIGRATION = 2;
         public const int UI_STATE_SERIALIZATION = 3;
-        public const int CURRENT = UI_STATE_SERIALIZATION;
+        public const int TRACK_STYLE_PROPERTY = 4;
+        public const int CURRENT = TRACK_STYLE_PROPERTY;
     }
 
     [Flags]
@@ -138,6 +139,7 @@ namespace KexEdit.UI.Serialization {
         public NativeArray<HeartKeyframe> HeartKeyframes;
         public NativeArray<FrictionKeyframe> FrictionKeyframes;
         public NativeArray<ResistanceKeyframe> ResistanceKeyframes;
+        public NativeArray<TrackStyleKeyframe> TrackStyleKeyframes;
 
         public bool Render {
             get => (BooleanFlags & NodeFlags.Render) != 0;
@@ -161,6 +163,7 @@ namespace KexEdit.UI.Serialization {
             if (HeartKeyframes.IsCreated) HeartKeyframes.Dispose();
             if (FrictionKeyframes.IsCreated) FrictionKeyframes.Dispose();
             if (ResistanceKeyframes.IsCreated) ResistanceKeyframes.Dispose();
+            if (TrackStyleKeyframes.IsCreated) TrackStyleKeyframes.Dispose();
         }
     }
 

@@ -56,6 +56,18 @@ Main application menu for project management, editing, and preferences.
 | **Stats**      | `F3`     | Show/hide simulation statistics   |
 | **Node Grid**  | `F4`     | Enable/disable node grid snapping |
 
+### Visualization
+
+| Menu Item         | Shortcut | Description                      |
+| ----------------- | -------- | -------------------------------- |
+| **Velocity**      | `Ctrl+1` | Show velocity color overlay      |
+| **Curvature**     | `Ctrl+2` | Show curvature color overlay     |
+| **Normal Force**  | `Ctrl+3` | Show normal force color overlay  |
+| **Lateral Force** | `Ctrl+4` | Show lateral force color overlay |
+| **Roll Speed**    | `Ctrl+5` | Show roll speed color overlay    |
+| **Pitch Speed**   | `Ctrl+6` | Show pitch speed color overlay   |
+| **Yaw Speed**     | `Ctrl+7` | Show yaw speed color overlay     |
+
 ## Help Menu
 
 | Menu Item    | Shortcut | Description                     |

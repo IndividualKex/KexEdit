@@ -85,6 +85,13 @@ namespace KexEdit.UI {
             ["Ctrl+H"] = "Cmd+H",
             ["Ctrl++"] = "Cmd++",
             ["Ctrl+-"] = "Cmd+-",
+            ["Ctrl+1"] = "Cmd+1",
+            ["Ctrl+2"] = "Cmd+2",
+            ["Ctrl+3"] = "Cmd+3",
+            ["Ctrl+4"] = "Cmd+4",
+            ["Ctrl+5"] = "Cmd+5",
+            ["Ctrl+6"] = "Cmd+6",
+            ["Ctrl+7"] = "Cmd+7",
             ["Alt+A"] = "Option+A",
             ["Alt + Mouse Drag"] = "Option + Mouse Drag",
             ["Alt + Right Mouse Drag"] = "Option + Right Mouse Drag"
@@ -122,6 +129,7 @@ namespace KexEdit.UI {
                 PropertyType.Heart => UnitsType.Distance,
                 PropertyType.Friction => UnitsType.None,
                 PropertyType.Resistance => UnitsType.Resistance,
+                PropertyType.TrackStyle => UnitsType.None,
                 _ => UnitsType.None
             };
         }
@@ -465,10 +473,18 @@ namespace KexEdit.UI {
             return dialog;
         }
 
-        public static PreferencesDialog ShowPreferencesDialog(this VisualElement element) {
+        public static RideCameraDialog ShowRideCameraDialog(this VisualElement element) {
             var root = element.panel.visualTree.Q<TemplateContainer>();
             KexTime.Pause();
-            var dialog = new PreferencesDialog(KexTime.Unpause);
+            var dialog = new RideCameraDialog(KexTime.Unpause);
+            root.Add(dialog);
+            return dialog;
+        }
+
+        public static ColorPickerDialog ShowColorPickerDialog(this VisualElement element) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new ColorPickerDialog(KexTime.Unpause);
             root.Add(dialog);
             return dialog;
         }

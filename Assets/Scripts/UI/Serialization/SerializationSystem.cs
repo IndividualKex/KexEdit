@@ -361,6 +361,12 @@ namespace KexEdit.UI.Serialization {
                 NodeType.Bridge => SystemAPI.GetBuffer<ResistanceKeyframe>(entity),
                 _ => null,
             };
+            DynamicBuffer<TrackStyleKeyframe>? trackStyleKeyframeBuffer = node.Type switch {
+                NodeType.ForceSection or NodeType.GeometricSection or
+                NodeType.CurvedSection or NodeType.CopyPathSection or
+                NodeType.Bridge => SystemAPI.GetBuffer<TrackStyleKeyframe>(entity),
+                _ => null,
+            };
 
             NativeArray<RollSpeedKeyframe> rollSpeedKeyframes = rollSpeedKeyframeBuffer.HasValue ?
                 rollSpeedKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
@@ -388,6 +394,9 @@ namespace KexEdit.UI.Serialization {
 
             NativeArray<ResistanceKeyframe> resistanceKeyframes = resistanceKeyframeBuffer.HasValue ?
                 resistanceKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
+
+            NativeArray<TrackStyleKeyframe> trackStyleKeyframes = trackStyleKeyframeBuffer.HasValue ?
+                trackStyleKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
 
             NativeArray<SerializedPort> outputPorts = new(outputPortBuffer.Length, allocator);
             for (int i = 0; i < outputPortBuffer.Length; i++) {
@@ -479,6 +488,7 @@ namespace KexEdit.UI.Serialization {
                 HeartKeyframes = heartKeyframes,
                 FrictionKeyframes = frictionKeyframes,
                 ResistanceKeyframes = resistanceKeyframes,
+                TrackStyleKeyframes = trackStyleKeyframes,
             };
         }
 
@@ -595,6 +605,12 @@ namespace KexEdit.UI.Serialization {
                 foreach (var keyframe in node.ResistanceKeyframes) {
                     ecb.AppendToBuffer(entity, keyframe);
                 }
+                ecb.AddBuffer<TrackStyleKeyframe>(entity);
+                foreach (var keyframe in node.TrackStyleKeyframes) {
+                    ecb.AppendToBuffer(entity, keyframe);
+                }
+                ecb.AddComponent<StyleHash>(entity);
+                ecb.AddComponent<RenderedStyleHash>(entity);
             }
 
             if (type == NodeType.Mesh) {
@@ -656,8 +672,8 @@ namespace KexEdit.UI.Serialization {
             }
             else if (type == NodeType.Mesh) {
                 ecb.AddComponent(entity, new MeshReference {
-                    FilePath = node.MeshFilePath,
                     Value = null,
+                    FilePath = node.MeshFilePath,
                     Loaded = false
                 });
             }

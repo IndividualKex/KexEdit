@@ -60,6 +60,7 @@ namespace KexEdit.UI.Serialization {
             size += sizeof(int) + node.HeartKeyframes.Length * Marshal.SizeOf<HeartKeyframe>();
             size += sizeof(int) + node.FrictionKeyframes.Length * Marshal.SizeOf<FrictionKeyframe>();
             size += sizeof(int) + node.ResistanceKeyframes.Length * Marshal.SizeOf<ResistanceKeyframe>();
+            size += sizeof(int) + node.TrackStyleKeyframes.Length * Marshal.SizeOf<TrackStyleKeyframe>();
 
             return size;
         }

@@ -68,4 +68,9 @@ namespace KexEdit.UI {
         OutWeight,
         OutTangent
     }
+
+    public enum SkyType {
+        Solid,
+        Procedural
+    }
 }

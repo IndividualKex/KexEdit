@@ -43,7 +43,7 @@ namespace KexEdit.UI {
                     top = 10f,
                     right = 10f,
                     minWidth = 256f,
-                    backgroundColor = new Color(0, 0, 0, 0.2f),
+                    backgroundColor = new Color(0, 0, 0, 0.5f),
                     borderTopLeftRadius = 4f,
                     borderTopRightRadius = 4f,
                     borderBottomLeftRadius = 4f,

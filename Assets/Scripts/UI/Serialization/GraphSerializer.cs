@@ -171,6 +171,7 @@ namespace KexEdit.UI.Serialization {
             writer.WriteArray(node.HeartKeyframes);
             writer.WriteArray(node.FrictionKeyframes);
             writer.WriteArray(node.ResistanceKeyframes);
+            writer.WriteArray(node.TrackStyleKeyframes);
         }
 
         [BurstCompile]
@@ -211,6 +212,12 @@ namespace KexEdit.UI.Serialization {
                 reader.ReadArray(out node.HeartKeyframes, Allocator.Temp);
                 reader.ReadArray(out node.FrictionKeyframes, Allocator.Temp);
                 reader.ReadArray(out node.ResistanceKeyframes, Allocator.Temp);
+                
+                if (version >= SerializationVersion.TRACK_STYLE_PROPERTY) {
+                    reader.ReadArray(out node.TrackStyleKeyframes, Allocator.Temp);
+                } else {
+                    node.TrackStyleKeyframes = new NativeArray<TrackStyleKeyframe>(0, Allocator.Temp);
+                }
             }
         }
 
@@ -225,6 +232,7 @@ namespace KexEdit.UI.Serialization {
             ReadLegacyKeyframeArray(out node.HeartKeyframes, ref reader);
             ReadLegacyKeyframeArray(out node.FrictionKeyframes, ref reader);
             ReadLegacyKeyframeArray(out node.ResistanceKeyframes, ref reader);
+            node.TrackStyleKeyframes = new NativeArray<TrackStyleKeyframe>(0, Allocator.Temp);
         }
 
         [BurstCompile]

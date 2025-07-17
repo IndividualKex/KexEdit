@@ -11,7 +11,9 @@ namespace KexEdit {
 
         public DuplicationMeshBuffers(MeshBuffers meshBuffers, DuplicationMeshSettings settings) {
             int count = meshBuffers.Count;
-            int matrixCount = Mathf.CeilToInt((float)count / settings.Step);
+            int matrixCount = settings.Offset < count - 1 
+                ? Mathf.Max(1, (count - 2 - settings.Offset) / settings.Step + 1)
+                : 1;
             Settings = settings;
 
             MatricesBuffer = new ComputeBuffer(matrixCount, 16 * sizeof(float));

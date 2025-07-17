@@ -224,7 +224,7 @@ namespace KexEdit.UI.Timeline {
         private void OnKeyDown(KeyDownEvent evt) {
             if (!_data.Active) return;
 
-            if (evt.keyCode == KeyCode.V && _data.SelectedKeyframeCount == 1) {
+            if (evt.keyCode == KeyCode.V && !evt.ctrlKey && !evt.commandKey && _data.SelectedKeyframeCount == 1) {
                 int propertyIndex = 0;
                 foreach (var propertyType in _data.OrderedProperties) {
                     var propertyData = _data.Properties[propertyType];

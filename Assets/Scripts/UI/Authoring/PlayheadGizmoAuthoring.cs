@@ -11,6 +11,11 @@ namespace KexEdit.UI {
                     Active = false,
                     Kinematic = true,
                 });
+                AddComponent(entity, new CartStyleReference {
+                    StyleIndex = 0,
+                    Version = 0
+                });
+                AddComponentObject(entity, new CartMeshReference());
                 AddComponent<PlayheadGizmoTag>(entity);
             }
         }

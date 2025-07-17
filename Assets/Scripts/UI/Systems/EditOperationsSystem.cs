@@ -35,6 +35,7 @@ namespace KexEdit.UI {
                 _activeHandler = handler;
                 return;
             }
+            _activeHandler = null;
         }
 
         private void ProcessKeyboardShortcuts() {

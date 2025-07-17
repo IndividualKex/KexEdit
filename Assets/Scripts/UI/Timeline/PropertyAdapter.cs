@@ -13,7 +13,7 @@ namespace KexEdit.UI.Timeline {
         public abstract bool HasBuffer(Entity entity);
         public abstract float EvaluateAt(Entity entity, float time, Anchor anchor);
 
-        public abstract void UpdateKeyframes(Entity entity, List<Keyframe> keyframes);
+        public abstract void GetKeyframes(Entity entity, List<Keyframe> keyframes);
         public abstract void UpdateKeyframe(Entity entity, Keyframe keyframe);
         public abstract void AddKeyframe(Entity entity, Keyframe keyframe);
         public abstract void RemoveKeyframe(Entity entity, uint id);
@@ -28,6 +28,7 @@ namespace KexEdit.UI.Timeline {
             new HeartAdapter(),
             new FrictionAdapter(),
             new ResistanceAdapter(),
+            new TrackStyleAdapter(),
         };
 
         private static readonly RollSpeedAdapter s_RollSpeedAdapter = new();
@@ -39,6 +40,7 @@ namespace KexEdit.UI.Timeline {
         private static readonly HeartAdapter s_HeartAdapter = new();
         private static readonly FrictionAdapter s_FrictionAdapter = new();
         private static readonly ResistanceAdapter s_ResistanceAdapter = new();
+        private static readonly TrackStyleAdapter s_TrackStyleAdapter = new();
 
         public static PropertyAdapter GetAdapter(PropertyType type) => type switch {
             PropertyType.RollSpeed => s_RollSpeedAdapter,
@@ -50,6 +52,7 @@ namespace KexEdit.UI.Timeline {
             PropertyType.Heart => s_HeartAdapter,
             PropertyType.Friction => s_FrictionAdapter,
             PropertyType.Resistance => s_ResistanceAdapter,
+            PropertyType.TrackStyle => s_TrackStyleAdapter,
             _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
     }
@@ -58,7 +61,7 @@ namespace KexEdit.UI.Timeline {
         public override bool HasBuffer(Entity entity) =>
             EntityManager.HasBuffer<T>(entity);
 
-        public override void UpdateKeyframes(Entity entity, List<Keyframe> keyframes) {
+        public override void GetKeyframes(Entity entity, List<Keyframe> keyframes) {
             keyframes.Clear();
             if (!HasBuffer(entity)) return;
             var buffer = EntityManager.GetBuffer<T>(entity);
@@ -248,5 +251,16 @@ namespace KexEdit.UI.Timeline {
             keyframe.Value *= RESISTANCE_UI_TO_PHYSICS_SCALE;
             return keyframe;
         }
+    }
+
+    public class TrackStyleAdapter : PropertyAdapter<TrackStyleKeyframe> {
+        public override PropertyType Type => PropertyType.TrackStyle;
+        public override string DisplayName => "Track Style";
+
+        public override float EvaluateAt(Entity entity, float time, Anchor anchor) =>
+            EntityManager.GetBuffer<TrackStyleKeyframe>(entity).Evaluate(time);
+
+        protected override Keyframe GetData(TrackStyleKeyframe element) => element.Value;
+        protected override TrackStyleKeyframe CreateElement(Keyframe keyframe) => keyframe;
     }
 }
