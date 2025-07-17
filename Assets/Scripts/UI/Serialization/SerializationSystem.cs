@@ -68,7 +68,7 @@ namespace KexEdit.UI.Serialization {
             var current = SerializeGraph();
             var prev = _undoStack.Pop();
             _redoStack.Push(current);
-            DeserializeGraph(prev);
+            DeserializeGraph(prev, restoreUIState: false);
         }
 
         public void Redo() {
@@ -76,7 +76,7 @@ namespace KexEdit.UI.Serialization {
             var current = SerializeGraph();
             var next = _redoStack.Pop();
             _undoStack.Push(current);
-            DeserializeGraph(next);
+            DeserializeGraph(next, restoreUIState: false);
         }
 
         public void Clear() {
@@ -123,7 +123,7 @@ namespace KexEdit.UI.Serialization {
             return result;
         }
 
-        public void DeserializeGraph(byte[] data) {
+        public void DeserializeGraph(byte[] data, bool restoreUIState = true) {
             var ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (_, entity) in SystemAPI.Query<Node>().WithEntityAccess()) {
                 ecb.DestroyEntity(entity);
@@ -145,8 +145,10 @@ namespace KexEdit.UI.Serialization {
             GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
             buffer.Dispose();
 
-            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
-            uiState = serializedGraph.UIState.ToState();
+            if (restoreUIState) {
+                ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+                uiState = serializedGraph.UIState.ToState();
+            }
 
             ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var node in serializedGraph.Nodes) {
@@ -293,7 +295,7 @@ namespace KexEdit.UI.Serialization {
             bool render = node.Type switch {
                 NodeType.ForceSection or NodeType.GeometricSection or
                 NodeType.CurvedSection or NodeType.CopyPathSection or
-                NodeType.Bridge => SystemAPI.GetComponent<Render>(entity),
+                NodeType.Bridge or NodeType.Mesh => SystemAPI.GetComponent<Render>(entity),
                 _ => false,
             };
             PropertyOverrides overrides = node.Type switch {
@@ -593,6 +595,10 @@ namespace KexEdit.UI.Serialization {
                 foreach (var keyframe in node.ResistanceKeyframes) {
                     ecb.AppendToBuffer(entity, keyframe);
                 }
+            }
+
+            if (type == NodeType.Mesh) {
+                ecb.AddComponent<Render>(entity, node.Render);
             }
 
             if (type == NodeType.ForceSection

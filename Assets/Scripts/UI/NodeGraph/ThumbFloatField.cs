@@ -1,5 +1,6 @@
 using Unity.Mathematics;
 using Unity.Properties;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace KexEdit.UI.NodeGraph {
@@ -12,6 +13,7 @@ namespace KexEdit.UI.NodeGraph {
         private PortData _data;
         private float _startPosition;
         private float _startValue;
+        private float _lastScrollTime;
         private int _index;
         private bool _dragging;
         private bool _moved;
@@ -67,6 +69,7 @@ namespace KexEdit.UI.NodeGraph {
             _label.RegisterCallback<MouseDownEvent>(OnMouseDown);
             _label.RegisterCallback<MouseMoveEvent>(OnMouseMove);
             _label.RegisterCallback<MouseUpEvent>(OnMouseUp);
+            _field.RegisterCallback<WheelEvent>(OnFieldScroll);
 
             var binding = new DataBinding {
                 dataSourcePath = new PropertyPath(nameof(PortData.Value)),
@@ -132,6 +135,32 @@ namespace KexEdit.UI.NodeGraph {
             if (math.abs(internalValue - GetValue()) < 1e-6f) return;
             Undo.Record();
             SetInternalValue(internalValue);
+        }
+
+        private void OnFieldScroll(WheelEvent evt) {
+            float scrollAmount = evt.shiftKey ? 0.01f : 0.1f;
+            float delta = evt.delta.y > 0 ? -scrollAmount : scrollAmount;
+            float newValue = _field.value + delta;
+
+            var bounds = _data.Port.Type.GetPortBounds();
+            float internalValue = _data.Units.DisplayToValue(newValue);
+            internalValue = math.clamp(internalValue, bounds.Min, bounds.Max);
+            float clampedDisplayValue = _data.Units.ValueToDisplay(internalValue);
+
+            float roundedValue = math.round(clampedDisplayValue * 1e3f) / 1e3f;
+
+            if (math.abs(roundedValue - _field.value) > 1e-6f) {
+                float currentTime = Time.realtimeSinceStartup;
+                if (currentTime - _lastScrollTime > 0.5f) {
+                    Undo.Record();
+                }
+                _lastScrollTime = currentTime;
+
+                _field.SetValueWithoutNotify(roundedValue);
+                SetInternalValue(internalValue);
+            }
+
+            evt.StopPropagation();
         }
 
         private void SetInternalValue(float internalValue) {

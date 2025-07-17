@@ -231,7 +231,8 @@ namespace KexEdit.UI.NodeGraph {
                 || _type == NodeType.CurvedSection
                 || _type == NodeType.CopyPathSection
                 || _type == NodeType.Reverse
-                || _type == NodeType.ReversePath) {
+                || _type == NodeType.ReversePath
+                || _type == NodeType.Mesh) {
                 _itemsContainer = new VisualElement {
                     style = {
                         position = Position.Relative,
@@ -261,13 +262,16 @@ namespace KexEdit.UI.NodeGraph {
                 if (_type == NodeType.ForceSection
                     || _type == NodeType.GeometricSection
                     || _type == NodeType.CurvedSection
-                    || _type == NodeType.CopyPathSection) {
+                    || _type == NodeType.CopyPathSection
+                    || _type == NodeType.Mesh) {
                     _renderToggle = new RenderToggle();
                     _itemsContainer.Add(_renderToggle);
                 }
 
-                _priorityField = new PriorityField();
-                _itemsContainer.Add(_priorityField);
+                if (_type != NodeType.Mesh) {
+                    _priorityField = new PriorityField();
+                    _itemsContainer.Add(_priorityField);
+                }
 
                 _collapseButton = new Label("▼") {
                     style = {
