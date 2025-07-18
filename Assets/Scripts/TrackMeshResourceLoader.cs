@@ -78,8 +78,7 @@ namespace KexEdit {
                 }
                 else {
                     var fallbackMesh = LoadMesh("FallbackRail.obj");
-                    ExtrusionMeshConverter.Convert(fallbackMesh, out fallbackMesh);
-                    if (fallbackMesh != null) {
+                    if (fallbackMesh != null && ExtrusionMeshConverter.Convert(fallbackMesh, out fallbackMesh)) {
                         Debug.LogWarning($"Mesh conversion failed for {config.MeshPath}, using fallback mesh.");
                         mesh = fallbackMesh;
                     }
