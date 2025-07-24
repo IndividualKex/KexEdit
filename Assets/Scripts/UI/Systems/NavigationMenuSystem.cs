@@ -88,6 +88,7 @@ namespace KexEdit.UI {
                 menu.AddSeparator();
                 menu.AddSubmenu("Export", submenu => {
                     submenu.AddItem("NoLimits 2", ShowExportDialog);
+                    submenu.AddItem("Track Mesh", TrackMeshExporter.ExportTrackMesh);
                 });
                 menu.AddSeparator();
                 menu.AddSubmenu("Units", submenu => {
@@ -138,8 +139,6 @@ namespace KexEdit.UI {
                     });
                 });
                 menu.AddSeparator();
-                menu.AddItem("Preferences", ShowPreferences);
-                menu.AddSeparator();
                 menu.AddItem("Quit", QuitWithConfirmation);
             });
         }
@@ -168,19 +167,94 @@ namespace KexEdit.UI {
 
         private void AddViewMenu(MenuBar menuBar) {
             menuBar.AddMenu("View", menu => {
-                menu.AddItem("Ride Camera", () => OrbitCameraSystem.ToggleRideCamera(), "R",
-                    isChecked: OrbitCameraSystem.IsRideCameraActive);
-                menu.AddSeparator();
+                menu.AddItem("Full Screen", () => VideoControlSystem.Instance?.ToggleFullscreen(), "F11",
+                    isChecked: VideoControlSystem.IsFullscreen);
                 menu.AddItem("Zoom In", () => UIScaleSystem.Instance?.ZoomIn(), "Ctrl++".ToPlatformShortcut());
                 menu.AddItem("Zoom Out", () => UIScaleSystem.Instance?.ZoomOut(), "Ctrl+-".ToPlatformShortcut());
                 menu.AddItem("Reset Zoom", () => UIScaleSystem.Instance?.ResetZoom());
                 menu.AddSeparator();
-                menu.AddItem("Grid", () => GridSystem.Instance?.ToggleGrid(), "F2",
-                    isChecked: GridSystem.Instance?.ShowGrid == true);
-                menu.AddItem("Stats", ToggleShowStats, "F3",
-                    isChecked: Preferences.ShowStats);
-                menu.AddItem("Node Grid", ToggleNodeGridSnapping, "F4",
-                    isChecked: Preferences.NodeGridSnapping);
+                menu.AddSubmenu("Camera", submenu => {
+                    submenu.AddItem("Front View", () => OrbitCameraSystem.SetFrontView(), "Numpad 1");
+                    submenu.AddItem("Back View", () => OrbitCameraSystem.SetBackView(), "Ctrl+Numpad 1".ToPlatformShortcut());
+                    submenu.AddItem("Right View", () => OrbitCameraSystem.SetSideView(), "Numpad 3");
+                    submenu.AddItem("Left View", () => OrbitCameraSystem.SetOtherSideView(), "Ctrl+Numpad 3".ToPlatformShortcut());
+                    submenu.AddItem("Top View", () => OrbitCameraSystem.SetTopView(), "Numpad 7");
+                    submenu.AddItem("Bottom View", () => OrbitCameraSystem.SetBottomView(), "Ctrl+Numpad 7".ToPlatformShortcut());
+                    submenu.AddSeparator();
+                    submenu.AddItem("Toggle Orthographic", () => OrbitCameraSystem.ToggleOrthographic(), "Numpad 5");
+                    submenu.AddSeparator();
+                    submenu.AddSubmenu("Ride Camera", rideSubmenu => {
+                        rideSubmenu.AddItem("Toggle", () => OrbitCameraSystem.ToggleRideCamera(), "R",
+                            isChecked: OrbitCameraSystem.IsRideCameraActive);
+                        rideSubmenu.AddItem("Edit", ShowRideCameraDialog);
+                    });
+                });
+                menu.AddSubmenu("Display", submenu => {
+                    submenu.AddItem("Gizmos", ToggleShowGizmos, "F1",
+                        isChecked: Preferences.ShowGizmos);
+                    submenu.AddItem("Grid", () => GridSystem.Instance?.ToggleGrid(), "F2",
+                        isChecked: GridSystem.Instance?.ShowGrid == true);
+                    submenu.AddItem("Stats", ToggleShowStats, "F3",
+                        isChecked: Preferences.ShowStats);
+                    submenu.AddItem("Node Grid", ToggleNodeGridSnapping, "F4",
+                        isChecked: Preferences.NodeGridSnapping);
+                });
+                menu.AddSeparator();
+                menu.AddSubmenu("Visualization", submenu => {
+                    var currentMode = VisualizationSystem.CurrentMode;
+                    submenu.AddItem("Velocity", () => VisualizationSystem.SetMode(VisualizationMode.Velocity), "Ctrl+1".ToPlatformShortcut(),
+                        isChecked: currentMode == VisualizationMode.Velocity);
+                    submenu.AddItem("Curvature", () => VisualizationSystem.SetMode(VisualizationMode.Curvature), "Ctrl+2".ToPlatformShortcut(),
+                        isChecked: currentMode == VisualizationMode.Curvature);
+                    submenu.AddItem("Normal Force", () => VisualizationSystem.SetMode(VisualizationMode.NormalForce), "Ctrl+3".ToPlatformShortcut(),
+                        isChecked: currentMode == VisualizationMode.NormalForce);
+                    submenu.AddItem("Lateral Force", () => VisualizationSystem.SetMode(VisualizationMode.LateralForce), "Ctrl+4".ToPlatformShortcut(),
+                        isChecked: currentMode == VisualizationMode.LateralForce);
+                    submenu.AddItem("Roll Speed", () => VisualizationSystem.SetMode(VisualizationMode.RollSpeed), "Ctrl+5".ToPlatformShortcut(),
+                        isChecked: currentMode == VisualizationMode.RollSpeed);
+                    submenu.AddItem("Pitch Speed", () => VisualizationSystem.SetMode(VisualizationMode.PitchSpeed), "Ctrl+6".ToPlatformShortcut(),
+                        isChecked: currentMode == VisualizationMode.PitchSpeed);
+                    submenu.AddItem("Yaw Speed", () => VisualizationSystem.SetMode(VisualizationMode.YawSpeed), "Ctrl+7".ToPlatformShortcut(),
+                        isChecked: currentMode == VisualizationMode.YawSpeed);
+                });
+                menu.AddSubmenu("Appearance", submenu => {
+                    submenu.AddSubmenu("Track Style", trackSubmenu => {
+                        var availableConfigs = TrackMeshConfigManager.GetAvailableConfigsWithNames();
+                        string currentConfigName = TrackStylePreferences.CurrentTrackMesh;
+                        if (availableConfigs.Length > 0) {
+                            foreach (var configInfo in availableConfigs) {
+                                bool isCurrentConfig = configInfo.FileName == currentConfigName;
+                                trackSubmenu.AddItem(configInfo.DisplayName, () => TrackMeshConfigManager.LoadConfig(configInfo.FileName),
+                                isChecked: isCurrentConfig);
+                            }
+                            trackSubmenu.AddSeparator();
+                        }
+                        trackSubmenu.AddItem("Edit Colors", ShowColorPicker);
+                        trackSubmenu.AddItem("Auto Style", ToggleAutoStyle, isChecked: Preferences.AutoStyle);
+                        trackSubmenu.AddSeparator();
+                        trackSubmenu.AddItem("Open Folder", TrackMeshConfigManager.OpenTrackMeshFolder);
+                    });
+                    submenu.AddSubmenu("Cart Style", cartSubmenu => {
+                        var availableConfigs = CartStyleConfigManager.GetAvailableConfigsWithNames();
+                        string currentConfigName = CartStylePreferences.CurrentCartStyle;
+                        if (availableConfigs.Count > 0) {
+                            foreach (var configInfo in availableConfigs) {
+                                bool isCurrentConfig = configInfo.fileName == currentConfigName;
+                                cartSubmenu.AddItem(configInfo.displayName, () => CartStyleConfigManager.LoadConfig(configInfo.fileName),
+                                isChecked: isCurrentConfig);
+                            }
+                            cartSubmenu.AddSeparator();
+                        }
+                        cartSubmenu.AddItem("Open Folder", CartStyleConfigManager.OpenCartStyleFolder);
+                    });
+                    submenu.AddSubmenu("Background", envSubmenu => {
+                        var currentSkyType = Preferences.SkyType;
+                        envSubmenu.AddItem("Solid", () => Preferences.SkyType = SkyType.Solid,
+                            isChecked: currentSkyType == SkyType.Solid);
+                        envSubmenu.AddItem("Sky", () => Preferences.SkyType = SkyType.Procedural,
+                            isChecked: currentSkyType == SkyType.Procedural);
+                    });
+                });
             });
         }
 
@@ -208,8 +282,12 @@ namespace KexEdit.UI {
             _root.ShowExportDialog(metersPerNode => NoLimits2Exporter.ExportTrack(metersPerNode));
         }
 
-        private void ShowPreferences() {
-            _root.ShowPreferencesDialog();
+        private void ShowRideCameraDialog() {
+            _root.ShowRideCameraDialog();
+        }
+
+        private void ShowColorPicker() {
+            _root.ShowColorPickerDialog();
         }
 
         private void ToggleNodeGridSnapping() {
@@ -224,14 +302,33 @@ namespace KexEdit.UI {
             Preferences.ShowStats = !Preferences.ShowStats;
         }
 
+        private void ToggleShowGizmos() {
+            Preferences.ShowGizmos = !Preferences.ShowGizmos;
+        }
+
+        private void ToggleAutoStyle() {
+            Preferences.AutoStyle = !Preferences.AutoStyle;
+
+            var settings = SystemAPI.ManagedAPI.GetSingleton<TrackStyleSettings>();
+            settings.Version++;
+        }
+
         protected override void OnUpdate() {
             var kb = Keyboard.current;
 
-            if (kb.f2Key.wasPressedThisFrame) GridSystem.Instance?.ToggleGrid();
-            else if (kb.f3Key.wasPressedThisFrame) ToggleShowStats();
-            else if (kb.f4Key.wasPressedThisFrame) ToggleNodeGridSnapping();
-            else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
-            else if (kb.tKey.wasPressedThisFrame) ToggleSyncPlayback();
+            if (!kb.ctrlKey.isPressed && !kb.leftCommandKey.isPressed) {
+                if (kb.f1Key.wasPressedThisFrame) ToggleShowGizmos();
+                else if (kb.f2Key.wasPressedThisFrame) GridSystem.Instance?.ToggleGrid();
+                else if (kb.f3Key.wasPressedThisFrame) ToggleShowStats();
+                else if (kb.f4Key.wasPressedThisFrame) ToggleNodeGridSnapping();
+                else if (kb.f11Key.wasPressedThisFrame) VideoControlSystem.Instance?.ToggleFullscreen();
+                else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
+                else if (kb.tKey.wasPressedThisFrame) ToggleSyncPlayback();
+                else if (kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetFrontView();
+                else if (kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetSideView();
+                else if (kb.numpad5Key.wasPressedThisFrame) OrbitCameraSystem.ToggleOrthographic();
+                else if (kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetTopView();
+            }
 
             if (kb.ctrlKey.isPressed || kb.leftCommandKey.isPressed) {
                 if (kb.zKey.wasPressedThisFrame) {
@@ -249,6 +346,16 @@ namespace KexEdit.UI {
                 else if (kb.hKey.wasPressedThisFrame) ShowControls();
                 else if (kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomIn();
                 else if (kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomOut();
+                else if (kb.digit1Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.Velocity);
+                else if (kb.digit2Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.Curvature);
+                else if (kb.digit3Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.NormalForce);
+                else if (kb.digit4Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.LateralForce);
+                else if (kb.digit5Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.RollSpeed);
+                else if (kb.digit6Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.PitchSpeed);
+                else if (kb.digit7Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.YawSpeed);
+                else if (kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetBackView();
+                else if (kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetOtherSideView();
+                else if (kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetBottomView();
             }
         }
 

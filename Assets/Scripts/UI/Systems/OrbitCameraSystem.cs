@@ -26,11 +26,11 @@ namespace KexEdit.UI {
         private float _currentDistance;
         private float _currentPitch;
         private float _currentYaw;
+        private bool _currentIsOrthographic;
+        private float _currentOrthographicSize;
 
         public static OrbitCameraSystem Instance { get; private set; }
         public static bool IsRideCameraActive => Instance._isRideCameraActive;
-
-        public static System.Action<float> OnSpeedMultiplierChanged;
 
         public OrbitCameraSystem() {
             Instance = this;
@@ -53,6 +53,12 @@ namespace KexEdit.UI {
             _gameView.RegisterCallback<MouseEnterEvent>(_ => _isOverGameView = true);
             _gameView.RegisterCallback<MouseLeaveEvent>(_ => _isOverGameView = false);
 
+            float2 mousePosition = Mouse.current.position.ReadValue();
+            float uiScale = UIScaleSystem.Instance.CurrentScale;
+            mousePosition /= uiScale;
+            mousePosition.y = _gameView.worldBound.height - mousePosition.y;
+            _isOverGameView = _gameView.worldBound.Contains(mousePosition);
+
             _camera = UnityEngine.Camera.main;
             _target = new UnityEngine.GameObject("CameraTarget").transform;
 
@@ -61,8 +67,21 @@ namespace KexEdit.UI {
             _currentDistance = uiState.CameraTargetDistance;
             _currentPitch = uiState.CameraTargetPitch;
             _currentYaw = uiState.CameraTargetYaw;
+            _currentIsOrthographic = uiState.CameraTargetOrthographic;
+            _currentOrthographicSize = uiState.CameraTargetOrthographicSize;
 
             _camera.cullingMask = _defaultCullingMask;
+            _camera.orthographic = _currentIsOrthographic;
+            
+            _cinemachineCamera.Lens.ModeOverride = _currentIsOrthographic ? 
+                LensSettings.OverrideModes.Orthographic : 
+                LensSettings.OverrideModes.None;
+                
+            if (_currentIsOrthographic) {
+                _camera.orthographicSize = _currentOrthographicSize;
+                _cinemachineCamera.Lens.OrthographicSize = _currentOrthographicSize;
+            }
+            
             UpdateCamera();
         }
 
@@ -85,6 +104,16 @@ namespace KexEdit.UI {
                 ToggleRideCameraInternal();
             }
 
+            if (keyboard.numpad1Key.wasPressedThisFrame) {
+                SetFrontViewInternal();
+            }
+            if (keyboard.numpad3Key.wasPressedThisFrame) {
+                SetSideViewInternal();
+            }
+            if (keyboard.numpad7Key.wasPressedThisFrame) {
+                SetTopViewInternal();
+            }
+
             if (_isRideCameraActive) return;
 
             ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
@@ -102,10 +131,12 @@ namespace KexEdit.UI {
 
                 if (mouse.leftButton.wasPressedThisFrame && altOrCmdPressed) {
                     _isOrbiting = true;
+                    uiState.CameraTargetOrthographic = false;
                 }
 
                 if (mouse.rightButton.wasPressedThisFrame && !altOrCmdPressed) {
                     _isFreeLooking = true;
+                    uiState.CameraTargetOrthographic = false;
                 }
 
                 if (mouse.middleButton.wasPressedThisFrame ||
@@ -156,7 +187,7 @@ namespace KexEdit.UI {
                         uiState.CameraSpeedMultiplier -= CameraProperties.SpeedMultiplierStep;
                     }
                     uiState.CameraSpeedMultiplier = math.clamp(uiState.CameraSpeedMultiplier, CameraProperties.MinSpeedMultiplier, CameraProperties.MaxSpeedMultiplier);
-                    OnSpeedMultiplierChanged?.Invoke(uiState.CameraSpeedMultiplier);
+                    NotificationSystem.ShowNotification($"Fly Speed: {uiState.CameraSpeedMultiplier:F1}x");
                 }
 
                 float3 movement = float3.zero;
@@ -203,6 +234,10 @@ namespace KexEdit.UI {
                     float zoomAmount = scroll * CameraProperties.ZoomSpeed * uiState.CameraTargetDistance;
                     uiState.CameraTargetDistance -= zoomAmount;
                     uiState.CameraTargetDistance = math.clamp(uiState.CameraTargetDistance, CameraProperties.MinDistance, CameraProperties.MaxDistance);
+                    
+                    if (uiState.CameraTargetOrthographic) {
+                        uiState.CameraTargetOrthographicSize = uiState.CameraTargetDistance * 0.6f;
+                    }
                 }
             }
 
@@ -212,11 +247,31 @@ namespace KexEdit.UI {
         private void UpdateCamera() {
             ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
 
-            float t = 1f - math.exp(-CameraProperties.Dampening * UnityEngine.Time.unscaledDeltaTime);
-            _currentPitch = math.lerp(_currentPitch, uiState.CameraTargetPitch, t);
-            _currentYaw = math.lerp(_currentYaw, uiState.CameraTargetYaw, t);
-            _currentDistance = math.lerp(_currentDistance, uiState.CameraTargetDistance, t);
-            _currentPosition = math.lerp(_currentPosition, uiState.CameraTargetPosition, t);
+            if (_isFreeLooking) {
+                _currentPitch = uiState.CameraTargetPitch;
+                _currentYaw = uiState.CameraTargetYaw;
+                _currentDistance = uiState.CameraTargetDistance;
+                _currentPosition = uiState.CameraTargetPosition;
+                _currentIsOrthographic = uiState.CameraTargetOrthographic;
+                _currentOrthographicSize = uiState.CameraTargetOrthographicSize;
+                
+                if (_currentIsOrthographic) {
+                    _currentOrthographicSize = _currentDistance * 0.6f;
+                }
+            }
+            else {
+                float t = 1f - math.exp(-CameraProperties.Dampening * UnityEngine.Time.unscaledDeltaTime);
+                _currentPitch = math.lerp(_currentPitch, uiState.CameraTargetPitch, t);
+                _currentYaw = math.lerp(_currentYaw, uiState.CameraTargetYaw, t);
+                _currentDistance = math.lerp(_currentDistance, uiState.CameraTargetDistance, t);
+                _currentPosition = math.lerp(_currentPosition, uiState.CameraTargetPosition, t);
+                _currentIsOrthographic = uiState.CameraTargetOrthographic;
+                _currentOrthographicSize = math.lerp(_currentOrthographicSize, uiState.CameraTargetOrthographicSize, t);
+                
+                if (_currentIsOrthographic) {
+                    _currentOrthographicSize = _currentDistance * 0.6f;
+                }
+            }
 
             quaternion rotation = quaternion.Euler(math.radians(_currentPitch), math.radians(_currentYaw), 0f);
             float3 dir = math.mul(rotation, new float3(0, 0, -1));
@@ -225,10 +280,23 @@ namespace KexEdit.UI {
             _cinemachineCamera.transform.SetPositionAndRotation(pos, rotation);
             _target.transform.position = _currentPosition;
 
+            _camera.orthographic = _currentIsOrthographic;
+            
+            _cinemachineCamera.Lens.ModeOverride = _currentIsOrthographic ? 
+                LensSettings.OverrideModes.Orthographic : 
+                LensSettings.OverrideModes.None;
+                
+            if (_currentIsOrthographic) {
+                _camera.orthographicSize = _currentOrthographicSize;
+                _cinemachineCamera.Lens.OrthographicSize = _currentOrthographicSize;
+            }
+
             uiState.CameraPosition = pos;
             uiState.CameraPitch = _currentPitch;
             uiState.CameraYaw = _currentYaw;
             uiState.CameraDistance = _currentDistance;
+            uiState.CameraOrthographic = _currentIsOrthographic;
+            uiState.CameraOrthographicSize = _currentOrthographicSize;
         }
 
         private void ToggleRideCameraInternal() {
@@ -301,6 +369,119 @@ namespace KexEdit.UI {
 
         public static void ToggleRideCamera() {
             Instance.ToggleRideCameraInternal();
+        }
+
+        private void SetFrontViewInternal() {
+            if (_isRideCameraActive) return;
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.CameraTargetPitch = 0f;
+            uiState.CameraTargetYaw = 0f;
+            uiState.CameraTargetOrthographic = true;
+            if (uiState.CameraTargetOrthographicSize <= 0.1f) {
+                uiState.CameraTargetOrthographicSize = uiState.CameraTargetDistance * 0.6f;
+            }
+            NotificationSystem.ShowNotification("Front View");
+        }
+
+        private void SetSideViewInternal() {
+            if (_isRideCameraActive) return;
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.CameraTargetPitch = 0f;
+            uiState.CameraTargetYaw = -90f;
+            uiState.CameraTargetOrthographic = true;
+            if (uiState.CameraTargetOrthographicSize <= 0.1f) {
+                uiState.CameraTargetOrthographicSize = uiState.CameraTargetDistance * 0.6f;
+            }
+            NotificationSystem.ShowNotification("Right View");
+        }
+
+        private void SetTopViewInternal() {
+            if (_isRideCameraActive) return;
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.CameraTargetPitch = 90f;
+            uiState.CameraTargetYaw = 0f;
+            uiState.CameraTargetOrthographic = true;
+            if (uiState.CameraTargetOrthographicSize <= 0.1f) {
+                uiState.CameraTargetOrthographicSize = uiState.CameraTargetDistance * 0.6f;
+            }
+            NotificationSystem.ShowNotification("Top View");
+        }
+
+        private void SetBackViewInternal() {
+            if (_isRideCameraActive) return;
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.CameraTargetPitch = 0f;
+            uiState.CameraTargetYaw = 180f;
+            uiState.CameraTargetOrthographic = true;
+            if (uiState.CameraTargetOrthographicSize <= 0.1f) {
+                uiState.CameraTargetOrthographicSize = uiState.CameraTargetDistance * 0.6f;
+            }
+            NotificationSystem.ShowNotification("Back View");
+        }
+
+        private void SetOtherSideViewInternal() {
+            if (_isRideCameraActive) return;
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.CameraTargetPitch = 0f;
+            uiState.CameraTargetYaw = 90f;
+            uiState.CameraTargetOrthographic = true;
+            if (uiState.CameraTargetOrthographicSize <= 0.1f) {
+                uiState.CameraTargetOrthographicSize = uiState.CameraTargetDistance * 0.6f;
+            }
+            NotificationSystem.ShowNotification("Left View");
+        }
+
+        private void SetBottomViewInternal() {
+            if (_isRideCameraActive) return;
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.CameraTargetPitch = -90f;
+            uiState.CameraTargetYaw = 0f;
+            uiState.CameraTargetOrthographic = true;
+            if (uiState.CameraTargetOrthographicSize <= 0.1f) {
+                uiState.CameraTargetOrthographicSize = uiState.CameraTargetDistance * 0.6f;
+            }
+            NotificationSystem.ShowNotification("Bottom View");
+        }
+
+        public static void SetFrontView() {
+            Instance.SetFrontViewInternal();
+        }
+
+        public static void SetSideView() {
+            Instance.SetSideViewInternal();
+        }
+
+        public static void SetTopView() {
+            Instance.SetTopViewInternal();
+        }
+
+        public static void SetBackView() {
+            Instance.SetBackViewInternal();
+        }
+
+        public static void SetOtherSideView() {
+            Instance.SetOtherSideViewInternal();
+        }
+
+        public static void SetBottomView() {
+            Instance.SetBottomViewInternal();
+        }
+
+        private void ToggleOrthographicInternal() {
+            if (_isRideCameraActive) return;
+            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
+            uiState.CameraTargetOrthographic = !uiState.CameraTargetOrthographic;
+
+            if (uiState.CameraTargetOrthographic && uiState.CameraTargetOrthographicSize <= 0.1f) {
+                uiState.CameraTargetOrthographicSize = uiState.CameraTargetDistance * 0.6f;
+            }
+
+            string mode = uiState.CameraTargetOrthographic ? "Orthographic" : "Perspective";
+            NotificationSystem.ShowNotification($"{mode} View");
+        }
+
+        public static void ToggleOrthographic() {
+            Instance.ToggleOrthographicInternal();
         }
     }
 }

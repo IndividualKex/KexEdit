@@ -82,8 +82,7 @@ namespace KexEdit.UI.Timeline {
                 PropertyType.LateralForce => s_LateralForceColor,
                 PropertyType.PitchSpeed => s_PitchSpeedColor,
                 PropertyType.YawSpeed => s_YawSpeedColor,
-                PropertyType.FixedVelocity => s_FixedVelocityColor,
-                _ => s_FixedVelocityColor
+                _ => s_DefaultColor
             };
         }
 
@@ -98,6 +97,7 @@ namespace KexEdit.UI.Timeline {
                 PropertyType.Heart => s_HeartName,
                 PropertyType.Friction => s_FrictionName,
                 PropertyType.Resistance => s_ResistanceName,
+                PropertyType.TrackStyle => s_TrackStyleName,
                 _ => throw new System.ArgumentOutOfRangeException(nameof(propertyType), propertyType, "Unknown PropertyType")
             };
         }

@@ -14,18 +14,24 @@ namespace KexEdit.UI {
         private const string PREF_SHOW_STATS = "ShowStats";
         private const string PREF_SYNC_PLAYBACK = "SyncPlayback";
         private const string PREF_KEYFRAME_EDITOR = "KeyframeEditor";
+        private const string PREF_SHOW_GIZMOS = "ShowGizmos";
+        private const string PREF_AUTO_STYLE = "AutoStyle";
+        private const string PREF_SKY_TYPE = "SkyType";
 
         private static DistanceUnitsType s_DistanceUnits;
         private static AngleUnitsType s_AngleUnits;
         private static AngleChangeUnitsType s_AngleChangeUnits;
         private static SpeedUnitsType s_SpeedUnits;
 
+        private static SkyType s_SkyType;
         private static float s_RideCameraHeight;
         private static float s_UIScale;
         private static bool s_NodeGridSnapping;
         private static bool s_ShowStats;
         private static bool s_SyncPlayback;
         private static bool s_KeyframeEditor;
+        private static bool s_ShowGizmos;
+        private static bool s_AutoStyle;
 
         static Preferences() {
             LoadPreferences();
@@ -112,11 +118,38 @@ namespace KexEdit.UI {
             }
         }
 
+        public static bool ShowGizmos {
+            get => s_ShowGizmos;
+            set {
+                s_ShowGizmos = value;
+                PlayerPrefs.SetInt(PREF_SHOW_GIZMOS, value ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static bool AutoStyle {
+            get => s_AutoStyle;
+            set {
+                s_AutoStyle = value;
+                PlayerPrefs.SetInt(PREF_AUTO_STYLE, value ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+        }
+
         public static float RideCameraHeight {
             get => s_RideCameraHeight;
             set {
                 s_RideCameraHeight = value;
                 PlayerPrefs.SetFloat(PREF_RIDE_CAMERA_HEIGHT, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static SkyType SkyType {
+            get => s_SkyType;
+            set {
+                s_SkyType = value;
+                PlayerPrefs.SetInt(PREF_SKY_TYPE, (int)value);
                 PlayerPrefs.Save();
             }
         }
@@ -141,6 +174,9 @@ namespace KexEdit.UI {
             s_ShowStats = PlayerPrefs.GetInt(PREF_SHOW_STATS, 0) == 1;
             s_SyncPlayback = PlayerPrefs.GetInt(PREF_SYNC_PLAYBACK, 0) == 1;
             s_KeyframeEditor = PlayerPrefs.GetInt(PREF_KEYFRAME_EDITOR, 0) == 1;
+            s_ShowGizmos = PlayerPrefs.GetInt(PREF_SHOW_GIZMOS, 0) == 1;
+            s_AutoStyle = PlayerPrefs.GetInt(PREF_AUTO_STYLE, 0) == 1;
+            s_SkyType = (SkyType)PlayerPrefs.GetInt(PREF_SKY_TYPE, (int)SkyType.Solid);
         }
     }
 }

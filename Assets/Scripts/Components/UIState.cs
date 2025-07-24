@@ -16,5 +16,9 @@ namespace KexEdit {
         public float CameraYaw;
         public float CameraTargetYaw;
         public float CameraSpeedMultiplier;
+        public float CameraOrthographicSize;
+        public float CameraTargetOrthographicSize;
+        public bool CameraOrthographic;
+        public bool CameraTargetOrthographic;
     }
 }

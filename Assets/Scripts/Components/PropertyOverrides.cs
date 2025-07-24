@@ -26,6 +26,11 @@ namespace KexEdit {
             set => Flags = value ? Flags | PropertyOverrideFlags.Resistance : Flags & ~PropertyOverrideFlags.Resistance;
         }
 
+        public bool TrackStyle {
+            get => (Flags & PropertyOverrideFlags.TrackStyle) != 0;
+            set => Flags = value ? Flags | PropertyOverrideFlags.TrackStyle : Flags & ~PropertyOverrideFlags.TrackStyle;
+        }
+
         public static PropertyOverrides Default => new() {
             Flags = PropertyOverrideFlags.None
         };

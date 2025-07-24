@@ -32,6 +32,7 @@ namespace KexEdit.UI.Timeline {
             PropertyType.Heart => true,
             PropertyType.Friction => true,
             PropertyType.Resistance => true,
+            PropertyType.TrackStyle => true,
             _ => false
         };
 

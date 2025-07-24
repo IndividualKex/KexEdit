@@ -41,11 +41,11 @@ namespace KexEdit.UI.NodeGraph {
         protected override void OnStartRunning() {
             var root = UIService.Instance.UIDocument.rootVisualElement;
             _view = root.Q<NodeGraphView>();
-            
+
             var uiState = SystemAPI.GetSingleton<UIState>();
             _data.Pan = uiState.NodeGraphPan;
             _data.Zoom = uiState.NodeGraphZoom;
-            
+
             _view.Initialize(_data);
 
             _view.RegisterCallback<ViewRightClickEvent>(OnViewRightClick);
@@ -1072,6 +1072,9 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.AddBuffer<HeartKeyframe>(entity);
                 ecb.AddBuffer<FrictionKeyframe>(entity);
                 ecb.AddBuffer<ResistanceKeyframe>(entity);
+                ecb.AddBuffer<TrackStyleKeyframe>(entity);
+                ecb.AddComponent<StyleHash>(entity);
+                ecb.AddComponent<RenderedStyleHash>(entity);
             }
 
             if (type == NodeType.Mesh) {
