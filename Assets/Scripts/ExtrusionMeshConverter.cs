@@ -8,13 +8,15 @@ namespace KexEdit {
 
             var inVertices = inputMesh.vertices;
             var inUVs = inputMesh.uv;
+            var inNormals = inputMesh.normals;
             var inTriangles = inputMesh.triangles;
 
             var vertices = new List<VertexData>();
             for (int i = 0; i < inVertices.Length; i++) {
                 vertices.Add(new VertexData {
                     Position = inVertices[i],
-                    UV = inUVs[i]
+                    UV = inUVs[i],
+                    Normal = inNormals.Length > i ? inNormals[i] : Vector3.up
                 });
             }
 
@@ -188,10 +190,10 @@ namespace KexEdit {
 
                     Vector3 a = edge.A.Position;
                     Vector3 b = edge.B.Position;
+                    a.z = 0f;
+                    b.z = 0f;
                     Vector3 c = a + Vector3.forward;
                     Vector3 d = b + Vector3.forward;
-
-                    Vector3 normal = Vector3.Cross(b - a, Vector3.back).normalized;
 
                     int ai = index * 2;
                     int bi = ai + 1;
@@ -208,10 +210,10 @@ namespace KexEdit {
                     outUVs[ci] = edge.A.UV;
                     outUVs[di] = edge.B.UV;
 
-                    outNormals[ai] = normal;
-                    outNormals[bi] = normal;
-                    outNormals[ci] = normal;
-                    outNormals[di] = normal;
+                    outNormals[ai] = edge.A.Normal;
+                    outNormals[bi] = edge.B.Normal;
+                    outNormals[ci] = edge.A.Normal;
+                    outNormals[di] = edge.B.Normal;
 
                     outTriangles[index * 6] = ai;
                     outTriangles[index * 6 + 1] = ci;
@@ -225,7 +227,7 @@ namespace KexEdit {
             }
 
             outputMesh = new Mesh {
-                name = "Default Rail"
+                name = inputMesh.name
             };
             outputMesh.SetVertices(outVertices);
             outputMesh.SetUVs(0, outUVs);
@@ -238,6 +240,7 @@ namespace KexEdit {
         private struct VertexData {
             public Vector3 Position;
             public Vector2 UV;
+            public Vector3 Normal;
         }
 
         private struct Edge {

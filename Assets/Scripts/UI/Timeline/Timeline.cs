@@ -68,12 +68,17 @@ namespace KexEdit.UI.Timeline {
                     marginLeft = 0f,
                     marginRight = 0f,
                     marginTop = 0f,
-                    marginBottom = 0f
+                    marginBottom = 0f,
+                    display = DisplayStyle.None
                 }
             };
             Add(_editorDivider);
 
-            _keyframeEditor = new KeyframeEditor();
+            _keyframeEditor = new KeyframeEditor() {
+                style = {
+                    display = DisplayStyle.None
+                }
+            };
             Add(_keyframeEditor);
 
             var displayBinding = new DataBinding {

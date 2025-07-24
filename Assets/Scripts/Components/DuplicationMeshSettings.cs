@@ -7,5 +7,6 @@ namespace KexEdit {
         public Mesh Mesh;
         public Material Material;
         public int Step = 1;
+        public int Offset = 0;
     }
 }

@@ -7,6 +7,7 @@ namespace KexEdit {
             public override void Bake(ColliderPrefabAuthoring authoring) {
                 var entity = GetEntity(TransformUsageFlags.None);
                 AddComponent<NodeReference>(entity);
+                AddComponent<SegmentReference>(entity);
             }
         }
     }

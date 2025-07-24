@@ -4,21 +4,15 @@ using Unity.Mathematics;
 using Unity.Physics;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
-using System.Collections.Generic;
 using KexEdit.UI.NodeGraph;
 using UnityEngine;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class GameViewControlSystem : SystemBase, IEditableHandler {
-        private const float SpeedLabelDisplayTime = 2f;
-
         private UnityEngine.Camera _camera;
         private NodeGraphView _nodeGraphView;
         private VisualElement _gameView;
-        private Label _speedLabel;
-
-        private float _speedLabelTimer;
 
         public static GameViewControlSystem Instance { get; private set; }
 
@@ -33,59 +27,14 @@ namespace KexEdit.UI {
             _nodeGraphView = root.Q<NodeGraphView>();
             _gameView = root.Q<VisualElement>("GameView");
 
-            SetupSpeedLabel();
-
             _gameView.RegisterCallback<MouseDownEvent>(OnGameViewMouseDown);
-
-            OrbitCameraSystem.OnSpeedMultiplierChanged += OnSpeedMultiplierChanged;
 
             EditOperationsSystem.RegisterHandler(this);
         }
 
         protected override void OnDestroy() {
             EditOperationsSystem.UnregisterHandler(this);
-            OrbitCameraSystem.OnSpeedMultiplierChanged -= OnSpeedMultiplierChanged;
             base.OnDestroy();
-        }
-
-        private void SetupSpeedLabel() {
-            _speedLabel = new Label {
-                style = {
-                    position = Position.Absolute,
-                    top = 20f,
-                    left = Length.Percent(50f),
-                    translate = new Translate(Length.Percent(-50f), 0f),
-                    backgroundColor = new UnityEngine.Color(0.1f, 0.1f, 0.1f, 0.8f),
-                    color = new UnityEngine.Color(0.9f, 0.9f, 0.9f, 1f),
-                    fontSize = 12,
-                    paddingTop = 8f,
-                    paddingRight = 12f,
-                    paddingBottom = 8f,
-                    paddingLeft = 12f,
-                    borderTopLeftRadius = 4f,
-                    borderTopRightRadius = 4f,
-                    borderBottomLeftRadius = 4f,
-                    borderBottomRightRadius = 4f,
-                    opacity = 0f,
-                    visibility = Visibility.Hidden,
-                    unityTextAlign = UnityEngine.TextAnchor.MiddleCenter,
-                    transitionProperty = new List<StylePropertyName> { "opacity" },
-                    transitionDuration = new List<TimeValue> { new(300, TimeUnit.Millisecond) },
-                    transitionTimingFunction = new List<EasingFunction> { EasingMode.EaseOutCubic }
-                }
-            };
-            _gameView.Add(_speedLabel);
-        }
-
-        private void OnSpeedMultiplierChanged(float multiplier) {
-            ShowSpeedLabel(multiplier);
-        }
-
-        private void ShowSpeedLabel(float multiplier) {
-            _speedLabel.text = $"Fly Speed: {multiplier:F1}x";
-            _speedLabel.style.visibility = Visibility.Visible;
-            _speedLabel.style.opacity = 1f;
-            _speedLabelTimer = SpeedLabelDisplayTime;
         }
 
         private void OnGameViewMouseDown(MouseDownEvent evt) {
@@ -135,7 +84,7 @@ namespace KexEdit.UI {
             float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
             bool foundAny = false;
 
-            foreach (var node in SystemAPI.Query<NodeAspect>().WithAll<TrackHash>()) {
+            foreach (var node in SystemAPI.Query<NodeAspect>().WithAll<Point>()) {
                 if (!node.Selected) continue;
 
                 var pointBuffer = SystemAPI.GetBuffer<Point>(node.Self);
@@ -214,21 +163,6 @@ namespace KexEdit.UI {
             return _gameView.worldBound.Contains(mousePosition);
         }
 
-        protected override void OnUpdate() {
-            UpdateSpeedLabel();
-        }
-
-        private void UpdateSpeedLabel() {
-            if (_speedLabelTimer > 0f) {
-                _speedLabelTimer -= UnityEngine.Time.unscaledDeltaTime;
-
-                if (_speedLabelTimer <= 0f) {
-                    _speedLabel.style.opacity = 0f;
-                    _speedLabel.schedule.Execute(() => {
-                        _speedLabel.style.visibility = Visibility.Hidden;
-                    }).ExecuteLater(300);
-                }
-            }
-        }
+        protected override void OnUpdate() { }
     }
 }

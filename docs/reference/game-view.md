@@ -49,7 +49,7 @@ Click track sections to select them for editing or focus.
 
 | Input           | Action       | Notes                    |
 | --------------- | ------------ | ------------------------ |
-| `Left Click`    | Select       | Select track section     |   
+| `Left Click`    | Select       | Select track section     |
 | `Shift + Click` | Multi-Select | Add section to selection |
 | `F`             | Focus        | Frame selected sections  |
 
@@ -78,11 +78,13 @@ _Ride camera follows the cart along the track for rider's perspective._
 
 ### Overlays
 
-| Input | Action       | Notes                      |
-| ----- | ------------ | -------------------------- |
-| `F1`  | Speed Visual | Toggle speed visualization |
-| `F2`  | Grid         | Toggle alignment grid      |
-| `F3`  | Stats        | Toggle simulation stats    |
+| Input       | Action                 | Notes                         |
+| ----------- | ---------------------- | ----------------------------- |
+| `F1`        | Gizmos                 | Toggle track gizmos           |
+| `F2`        | Grid                   | Toggle alignment grid         |
+| `F3`        | Stats                  | Toggle simulation stats       |
+| `F4`        | Node Grid Snapping     | Toggle node grid snapping     |
+| `Ctrl + F1` | Velocity Visualization | Toggle velocity visualization |
 
 ---
 

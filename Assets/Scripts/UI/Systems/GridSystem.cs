@@ -10,8 +10,8 @@ namespace KexEdit.UI {
     public partial class GridSystem : SystemBase {
         public static GridSystem Instance { get; private set; }
 
-        private GameObject _groundPlane;
         private Material _gridMaterial;
+        private GameObject _groundPlane;
         private GraphicsBuffer _vertexBuffer;
         private GraphicsBuffer _indexBuffer;
         private MaterialPropertyBlock _matProps;
@@ -22,7 +22,6 @@ namespace KexEdit.UI {
         private bool _showGrid = true;
         private int _gridSize = 250;
         private float _gridSpacing = 10f;
-        private Color _gridColor = new(1f, 1f, 1f, 0.1f);
 
         public bool ShowGrid => _showGrid;
 
@@ -34,7 +33,7 @@ namespace KexEdit.UI {
             _groundPlane = GameObject.Find("GroundPlane");
             _bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
             _camera = UnityEngine.Camera.main;
-            CreateGridMaterial();
+            _gridMaterial = UIService.Instance.GridMaterial;
             GenerateGridMesh();
             _groundPlane.SetActive(_showGrid);
         }
@@ -42,9 +41,6 @@ namespace KexEdit.UI {
         protected override void OnStopRunning() {
             _vertexBuffer?.Dispose();
             _indexBuffer?.Dispose();
-            if (_gridMaterial != null) {
-                Object.DestroyImmediate(_gridMaterial);
-            }
             Instance = null;
         }
 
@@ -74,26 +70,6 @@ namespace KexEdit.UI {
                 MeshTopology.Lines,
                 _indexBuffer.count
             );
-        }
-
-        private void CreateGridMaterial() {
-            var shader = UIService.Instance.LineGizmoShader;
-
-            _gridMaterial = new Material(shader) {
-                name = "GridMaterial"
-            };
-
-            _gridMaterial.SetFloat("_Surface", 1f);
-            _gridMaterial.SetFloat("_Blend", 0f);
-            _gridMaterial.SetFloat("_SrcBlend", 1f);
-            _gridMaterial.SetFloat("_DstBlend", 1f);
-            _gridMaterial.SetFloat("_ZWrite", 0f);
-            _gridMaterial.SetFloat("_ZTest", 4f);
-            _gridMaterial.SetColor("_BaseColor", _gridColor);
-            _gridMaterial.SetColor("_Color", _gridColor);
-            _gridMaterial.renderQueue = 3000;
-
-            _gridMaterial.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
         }
 
         private void GenerateGridMesh(Vector3 center = default) {
@@ -140,19 +116,6 @@ namespace KexEdit.UI {
         public void ToggleGrid() {
             _showGrid = !_showGrid;
             _groundPlane.SetActive(_showGrid);
-        }
-
-        public void SetGridSettings(int size, float spacing, Color color) {
-            if (size != _gridSize || !Mathf.Approximately(spacing, _gridSpacing)) {
-                _gridSize = size;
-                _gridSpacing = spacing;
-                GenerateGridMesh();
-            }
-
-            if (color != _gridColor) {
-                _gridColor = color;
-                _gridMaterial.color = color;
-            }
         }
 
         [BurstCompile]

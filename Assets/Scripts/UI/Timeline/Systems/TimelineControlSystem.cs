@@ -45,6 +45,7 @@ namespace KexEdit.UI.Timeline {
 
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAspect<NodeAspect>()
+                .WithAll<Point>()
                 .Build(EntityManager);
 
             RequireForUpdate(_playheadQuery);
@@ -119,7 +120,6 @@ namespace KexEdit.UI.Timeline {
                     _data.Entity = Entity.Null;
                     return;
                 }
-                if (!SystemAPI.HasComponent<TrackHash>(entity)) continue;
                 _data.Entity = entity;
             }
             _data.Active = _data.Entity != Entity.Null;
@@ -212,7 +212,7 @@ namespace KexEdit.UI.Timeline {
                 propertyData.Visible = false;
 
                 var adapter = PropertyAdapter.GetAdapter(property);
-                adapter.UpdateKeyframes(_data.Entity, propertyData.Keyframes);
+                adapter.GetKeyframes(_data.Entity, propertyData.Keyframes);
 
                 if (!_data.Active) continue;
 
@@ -238,7 +238,7 @@ namespace KexEdit.UI.Timeline {
             foreach (var (type, propertyData) in _data.Properties) {
                 var adapter = PropertyAdapter.GetAdapter(type);
                 propertyData.SelectedKeyframeCount = 0;
-                adapter.UpdateKeyframes(_data.Entity, propertyData.Keyframes);
+                adapter.GetKeyframes(_data.Entity, propertyData.Keyframes);
                 if (!propertyData.Visible) continue;
                 foreach (var keyframe in propertyData.Keyframes) {
                     if (keyframe.Selected) {
@@ -477,6 +477,7 @@ namespace KexEdit.UI.Timeline {
                 PropertyType.Heart => overrides.Heart,
                 PropertyType.Friction => overrides.Friction,
                 PropertyType.Resistance => overrides.Resistance,
+                PropertyType.TrackStyle => overrides.TrackStyle,
                 _ => true
             };
         }
@@ -498,8 +499,9 @@ namespace KexEdit.UI.Timeline {
             bool canAddHeart = !overrides.Heart;
             bool canAddFriction = !overrides.Friction;
             bool canAddResistance = !overrides.Resistance;
+            bool canAddTrackStyle = !overrides.TrackStyle;
 
-            return canAddFixedVelocity || canAddHeart || canAddFriction || canAddResistance;
+            return canAddFixedVelocity || canAddHeart || canAddFriction || canAddResistance || canAddTrackStyle;
         }
 
         private void MarkTrackDirty() {
@@ -537,6 +539,9 @@ namespace KexEdit.UI.Timeline {
                     break;
                 case PropertyType.Resistance:
                     overrides.Resistance = value;
+                    break;
+                case PropertyType.TrackStyle:
+                    overrides.TrackStyle = value;
                     break;
                 default:
                     throw new System.NotImplementedException($"Property override not implemented for {type}");
@@ -1710,6 +1715,7 @@ namespace KexEdit.UI.Timeline {
                 bool canAddHeart = !IsPropertyVisible(PropertyType.Heart);
                 bool canAddFriction = !IsPropertyVisible(PropertyType.Friction);
                 bool canAddResistance = !IsPropertyVisible(PropertyType.Resistance);
+                bool canAddTrackStyle = !IsPropertyVisible(PropertyType.TrackStyle);
 
                 if (canAddFixedVelocity) {
                     menu.AddItem("Fixed Velocity", () => AddProperty(PropertyType.FixedVelocity));
@@ -1722,6 +1728,9 @@ namespace KexEdit.UI.Timeline {
                 }
                 if (canAddResistance) {
                     menu.AddItem("Resistance", () => AddProperty(PropertyType.Resistance));
+                }
+                if (canAddTrackStyle) {
+                    menu.AddItem("Track Style", () => AddProperty(PropertyType.TrackStyle));
                 }
             });
         }
