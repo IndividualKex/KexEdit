@@ -622,5 +622,16 @@ namespace KexEdit.UI {
                     break;
             }
         }
+
+        public static bool IsTextInputActive() {
+            try {
+                var root = UIService.Instance.UIDocument.rootVisualElement;
+                var focusedElement = root.panel.focusController.focusedElement;
+                return focusedElement is FloatField or IntegerField or TextField;
+            }
+            catch {
+                return false;
+            }
+        }
     }
 }

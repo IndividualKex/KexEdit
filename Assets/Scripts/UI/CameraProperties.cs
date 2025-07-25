@@ -12,5 +12,7 @@ namespace KexEdit.UI {
         public const float MinSpeedMultiplier = 0.1f;
         public const float MaxSpeedMultiplier = 10f;
         public const float SpeedMultiplierStep = 0.1f;
+        public const float PerspectiveNearClip = 0.3f;
+        public const float OrthographicNearClip = -100f;
     }
 }

@@ -104,14 +104,16 @@ namespace KexEdit.UI {
                 ToggleRideCameraInternal();
             }
 
-            if (keyboard.numpad1Key.wasPressedThisFrame) {
-                SetFrontViewInternal();
-            }
-            if (keyboard.numpad3Key.wasPressedThisFrame) {
-                SetSideViewInternal();
-            }
-            if (keyboard.numpad7Key.wasPressedThisFrame) {
-                SetTopViewInternal();
+            if (!Extensions.IsTextInputActive()) {
+                if (keyboard.numpad1Key.wasPressedThisFrame) {
+                    SetFrontViewInternal();
+                }
+                if (keyboard.numpad3Key.wasPressedThisFrame) {
+                    SetSideViewInternal();
+                }
+                if (keyboard.numpad7Key.wasPressedThisFrame) {
+                    SetTopViewInternal();
+                }
             }
 
             if (_isRideCameraActive) return;
@@ -281,6 +283,7 @@ namespace KexEdit.UI {
             _target.transform.position = _currentPosition;
 
             _camera.orthographic = _currentIsOrthographic;
+            _cinemachineCamera.Lens.NearClipPlane = _currentIsOrthographic ? CameraProperties.OrthographicNearClip : CameraProperties.PerspectiveNearClip;
             
             _cinemachineCamera.Lens.ModeOverride = _currentIsOrthographic ? 
                 LensSettings.OverrideModes.Orthographic : 
