@@ -3,8 +3,10 @@ using UnityEngine;
 namespace KexEdit {
     public static class TrackStylePreferences {
         private const string PREF_CURRENT_TRACK_MESH = "CurrentTrackMesh";
+        private const string PREF_AUTO_STYLE = "AutoStyle";
 
         private static string s_CurrentTrackMesh;
+        private static bool s_AutoStyle;
 
         static TrackStylePreferences() {
             LoadPreferences();
@@ -19,8 +21,18 @@ namespace KexEdit {
             }
         }
 
+        public static bool AutoStyle {
+            get => s_AutoStyle;
+            set {
+                s_AutoStyle = value;
+                PlayerPrefs.SetInt(PREF_AUTO_STYLE, value ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+        }
+
         private static void LoadPreferences() {
             s_CurrentTrackMesh = PlayerPrefs.GetString(PREF_CURRENT_TRACK_MESH, "Default.json");
+            s_AutoStyle = PlayerPrefs.GetInt(PREF_AUTO_STYLE, 0) == 1;
         }
     }
 }

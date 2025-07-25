@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
-using KexEdit.UI;
 
 namespace KexEdit {
     public static class TrackStyleResourceLoader {

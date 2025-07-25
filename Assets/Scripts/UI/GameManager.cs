@@ -1,10 +1,9 @@
 using System.Collections;
-using KexEdit.UI;
 using KexEdit.UI.Serialization;
 using Unity.Entities;
 using UnityEngine;
 
-namespace KexEdit {
+namespace KexEdit.UI {
     public class GameManager : MonoBehaviour {
         private void Awake() {
             Physics.simulationMode = SimulationMode.Script;

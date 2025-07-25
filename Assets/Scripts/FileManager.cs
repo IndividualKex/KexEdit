@@ -3,7 +3,7 @@ using System.IO;
 using System;
 using UnityEngine;
 
-namespace KexEdit.UI {
+namespace KexEdit {
     public static class FileManager {
         private const string FileExtension = ".kex";
         private static string DefaultDirectory => Path.Combine(Application.persistentDataPath, "Tracks");

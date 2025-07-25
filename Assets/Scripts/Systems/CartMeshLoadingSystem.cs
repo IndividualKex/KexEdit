@@ -1,5 +1,4 @@
 using Unity.Entities;
-using KexEdit.UI;
 using UnityEngine;
 
 namespace KexEdit {

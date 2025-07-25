@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 using GLTFast;
 using SFB;
 
-namespace KexEdit.UI {
+namespace KexEdit {
     public static class ImportManager {
         public static void ShowImportDialog(VisualElement root, Action<string> onSuccess = null) {
             var extensions = new ExtensionFilter[] {

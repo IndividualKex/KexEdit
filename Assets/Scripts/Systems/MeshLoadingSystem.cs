@@ -1,5 +1,4 @@
 using Unity.Entities;
-using KexEdit.UI;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(InitializationSystemGroup))]

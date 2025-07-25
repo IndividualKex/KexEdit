@@ -230,7 +230,7 @@ namespace KexEdit.UI {
                             trackSubmenu.AddSeparator();
                         }
                         trackSubmenu.AddItem("Edit Colors", ShowColorPicker);
-                        trackSubmenu.AddItem("Auto Style", ToggleAutoStyle, isChecked: Preferences.AutoStyle);
+                        trackSubmenu.AddItem("Auto Style", ToggleAutoStyle, isChecked: TrackStylePreferences.AutoStyle);
                         trackSubmenu.AddSeparator();
                         trackSubmenu.AddItem("Open Folder", TrackMeshConfigManager.OpenTrackMeshFolder);
                     });
@@ -307,7 +307,7 @@ namespace KexEdit.UI {
         }
 
         private void ToggleAutoStyle() {
-            Preferences.AutoStyle = !Preferences.AutoStyle;
+            TrackStylePreferences.AutoStyle = !TrackStylePreferences.AutoStyle;
 
             var settings = SystemAPI.ManagedAPI.GetSingleton<TrackStyleSettings>();
             settings.Version++;

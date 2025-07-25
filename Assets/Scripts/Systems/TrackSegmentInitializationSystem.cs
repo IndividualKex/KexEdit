@@ -106,7 +106,7 @@ namespace KexEdit {
             DynamicBuffer<Point> points,
             TrackStyleSettings settings
         ) {
-            if (!UI.Preferences.AutoStyle) {
+            if (!TrackStylePreferences.AutoStyle) {
                 int defaultStyleIndex = math.clamp(settings.DefaultStyle, 0, settings.Styles.Count - 1);
                 var singleBreakpoint = new NativeArray<StyleBreakpoint>(1, Allocator.Temp);
                 singleBreakpoint[0] = new StyleBreakpoint {

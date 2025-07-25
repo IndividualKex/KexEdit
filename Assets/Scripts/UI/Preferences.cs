@@ -15,7 +15,6 @@ namespace KexEdit.UI {
         private const string PREF_SYNC_PLAYBACK = "SyncPlayback";
         private const string PREF_KEYFRAME_EDITOR = "KeyframeEditor";
         private const string PREF_SHOW_GIZMOS = "ShowGizmos";
-        private const string PREF_AUTO_STYLE = "AutoStyle";
         private const string PREF_SKY_TYPE = "SkyType";
 
         private static DistanceUnitsType s_DistanceUnits;
@@ -31,7 +30,6 @@ namespace KexEdit.UI {
         private static bool s_SyncPlayback;
         private static bool s_KeyframeEditor;
         private static bool s_ShowGizmos;
-        private static bool s_AutoStyle;
 
         static Preferences() {
             LoadPreferences();
@@ -127,14 +125,6 @@ namespace KexEdit.UI {
             }
         }
 
-        public static bool AutoStyle {
-            get => s_AutoStyle;
-            set {
-                s_AutoStyle = value;
-                PlayerPrefs.SetInt(PREF_AUTO_STYLE, value ? 1 : 0);
-                PlayerPrefs.Save();
-            }
-        }
 
         public static float RideCameraHeight {
             get => s_RideCameraHeight;
@@ -175,7 +165,6 @@ namespace KexEdit.UI {
             s_SyncPlayback = PlayerPrefs.GetInt(PREF_SYNC_PLAYBACK, 0) == 1;
             s_KeyframeEditor = PlayerPrefs.GetInt(PREF_KEYFRAME_EDITOR, 0) == 1;
             s_ShowGizmos = PlayerPrefs.GetInt(PREF_SHOW_GIZMOS, 0) == 1;
-            s_AutoStyle = PlayerPrefs.GetInt(PREF_AUTO_STYLE, 0) == 1;
             s_SkyType = (SkyType)PlayerPrefs.GetInt(PREF_SKY_TYPE, (int)SkyType.Solid);
         }
     }
