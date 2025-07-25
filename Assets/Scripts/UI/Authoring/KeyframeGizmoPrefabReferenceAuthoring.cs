@@ -1,7 +1,7 @@
 using UnityEngine;
 using Unity.Entities;
 
-namespace KexEdit {
+namespace KexEdit.UI {
     public class KeyframeGizmoPrefabReferenceAuthoring : MonoBehaviour {
         public GameObject Gizmo;
 

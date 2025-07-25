@@ -20,7 +20,7 @@ namespace KexEdit.UI {
             }
 
             state.RequireForUpdate<KeyframeGizmoPrefabReference>();
-            state.RequireForUpdate<PreferencesSingleton>();
+            state.RequireForUpdate<Gizmos>();
         }
 
         [BurstCompile]
@@ -35,7 +35,7 @@ namespace KexEdit.UI {
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            if (!SystemAPI.GetSingleton<PreferencesSingleton>().ShowGizmos) return;
+            if (!SystemAPI.GetSingleton<Gizmos>().ShowGizmos) return;
 
             var prefabReference = SystemAPI.GetSingleton<KeyframeGizmoPrefabReference>();
             if (prefabReference.Value == Entity.Null) return;

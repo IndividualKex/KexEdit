@@ -1,6 +1,6 @@
 using Unity.Entities;
 
-namespace KexEdit {
+namespace KexEdit.UI {
     public struct KeyframeGizmoPrefabReference : IComponentData {
         public Entity Value;
 

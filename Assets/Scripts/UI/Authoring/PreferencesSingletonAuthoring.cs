@@ -6,7 +6,7 @@ namespace KexEdit.UI {
         private class Baker : Baker<PreferencesSingletonAuthoring> {
             public override void Bake(PreferencesSingletonAuthoring authoring) {
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
-                AddComponent<PreferencesSingleton>(entity);
+                AddComponent<Gizmos>(entity);
             }
         }
     }

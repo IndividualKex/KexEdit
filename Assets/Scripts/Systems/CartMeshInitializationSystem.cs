@@ -32,10 +32,13 @@ namespace KexEdit {
                 mesh.Value.Cart = entity;
                 mesh.Value.gameObject.SetActive(true);
 
-                if (EntityManager.HasComponent<PlayheadGizmoTag>(entity) && globalSettings.PlayheadGizmoMaterial != null) {
-                    var renderers = mesh.Value.GetComponentsInChildren<Renderer>();
-                    foreach (var renderer in renderers) {
-                        renderer.sharedMaterial = globalSettings.PlayheadGizmoMaterial;
+                if (SystemAPI.HasComponent<RenderTag>(entity)) {
+                    var renderTag = SystemAPI.GetComponent<RenderTag>(entity);
+                    if ((renderTag.Type & RenderTagType.Playhead) != 0 && globalSettings.PlayheadGizmoMaterial != null) {
+                        var renderers = mesh.Value.GetComponentsInChildren<Renderer>();
+                        foreach (var renderer in renderers) {
+                            renderer.sharedMaterial = globalSettings.PlayheadGizmoMaterial;
+                        }
                     }
                 }
 

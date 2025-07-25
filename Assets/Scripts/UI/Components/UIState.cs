@@ -1,7 +1,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace KexEdit {
+namespace KexEdit.UI {
     public struct UIState : IComponentData {
         public float TimelineOffset;
         public float TimelineZoom;

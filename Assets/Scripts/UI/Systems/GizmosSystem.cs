@@ -1,13 +1,13 @@
 using Unity.Entities;
 
 namespace KexEdit.UI {
-    public partial class PreferencesSystem : SystemBase {
+    public partial class GizmosSystem : SystemBase {
         protected override void OnCreate() {
-            RequireForUpdate<PreferencesSingleton>();
+            RequireForUpdate<Gizmos>();
         }
 
         protected override void OnUpdate() {
-            ref var preferences = ref SystemAPI.GetSingletonRW<PreferencesSingleton>().ValueRW;
+            ref var preferences = ref SystemAPI.GetSingletonRW<Gizmos>().ValueRW;
             preferences.ShowGizmos = Preferences.ShowGizmos && !OrbitCameraSystem.IsRideCameraActive;
         }
     }

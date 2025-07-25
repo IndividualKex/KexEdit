@@ -9,12 +9,12 @@ namespace KexEdit.UI {
     public partial struct KeyframeGizmoCleanupSystem : ISystem {
         [BurstCompile]
         public void OnCreate(ref SystemState state) {
-            state.RequireForUpdate<PreferencesSingleton>();
+            state.RequireForUpdate<Gizmos>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            var preferences = SystemAPI.GetSingleton<PreferencesSingleton>();
+            var preferences = SystemAPI.GetSingleton<Gizmos>();
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 

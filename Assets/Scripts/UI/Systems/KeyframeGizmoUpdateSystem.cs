@@ -10,12 +10,12 @@ namespace KexEdit.UI {
     public partial struct KeyframeGizmoUpdateSystem : ISystem {
         [BurstCompile]
         public void OnCreate(ref SystemState state) {
-            state.RequireForUpdate<PreferencesSingleton>();
+            state.RequireForUpdate<Gizmos>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            if (!SystemAPI.GetSingleton<PreferencesSingleton>().ShowGizmos) return;
+            if (!SystemAPI.GetSingleton<Gizmos>().ShowGizmos) return;
 
             float deltaTime = SystemAPI.Time.DeltaTime;
             float t = math.saturate(deltaTime * 30f);

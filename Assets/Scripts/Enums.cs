@@ -121,4 +121,10 @@ namespace KexEdit {
         YawSpeed,
         Curvature,
     }
+
+    [Flags]
+    public enum RenderTagType : byte {
+        None = 0,
+        Playhead = 1 << 0,
+    }
 }

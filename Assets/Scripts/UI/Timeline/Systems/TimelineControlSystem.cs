@@ -40,7 +40,7 @@ namespace KexEdit.UI.Timeline {
             _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
 
             _playheadQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<Cart, LocalTransform, PlayheadGizmoTag>()
+                .WithAll<Cart, LocalTransform, RenderTag>()
                 .Build(EntityManager);
 
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)

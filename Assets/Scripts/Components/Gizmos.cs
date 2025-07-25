@@ -1,7 +1,7 @@
 using Unity.Entities;
 
 namespace KexEdit {
-    public struct PreferencesSingleton : IComponentData {
+    public struct Gizmos : IComponentData {
         public bool ShowGizmos;
     }
 }

@@ -2,7 +2,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace KexEdit {
+namespace KexEdit.UI {
     public class UIStateAuthoring : MonoBehaviour {
         private class Baker : Baker<UIStateAuthoring> {
             public override void Bake(UIStateAuthoring authoring) {
