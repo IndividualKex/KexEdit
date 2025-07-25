@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
 namespace KexEdit.UI {
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class EditOperationsSystem : SystemBase {
         private static List<IEditableHandler> _handlers = new();
         private static IEditableHandler _activeHandler;

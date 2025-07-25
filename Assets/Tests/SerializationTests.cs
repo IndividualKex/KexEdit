@@ -2,7 +2,7 @@ using NUnit.Framework;
 using UnityEngine;
 using Unity.Collections;
 using Unity.Mathematics;
-using KexEdit.UI.Serialization;
+using KexEdit.Serialization;
 
 public class SerializationTests {
     [Test]

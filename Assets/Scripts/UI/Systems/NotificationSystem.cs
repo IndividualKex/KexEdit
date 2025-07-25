@@ -2,7 +2,7 @@ using Unity.Entities;
 using UnityEngine.UIElements;
 
 namespace KexEdit.UI {
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class NotificationSystem : SystemBase {
         public static NotificationSystem Instance { get; private set; }
 
@@ -23,7 +23,7 @@ namespace KexEdit.UI {
             };
 
             var root = UIService.Instance.UIDocument.rootVisualElement;
-            var gameView = root.Q<VisualElement>("GameView");
+            var gameView = root.Q<GameView>();
 
             _overlay = new NotificationOverlay(_data);
             gameView.Add(_overlay);

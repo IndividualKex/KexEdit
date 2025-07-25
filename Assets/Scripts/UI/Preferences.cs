@@ -15,17 +15,21 @@ namespace KexEdit.UI {
         private const string PREF_SYNC_PLAYBACK = "SyncPlayback";
         private const string PREF_KEYFRAME_EDITOR = "KeyframeEditor";
         private const string PREF_SHOW_GIZMOS = "ShowGizmos";
-        private const string PREF_AUTO_STYLE = "AutoStyle";
         private const string PREF_SKY_TYPE = "SkyType";
+        private const string PREF_CURRENT_CART_STYLE = "CurrentCartStyle";
+        private const string PREF_CURRENT_TRACK_STYLE = "CurrentTrackStyle";
+        private const string PREF_AUTO_STYLE = "AutoStyle";
 
         private static DistanceUnitsType s_DistanceUnits;
         private static AngleUnitsType s_AngleUnits;
         private static AngleChangeUnitsType s_AngleChangeUnits;
         private static SpeedUnitsType s_SpeedUnits;
 
-        private static SkyType s_SkyType;
+        private static string s_CurrentCartStyle;
+        private static string s_CurrentTrackStyle;
         private static float s_RideCameraHeight;
         private static float s_UIScale;
+        private static SkyType s_SkyType;
         private static bool s_NodeGridSnapping;
         private static bool s_ShowStats;
         private static bool s_SyncPlayback;
@@ -73,11 +77,56 @@ namespace KexEdit.UI {
             }
         }
 
+        public static string CurrentCartStyle {
+            get => s_CurrentCartStyle;
+            set {
+                s_CurrentCartStyle = value;
+                PlayerPrefs.SetString(PREF_CURRENT_CART_STYLE, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static string CurrentTrackStyle {
+            get => s_CurrentTrackStyle;
+            set {
+                s_CurrentTrackStyle = value;
+                PlayerPrefs.SetString(PREF_CURRENT_TRACK_STYLE, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static bool AutoStyle {
+            get => s_AutoStyle;
+            set {
+                s_AutoStyle = value;
+                PlayerPrefs.SetInt(PREF_AUTO_STYLE, value ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+        }
+
         public static float UIScale {
             get => s_UIScale;
             set {
                 s_UIScale = value;
                 PlayerPrefs.SetFloat(PREF_UI_SCALE, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static float RideCameraHeight {
+            get => s_RideCameraHeight;
+            set {
+                s_RideCameraHeight = value;
+                PlayerPrefs.SetFloat(PREF_RIDE_CAMERA_HEIGHT, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static SkyType SkyType {
+            get => s_SkyType;
+            set {
+                s_SkyType = value;
+                PlayerPrefs.SetInt(PREF_SKY_TYPE, (int)value);
                 PlayerPrefs.Save();
             }
         }
@@ -127,33 +176,6 @@ namespace KexEdit.UI {
             }
         }
 
-        public static bool AutoStyle {
-            get => s_AutoStyle;
-            set {
-                s_AutoStyle = value;
-                PlayerPrefs.SetInt(PREF_AUTO_STYLE, value ? 1 : 0);
-                PlayerPrefs.Save();
-            }
-        }
-
-        public static float RideCameraHeight {
-            get => s_RideCameraHeight;
-            set {
-                s_RideCameraHeight = value;
-                PlayerPrefs.SetFloat(PREF_RIDE_CAMERA_HEIGHT, value);
-                PlayerPrefs.Save();
-            }
-        }
-
-        public static SkyType SkyType {
-            get => s_SkyType;
-            set {
-                s_SkyType = value;
-                PlayerPrefs.SetInt(PREF_SKY_TYPE, (int)value);
-                PlayerPrefs.Save();
-            }
-        }
-
         public static float GetDefaultUIScale() {
             float dpi = Screen.dpi;
             if (dpi <= 96f) return 1f;
@@ -168,15 +190,17 @@ namespace KexEdit.UI {
             s_AngleChangeUnits = (AngleChangeUnitsType)PlayerPrefs.GetInt(PREF_ANGLE_CHANGE_UNITS, (int)AngleChangeUnitsType.Radians);
             s_SpeedUnits = (SpeedUnitsType)PlayerPrefs.GetInt(PREF_SPEED_UNITS, (int)SpeedUnitsType.MetersPerSecond);
 
-            s_NodeGridSnapping = PlayerPrefs.GetInt(PREF_NODE_GRID_SNAPPING, 0) == 1;
+            s_CurrentCartStyle = PlayerPrefs.GetString(PREF_CURRENT_CART_STYLE, "Default.json");
+            s_CurrentTrackStyle = PlayerPrefs.GetString(PREF_CURRENT_TRACK_STYLE, "Default.json");
             s_RideCameraHeight = PlayerPrefs.GetFloat(PREF_RIDE_CAMERA_HEIGHT, DEFAULT_RIDE_CAMERA_HEIGHT);
             s_UIScale = PlayerPrefs.GetFloat(PREF_UI_SCALE, GetDefaultUIScale());
+            s_SkyType = (SkyType)PlayerPrefs.GetInt(PREF_SKY_TYPE, (int)SkyType.Solid);
+            s_NodeGridSnapping = PlayerPrefs.GetInt(PREF_NODE_GRID_SNAPPING, 0) == 1;
             s_ShowStats = PlayerPrefs.GetInt(PREF_SHOW_STATS, 0) == 1;
             s_SyncPlayback = PlayerPrefs.GetInt(PREF_SYNC_PLAYBACK, 0) == 1;
             s_KeyframeEditor = PlayerPrefs.GetInt(PREF_KEYFRAME_EDITOR, 0) == 1;
             s_ShowGizmos = PlayerPrefs.GetInt(PREF_SHOW_GIZMOS, 0) == 1;
             s_AutoStyle = PlayerPrefs.GetInt(PREF_AUTO_STYLE, 0) == 1;
-            s_SkyType = (SkyType)PlayerPrefs.GetInt(PREF_SKY_TYPE, (int)SkyType.Solid);
         }
     }
 }

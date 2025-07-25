@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace KexEdit.UI {
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class StatsOverlaySystem : SystemBase {
         private VisualElement _statsOverlay;
         private Label _xLabel;
@@ -84,7 +84,7 @@ namespace KexEdit.UI {
 
             _statsOverlay.Add(container);
 
-            var gameView = root.Q<VisualElement>("GameView");
+            var gameView = root.Q<GameView>();
             gameView?.Add(_statsOverlay);
         }
 

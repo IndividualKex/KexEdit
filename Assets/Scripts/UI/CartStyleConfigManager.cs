@@ -40,7 +40,7 @@ namespace KexEdit.UI {
                             continue;
                         }
 
-                        var config = JsonUtility.FromJson<CartMeshConfig>(configText);
+                        var config = JsonUtility.FromJson<CartStyleConfig>(configText);
                         if (config != null && !string.IsNullOrEmpty(config.Name)) {
                             configs.Add(new CartStyleConfigInfo {
                                 fileName = fileName,
@@ -70,7 +70,7 @@ namespace KexEdit.UI {
             }
 
             try {
-                CartStylePreferences.CurrentCartStyle = configFileName;
+                Preferences.CurrentCartStyle = configFileName;
 
                 var world = World.DefaultGameObjectInjectionWorld;
                 if (world?.EntityManager != null) {
@@ -87,7 +87,7 @@ namespace KexEdit.UI {
             }
         }
 
-        public static void OpenCartStyleFolder() {
+        public static void OpenCartStylesFolder() {
             string path = Path.Combine(Application.streamingAssetsPath, "CartStyles");
 
             if (!Directory.Exists(path)) {

@@ -5,7 +5,7 @@ using Unity.Entities;
 using UnityEngine;
 
 namespace KexEdit.UI {
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class RecoverySystem : SystemBase {
         private const float RECOVERY_INTERVAL = 10f;
 

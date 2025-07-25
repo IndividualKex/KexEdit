@@ -9,7 +9,8 @@
         "Unity.Mathematics",
         "Unity.Burst",
         "KexEdit",
-        "KexEdit.Editor"
+        "KexEdit.Editor",
+        "KexEdit.UI"
     ],
     "includePlatforms": [
         "Editor"

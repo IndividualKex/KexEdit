@@ -73,4 +73,10 @@ namespace KexEdit.UI {
         Solid,
         Procedural
     }
+
+    [Flags]
+    public enum RenderTagType : byte {
+        None = 0,
+        Playhead = 1 << 0,
+    }
 }

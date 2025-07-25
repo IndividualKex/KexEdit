@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Entities;
-using static KexEdit.UI.Constants;
+using static KexEdit.Constants;
 
 namespace KexEdit.UI.Timeline {
     public abstract class PropertyAdapter {

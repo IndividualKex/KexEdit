@@ -8,11 +8,11 @@ using KexEdit.UI.NodeGraph;
 using UnityEngine;
 
 namespace KexEdit.UI {
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class GameViewControlSystem : SystemBase, IEditableHandler {
         private UnityEngine.Camera _camera;
         private NodeGraphView _nodeGraphView;
-        private VisualElement _gameView;
+        private GameView _gameView;
 
         public static GameViewControlSystem Instance { get; private set; }
 
@@ -25,7 +25,7 @@ namespace KexEdit.UI {
 
             var root = UIService.Instance.UIDocument.rootVisualElement;
             _nodeGraphView = root.Q<NodeGraphView>();
-            _gameView = root.Q<VisualElement>("GameView");
+            _gameView = root.Q<GameView>();
 
             _gameView.RegisterCallback<MouseDownEvent>(OnGameViewMouseDown);
 

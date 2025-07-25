@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace KexEdit.UI {
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class VisualizationLegendSystem : SystemBase {
         private VisualizationLegendData _data;
         private VisualizationLegend _legend;
@@ -19,7 +19,7 @@ namespace KexEdit.UI {
             };
 
             var root = UIService.Instance.UIDocument.rootVisualElement;
-            var gameView = root.Q<VisualElement>("GameView");
+            var gameView = root.Q<GameView>();
 
             _legend = new VisualizationLegend(_data);
             gameView?.Add(_legend);

@@ -59,12 +59,7 @@ namespace KexEdit.UI {
         public static readonly string s_UnitsSuffixGs = "(g's)";
         public static readonly string s_UnitsSuffixOneOverMicrometers = "(1/μm)";
 
-        public const float FRICTION_UI_TO_PHYSICS_SCALE = 1e-2f;
-        public const float FRICTION_PHYSICS_TO_UI_SCALE = 1e2f;
-        public const float RESISTANCE_UI_TO_PHYSICS_SCALE = 1e-6f;
-        public const float RESISTANCE_PHYSICS_TO_UI_SCALE = 1e6f;
         public const float NODE_GRID_SIZE = 24f;
-
         public const float DEFAULT_RIDE_CAMERA_HEIGHT = 1.1f;
     }
 }
