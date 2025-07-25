@@ -2,7 +2,7 @@ using Unity.Entities;
 using UnityEngine;
 
 namespace KexEdit.UI {
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class SkySystem : SystemBase {
         private Material _proceduralSkyMaterial;
         private Camera _mainCamera;

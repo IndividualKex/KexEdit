@@ -34,21 +34,6 @@ namespace KexEdit.UI {
             }
         }
 
-        public static byte[] LoadGraph(string filePath) {
-            try {
-                if (!File.Exists(filePath)) {
-                    Debug.LogError($"File not found: {filePath}");
-                    return null;
-                }
-
-                return File.ReadAllBytes(filePath);
-            }
-            catch (Exception ex) {
-                Debug.LogError($"Error loading graph: {ex.Message}");
-                throw;
-            }
-        }
-
         public static string ShowSaveFileDialog(string defaultName = null) {
             defaultName ??= $"Track_{DateTime.Now:yyyyMMdd_HHmmss}";
 

@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using UnityEngine;
-using KexEdit.UI.Serialization;
 using System.Collections.Generic;
 using System.Linq;
+using KexEdit.Serialization;
 
 namespace KexEdit.UI {
     public static class ProjectOperations {
@@ -43,7 +43,7 @@ namespace KexEdit.UI {
             if (string.IsNullOrEmpty(filePath)) return;
 
             try {
-                byte[] graphData = FileManager.LoadGraph(filePath);
+                byte[] graphData = File.ReadAllBytes(filePath);
                 if (graphData == null || graphData.Length == 0) return;
 
                 SerializationSystem.Instance.DeserializeGraph(graphData);

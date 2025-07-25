@@ -6,7 +6,7 @@ using Unity.Burst;
 using Unity.Mathematics;
 
 namespace KexEdit.UI {
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class GridSystem : SystemBase {
         public static GridSystem Instance { get; private set; }
 

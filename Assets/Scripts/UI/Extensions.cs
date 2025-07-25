@@ -481,10 +481,10 @@ namespace KexEdit.UI {
             return dialog;
         }
 
-        public static ColorPickerDialog ShowColorPickerDialog(this VisualElement element) {
+        public static TrackColorPickerDialog ShowColorPickerDialog(this VisualElement element) {
             var root = element.panel.visualTree.Q<TemplateContainer>();
             KexTime.Pause();
-            var dialog = new ColorPickerDialog(KexTime.Unpause);
+            var dialog = new TrackColorPickerDialog(KexTime.Unpause);
             root.Add(dialog);
             return dialog;
         }

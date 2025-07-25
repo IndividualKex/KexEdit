@@ -5,7 +5,7 @@ using Unity.Transforms;
 using UnityEngine;
 
 namespace KexEdit.UI {
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class RideCameraSystem : SystemBase {
         private CinemachineCamera _rideCamera;
 

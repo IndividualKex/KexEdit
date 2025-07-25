@@ -13,7 +13,7 @@ using static KexEdit.Constants;
 using static KexEdit.UI.Timeline.Constants;
 
 namespace KexEdit.UI.Timeline {
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class TimelineControlSystem : SystemBase, IEditableHandler {
         private List<KeyframeData> _clipboard = new();
         private TimelineData _data;
@@ -40,7 +40,7 @@ namespace KexEdit.UI.Timeline {
             _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
 
             _playheadQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<Cart, LocalTransform, PlayheadGizmoTag>()
+                .WithAll<Cart, LocalTransform, RenderTag>()
                 .Build(EntityManager);
 
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
@@ -49,16 +49,16 @@ namespace KexEdit.UI.Timeline {
                 .Build(EntityManager);
 
             RequireForUpdate(_playheadQuery);
-            RequireForUpdate<UIState>();
+            RequireForUpdate<TimelineState>();
         }
 
         protected override void OnStartRunning() {
             var root = UIService.Instance.UIDocument.rootVisualElement;
             _timeline = root.Q<Timeline>();
 
-            var uiState = SystemAPI.GetSingleton<UIState>();
-            _data.Offset = uiState.TimelineOffset;
-            _data.Zoom = uiState.TimelineZoom;
+            var timelineState = SystemAPI.GetSingleton<TimelineState>();
+            _data.Offset = timelineState.Offset;
+            _data.Zoom = timelineState.Zoom;
 
             _timeline.Initialize(_data);
 
@@ -104,9 +104,9 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void SyncUIState() {
-            var uiState = SystemAPI.GetSingleton<UIState>();
-            _data.Offset = uiState.TimelineOffset;
-            _data.Zoom = uiState.TimelineZoom;
+            var timelineState = SystemAPI.GetSingleton<TimelineState>();
+            _data.Offset = timelineState.Offset;
+            _data.Zoom = timelineState.Zoom;
         }
 
         private void UpdateActive() {
@@ -2005,13 +2005,13 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void OnTimelineOffsetChange(TimelineOffsetChangeEvent evt) {
-            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
-            uiState.TimelineOffset = evt.Offset;
+            ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
+            timelineState.Offset = evt.Offset;
         }
 
         private void OnTimelineZoomChange(TimelineZoomChangeEvent evt) {
-            ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
-            uiState.TimelineZoom = evt.Zoom;
+            ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
+            timelineState.Zoom = evt.Zoom;
         }
     }
 }

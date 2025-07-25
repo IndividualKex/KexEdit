@@ -6,7 +6,7 @@ using UnityEngine.UIElements;
 using KexEdit.UI.Timeline;
 
 namespace KexEdit.UI {
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class NavigationMenuSystem : SystemBase {
         private VisualElement _root;
         private Timeline.Timeline _timeline;
@@ -219,12 +219,12 @@ namespace KexEdit.UI {
                 });
                 menu.AddSubmenu("Appearance", submenu => {
                     submenu.AddSubmenu("Track Style", trackSubmenu => {
-                        var availableConfigs = TrackMeshConfigManager.GetAvailableConfigsWithNames();
-                        string currentConfigName = TrackStylePreferences.CurrentTrackMesh;
+                        var availableConfigs = TrackStyleConfigManager.GetAvailableConfigsWithNames();
+                        string currentConfigName = Preferences.CurrentTrackStyle;
                         if (availableConfigs.Length > 0) {
                             foreach (var configInfo in availableConfigs) {
                                 bool isCurrentConfig = configInfo.FileName == currentConfigName;
-                                trackSubmenu.AddItem(configInfo.DisplayName, () => TrackMeshConfigManager.LoadConfig(configInfo.FileName),
+                                trackSubmenu.AddItem(configInfo.DisplayName, () => TrackStyleConfigManager.LoadConfig(configInfo.FileName),
                                 isChecked: isCurrentConfig);
                             }
                             trackSubmenu.AddSeparator();
@@ -232,11 +232,11 @@ namespace KexEdit.UI {
                         trackSubmenu.AddItem("Edit Colors", ShowColorPicker);
                         trackSubmenu.AddItem("Auto Style", ToggleAutoStyle, isChecked: Preferences.AutoStyle);
                         trackSubmenu.AddSeparator();
-                        trackSubmenu.AddItem("Open Folder", TrackMeshConfigManager.OpenTrackMeshFolder);
+                        trackSubmenu.AddItem("Open Folder", TrackStyleConfigManager.OpenTrackStylesFolder);
                     });
                     submenu.AddSubmenu("Cart Style", cartSubmenu => {
                         var availableConfigs = CartStyleConfigManager.GetAvailableConfigsWithNames();
-                        string currentConfigName = CartStylePreferences.CurrentCartStyle;
+                        string currentConfigName = Preferences.CurrentCartStyle;
                         if (availableConfigs.Count > 0) {
                             foreach (var configInfo in availableConfigs) {
                                 bool isCurrentConfig = configInfo.fileName == currentConfigName;
@@ -245,7 +245,7 @@ namespace KexEdit.UI {
                             }
                             cartSubmenu.AddSeparator();
                         }
-                        cartSubmenu.AddItem("Open Folder", CartStyleConfigManager.OpenCartStyleFolder);
+                        cartSubmenu.AddItem("Open Folder", CartStyleConfigManager.OpenCartStylesFolder);
                     });
                     submenu.AddSubmenu("Background", envSubmenu => {
                         var currentSkyType = Preferences.SkyType;
@@ -311,6 +311,7 @@ namespace KexEdit.UI {
 
             var settings = SystemAPI.ManagedAPI.GetSingleton<TrackStyleSettings>();
             settings.Version++;
+            settings.AutoStyle = Preferences.AutoStyle;
         }
 
         protected override void OnUpdate() {
