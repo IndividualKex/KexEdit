@@ -91,7 +91,7 @@ namespace KexEdit.UI {
                 _data.MouseIdleTimer = 0f;
                 _data.IsControlsVisible = true;
                 _lastMousePosition = currentMousePosition;
-                
+
                 if (_data.IsFullscreen) {
                     UnityEngine.Cursor.visible = true;
                 }
@@ -203,7 +203,7 @@ namespace KexEdit.UI {
 
             var targetDistance = _data.Progress * _data.TotalLength;
             foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
-                if (cart.ValueRO.Active) {
+                if (cart.ValueRO.Active && !cart.ValueRO.Kinematic) {
                     SetCartPosition(ref cart.ValueRW, rootEntity, targetDistance);
                     break;
                 }

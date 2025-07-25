@@ -20,7 +20,7 @@ namespace KexEdit.UI {
             if (_rideCamera == null) return;
 
             foreach (var (cart, transform) in SystemAPI.Query<Cart, LocalTransform>()) {
-                if (!cart.Active) continue;
+                if (!cart.Active || cart.Kinematic) continue;
                 quaternion rotation = math.mul(
                     transform.Rotation,
                     quaternion.RotateY(math.PI)

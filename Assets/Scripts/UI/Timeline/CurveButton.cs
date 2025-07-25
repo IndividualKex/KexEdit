@@ -28,7 +28,6 @@ namespace KexEdit.UI.Timeline {
         public void Initialize(TimelineData data) {
             _data = data;
 
-            RegisterCallback<GeometryChangedEvent>(OnGeometryChanged);
             RegisterCallback<MouseEnterEvent>(OnMouseEnter);
             RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
             RegisterCallback<MouseDownEvent>(OnMouseDown);
@@ -47,13 +46,10 @@ namespace KexEdit.UI.Timeline {
             tintBinding.sourceToUiConverters.AddConverter((ref TimelineViewMode viewMode) =>
                 (StyleColor)(viewMode == TimelineViewMode.Curve ? s_ActiveTextColor : s_TextColor));
 
+            style.backgroundImage = UIService.Instance.CurveButtonTexture;
+
             SetBinding("style.backgroundColor", backgroundBinding);
             SetBinding("style.unityBackgroundImageTintColor", tintBinding);
-        }
-
-        private void OnGeometryChanged(GeometryChangedEvent evt) {
-            if (UIService.Instance == null) return;
-            style.backgroundImage = UIService.Instance.CurveButtonTexture;
         }
 
         private void OnMouseEnter(MouseEnterEvent evt) {

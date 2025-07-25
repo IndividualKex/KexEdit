@@ -256,7 +256,7 @@ namespace KexEdit.UI {
         private unsafe string FormatTimeRange(float currentPoints, float totalPoints) {
             float currentSeconds = currentPoints / HZ;
             float totalSeconds = totalPoints / HZ;
-            
+
             Span<char> buffer = stackalloc char[32];
 
             int currentMinutes = Mathf.FloorToInt(currentSeconds / 60f);

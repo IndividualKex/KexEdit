@@ -324,10 +324,10 @@ namespace KexEdit.UI {
                 else if (kb.f11Key.wasPressedThisFrame) VideoControlSystem.Instance?.ToggleFullscreen();
                 else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
                 else if (kb.tKey.wasPressedThisFrame) ToggleSyncPlayback();
-                else if (kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetFrontView();
-                else if (kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetSideView();
-                else if (kb.numpad5Key.wasPressedThisFrame) OrbitCameraSystem.ToggleOrthographic();
-                else if (kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetTopView();
+                else if (!Extensions.IsTextInputActive() && kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetFrontView();
+                else if (!Extensions.IsTextInputActive() && kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetSideView();
+                else if (!Extensions.IsTextInputActive() && kb.numpad5Key.wasPressedThisFrame) OrbitCameraSystem.ToggleOrthographic();
+                else if (!Extensions.IsTextInputActive() && kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetTopView();
             }
 
             if (kb.ctrlKey.isPressed || kb.leftCommandKey.isPressed) {
@@ -353,9 +353,9 @@ namespace KexEdit.UI {
                 else if (kb.digit5Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.RollSpeed);
                 else if (kb.digit6Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.PitchSpeed);
                 else if (kb.digit7Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.YawSpeed);
-                else if (kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetBackView();
-                else if (kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetOtherSideView();
-                else if (kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetBottomView();
+                else if (!Extensions.IsTextInputActive() && kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetBackView();
+                else if (!Extensions.IsTextInputActive() && kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetOtherSideView();
+                else if (!Extensions.IsTextInputActive() && kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetBottomView();
             }
         }
 
