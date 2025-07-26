@@ -12,14 +12,14 @@ namespace KexEdit.UI {
 
         public void OnCreate(ref SystemState state) {
             _keyframes = new NativeList<Keyframe>(Allocator.Persistent);
-            
+
             var propertyTypes = System.Enum.GetValues(typeof(PropertyType));
             _propertyTypes = new NativeArray<PropertyType>(propertyTypes.Length, Allocator.Persistent);
             for (int i = 0; i < propertyTypes.Length; i++) {
                 _propertyTypes[i] = (PropertyType)propertyTypes.GetValue(i);
             }
 
-            state.RequireForUpdate<KeyframeGizmoPrefabReference>();
+            state.RequireForUpdate<KeyframeGizmoPrefab>();
             state.RequireForUpdate<Gizmos>();
         }
 
@@ -37,8 +37,8 @@ namespace KexEdit.UI {
         public void OnUpdate(ref SystemState state) {
             if (!SystemAPI.GetSingleton<Gizmos>().DrawGizmos) return;
 
-            var prefabReference = SystemAPI.GetSingleton<KeyframeGizmoPrefabReference>();
-            if (prefabReference.Value == Entity.Null) return;
+            var prefab = SystemAPI.GetSingleton<KeyframeGizmoPrefab>();
+            if (prefab.Value == Entity.Null) return;
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
             using var existingGizmos = new NativeParallelHashSet<uint>(2048, Allocator.Temp);
@@ -59,7 +59,7 @@ namespace KexEdit.UI {
                     foreach (var keyframe in _keyframes) {
                         if (existingGizmos.Contains(keyframe.Id)) continue;
 
-                        var gizmoEntity = ecb.Instantiate(prefabReference.Value);
+                        var gizmoEntity = ecb.Instantiate(prefab.Value);
                         ecb.AddComponent<KeyframeGizmoTag>(gizmoEntity);
                         ecb.AddComponent(gizmoEntity, new KeyframeGizmo {
                             Section = entity,
