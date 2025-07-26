@@ -84,7 +84,7 @@ namespace KexEdit.UI {
 
             _statsOverlay.Add(container);
 
-            var gameView = root.Q<VisualElement>("GameView");
+            var gameView = root.Q<GameView>();
             gameView?.Add(_statsOverlay);
         }
 

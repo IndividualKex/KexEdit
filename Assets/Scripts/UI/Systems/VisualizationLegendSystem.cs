@@ -19,7 +19,7 @@ namespace KexEdit.UI {
             };
 
             var root = UIService.Instance.UIDocument.rootVisualElement;
-            var gameView = root.Q<VisualElement>("GameView");
+            var gameView = root.Q<GameView>();
 
             _legend = new VisualizationLegend(_data);
             gameView?.Add(_legend);

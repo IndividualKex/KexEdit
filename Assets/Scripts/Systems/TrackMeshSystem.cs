@@ -13,7 +13,6 @@ namespace KexEdit {
 
             RequireForUpdate<TrackMeshGlobalSettings>();
             RequireForUpdate<TrackMeshGizmoSettings>();
-            RequireForUpdate<Gizmos>();
         }
 
         protected override void OnUpdate() {
@@ -106,8 +105,8 @@ namespace KexEdit {
                     );
                 }
 
-                var gizmos = SystemAPI.GetSingleton<Gizmos>();
-                if (gizmos.ShowGizmos) {
+                if (SystemAPI.HasSingleton<Gizmos>() && 
+                    SystemAPI.GetSingleton<Gizmos>().DrawGizmos) {
                     foreach (var buffer in style.CurrentBuffers.DuplicationGizmoBuffers) {
                         var rp = new RenderParams(buffer.Settings.Material) {
                             worldBounds = _bounds,

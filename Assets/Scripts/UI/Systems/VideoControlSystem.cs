@@ -23,7 +23,7 @@ namespace KexEdit.UI {
 
         protected override void OnStartRunning() {
             var root = UIService.Instance.UIDocument.rootVisualElement;
-            var gameView = root.Q<VisualElement>("GameView");
+            var gameView = root.Q<GameView>();
 
             _data = new VideoControlData { IsPlaying = !KexTime.IsPaused };
 

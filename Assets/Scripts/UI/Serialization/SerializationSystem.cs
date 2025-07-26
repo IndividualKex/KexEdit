@@ -39,7 +39,9 @@ namespace KexEdit.UI.Serialization {
                 .WithAll<Port>()
                 .Build(EntityManager);
 
-            RequireForUpdate<UIState>();
+            RequireForUpdate<TimelineState>();
+            RequireForUpdate<NodeGraphState>();
+            RequireForUpdate<CameraState>();
         }
 
         protected override void OnUpdate() { }
@@ -87,8 +89,10 @@ namespace KexEdit.UI.Serialization {
         public byte[] SerializeGraph() {
             SerializedGraph graph = new();
 
-            var uiState = SystemAPI.GetSingleton<UIState>();
-            graph.UIState = SerializedUIState.FromState(uiState);
+            var timelineState = SystemAPI.GetSingleton<TimelineState>();
+            var nodeGraphState = SystemAPI.GetSingleton<NodeGraphState>();
+            var cameraState = SystemAPI.GetSingleton<CameraState>();
+            graph.UIState = SerializedUIState.FromState(timelineState, nodeGraphState, cameraState);
 
             using var nodeEntities = _nodeQuery.ToEntityArray(Allocator.Temp);
             graph.Nodes = new(nodeEntities.Length, Allocator.Temp);
@@ -146,8 +150,10 @@ namespace KexEdit.UI.Serialization {
             buffer.Dispose();
 
             if (restoreUIState) {
-                ref var uiState = ref SystemAPI.GetSingletonRW<UIState>().ValueRW;
-                uiState = serializedGraph.UIState.ToState();
+                ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
+                ref var nodeGraphState = ref SystemAPI.GetSingletonRW<NodeGraphState>().ValueRW;
+                ref var cameraState = ref SystemAPI.GetSingletonRW<CameraState>().ValueRW;
+                serializedGraph.UIState.ToState(out timelineState, out nodeGraphState, out cameraState);
             }
 
             ecb = new EntityCommandBuffer(Allocator.Temp);

@@ -7,8 +7,8 @@ namespace KexEdit.UI {
         }
 
         protected override void OnUpdate() {
-            ref var preferences = ref SystemAPI.GetSingletonRW<Gizmos>().ValueRW;
-            preferences.ShowGizmos = Preferences.ShowGizmos && !OrbitCameraSystem.IsRideCameraActive;
+            ref var gizmos = ref SystemAPI.GetSingletonRW<Gizmos>().ValueRW;
+            gizmos.DrawGizmos = Preferences.ShowGizmos && !OrbitCameraSystem.IsRideCameraActive;
         }
     }
 }

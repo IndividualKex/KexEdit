@@ -35,7 +35,7 @@ namespace KexEdit.UI {
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            if (!SystemAPI.GetSingleton<Gizmos>().ShowGizmos) return;
+            if (!SystemAPI.GetSingleton<Gizmos>().DrawGizmos) return;
 
             var prefabReference = SystemAPI.GetSingleton<KeyframeGizmoPrefabReference>();
             if (prefabReference.Value == Entity.Null) return;

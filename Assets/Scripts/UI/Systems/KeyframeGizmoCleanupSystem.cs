@@ -14,7 +14,7 @@ namespace KexEdit.UI {
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            var preferences = SystemAPI.GetSingleton<Gizmos>();
+            var gizmos = SystemAPI.GetSingleton<Gizmos>();
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
@@ -23,7 +23,7 @@ namespace KexEdit.UI {
                 .WithAll<KeyframeGizmoTag>()
                 .WithEntityAccess()
             ) {
-                if (!preferences.ShowGizmos ||
+                if (!gizmos.DrawGizmos ||
                     !SystemAPI.HasComponent<Node>(gizmo.Section)) {
                     ecb.DestroyEntity(entity);
                     continue;

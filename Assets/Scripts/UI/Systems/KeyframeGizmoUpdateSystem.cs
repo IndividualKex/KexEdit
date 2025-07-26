@@ -15,7 +15,7 @@ namespace KexEdit.UI {
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            if (!SystemAPI.GetSingleton<Gizmos>().ShowGizmos) return;
+            if (!SystemAPI.GetSingleton<Gizmos>().DrawGizmos) return;
 
             float deltaTime = SystemAPI.Time.DeltaTime;
             float t = math.saturate(deltaTime * 30f);

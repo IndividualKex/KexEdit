@@ -63,44 +63,52 @@ namespace KexEdit.UI.Serialization {
         public float CameraTargetYaw;
         public float CameraSpeedMultiplier;
 
-        public static SerializedUIState FromState(UIState state) {
+        public static SerializedUIState FromState(
+            TimelineState timelineState,
+            NodeGraphState nodeGraphState,
+            CameraState cameraState
+        ) {
             return new SerializedUIState {
-                TimelineOffset = state.TimelineOffset,
-                TimelineZoom = state.TimelineZoom,
-                NodeGraphPanX = state.NodeGraphPan.x,
-                NodeGraphPanY = state.NodeGraphPan.y,
-                NodeGraphZoom = state.NodeGraphZoom,
-                CameraPositionX = state.CameraPosition.x,
-                CameraPositionY = state.CameraPosition.y,
-                CameraPositionZ = state.CameraPosition.z,
-                CameraTargetPositionX = state.CameraTargetPosition.x,
-                CameraTargetPositionY = state.CameraTargetPosition.y,
-                CameraTargetPositionZ = state.CameraTargetPosition.z,
-                CameraDistance = state.CameraDistance,
-                CameraTargetDistance = state.CameraTargetDistance,
-                CameraPitch = state.CameraPitch,
-                CameraTargetPitch = state.CameraTargetPitch,
-                CameraYaw = state.CameraYaw,
-                CameraTargetYaw = state.CameraTargetYaw,
-                CameraSpeedMultiplier = state.CameraSpeedMultiplier
+                TimelineOffset = timelineState.Offset,
+                TimelineZoom = timelineState.Zoom,
+                NodeGraphPanX = nodeGraphState.Pan.x,
+                NodeGraphPanY = nodeGraphState.Pan.y,
+                NodeGraphZoom = nodeGraphState.Zoom,
+                CameraPositionX = cameraState.Position.x,
+                CameraPositionY = cameraState.Position.y,
+                CameraPositionZ = cameraState.Position.z,
+                CameraTargetPositionX = cameraState.TargetPosition.x,
+                CameraTargetPositionY = cameraState.TargetPosition.y,
+                CameraTargetPositionZ = cameraState.TargetPosition.z,
+                CameraDistance = cameraState.Distance,
+                CameraTargetDistance = cameraState.TargetDistance,
+                CameraPitch = cameraState.Pitch,
+                CameraTargetPitch = cameraState.TargetPitch,
+                CameraYaw = cameraState.Yaw,
+                CameraTargetYaw = cameraState.TargetYaw,
+                CameraSpeedMultiplier = cameraState.SpeedMultiplier
             };
         }
 
-        public UIState ToState() {
-            return new UIState {
-                TimelineOffset = TimelineOffset,
-                TimelineZoom = TimelineZoom,
-                NodeGraphPan = new float2(NodeGraphPanX, NodeGraphPanY),
-                NodeGraphZoom = NodeGraphZoom,
-                CameraPosition = new float3(CameraPositionX, CameraPositionY, CameraPositionZ),
-                CameraTargetPosition = new float3(CameraTargetPositionX, CameraTargetPositionY, CameraTargetPositionZ),
-                CameraDistance = CameraDistance,
-                CameraTargetDistance = CameraTargetDistance,
-                CameraPitch = CameraPitch,
-                CameraTargetPitch = CameraTargetPitch,
-                CameraYaw = CameraYaw,
-                CameraTargetYaw = CameraTargetYaw,
-                CameraSpeedMultiplier = CameraSpeedMultiplier
+        public void ToState(out TimelineState timelineState, out NodeGraphState nodeGraphState, out CameraState cameraState) {
+            timelineState = new TimelineState {
+                Offset = TimelineOffset,
+                Zoom = TimelineZoom,
+            };
+            nodeGraphState = new NodeGraphState {
+                Pan = new float2(NodeGraphPanX, NodeGraphPanY),
+                Zoom = NodeGraphZoom,
+            };
+            cameraState = new CameraState {
+                Position = new float3(CameraPositionX, CameraPositionY, CameraPositionZ),
+                TargetPosition = new float3(CameraTargetPositionX, CameraTargetPositionY, CameraTargetPositionZ),
+                Distance = CameraDistance,
+                TargetDistance = CameraTargetDistance,
+                Pitch = CameraPitch,
+                TargetPitch = CameraTargetPitch,
+                Yaw = CameraYaw,
+                TargetYaw = CameraTargetYaw,
+                SpeedMultiplier = CameraSpeedMultiplier
             };
         }
     }

@@ -2,23 +2,19 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 namespace KexEdit.UI {
-    public struct UIState : IComponentData {
-        public float TimelineOffset;
-        public float TimelineZoom;
-        public float2 NodeGraphPan;
-        public float NodeGraphZoom;
-        public float3 CameraPosition;
-        public float3 CameraTargetPosition;
-        public float CameraDistance;
-        public float CameraTargetDistance;
-        public float CameraPitch;
-        public float CameraTargetPitch;
-        public float CameraYaw;
-        public float CameraTargetYaw;
-        public float CameraSpeedMultiplier;
-        public float CameraOrthographicSize;
-        public float CameraTargetOrthographicSize;
-        public bool CameraOrthographic;
-        public bool CameraTargetOrthographic;
+    public struct CameraState : IComponentData {
+        public float3 Position;
+        public float3 TargetPosition;
+        public float Distance;
+        public float TargetDistance;
+        public float Pitch;
+        public float TargetPitch;
+        public float Yaw;
+        public float TargetYaw;
+        public float SpeedMultiplier;
+        public float OrthographicSize;
+        public float TargetOrthographicSize;
+        public bool Orthographic;
+        public bool TargetOrthographic;
     }
 }

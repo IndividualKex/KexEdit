@@ -3,7 +3,7 @@
     <ui:VisualElement name="Container" style="flex-grow: 1; position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
         <ui:VisualElement name="Top" style="height: 24px; background-color: rgb(64, 64, 64);" />
         <ui:VisualElement name="Center" style="flex-grow: 1; flex-direction: row-reverse;">
-            <ui:VisualElement name="GameView" focusable="true" style="flex-grow: 1; border-left-color: rgb(38, 38, 38); border-right-color: rgb(38, 38, 38); border-top-color: rgb(38, 38, 38); border-bottom-color: rgb(38, 38, 38); border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px;" />
+            <KexEdit.UI.GameView />
             <ui:VisualElement name="TopLeftPanel" class="panel" style="width: 640px; border-right-width: 1px; border-left-color: rgb(38, 38, 38); border-right-color: rgb(38, 38, 38); border-top-color: rgb(38, 38, 38); border-bottom-color: rgb(38, 38, 38); border-top-width: 1px; border-bottom-width: 1px; border-left-width: 1px;">
                 <ui:VisualElement name="Header" class="header" style="color: rgb(26, 26, 26);">
                     <ui:Label text="Node Editor" name="Title" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; font-size: 12px;" />
