@@ -7,7 +7,7 @@ namespace KexEdit.UI.NodeGraph {
             { NodeType.ForceSection, 16 },
             { NodeType.GeometricSection, 16 },
             { NodeType.CurvedSection, 8 },
-            { NodeType.CopyPathSection, 4 },
+            { NodeType.CopyPathSection, 8 },
             { NodeType.Anchor, 4 },
             { NodeType.Bridge, 4 },
             { NodeType.Reverse, 4 },
@@ -35,6 +35,7 @@ namespace KexEdit.UI.NodeGraph {
                 stack = new Stack<NodeGraphNode>();
                 _pools[type] = stack;
             }
+            
 
             if (stack.Count > 0) {
                 return stack.Pop();

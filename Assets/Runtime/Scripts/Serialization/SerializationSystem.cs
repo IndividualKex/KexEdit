@@ -286,6 +286,14 @@ namespace KexEdit.Serialization {
                         float scaleValue = SystemAPI.GetComponent<ScalePort>(portEntity).Value;
                         portData.Value.Roll = scaleValue;
                         break;
+                    case PortType.Start:
+                        float startValue = SystemAPI.GetComponent<StartPort>(portEntity).Value;
+                        portData.Value.Roll = startValue;
+                        break;
+                    case PortType.End:
+                        float endValue = SystemAPI.GetComponent<EndPort>(portEntity).Value;
+                        portData.Value.Roll = endValue;
+                        break;
                     default:
                         throw new NotImplementedException();
                 }
@@ -574,6 +582,12 @@ namespace KexEdit.Serialization {
                         break;
                     case PortType.Scale:
                         ecb.AddComponent<ScalePort>(portEntity, port.Value.Roll);
+                        break;
+                    case PortType.Start:
+                        ecb.AddComponent<StartPort>(portEntity, port.Value.Roll);
+                        break;
+                    case PortType.End:
+                        ecb.AddComponent<EndPort>(portEntity, port.Value.Roll);
                         break;
                     default:
                         throw new NotImplementedException();

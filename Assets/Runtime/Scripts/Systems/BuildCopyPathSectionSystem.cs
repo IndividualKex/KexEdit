@@ -9,16 +9,22 @@ namespace KexEdit {
     [BurstCompile]
     public partial struct BuildCopyPathSectionSystem : ISystem {
         private ComponentLookup<AnchorPort> _anchorPortLookup;
+        private ComponentLookup<StartPort> _startPortLookup;
+        private ComponentLookup<EndPort> _endPortLookup;
         private BufferLookup<PathPort> _pathPortLookup;
 
         public void OnCreate(ref SystemState state) {
             _anchorPortLookup = SystemAPI.GetComponentLookup<AnchorPort>(true);
+            _startPortLookup = SystemAPI.GetComponentLookup<StartPort>(true);
+            _endPortLookup = SystemAPI.GetComponentLookup<EndPort>(true);
             _pathPortLookup = SystemAPI.GetBufferLookup<PathPort>(true);
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             _anchorPortLookup.Update(ref state);
+            _startPortLookup.Update(ref state);
+            _endPortLookup.Update(ref state);
             _pathPortLookup.Update(ref state);
 
             var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
@@ -27,6 +33,8 @@ namespace KexEdit {
             state.Dependency = new Job {
                 Ecb = ecb.AsParallelWriter(),
                 AnchorPortLookup = _anchorPortLookup,
+                StartPortLookup = _startPortLookup,
+                EndPortLookup = _endPortLookup,
                 PathPortLookup = _pathPortLookup,
             }.ScheduleParallel(state.Dependency);
         }
@@ -39,23 +47,52 @@ namespace KexEdit {
             public ComponentLookup<AnchorPort> AnchorPortLookup;
 
             [ReadOnly]
+            public ComponentLookup<StartPort> StartPortLookup;
+
+            [ReadOnly]
+            public ComponentLookup<EndPort> EndPortLookup;
+
+            [ReadOnly]
             public BufferLookup<PathPort> PathPortLookup;
 
             public void Execute([ChunkIndexInQuery] int chunkIndex, Entity entity, CopyPathSectionAspect section) {
                 if (!section.Dirty) return;
 
-                if (section.InputPorts.Length < 2
-                    || !PathPortLookup.TryGetBuffer(section.InputPorts[1], out var pathBuffer)) {
+                if (section.InputPorts.Length != 4) {
+                    UnityEngine.Debug.LogError("BuildCopyPathSectionSystem: Expected 4 input ports (anchor, path, start, end)");
+                    return;
+                }
+
+                if (!PathPortLookup.TryGetBuffer(section.InputPorts[1], out var pathBuffer)) {
                     UnityEngine.Debug.LogError("BuildCopyPathSectionSystem: No path port found");
+                    return;
+                }
+
+                if (!StartPortLookup.TryGetComponent(section.InputPorts[2], out var startPort)) {
+                    UnityEngine.Debug.LogError("BuildCopyPathSectionSystem: No start port found");
+                    return;
+                }
+
+                if (!EndPortLookup.TryGetComponent(section.InputPorts[3], out var endPort)) {
+                    UnityEngine.Debug.LogError("BuildCopyPathSectionSystem: No end port found");
                     return;
                 }
 
                 if (pathBuffer.Length < 2) return;
 
+                float startTime = startPort.Value;
+                float endTime = endPort.Value;
+
+                float pathDuration = (pathBuffer.Length - 1) / HZ;
+                int startIndex = startTime <= 0f ? 0 : math.clamp((int)(startTime * HZ), 0, pathBuffer.Length - 1);
+                int endIndex = endTime < 0f ? pathBuffer.Length - 1 : math.clamp((int)(endTime * HZ), startIndex, pathBuffer.Length - 1);
+
+                if (endIndex - startIndex < 1) return;
+
                 section.Points.Clear();
                 section.Points.Add(section.Anchor);
 
-                PointData pathStart = pathBuffer[0];
+                PointData pathStart = pathBuffer[startIndex].Value;
                 PointData anchor = section.Anchor;
 
                 float3x3 pathBasis = new(pathStart.Lateral, pathStart.Normal, pathStart.Direction);
@@ -69,8 +106,8 @@ namespace KexEdit {
                     new float4(translation, 1f)
                 );
 
-                float distance = pathBuffer[0].Value.TotalLength;
-                float endDistance = pathBuffer[^1].Value.TotalLength;
+                float distance = pathBuffer[startIndex].Value.TotalLength;
+                float endDistance = pathBuffer[endIndex].Value.TotalLength;
                 int index = 0;
                 int iters = 0;
                 while (distance < endDistance) {
@@ -107,7 +144,19 @@ namespace KexEdit {
 
                     PointData curr = prev;
 
-                    UpdateCopyPoint(section, anchor, ref curr, prev, ref pathBuffer, ref index, ref distance, transform, rotation);
+                    UpdateCopyPoint(
+                        section,
+                        anchor,
+                        ref curr,
+                        prev,
+                        ref pathBuffer,
+                        ref index,
+                        ref distance,
+                        transform,
+                        rotation,
+                        startIndex,
+                        endIndex
+                    );
 
                     section.Points.Add(curr);
                 }
@@ -135,18 +184,20 @@ namespace KexEdit {
                 ref int index,
                 ref float distance,
                 float4x4 transform,
-                float3x3 rotation
+                float3x3 rotation,
+                int startIndex,
+                int endIndex
             ) {
                 float expectedAdvancement = prev.Velocity / HZ;
                 float desiredDistance = distance + expectedAdvancement;
-                var (start, end, t) = Project(ref pathBuffer, ref index, desiredDistance);
+                var (start, end, t) = Project(ref pathBuffer, ref index, desiredDistance, startIndex, endIndex);
 
                 if (t == -1f) {
                     curr.Position = end.Position;
                     curr.Direction = end.Direction;
                     curr.Lateral = end.Lateral;
                     curr.Normal = end.Normal;
-                    distance = pathBuffer[^1].Value.TotalLength;
+                    distance = pathBuffer[endIndex].Value.TotalLength;
                 }
                 else {
                     curr.Position = math.lerp(start.Position, end.Position, t);
@@ -214,32 +265,35 @@ namespace KexEdit {
             private (PointData, PointData, float) Project(
                 ref DynamicBuffer<PathPort> pathBuffer,
                 ref int index,
-                float distance
+                float distance,
+                int startIndex,
+                int endIndex
             ) {
                 PointData start;
                 PointData end;
 
-                if (distance >= pathBuffer[^1].Value.TotalLength) {
-                    index = pathBuffer.Length - 1;
-                    end = pathBuffer[^1].Value;
+                if (distance >= pathBuffer[endIndex].Value.TotalLength) {
+                    index = endIndex - startIndex;
+                    end = pathBuffer[endIndex].Value;
                     return (end, end, -1f);
                 }
 
-                for (int i = index; i < pathBuffer.Length - 1; i++) {
+                for (int i = startIndex + index; i < endIndex; i++) {
                     if (pathBuffer[i + 1].Value.TotalLength >= distance) {
-                        index = i;
+                        index = i - startIndex;
                         break;
                     }
                 }
 
-                start = pathBuffer[index].Value;
-                end = pathBuffer[index + 1].Value;
+                start = pathBuffer[startIndex + index].Value;
+                end = pathBuffer[startIndex + index + 1].Value;
 
                 float t = (distance - start.TotalLength) / (end.TotalLength - start.TotalLength);
                 t = math.saturate(t);
 
                 return (start, end, t);
             }
+
         }
     }
 }

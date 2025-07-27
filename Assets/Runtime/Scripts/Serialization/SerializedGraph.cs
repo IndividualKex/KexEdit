@@ -19,7 +19,8 @@ namespace KexEdit.Serialization {
         public const int PRECISION_MIGRATION = 2;
         public const int UI_STATE_SERIALIZATION = 3;
         public const int TRACK_STYLE_PROPERTY = 4;
-        public const int CURRENT = TRACK_STYLE_PROPERTY;
+        public const int COPY_PATH_TRIM_PORTS = 5;
+        public const int CURRENT = COPY_PATH_TRIM_PORTS;
     }
 
     [Flags]

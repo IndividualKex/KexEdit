@@ -151,6 +151,8 @@ namespace KexEdit.UI.NodeGraph {
                     DurationType.Distance => UnitsType.Distance,
                     _ => throw new NotImplementedException(),
                 },
+                PortType.Start => UnitsType.Time,
+                PortType.End => UnitsType.Time,
                 _ => portType.GetUnits(),
             };
         }
@@ -767,6 +769,14 @@ namespace KexEdit.UI.NodeGraph {
                     float scaleValue = SystemAPI.GetComponent<ScalePort>(port.Entity);
                     port.SetValue(scaleValue);
                     break;
+                case PortType.Start:
+                    float startValue = SystemAPI.GetComponent<StartPort>(port.Entity);
+                    port.SetValue(startValue);
+                    break;
+                case PortType.End:
+                    float endValue = SystemAPI.GetComponent<EndPort>(port.Entity);
+                    port.SetValue(endValue);
+                    break;
                 default:
                     throw new NotImplementedException();
             }
@@ -863,6 +873,16 @@ namespace KexEdit.UI.NodeGraph {
                     port.GetValue(out float scaleValue);
                     ref var scale = ref SystemAPI.GetComponentRW<ScalePort>(port.Entity).ValueRW;
                     scale.Value = scaleValue;
+                    break;
+                case PortType.Start:
+                    port.GetValue(out float startValue);
+                    ref var start = ref SystemAPI.GetComponentRW<StartPort>(port.Entity).ValueRW;
+                    start.Value = startValue;
+                    break;
+                case PortType.End:
+                    port.GetValue(out float endValue);
+                    ref var end = ref SystemAPI.GetComponentRW<EndPort>(port.Entity).ValueRW;
+                    end.Value = endValue;
                     break;
                 default:
                     throw new NotImplementedException();
@@ -972,6 +992,22 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.AddBuffer<PathPort>(pathPort);
                 ecb.AppendToBuffer<InputPortReference>(entity, pathPort);
                 ecb.SetName(pathPort, PortType.Path.GetDisplayName(true));
+            }
+
+            if (type == NodeType.CopyPathSection) {
+                var startPort = ecb.CreateEntity();
+                ecb.AddComponent<Port>(startPort, Port.Create(PortType.Start, true));
+                ecb.AddComponent<Dirty>(startPort, true);
+                ecb.AddComponent<StartPort>(startPort, 0f);
+                ecb.AppendToBuffer<InputPortReference>(entity, startPort);
+                ecb.SetName(startPort, PortType.Start.GetDisplayName(true));
+
+                var endPort = ecb.CreateEntity();
+                ecb.AddComponent<Port>(endPort, Port.Create(PortType.End, true));
+                ecb.AddComponent<Dirty>(endPort, true);
+                ecb.AddComponent<EndPort>(endPort, -1f);
+                ecb.AppendToBuffer<InputPortReference>(entity, endPort);
+                ecb.SetName(endPort, PortType.End.GetDisplayName(true));
             }
 
             if (type == NodeType.ForceSection || type == NodeType.GeometricSection) {

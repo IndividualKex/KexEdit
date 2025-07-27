@@ -38,6 +38,8 @@ namespace KexEdit.UI {
             { PortType.LeadOut, "Lead Out" },
             { PortType.Rotation, "Rotation" },
             { PortType.Scale, "Scale" },
+            { PortType.Start, "Start" },
+            { PortType.End, "End" },
         };
 
         private static readonly Dictionary<PortType, string> s_OutputPortNames = new() {
@@ -59,6 +61,8 @@ namespace KexEdit.UI {
             { PortType.LeadOut, "Lead Out" },
             { PortType.Rotation, "Rotation" },
             { PortType.Scale, "Scale" },
+            { PortType.Start, "Start" },
+            { PortType.End, "End" },
         };
 
         private static readonly EasingType[] s_EasingTypes = {
@@ -204,6 +208,8 @@ namespace KexEdit.UI {
                 PortType.LeadOut => UnitsType.Angle,
                 PortType.Rotation => UnitsType.Angle,
                 PortType.Scale => UnitsType.None,
+                PortType.Start => throw new System.Exception("Start port type should not be used in GetUnits"),
+                PortType.End => throw new System.Exception("End port type should not be used in GetUnits"),
                 _ => UnitsType.None
             };
         }

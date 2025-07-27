@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using Unity.Properties;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
@@ -147,12 +148,13 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void OnTimeFieldChanged(ChangeEvent<float> evt) {
-            if (evt.newValue == _data.Time) return;
-            var e = this.GetPooled<TimeChangeEvent>();
-            e.Time = _data.DurationType switch {
-                DurationType.Distance => Units.DisplayToDistance(_timeField.value),
-                _ => _timeField.value,
+            float newValue = _data.DurationType switch {
+                DurationType.Distance => Units.DisplayToDistance(evt.newValue),
+                _ => evt.newValue,
             };
+            if (math.abs(newValue - _data.Time) < 1e-3f) return;
+            var e = this.GetPooled<TimeChangeEvent>();
+            e.Time = newValue;
             e.Snap = false;
             this.Send(e);
         }

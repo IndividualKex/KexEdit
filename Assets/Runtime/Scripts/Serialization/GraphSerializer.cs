@@ -54,7 +54,6 @@ namespace KexEdit.Serialization {
             return DeserializeBinary(ref graph, ref reader);
         }
 
-        [BurstCompile]
         private static int SerializeBinary(ref SerializedGraph graph, ref BinaryWriter writer) {
             int startPos = writer.Position;
 
@@ -84,7 +83,6 @@ namespace KexEdit.Serialization {
             return writer.Position - startPos;
         }
 
-        [BurstCompile]
         private static int DeserializeBinary(ref SerializedGraph graph, ref BinaryReader reader) {
             int fileVersion = reader.Read<int>();
 
@@ -142,7 +140,6 @@ namespace KexEdit.Serialization {
             return reader.Position;
         }
 
-        [BurstCompile]
         private static void SerializeNode(ref SerializedNode node, ref BinaryWriter writer) {
             writer.Write(node.Node);
             writer.Write(node.Anchor);
@@ -174,7 +171,6 @@ namespace KexEdit.Serialization {
             writer.WriteArray(node.TrackStyleKeyframes);
         }
 
-        [BurstCompile]
         private static void DeserializeNode(ref SerializedNode node, ref BinaryReader reader, int version) {
             node.Node = reader.Read<Node>();
             node.Anchor = reader.Read<PointData>();
@@ -199,6 +195,29 @@ namespace KexEdit.Serialization {
             reader.ReadArray(out node.InputPorts, Allocator.Temp);
             reader.ReadArray(out node.OutputPorts, Allocator.Temp);
 
+            uint id = 1;
+
+            if (version < SerializationVersion.COPY_PATH_TRIM_PORTS && node.Node.Type == NodeType.CopyPathSection) {
+                var oldInputPorts = node.InputPorts;
+                node.InputPorts = new NativeArray<SerializedPort>(oldInputPorts.Length + 2, Allocator.Temp);
+                
+                for (int i = 0; i < oldInputPorts.Length; i++) {
+                    node.InputPorts[i] = oldInputPorts[i];
+                }
+                
+                node.InputPorts[oldInputPorts.Length] = new SerializedPort {
+                    Port = Port.Create(PortType.Start, true, id++),
+                    Value = new PointData { Roll = 0f }
+                };
+                
+                node.InputPorts[oldInputPorts.Length + 1] = new SerializedPort {
+                    Port = Port.Create(PortType.End, true, id++),
+                    Value = new PointData { Roll = -1f }
+                };
+                
+                oldInputPorts.Dispose();
+            }
+
             if (version < SerializationVersion.PRECISION_MIGRATION) {
                 ReadLegacyKeyframes(ref node, ref reader);
             }
@@ -221,7 +240,6 @@ namespace KexEdit.Serialization {
             }
         }
 
-        [BurstCompile]
         private static void ReadLegacyKeyframes(ref SerializedNode node, ref BinaryReader reader) {
             ReadLegacyKeyframeArray(out node.RollSpeedKeyframes, ref reader);
             ReadLegacyKeyframeArray(out node.NormalForceKeyframes, ref reader);
@@ -235,7 +253,6 @@ namespace KexEdit.Serialization {
             node.TrackStyleKeyframes = new NativeArray<TrackStyleKeyframe>(0, Allocator.Temp);
         }
 
-        [BurstCompile]
         private static void ReadLegacyKeyframeArray<T>(out NativeArray<T> output, ref BinaryReader reader) where T : unmanaged {
             reader.ReadArray(out NativeArray<KeyframeV1> legacy, Allocator.Temp);
             output = new NativeArray<T>(legacy.Length, Allocator.Temp);
