@@ -57,6 +57,8 @@ namespace KexEdit {
         LeadOut,
         Rotation,
         Scale,
+        Start,
+        End,
     }
 
     public enum PropertyType {

@@ -133,6 +133,8 @@ Inputs:
 
 -   **Anchor**: The anchor node defining the start of the track section
 -   **Path**: The path of the track section to copy
+-   **Start**: Optional trimmed start time (0 for no trimming)
+-   **End**: Optional trimmed end time (-1 for no trimming)
 
 Outputs:
 

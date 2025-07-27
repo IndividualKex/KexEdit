@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using Unity.Collections;
@@ -173,7 +174,7 @@ namespace KexEdit.UI {
         }
 
         private static void WriteElement(StreamWriter writer, string name, float value) {
-            writer.WriteLine($"\t\t\t<{name}>{value:e}</{name}>");
+            writer.WriteLine($"\t\t\t<{name}>{value.ToString("e", CultureInfo.InvariantCulture)}</{name}>");
         }
 
         private struct SampledPoint {

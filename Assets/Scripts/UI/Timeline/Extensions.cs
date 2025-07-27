@@ -56,13 +56,13 @@ namespace KexEdit.UI.Timeline {
         public static void ClampOffset(this TimelineData data) {
             float minOffset = -data.ViewWidth;
             float maxOffset = data.Duration * RESOLUTION * data.Zoom + data.ViewWidth;
-            data.Offset = Mathf.Clamp(data.Offset, minOffset, maxOffset);
+            data.Offset = math.clamp(data.Offset, minOffset, maxOffset);
         }
 
         public static float ClampTime(this TimelineData data, float time) {
             float minTime = -data.ViewWidth / (RESOLUTION * data.Zoom);
             float maxTime = data.Duration + data.ViewWidth / (RESOLUTION * data.Zoom);
-            return Mathf.Clamp(time, minTime, maxTime);
+            return math.clamp(time, minTime, maxTime);
         }
 
         public static void SortByTime(this NativeList<Keyframe> keyframes) {
@@ -103,7 +103,7 @@ namespace KexEdit.UI.Timeline {
         }
 
         public static InterpolationType GetMaxInterpolation(InterpolationType a, InterpolationType b) {
-            return (InterpolationType)Mathf.Max((int)a, (int)b);
+            return (InterpolationType)math.max((int)a, (int)b);
         }
 
         public static void DrawKeyframes(this Painter2D painter, TimelineData data, ValueBounds bounds, PropertyData propertyData, Rect rect) {
@@ -483,7 +483,7 @@ namespace KexEdit.UI.Timeline {
             while (currentDistance < totalDistance) {
                 float segmentLength = drawing ? dashLength : gapLength;
                 float remainingDistance = totalDistance - currentDistance;
-                float actualSegmentLength = Mathf.Min(segmentLength, remainingDistance);
+                float actualSegmentLength = math.min(segmentLength, remainingDistance);
 
                 Vector2 nextPoint = start + direction * (currentDistance + actualSegmentLength);
 

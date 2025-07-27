@@ -131,7 +131,7 @@ namespace KexEdit.UI.Timeline {
             foreach (var cart in SystemAPI.Query<Cart>()) {
                 if (cart.Active && !cart.Kinematic && cart.Section == _data.Entity) {
                     float timelineTime = CartPositionToTime(cart.Position);
-                    if (math.abs(_data.Time - timelineTime) > 0.01f) {
+                    if (math.abs(_data.Time - timelineTime) > 1e-3f) {
                         _data.Time = math.clamp(timelineTime, 0f, _data.Duration);
                     }
                     return;
@@ -156,6 +156,11 @@ namespace KexEdit.UI.Timeline {
 
             if (!playhead.Active) return;
 
+            if (_data.Time < 0f) {
+                playhead.Position = 0f;
+                return;
+            }
+
             var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
             if (pointBuffer.Length < 2) return;
 
@@ -166,11 +171,12 @@ namespace KexEdit.UI.Timeline {
                     return;
                 }
                 else {
-                    float targetDistance = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength + _data.Time;
+                    float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
+                    float targetDistance = anchorLength + _data.Time;
                     for (int i = 0; i < pointBuffer.Length - 1; i++) {
                         float currentDistance = pointBuffer[i].Value.TotalLength;
                         float nextDistance = pointBuffer[i + 1].Value.TotalLength;
-                        if (targetDistance >= currentDistance && targetDistance <= nextDistance) {
+                        if (targetDistance >= currentDistance && targetDistance < nextDistance) {
                             float t = (nextDistance - currentDistance) > 0 ?
                                 (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;
                             playhead.Position = i + t;
@@ -786,10 +792,15 @@ namespace KexEdit.UI.Timeline {
                 return time * HZ;
             }
 
-            return DistanceToCartPosition(SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength + time);
+            float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
+            return DistanceToCartPosition(anchorLength + time);
         }
 
         private float CartPositionToTime(float cartPosition) {
+            if (cartPosition < 0f) {
+                return 0f;
+            }
+
             if (GetDurationType() == DurationType.Time) {
                 return cartPosition / HZ;
             }
@@ -801,10 +812,15 @@ namespace KexEdit.UI.Timeline {
             float t = cartPosition - index;
 
             float distance = math.lerp(pointBuffer[index].Value.TotalLength, pointBuffer[index + 1].Value.TotalLength, t);
-            return distance - SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
+            float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
+            return distance - anchorLength;
         }
 
         private float DistanceToCartPosition(float targetDistance) {
+            if (targetDistance < 0f) {
+                return 0f;
+            }
+
             var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
             if (pointBuffer.Length < 2) return 0f;
 
@@ -1647,6 +1663,7 @@ namespace KexEdit.UI.Timeline {
             foreach (var keyframe in evt.Keyframes) {
                 var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
                 adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithSelected(true));
+                _data.LatestSelectedProperty = keyframe.Type;
             }
             UpdateKeyframes();
             UpdateSelectionState();

@@ -144,6 +144,9 @@ namespace KexEdit {
                         float scale = SystemAPI.GetComponent<ScalePort>(inputPort);
                         anchor.Value.NormalForce = scale;
                     }
+                    else if (type == PortType.Start || type == PortType.End) {
+                        // Start and End ports are read directly by BuildCopyPathSectionSystem
+                    }
                     else {
                         throw new System.NotImplementedException($"Unknown input port type: {type}");
                     }

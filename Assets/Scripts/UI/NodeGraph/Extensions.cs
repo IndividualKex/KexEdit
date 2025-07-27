@@ -7,9 +7,10 @@ namespace KexEdit.UI.NodeGraph {
                 PortType.Roll or PortType.Yaw => -180f,
                 PortType.Pitch => -90f,
                 PortType.Duration or PortType.Radius or PortType.Arc or
-                PortType.LeadIn or PortType.LeadOut => 0f,
+                PortType.LeadIn or PortType.LeadOut or PortType.Start => 0f,
                 PortType.Velocity => 0.01f,
                 PortType.Axis => -360f,
+                PortType.End => -1f,
                 _ => float.MinValue
             };
             float max = portType switch {

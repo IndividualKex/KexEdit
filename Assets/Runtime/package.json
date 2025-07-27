@@ -1,8 +1,8 @@
 {
     "name": "com.individualkex.kexedit",
-    "displayName": "KexEdit Runtime",
+    "displayName": "KexEdit",
     "version": "0.10.1",
-    "description": "Core runtime for building, rendering, and simulating roller coaster tracks",
+    "description": "KexEdit core runtime for building, rendering, and simulating roller coaster tracks",
     "unity": "6000.0",
     "keywords": [
         "rollercoaster",
