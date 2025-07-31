@@ -32,6 +32,7 @@ When a node with controllable properties is selected, the Timeline displays:
 | -------------------------------- | ---------------- | --------------------------------------- |
 | `Left Click`                     | Select           | Select property track                   |
 | `Shift + Click`                  | Multi-Select     | Add property to selection               |
+| `Shift + 1-9`                    | Toggle Selection | Property selection                      |
 | `Set Keyframe Button`            | Set Keyframe     | Add or update keyframe at playhead time |
 | `Jump to Next/Previous Keyframe` | Jump to Keyframe | Jump playhead to next/previous keyframe |
 

@@ -5,12 +5,15 @@ namespace KexEdit {
         public readonly Entity Self;
 
         private readonly RefRO<Connection> ConnectionRO;
+        private readonly RefRO<CoasterReference> CoasterReferenceRO;
         private readonly RefRW<Dirty> DirtyRW;
 
         public uint Id => ConnectionRO.ValueRO.Id;
         public Entity Source => ConnectionRO.ValueRO.Source;
         public Entity Target => ConnectionRO.ValueRO.Target;
         public bool Selected => ConnectionRO.ValueRO.Selected;
+
+        public Entity Coaster => CoasterReferenceRO.ValueRO.Value;
 
         public bool Dirty {
             get => DirtyRW.ValueRO.Value;

@@ -61,13 +61,13 @@ namespace KexEdit.UI {
         private static NativeList<Entity> BuildTrackGraph(EntityManager entityManager) {
             var orderedNodes = new NativeList<Entity>(Allocator.Temp);
 
-            var rootQuery = entityManager.CreateEntityQuery(typeof(NodeGraphRoot));
-            if (rootQuery.IsEmpty) {
+            var coasterQuery = entityManager.CreateEntityQuery(typeof(Coaster));
+            if (coasterQuery.IsEmpty) {
                 return orderedNodes;
             }
 
-            var root = rootQuery.GetSingleton<NodeGraphRoot>();
-            var currentNode = root.Value;
+            var coaster = coasterQuery.GetSingleton<Coaster>();
+            var currentNode = coaster.RootNode;
 
             while (currentNode != Entity.Null) {
                 orderedNodes.Add(currentNode);

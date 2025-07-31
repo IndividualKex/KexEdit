@@ -40,8 +40,10 @@ namespace KexEdit {
                 ecb.AddComponent(settingsEntity, new TrackStyleSettings {
                     Styles = styles,
                     DefaultStyle = evt.TrackStyle.DefaultStyle,
+                    Version = evt.TrackStyle.Version,
                     AutoStyle = evt.TrackStyle.AutoStyle,
                 });
+                ecb.AddComponent<TrackStyleReference>(evt.Target, settingsEntity);
                 ecb.SetName(settingsEntity, "Track Style Settings");
                 ecb.DestroyEntity(entity);
             }

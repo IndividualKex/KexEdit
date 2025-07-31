@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using KexEdit.Serialization;
+using SFB;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -17,13 +18,15 @@ namespace KexEdit.UI.NodeGraph {
         private NodeGraphData _data;
         private NodeGraphView _view;
 
+        private EntityQuery _coasterQuery;
         private EntityQuery _nodeQuery;
         private EntityQuery _connectionQuery;
         private EntityQuery _portQuery;
 
         protected override void OnCreate() {
-            _data = new NodeGraphData();
-
+            _coasterQuery = new EntityQueryBuilder(Allocator.Temp)
+                .WithAll<Coaster, EditorCoasterTag>()
+                .Build(EntityManager);
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAspect<NodeAspect>()
                 .Build(EntityManager);
@@ -35,9 +38,12 @@ namespace KexEdit.UI.NodeGraph {
                 .Build(EntityManager);
 
             RequireForUpdate<NodeGraphState>();
+            RequireForUpdate<NodeGraphData>();
         }
 
         protected override void OnStartRunning() {
+            _data = SystemAPI.ManagedAPI.GetSingleton<NodeGraphData>();
+
             var root = UIService.Instance.UIDocument.rootVisualElement;
             _view = root.Q<NodeGraphView>();
 
@@ -66,16 +72,22 @@ namespace KexEdit.UI.NodeGraph {
             _view.RegisterCallback<PriorityChangeEvent>(OnPriorityChange);
             _view.RegisterCallback<NodeGraphPanChangeEvent>(OnNodeGraphPanChange);
             _view.RegisterCallback<NodeGraphZoomChangeEvent>(OnNodeGraphZoomChange);
+            _view.RegisterCallback<FocusInEvent>(OnFocusIn);
+            _view.RegisterCallback<FocusOutEvent>(OnFocusOut);
 
-            EditOperationsSystem.RegisterHandler(this);
+            EditOperations.RegisterHandler(this);
         }
 
         protected override void OnDestroy() {
-            EditOperationsSystem.UnregisterHandler(this);
+            EditOperations.UnregisterHandler(this);
             base.OnDestroy();
         }
 
         protected override void OnUpdate() {
+            _data.Coaster = _coasterQuery.IsEmpty ?
+                Entity.Null :
+                _coasterQuery.GetSingletonEntity();
+
             SyncUIState();
             InitializeNodes();
             InitializeEdges();
@@ -94,6 +106,9 @@ namespace KexEdit.UI.NodeGraph {
             using var entities = _nodeQuery.ToEntityArray(Allocator.Temp);
             using var set = new NativeHashSet<Entity>(entities.Length, Allocator.Temp);
             foreach (var entity in entities) {
+                var node = SystemAPI.GetAspect<NodeAspect>(entity);
+                if (node.Coaster != _data.Coaster) continue;
+
                 set.Add(entity);
 
                 if (_data.Nodes.ContainsKey(entity)) continue;
@@ -108,7 +123,6 @@ namespace KexEdit.UI.NodeGraph {
                     render = SystemAPI.GetComponent<Render>(entity);
                 }
 
-                var node = SystemAPI.GetAspect<NodeAspect>(entity);
                 var nodeData = NodeData.Create(node, durationType, render);
 
                 var inputPortReferences = SystemAPI.GetBuffer<InputPortReference>(entity);
@@ -162,6 +176,8 @@ namespace KexEdit.UI.NodeGraph {
             using var set = new NativeHashSet<Entity>(entities.Length, Allocator.Temp);
             foreach (var entity in entities) {
                 var connection = SystemAPI.GetAspect<ConnectionAspect>(entity);
+                if (connection.Coaster != _data.Coaster) continue;
+
                 set.Add(entity);
 
                 if (_data.Edges.ContainsKey(entity)) continue;
@@ -307,19 +323,35 @@ namespace KexEdit.UI.NodeGraph {
                             });
                         });
                     });
+                    submenu.AddItem("Append", () => {
+                        var kexExtensions = new ExtensionFilter[] {
+                            new("KexEdit Tracks", "kex"),
+                            new("All Files", "*")
+                        };
+                        ImportManager.ShowImportDialog(_view, kexExtensions, filePath => {
+                            Undo.Record();
+                            var node = AddNode(evt.ContentPosition, NodeType.Append);
+                            EntityManager.AddComponentData<AppendReference>(node, new AppendReference {
+                                FilePath = filePath,
+                                Value = Entity.Null,
+                                Loaded = false
+                            });
+                        });
+                    });
                 });
                 menu.AddSeparator();
-                var canPaste = EditOperationsSystem.CanPaste;
+                var canPaste = EditOperations.CanPaste;
                 menu.AddItem(canPaste ? "Paste" : "Cannot Paste", () => {
-                    if (EditOperationsSystem.CanPaste) {
-                        EditOperationsSystem.HandlePaste(evt.MousePosition);
+                    if (EditOperations.CanPaste) {
+                        EditOperations.HandlePaste(evt.MousePosition);
                     }
                 }, "Ctrl+V".ToPlatformShortcut(), enabled: canPaste);
             });
         }
 
         private void OnNodeClick(NodeClickEvent evt) {
-            var nodeData = _data.Nodes[evt.Node];
+            if (!_data.Nodes.TryGetValue(evt.Node, out var nodeData)) return;
+
             if (evt.ShiftKey) {
                 if (nodeData.Selected) {
                     DeselectNode(nodeData);
@@ -338,9 +370,9 @@ namespace KexEdit.UI.NodeGraph {
             var nodeData = _data.Nodes[evt.Node];
 
             (evt.target as VisualElement).ShowContextMenu(evt.MousePosition, menu => {
-                bool canCut = EditOperationsSystem.CanCut;
-                bool canCopy = EditOperationsSystem.CanCopy;
-                bool canPaste = EditOperationsSystem.CanPaste;
+                bool canCut = EditOperations.CanCut;
+                bool canCopy = EditOperations.CanCopy;
+                bool canPaste = EditOperations.CanPaste;
 
                 if (nodeData.Type == NodeType.Mesh) {
                     menu.AddItem("Link", () => {
@@ -349,10 +381,17 @@ namespace KexEdit.UI.NodeGraph {
                     });
                     menu.AddSeparator();
                 }
+                else if (nodeData.Type == NodeType.Append) {
+                    menu.AddItem("Link", () => {
+                        Undo.Record();
+                        LinkAppend(nodeData);
+                    });
+                    menu.AddSeparator();
+                }
 
-                menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", EditOperationsSystem.HandleCut, "Ctrl+X", enabled: canCut);
-                menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", EditOperationsSystem.HandleCopy, "Ctrl+C", enabled: canCopy);
-                menu.AddPlatformItem(canPaste ? "Paste" : "Cannot Paste", EditOperationsSystem.HandlePaste, "Ctrl+V", enabled: canPaste);
+                menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", EditOperations.HandleCut, "Ctrl+X", enabled: canCut);
+                menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", EditOperations.HandleCopy, "Ctrl+C", enabled: canCopy);
+                menu.AddPlatformItem(canPaste ? "Paste" : "Cannot Paste", EditOperations.HandlePaste, "Ctrl+V", enabled: canPaste);
                 menu.AddSeparator();
                 menu.AddItem("Delete", () => {
                     Undo.Record();
@@ -565,10 +604,12 @@ namespace KexEdit.UI.NodeGraph {
 
         private void ClearSelection() {
             foreach (var nodeData in _data.Nodes.Values) {
+                if (!SystemAPI.HasComponent<Node>(nodeData.Entity)) continue;
                 ref Node node = ref SystemAPI.GetComponentRW<Node>(nodeData.Entity).ValueRW;
                 node.Selected = false;
             }
             foreach (var edgeData in _data.Edges.Values) {
+                if (!SystemAPI.HasComponent<Connection>(edgeData.Entity)) continue;
                 ref Connection connection = ref SystemAPI.GetComponentRW<Connection>(edgeData.Entity).ValueRW;
                 connection.Selected = false;
             }
@@ -593,6 +634,7 @@ namespace KexEdit.UI.NodeGraph {
 
             var connection = ecb.CreateEntity();
             ecb.AddComponent<Dirty>(connection);
+            ecb.AddComponent<CoasterReference>(connection, _data.Coaster);
             ecb.AddComponent(connection, Connection.Create(source, target, false));
             ecb.SetName(connection, "Connection");
 
@@ -691,6 +733,20 @@ namespace KexEdit.UI.NodeGraph {
                 meshReference.FilePath = filePath;
                 meshReference.Value = null;
                 meshReference.Loaded = false;
+            });
+        }
+
+        private void LinkAppend(NodeData nodeData) {
+            var appendReference = SystemAPI.GetComponent<AppendReference>(nodeData.Entity);
+            var kexExtensions = new ExtensionFilter[] {
+                new("KexEdit Tracks", "kex"),
+                new("All Files", "*")
+            };
+            ImportManager.ShowImportDialog(_view, kexExtensions, filePath => {
+                Undo.Record();
+                appendReference.FilePath = filePath;
+                appendReference.Value = Entity.Null;
+                appendReference.Loaded = false;
             });
         }
 
@@ -898,6 +954,7 @@ namespace KexEdit.UI.NodeGraph {
             var entity = EntityManager.CreateEntity();
 
             ecb.AddComponent(entity, Node.Create(position, type));
+            ecb.AddComponent<CoasterReference>(entity, _data.Coaster);
             ecb.AddComponent<Dirty>(entity);
             ecb.AddComponent<SelectedProperties>(entity);
             ecb.SetName(entity, type.GetDisplayName());
@@ -1080,6 +1137,7 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.AppendToBuffer<InputPortReference>(entity, scalePort);
                 ecb.SetName(scalePort, PortType.Scale.GetDisplayName(true));
             }
+
 
             PointData anchor = PointData.Create();
             ecb.AddComponent(entity, new Anchor {
@@ -1274,7 +1332,7 @@ namespace KexEdit.UI.NodeGraph {
                     portIdMap[port.Value] = SystemAPI.GetComponent<Port>(port.Value).Id;
                 }
 
-                var serializedNode = Serialization.SerializationSystem.Instance.SerializeNode(entity, Allocator.Temp);
+                var serializedNode = SerializationSystem.Instance.SerializeNode(entity, Allocator.Temp);
                 float2 position = SystemAPI.GetComponent<Node>(entity).Position;
                 nodeOffsets[nodeIndex] = position - center;
                 clipboardGraph.Nodes[nodeIndex++] = serializedNode;
@@ -1321,7 +1379,7 @@ namespace KexEdit.UI.NodeGraph {
             var clipboardData = ClipboardSerializer.Deserialize(_clipboardData);
             var portMap = new Dictionary<uint, uint>();
 
-            using var ecb = new EntityCommandBuffer(Allocator.Temp);
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
 
             for (int i = 0; i < clipboardData.Graph.Nodes.Length; i++) {
                 var nodeData = clipboardData.Graph.Nodes[i];
@@ -1350,10 +1408,11 @@ namespace KexEdit.UI.NodeGraph {
                     updatedNodeData.OutputPorts[j] = port;
                 }
 
-                Serialization.SerializationSystem.Instance.DeserializeNode(updatedNodeData, ecb);
+                SerializationSystem.Instance.DeserializeNode(updatedNodeData, _data.Coaster, ref ecb, false);
             }
 
             ecb.Playback(EntityManager);
+            ecb.Dispose();
 
             using var ports = _portQuery.ToEntityArray(Allocator.Temp);
             var lookup = new NativeHashMap<uint, Entity>(ports.Length, Allocator.Temp);
@@ -1373,6 +1432,7 @@ namespace KexEdit.UI.NodeGraph {
                     bool selected = copiedEdge.Selected;
                     var connection = Connection.Create(source, target, selected);
                     connectionEcb.AddComponent<Dirty>(entity);
+                    connectionEcb.AddComponent<CoasterReference>(entity, _data.Coaster);
                     connectionEcb.AddComponent(entity, connection);
                     connectionEcb.SetName(entity, "Connection");
                 }
@@ -1446,9 +1506,6 @@ namespace KexEdit.UI.NodeGraph {
             return false;
         }
 
-        public bool IsInBounds(Vector2 mousePosition) {
-            return _view.worldBound.Contains(mousePosition);
-        }
 
         private void OnNodeGraphPanChange(NodeGraphPanChangeEvent evt) {
             ref var nodeGraphState = ref SystemAPI.GetSingletonRW<NodeGraphState>().ValueRW;
@@ -1458,6 +1515,14 @@ namespace KexEdit.UI.NodeGraph {
         private void OnNodeGraphZoomChange(NodeGraphZoomChangeEvent evt) {
             ref var nodeGraphState = ref SystemAPI.GetSingletonRW<NodeGraphState>().ValueRW;
             nodeGraphState.Zoom = evt.Zoom;
+        }
+
+        private void OnFocusIn(FocusInEvent evt) {
+            EditOperations.SetActiveHandler(this);
+        }
+
+        private void OnFocusOut(FocusOutEvent evt) {
+            EditOperations.SetActiveHandler(null);
         }
     }
 }

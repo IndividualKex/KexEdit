@@ -36,6 +36,7 @@ namespace KexEdit {
         ReversePath,
         Bridge,
         Mesh,
+        Append,
     }
 
     public enum PortType {

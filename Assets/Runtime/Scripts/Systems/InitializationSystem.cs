@@ -8,41 +8,41 @@ using Resources = UnityEngine.Resources;
 namespace KexEdit {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class InitializationSystem : SystemBase {
-        private BlobAssetReference<Collider> _colliderBlob;
-        private EntityArchetype _colliderArchetype;
+        private BlobAssetReference<Collider> _trackColliderBlob;
+        private EntityArchetype _trackColliderArchetype;
         private bool _initialized;
 
-        private EntityQuery _initializeEventQuery;
-
         protected override void OnCreate() {
-            _initializeEventQuery = GetEntityQuery(typeof(InitializeEvent));
-            RequireForUpdate(_initializeEventQuery);
-
-            _colliderArchetype = EntityManager.CreateArchetype(
+            _trackColliderArchetype = EntityManager.CreateArchetype(
                 typeof(PhysicsCollider),
                 typeof(PhysicsWorldIndex),
                 typeof(NodeReference),
                 typeof(SegmentReference),
                 typeof(LocalTransform)
             );
+
+            RequireForUpdate<InitializeEvent>();
         }
 
         protected override void OnDestroy() {
-            if (_colliderBlob.IsCreated) {
-                _colliderBlob.Dispose();
+            if (_trackColliderBlob.IsCreated) {
+                _trackColliderBlob.Dispose();
             }
-            base.OnDestroy();
         }
 
         protected override void OnUpdate() {
-            if (_initialized) return;
-
-            _initialized = true;
+            if (_initialized) {
+                throw new System.Exception("Runtime already initialized");
+            }
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
             foreach (var (_, entity) in SystemAPI.Query<InitializeEvent>().WithEntityAccess()) {
                 ecb.DestroyEntity(entity);
+                if (_initialized) {
+                    throw new System.Exception("Runtime already initialized");
+                }
+                _initialized = true;
             }
 
             var boxGeometry = new BoxGeometry {
@@ -51,14 +51,14 @@ namespace KexEdit {
                 Size = new float3(1.1f, 0.5f, 0.5f)
             };
 
-            _colliderBlob = BoxCollider.Create(boxGeometry, CollisionFilter.Default, Material.Default);
+            _trackColliderBlob = BoxCollider.Create(boxGeometry, CollisionFilter.Default, Material.Default);
 
             var colliderTemplateEntity = ecb.CreateEntity();
-            ecb.AddComponent(colliderTemplateEntity, new ColliderTemplate {
-                Archetype = _colliderArchetype,
-                ColliderBlob = _colliderBlob
+            ecb.AddComponent(colliderTemplateEntity, new TrackColliderTemplate {
+                Archetype = _trackColliderArchetype,
+                ColliderBlob = _trackColliderBlob
             });
-            ecb.SetName(colliderTemplateEntity, "Collider Template");
+            ecb.SetName(colliderTemplateEntity, "Track Collider Template");
 
             var trackMeshCompute = Resources.Load<UnityEngine.ComputeShader>("TrackMeshCompute");
             var duplicationMaterial = Resources.Load<UnityEngine.Material>("Duplication");
@@ -85,16 +85,6 @@ namespace KexEdit {
 
             ecb.AddComponent(settingsEntity, gizmoSettings);
             ecb.SetName(settingsEntity, "Global Settings");
-
-            var cartEntity = ecb.CreateEntity();
-            ecb.AddComponent(cartEntity, LocalTransform.Identity);
-            ecb.AddComponent(cartEntity, new Cart {
-                Position = 1f,
-                Active = true,
-                Kinematic = false
-            });
-            ecb.AddComponent(cartEntity, new CartMeshReference());
-            ecb.SetName(cartEntity, "Cart");
 
             ecb.Playback(EntityManager);
         }

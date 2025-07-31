@@ -2,7 +2,6 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Collections;
-using Unity.Burst;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
@@ -31,6 +30,7 @@ namespace KexEdit {
                 .Build(EntityManager);
 
             RequireForUpdate<GlobalSettings>();
+            RequireForUpdate<Gizmos>();
         }
 
         protected override void OnStartRunning() {
@@ -50,8 +50,9 @@ namespace KexEdit {
         }
 
         private void SetVisualizationColors() {
-            Shader.SetGlobalColor("_MinColor", Color.green);
-            Shader.SetGlobalColor("_MaxColor", Color.red);
+            Shader.SetGlobalColor("_MinColor", new Color(0f, 0f, 1f, 1f)); // Pure blue
+            Shader.SetGlobalColor("_MaxColor", new Color(1f, 0f, 0f, 1f)); // Pure red
+            Shader.SetGlobalColor("_ZeroColor", new Color(1f, 1f, 1f, 1f)); // Pure white
         }
 
         private void UpdateVisualization() {
@@ -61,48 +62,19 @@ namespace KexEdit {
                 return;
             }
 
-            _pointLookup.Update(this);
-
-            NativeReference<float2> valueRange = new(Allocator.TempJob) { Value = new float2(float.MaxValue, float.MinValue) };
-
-            switch (_currentMode) {
-                case VisualizationMode.Velocity:
-                    new VelocityJob { ValueRange = valueRange, PointLookup = _pointLookup }.Run(_sectionQuery);
-                    break;
-                case VisualizationMode.NormalForce:
-                    new NormalForceJob { ValueRange = valueRange, PointLookup = _pointLookup }.Run(_sectionQuery);
-                    break;
-                case VisualizationMode.LateralForce:
-                    new LateralForceJob { ValueRange = valueRange, PointLookup = _pointLookup }.Run(_sectionQuery);
-                    break;
-                case VisualizationMode.RollSpeed:
-                    new RollSpeedJob { ValueRange = valueRange, PointLookup = _pointLookup }.Run(_sectionQuery);
-                    break;
-                case VisualizationMode.PitchSpeed:
-                    new PitchSpeedJob { ValueRange = valueRange, PointLookup = _pointLookup }.Run(_sectionQuery);
-                    break;
-                case VisualizationMode.YawSpeed:
-                    new YawSpeedJob { ValueRange = valueRange, PointLookup = _pointLookup }.Run(_sectionQuery);
-                    break;
-                case VisualizationMode.Curvature:
-                    new CurvatureJob { ValueRange = valueRange, PointLookup = _pointLookup }.Run(_sectionQuery);
-                    break;
-            }
-
-            float2 range = valueRange.Value;
-            if (range.x == float.MaxValue) {
-                range = new float2(0f, 1f);
-            }
-
-            if (_currentMode == VisualizationMode.LateralForce) {
-                float maxAbs = math.max(math.abs(range.x), math.abs(range.y));
-                range = new float2(-maxAbs, maxAbs);
-            }
-
+            var gizmos = SystemAPI.GetSingleton<Gizmos>();
+            var range = _currentMode switch {
+                VisualizationMode.Velocity => gizmos.VelocityRange,
+                VisualizationMode.NormalForce => gizmos.NormalForceRange,
+                VisualizationMode.LateralForce => gizmos.LateralForceRange,
+                VisualizationMode.RollSpeed => gizmos.RollSpeedRange,
+                VisualizationMode.PitchSpeed => gizmos.PitchSpeedRange,
+                VisualizationMode.YawSpeed => gizmos.YawSpeedRange,
+                VisualizationMode.Curvature => gizmos.CurvatureRange,   
+                _ => new float2(0f, 1f)
+            };
             Shader.SetGlobalFloat("_MinValue", range.x);
             Shader.SetGlobalFloat("_MaxValue", range.y);
-
-            valueRange.Dispose();
         }
 
         private void SetModeInternal(VisualizationMode mode) {
@@ -122,142 +94,6 @@ namespace KexEdit {
 
         public static void Toggle() {
             Instance.SetModeInternal(VisualizationMode.Velocity);
-        }
-
-        [BurstCompile]
-        private partial struct VelocityJob : IJobEntity {
-            public NativeReference<float2> ValueRange;
-
-            [ReadOnly]
-            public BufferLookup<Point> PointLookup;
-
-            public void Execute(Entity entity) {
-                if (!PointLookup.TryGetBuffer(entity, out var points)) return;
-                foreach (var point in points) {
-                    PointData p = point;
-                    ValueRange.Value = new float2(
-                        math.min(ValueRange.Value.x, p.Velocity),
-                        math.max(ValueRange.Value.y, p.Velocity)
-                    );
-                }
-            }
-        }
-
-        [BurstCompile]
-        private partial struct NormalForceJob : IJobEntity {
-            public NativeReference<float2> ValueRange;
-
-            [ReadOnly]
-            public BufferLookup<Point> PointLookup;
-
-            public void Execute(Entity entity) {
-                if (!PointLookup.TryGetBuffer(entity, out var points)) return;
-                foreach (var point in points) {
-                    PointData p = point;
-                    ValueRange.Value = new float2(
-                        math.min(ValueRange.Value.x, p.NormalForce),
-                        math.max(ValueRange.Value.y, p.NormalForce)
-                    );
-                }
-            }
-        }
-
-        [BurstCompile]
-        private partial struct LateralForceJob : IJobEntity {
-            public NativeReference<float2> ValueRange;
-
-            [ReadOnly]
-            public BufferLookup<Point> PointLookup;
-
-            public void Execute(Entity entity) {
-                if (!PointLookup.TryGetBuffer(entity, out var points)) return;
-                foreach (var point in points) {
-                    PointData p = point;
-                    ValueRange.Value = new float2(
-                        math.min(ValueRange.Value.x, p.LateralForce),
-                        math.max(ValueRange.Value.y, p.LateralForce)
-                    );
-                }
-            }
-        }
-
-        [BurstCompile]
-        private partial struct RollSpeedJob : IJobEntity {
-            public NativeReference<float2> ValueRange;
-
-            [ReadOnly]
-            public BufferLookup<Point> PointLookup;
-
-            public void Execute(Entity entity) {
-                if (!PointLookup.TryGetBuffer(entity, out var points)) return;
-                foreach (var point in points) {
-                    PointData p = point;
-                    ValueRange.Value = new float2(
-                        math.min(ValueRange.Value.x, p.RollSpeed),
-                        math.max(ValueRange.Value.y, p.RollSpeed)
-                    );
-                }
-            }
-        }
-
-        [BurstCompile]
-        private partial struct PitchSpeedJob : IJobEntity {
-            public NativeReference<float2> ValueRange;
-
-            [ReadOnly]
-            public BufferLookup<Point> PointLookup;
-
-            public void Execute(Entity entity) {
-                if (!PointLookup.TryGetBuffer(entity, out var points)) return;
-                foreach (var point in points) {
-                    PointData p = point;
-                    float pitchSpeed = math.abs(p.PitchFromLast);
-                    ValueRange.Value = new float2(
-                        math.min(ValueRange.Value.x, pitchSpeed),
-                        math.max(ValueRange.Value.y, pitchSpeed)
-                    );
-                }
-            }
-        }
-
-        [BurstCompile]
-        private partial struct YawSpeedJob : IJobEntity {
-            public NativeReference<float2> ValueRange;
-
-            [ReadOnly]
-            public BufferLookup<Point> PointLookup;
-
-            public void Execute(Entity entity) {
-                if (!PointLookup.TryGetBuffer(entity, out var points)) return;
-                foreach (var point in points) {
-                    PointData p = point;
-                    float yawSpeed = math.abs(p.YawFromLast);
-                    ValueRange.Value = new float2(
-                        math.min(ValueRange.Value.x, yawSpeed),
-                        math.max(ValueRange.Value.y, yawSpeed)
-                    );
-                }
-            }
-        }
-
-        [BurstCompile]
-        private partial struct CurvatureJob : IJobEntity {
-            public NativeReference<float2> ValueRange;
-
-            [ReadOnly]
-            public BufferLookup<Point> PointLookup;
-
-            public void Execute(Entity entity) {
-                if (!PointLookup.TryGetBuffer(entity, out var points)) return;
-                foreach (var point in points) {
-                    PointData p = point;
-                    float curvature = math.abs(p.AngleFromLast);
-                    ValueRange.Value = new float2(
-                        math.min(ValueRange.Value.x, curvature),
-                        math.max(ValueRange.Value.y, curvature)
-                    );
-                }
-            }
         }
     }
 }

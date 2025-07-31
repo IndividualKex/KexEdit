@@ -20,17 +20,30 @@ namespace KexEdit.UI {
             if (_rideCamera == null) return;
 
             foreach (var (cart, transform) in SystemAPI.Query<Cart, LocalTransform>()) {
-                if (!cart.Active || cart.Kinematic) continue;
-                quaternion rotation = math.mul(
+                if (!cart.Enabled || cart.Kinematic) continue;
+
+                quaternion cartRotation = math.mul(
                     transform.Rotation,
                     quaternion.RotateY(math.PI)
                 );
-                float3 offset = math.mul(rotation, new float3(
-                    0f,
-                    Preferences.RideCameraHeight,
-                    0f
-                ));
-                _rideCamera.transform.SetPositionAndRotation(transform.Position + offset, rotation);
+
+                quaternion userRotation = quaternion.EulerXYZ(
+                    math.radians(Preferences.RideCameraRotationX),
+                    math.radians(Preferences.RideCameraRotationY),
+                    math.radians(Preferences.RideCameraRotationZ)
+                );
+
+                quaternion finalRotation = math.mul(cartRotation, userRotation);
+
+                float3 positionOffset = new(
+                    Preferences.RideCameraPositionX,
+                    Preferences.RideCameraPositionY,
+                    Preferences.RideCameraPositionZ
+                );
+
+                float3 worldOffset = math.mul(cartRotation, positionOffset);
+
+                _rideCamera.transform.SetPositionAndRotation(transform.Position + worldOffset, finalRotation);
                 break;
             }
         }

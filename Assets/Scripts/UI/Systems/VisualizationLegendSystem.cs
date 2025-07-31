@@ -46,30 +46,37 @@ namespace KexEdit.UI {
                 case VisualizationMode.Velocity:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Velocity";
+                    _data.GradientType = VisualizationGradientType.TwoColorPositive;
                     break;
                 case VisualizationMode.NormalForce:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Normal Force";
+                    _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
                     break;
                 case VisualizationMode.LateralForce:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Lateral Force";
+                    _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
                     break;
                 case VisualizationMode.RollSpeed:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Roll Speed";
+                    _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
                     break;
                 case VisualizationMode.PitchSpeed:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Pitch Speed";
+                    _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
                     break;
                 case VisualizationMode.YawSpeed:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Yaw Speed";
+                    _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
                     break;
                 case VisualizationMode.Curvature:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Curvature";
+                    _data.GradientType = VisualizationGradientType.TwoColorPositive;
                     break;
             }
         }

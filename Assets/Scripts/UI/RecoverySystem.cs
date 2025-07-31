@@ -30,7 +30,7 @@ namespace KexEdit.UI {
                 string fileName = GetRecoveryFileName();
                 string filePath = Path.Combine(directory, fileName);
 
-                byte[] graphData = Serialization.SerializationSystem.Instance.SerializeGraph();
+                byte[] graphData = ProjectOperationsSystem.Instance.SerializeGraph();
                 File.WriteAllBytes(filePath, graphData);
 
                 Cleanup(directory);

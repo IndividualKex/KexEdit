@@ -240,24 +240,16 @@ namespace KexEdit {
             }
 
             private float GetVisualizationValue(PointData p0, PointData p1, float t) {
-                switch (VisualizationMode) {
-                    case VisualizationMode.Velocity:
-                        return math.lerp(p0.Velocity, p1.Velocity, t);
-                    case VisualizationMode.NormalForce:
-                        return math.lerp(p0.NormalForce, p1.NormalForce, t);
-                    case VisualizationMode.LateralForce:
-                        return math.lerp(p0.LateralForce, p1.LateralForce, t);
-                    case VisualizationMode.RollSpeed:
-                        return math.lerp(p0.RollSpeed, p1.RollSpeed, t);
-                    case VisualizationMode.PitchSpeed:
-                        return math.lerp(math.abs(p0.PitchFromLast), math.abs(p1.PitchFromLast), t);
-                    case VisualizationMode.YawSpeed:
-                        return math.lerp(math.abs(p0.YawFromLast), math.abs(p1.YawFromLast), t);
-                    case VisualizationMode.Curvature:
-                        return math.lerp(math.abs(p0.AngleFromLast), math.abs(p1.AngleFromLast), t);
-                    default:
-                        return math.lerp(p0.Velocity, p1.Velocity, t);
-                }
+                return VisualizationMode switch {
+                    VisualizationMode.Velocity => math.lerp(p0.Velocity, p1.Velocity, t),
+                    VisualizationMode.NormalForce => math.lerp(p0.NormalForce, p1.NormalForce, t),
+                    VisualizationMode.LateralForce => math.lerp(p0.LateralForce, p1.LateralForce, t),
+                    VisualizationMode.RollSpeed => math.lerp(p0.RollSpeed, p1.RollSpeed, t),
+                    VisualizationMode.PitchSpeed => math.lerp(p0.PitchFromLast, p1.PitchFromLast, t),
+                    VisualizationMode.YawSpeed => math.lerp(p0.YawFromLast, p1.YawFromLast, t),
+                    VisualizationMode.Curvature => math.lerp(p0.AngleFromLast, p1.AngleFromLast, t),
+                    _ => math.lerp(p0.Velocity, p1.Velocity, t),
+                };
             }
         }
     }

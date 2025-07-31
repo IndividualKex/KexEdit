@@ -59,6 +59,13 @@ namespace KexEdit.UI {
             _panel.style.transitionDuration = new List<TimeValue> { new(100, TimeUnit.Millisecond) };
             _panel.style.transitionTimingFunction = new List<EasingFunction> { EasingMode.EaseOutCubic };
 
+            RegisterCallback<MouseDownEvent>(evt => {
+                if (evt.target == this) {
+                    Close();
+                    evt.StopPropagation();
+                }
+            });
+
             RegisterCallback<KeyDownEvent>(evt => {
                 if (evt.keyCode == KeyCode.Escape) {
                     Close();
@@ -250,9 +257,7 @@ namespace KexEdit.UI {
                 var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
                 using var ecb = new EntityCommandBuffer(Allocator.Temp);
                 var loadEntity = ecb.CreateEntity();
-                ecb.AddComponent(loadEntity, new LoadTrackStyleConfigEvent {
-                    ConfigPath = _currentTrackStyle
-                });
+                ecb.AddComponent<ReloadTrackStyleEvent>(loadEntity);
                 ecb.Playback(entityManager);
             }
             catch (System.Exception ex) {

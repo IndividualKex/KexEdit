@@ -43,8 +43,8 @@ namespace KexEdit.Serialization {
 
         protected override void OnUpdate() { }
 
-        public void Record() {
-            var state = SerializeGraph();
+        public void Record(Entity target) {
+            var state = SerializeGraph(target);
             _undoStack.Push(state);
             _redoStack.Clear();
 
@@ -62,20 +62,20 @@ namespace KexEdit.Serialization {
             Recorded?.Invoke();
         }
 
-        public void Undo() {
-            if (_undoStack.Count == 0) return;
-            var current = SerializeGraph();
+        public Entity Undo(Entity target) {
+            if (_undoStack.Count == 0) return Entity.Null;
+            var current = SerializeGraph(target);
             var prev = _undoStack.Pop();
             _redoStack.Push(current);
-            DeserializeGraph(prev, restoreUIState: false);
+            return DeserializeGraph(prev, restoreUIState: false);
         }
 
-        public void Redo() {
-            if (_redoStack.Count == 0) return;
-            var current = SerializeGraph();
+        public Entity Redo(Entity target) {
+            if (_redoStack.Count == 0) return Entity.Null;
+            var current = SerializeGraph(target);
             var next = _redoStack.Pop();
             _undoStack.Push(current);
-            DeserializeGraph(next, restoreUIState: false);
+            return DeserializeGraph(next, restoreUIState: false);
         }
 
         public void Clear() {
@@ -85,14 +85,14 @@ namespace KexEdit.Serialization {
 
         public static void LoadGraph(string filePath) {
             if (string.IsNullOrEmpty(filePath)) return;
-            
+
             byte[] data = File.ReadAllBytes(filePath);
             if (data?.Length > 0) {
                 Instance.DeserializeGraph(data, restoreUIState: false);
             }
         }
 
-        public byte[] SerializeGraph() {
+        public byte[] SerializeGraph(Entity target) {
             SerializedGraph graph = new();
 
             var timelineState = SystemAPI.GetSingleton<TimelineState>();
@@ -101,21 +101,39 @@ namespace KexEdit.Serialization {
             graph.UIState = SerializedUIState.FromState(timelineState, nodeGraphState, cameraState);
 
             using var nodeEntities = _nodeQuery.ToEntityArray(Allocator.Temp);
-            graph.Nodes = new(nodeEntities.Length, Allocator.Temp);
-            for (int i = 0; i < nodeEntities.Length; i++) {
-                graph.Nodes[i] = SerializeNode(nodeEntities[i], Allocator.Temp);
+            using var targetNodes = new NativeList<Entity>(Allocator.Temp);
+
+            foreach (var entity in nodeEntities) {
+                var node = SystemAPI.GetAspect<NodeAspect>(entity);
+                if (node.Coaster == target) {
+                    targetNodes.Add(entity);
+                }
+            }
+
+            graph.Nodes = new(targetNodes.Length, Allocator.Temp);
+            for (int i = 0; i < targetNodes.Length; i++) {
+                graph.Nodes[i] = SerializeNode(targetNodes[i], Allocator.Temp);
             }
 
             using var connectionEntities = _connectionQuery.ToEntityArray(Allocator.Temp);
-            graph.Edges = new(connectionEntities.Length, Allocator.Temp);
-            for (int i = 0; i < connectionEntities.Length; i++) {
-                var connection = SystemAPI.GetComponent<Connection>(connectionEntities[i]);
-                var source = SystemAPI.GetComponent<Port>(connection.Source).Id;
-                var target = SystemAPI.GetComponent<Port>(connection.Target).Id;
+            using var targetConnections = new NativeList<Entity>(Allocator.Temp);
+
+            foreach (var entity in connectionEntities) {
+                var connection = SystemAPI.GetAspect<ConnectionAspect>(entity);
+                if (connection.Coaster == target) {
+                    targetConnections.Add(entity);
+                }
+            }
+
+            graph.Edges = new(targetConnections.Length, Allocator.Temp);
+            for (int i = 0; i < targetConnections.Length; i++) {
+                var connection = SystemAPI.GetComponent<Connection>(targetConnections[i]);
+                uint sourceId = SystemAPI.GetComponent<Port>(connection.Source).Id;
+                uint targetId = SystemAPI.GetComponent<Port>(connection.Target).Id;
                 graph.Edges[i] = new SerializedEdge {
                     Id = connection.Id,
-                    SourceId = source,
-                    TargetId = target,
+                    SourceId = sourceId,
+                    TargetId = targetId,
                     Selected = connection.Selected,
                 };
             }
@@ -133,22 +151,11 @@ namespace KexEdit.Serialization {
             return result;
         }
 
-        public void DeserializeGraph(byte[] data, bool restoreUIState = true) {
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (_, entity) in SystemAPI.Query<Node>().WithEntityAccess()) {
-                ecb.DestroyEntity(entity);
-            }
-            foreach (var (_, entity) in SystemAPI.Query<Port>().WithEntityAccess()) {
-                ecb.DestroyEntity(entity);
-            }
-            foreach (var (_, entity) in SystemAPI.Query<Connection>().WithEntityAccess()) {
-                ecb.DestroyEntity(entity);
-            }
+        public Entity DeserializeGraph(byte[] data, bool restoreUIState = true) {
+            var coaster = EntityManager.CreateEntity(typeof(Coaster));
+            EntityManager.SetName(coaster, "Coaster");
 
-            ecb.Playback(EntityManager);
-            ecb.Dispose();
-
-            if (data.Length == 0) return;
+            if (data.Length == 0) return coaster;
 
             var buffer = new NativeArray<byte>(data, Allocator.Temp);
             SerializedGraph serializedGraph = new();
@@ -162,9 +169,9 @@ namespace KexEdit.Serialization {
                 serializedGraph.UIState.ToState(out timelineState, out nodeGraphState, out cameraState);
             }
 
-            ecb = new EntityCommandBuffer(Allocator.Temp);
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var node in serializedGraph.Nodes) {
-                DeserializeNode(node, ecb);
+                DeserializeNode(node, coaster, ref ecb, restoreUIState);
             }
 
             ecb.Playback(EntityManager);
@@ -183,6 +190,7 @@ namespace KexEdit.Serialization {
                 var target = portMap[edge.TargetId];
                 var connection = ecb.CreateEntity();
                 ecb.AddComponent<Dirty>(connection);
+                ecb.AddComponent<CoasterReference>(connection, coaster);
                 ecb.AddComponent(connection, new Connection {
                     Id = edge.Id,
                     Source = source,
@@ -196,6 +204,8 @@ namespace KexEdit.Serialization {
 
             portMap.Dispose();
             serializedGraph.Dispose();
+
+            return coaster;
         }
 
         public SerializedNode SerializeNode(Entity entity, Allocator allocator) {
@@ -334,6 +344,7 @@ namespace KexEdit.Serialization {
             };
             FixedString512Bytes meshFilePath = node.Type switch {
                 NodeType.Mesh => SystemAPI.ManagedAPI.GetComponent<MeshReference>(entity).FilePath,
+                NodeType.Append => SystemAPI.GetComponent<AppendReference>(entity).FilePath,
                 _ => default,
             };
             DynamicBuffer<RollSpeedKeyframe>? rollSpeedKeyframeBuffer = node.Type switch {
@@ -512,11 +523,13 @@ namespace KexEdit.Serialization {
             };
         }
 
-        public Entity DeserializeNode(SerializedNode node, EntityCommandBuffer ecb) {
+        public Entity DeserializeNode(SerializedNode node, Entity coaster, ref EntityCommandBuffer ecb, bool restoreUIState) {
             var entity = ecb.CreateEntity();
 
             NodeType type = node.Node.Type;
+            if (restoreUIState) node.Node.Selected = false;
             ecb.AddComponent(entity, node.Node);
+            ecb.AddComponent<CoasterReference>(entity, coaster);
             ecb.AddComponent<Dirty>(entity);
 
             ecb.AddBuffer<InputPortReference>(entity);
@@ -699,6 +712,13 @@ namespace KexEdit.Serialization {
             else if (type == NodeType.Mesh) {
                 ecb.AddComponent(entity, new MeshReference {
                     Value = null,
+                    FilePath = node.MeshFilePath,
+                    Loaded = false
+                });
+            }
+            else if (type == NodeType.Append) {
+                ecb.AddComponent(entity, new AppendReference {
+                    Value = Entity.Null,
                     FilePath = node.MeshFilePath,
                     Loaded = false
                 });

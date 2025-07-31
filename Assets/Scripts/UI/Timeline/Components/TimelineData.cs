@@ -4,7 +4,7 @@ using Unity.Collections;
 using Unity.Entities;
 
 namespace KexEdit.UI.Timeline {
-    public class TimelineData : IDisposable {
+    public class TimelineData : IComponentData, IDisposable {
         public NativeList<float> Times = new(Allocator.Persistent);
         public List<PropertyType> OrderedProperties = new();
         public Dictionary<PropertyType, PropertyData> Properties = new();

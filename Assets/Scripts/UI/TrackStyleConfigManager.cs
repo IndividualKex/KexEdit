@@ -2,8 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using UnityEngine;
-using Unity.Entities;
-using Unity.Collections;
 
 namespace KexEdit.UI {
     public readonly struct TrackStyleConfigInfo {
@@ -45,34 +43,27 @@ namespace KexEdit.UI {
             }
         }
 
-        public static void LoadConfig(string configFileName) {
-            if (string.IsNullOrEmpty(configFileName)) {
+        public static TrackStyleConfig LoadConfig(string filename) {
+            if (string.IsNullOrEmpty(filename)) {
                 Debug.LogWarning("Config file name is empty");
-                return;
+                return null;
             }
 
-            string configPath = Path.Combine(TrackStylesPath, configFileName);
+            string configPath = Path.Combine(TrackStylesPath, filename);
             if (!IsValidConfigFile(configPath)) {
-                Debug.LogError($"Config file is not valid or does not exist: {configFileName}");
-                return;
+                Debug.LogError($"Config file is not valid or does not exist: {filename}");
+                return null;
             }
 
             try {
-                Preferences.CurrentTrackStyle = configFileName;
-
-                var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-
-                using var ecb = new EntityCommandBuffer(Allocator.Temp);
-                var loadEntity = ecb.CreateEntity();
-                ecb.AddComponent(loadEntity, new LoadTrackStyleConfigEvent {
-                    ConfigPath = configFileName
-                });
-                ecb.Playback(entityManager);
+                return TrackStyleResourceLoader.LoadConfig(filename);
             }
             catch (Exception ex) {
-                Debug.LogError($"Failed to load config {configFileName}: {ex.Message}");
+                Debug.LogError($"Failed to load config {filename}: {ex.Message}\n{ex.StackTrace}");
+                return null;
             }
         }
+
 
         public static void OpenTrackStylesFolder() {
             try {

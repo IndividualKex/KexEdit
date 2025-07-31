@@ -10,7 +10,12 @@ namespace KexEdit.UI {
         private Action _onClose;
 
         private VisualElement _panel;
-        private FloatField _rideCameraHeightField;
+        private FloatField _positionXField;
+        private FloatField _positionYField;
+        private FloatField _positionZField;
+        private FloatField _rotationXField;
+        private FloatField _rotationYField;
+        private FloatField _rotationZField;
 
         public RideCameraDialog(Action onClose) {
             _onClose = onClose;
@@ -47,25 +52,115 @@ namespace KexEdit.UI {
             };
 
             var fieldContainer = new VisualElement {
+                style = { marginBottom = 16f }
+            };
+
+            var positionLabel = new Label("Position:") {
+                style = { fontSize = 12, color = s_TextColor, marginBottom = 8f }
+            };
+
+            var positionContainer = new VisualElement {
                 style = {
                     flexDirection = FlexDirection.Row,
                     alignItems = Align.Center,
-                    marginBottom = 16f
+                    marginBottom = 12f
                 }
             };
 
-            var rideCameraHeightLabel = new Label("Height:") {
-                style = { fontSize = 12, color = s_TextColor, marginRight = 8f }
+            var positionXLabel = new Label("X:") {
+                style = { fontSize = 11, color = s_TextColor, marginRight = 4f }
             };
 
-            _rideCameraHeightField = new FloatField {
-                value = Preferences.RideCameraHeight,
+            _positionXField = new FloatField {
+                value = Preferences.RideCameraPositionX,
                 isDelayed = true,
-                style = { width = 60f }
+                style = { width = 50f, marginRight = 8f }
             };
 
-            _rideCameraHeightField.RegisterValueChangedCallback(evt => {
-                Preferences.RideCameraHeight = evt.newValue;
+            _positionXField.RegisterValueChangedCallback(evt => {
+                Preferences.RideCameraPositionX = evt.newValue;
+            });
+
+            var positionYLabel = new Label("Y:") {
+                style = { fontSize = 11, color = s_TextColor, marginRight = 4f }
+            };
+
+            _positionYField = new FloatField {
+                value = Preferences.RideCameraPositionY,
+                isDelayed = true,
+                style = { width = 50f, marginRight = 8f }
+            };
+
+            _positionYField.RegisterValueChangedCallback(evt => {
+                Preferences.RideCameraPositionY = evt.newValue;
+            });
+
+            var positionZLabel = new Label("Z:") {
+                style = { fontSize = 11, color = s_TextColor, marginRight = 4f }
+            };
+
+            _positionZField = new FloatField {
+                value = Preferences.RideCameraPositionZ,
+                isDelayed = true,
+                style = { width = 50f }
+            };
+
+            _positionZField.RegisterValueChangedCallback(evt => {
+                Preferences.RideCameraPositionZ = evt.newValue;
+            });
+
+            var rotationLabel = new Label("Rotation:") {
+                style = { fontSize = 12, color = s_TextColor, marginBottom = 8f }
+            };
+
+            var rotationContainer = new VisualElement {
+                style = {
+                    flexDirection = FlexDirection.Row,
+                    alignItems = Align.Center,
+                    marginBottom = 12f
+                }
+            };
+
+            var rotationXLabel = new Label("X:") {
+                style = { fontSize = 11, color = s_TextColor, marginRight = 4f }
+            };
+
+            _rotationXField = new FloatField {
+                value = Preferences.RideCameraRotationX,
+                isDelayed = true,
+                style = { width = 50f, marginRight = 8f }
+            };
+
+            _rotationXField.RegisterValueChangedCallback(evt => {
+                Preferences.RideCameraRotationX = evt.newValue;
+            });
+
+            var rotationYLabel = new Label("Y:") {
+                style = { fontSize = 11, color = s_TextColor, marginRight = 4f }
+            };
+
+            _rotationYField = new FloatField {
+                value = Preferences.RideCameraRotationY,
+                isDelayed = true,
+                style = { width = 50f, marginRight = 8f }
+            };
+
+            _rotationYField.RegisterValueChangedCallback(evt => {
+                Preferences.RideCameraRotationY = evt.newValue;
+            });
+
+            var rotationZLabel = new Label("Z:") {
+                style = { fontSize = 11, color = s_TextColor, marginRight = 4f }
+            };
+
+            _rotationZField = new FloatField {
+                value = Preferences.RideCameraRotationZ,
+                isDelayed = true,
+                style = { width = 50f }
+            };
+
+            _rotationZField.RegisterValueChangedCallback(evt => {
+                Preferences.RideCameraRotationZ = evt.newValue;
             });
 
             var buttonContainer = new VisualElement {
@@ -102,8 +197,24 @@ namespace KexEdit.UI {
                 Close();
             });
 
-            fieldContainer.Add(rideCameraHeightLabel);
-            fieldContainer.Add(_rideCameraHeightField);
+            positionContainer.Add(positionXLabel);
+            positionContainer.Add(_positionXField);
+            positionContainer.Add(positionYLabel);
+            positionContainer.Add(_positionYField);
+            positionContainer.Add(positionZLabel);
+            positionContainer.Add(_positionZField);
+
+            rotationContainer.Add(rotationXLabel);
+            rotationContainer.Add(_rotationXField);
+            rotationContainer.Add(rotationYLabel);
+            rotationContainer.Add(_rotationYField);
+            rotationContainer.Add(rotationZLabel);
+            rotationContainer.Add(_rotationZField);
+
+            fieldContainer.Add(positionLabel);
+            fieldContainer.Add(positionContainer);
+            fieldContainer.Add(rotationLabel);
+            fieldContainer.Add(rotationContainer);
             buttonContainer.Add(resetButton);
             buttonContainer.Add(closeButton);
 
@@ -117,6 +228,13 @@ namespace KexEdit.UI {
             _panel.style.transitionDuration = new List<TimeValue> { new(100, TimeUnit.Millisecond) };
             _panel.style.transitionTimingFunction = new List<EasingFunction> { EasingMode.EaseOutCubic };
 
+            RegisterCallback<MouseDownEvent>(evt => {
+                if (evt.target == this) {
+                    Close();
+                    evt.StopPropagation();
+                }
+            });
+
             RegisterCallback<KeyDownEvent>(evt => {
                 if (evt.keyCode == KeyCode.Escape) {
                     Close();
@@ -128,8 +246,19 @@ namespace KexEdit.UI {
         }
 
         private void ResetToDefaults() {
-            Preferences.RideCameraHeight = DEFAULT_RIDE_CAMERA_HEIGHT;
-            _rideCameraHeightField.SetValueWithoutNotify(Preferences.RideCameraHeight);
+            Preferences.RideCameraPositionX = DEFAULT_RIDE_CAMERA_POSITION_X;
+            Preferences.RideCameraPositionY = DEFAULT_RIDE_CAMERA_POSITION_Y;
+            Preferences.RideCameraPositionZ = DEFAULT_RIDE_CAMERA_POSITION_Z;
+            Preferences.RideCameraRotationX = DEFAULT_RIDE_CAMERA_ROTATION_X;
+            Preferences.RideCameraRotationY = DEFAULT_RIDE_CAMERA_ROTATION_Y;
+            Preferences.RideCameraRotationZ = DEFAULT_RIDE_CAMERA_ROTATION_Z;
+
+            _positionXField.SetValueWithoutNotify(Preferences.RideCameraPositionX);
+            _positionYField.SetValueWithoutNotify(Preferences.RideCameraPositionY);
+            _positionZField.SetValueWithoutNotify(Preferences.RideCameraPositionZ);
+            _rotationXField.SetValueWithoutNotify(Preferences.RideCameraRotationX);
+            _rotationYField.SetValueWithoutNotify(Preferences.RideCameraRotationY);
+            _rotationZField.SetValueWithoutNotify(Preferences.RideCameraRotationZ);
         }
 
         private void Close() {

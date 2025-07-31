@@ -2,12 +2,12 @@ using Unity.Entities;
 using UnityEngine;
 
 namespace KexEdit {
-    [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
+    [UpdateInGroup(typeof(CleanupSystemGroup))]
     public partial class MeshCleanupSystem : SystemBase {
         protected override void OnUpdate() {
             foreach (var mesh in GameObject.FindObjectsByType<NodeMesh>(FindObjectsSortMode.None)) {
-                if (EntityManager.HasComponent<MeshReference>(mesh.Node) &&
-                    EntityManager.GetComponentData<MeshReference>(mesh.Node).Value == mesh) continue;
+                if (SystemAPI.ManagedAPI.HasComponent<MeshReference>(mesh.Node) &&
+                    SystemAPI.ManagedAPI.GetComponent<MeshReference>(mesh.Node).Value == mesh) continue;
                 GameObject.Destroy(mesh.gameObject);
             }
         }

@@ -2,9 +2,7 @@ using UnityEngine;
 using KexEdit.Serialization;
 using Unity.Entities;
 using Unity.Collections;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 
 namespace KexEdit {
     public class TrackLoader : MonoBehaviour {
@@ -13,48 +11,44 @@ namespace KexEdit {
         public TrackStyleData TrackStyle;
 
         private IEnumerator Start() {
-            while (SerializationSystem.Instance == null) yield return null;
+            var world = World.DefaultGameObjectInjectionWorld;
+            var entityManager = world.EntityManager;
+            var query = entityManager.CreateEntityQuery(typeof(GlobalSettings));
+            while (query.IsEmpty) yield return null;
 
-            SerializationSystem.Instance.DeserializeGraph(Track.Data, restoreUIState: false);
+            var coaster = SerializationSystem.Instance.DeserializeGraph(Track.Data, restoreUIState: false);
+            if (coaster == Entity.Null) {
+                Debug.LogError("Failed to deserialize coaster");
+                yield break;
+            }
 
             if (CartRenderer != null) {
-                var world = World.DefaultGameObjectInjectionWorld;
-                var entityManager = world.EntityManager;
+                while (!entityManager.HasComponent<CartReference>(coaster)) {
+                    yield return null;
+                }
+
+                Entity cartEntity = entityManager.GetComponentData<CartReference>(coaster);
                 using var ecb = new EntityCommandBuffer(Allocator.Temp);
                 var entity = ecb.CreateEntity();
                 ecb.AddComponent(entity, new LoadCartMeshEvent {
-                    Cart = CartRenderer
+                    Cart = CartRenderer,
+                    Target = cartEntity
                 });
                 ecb.SetName(entity, "Load Cart Mesh Event");
                 ecb.Playback(entityManager);
             }
 
             if (TrackStyle != null) {
-                var world = World.DefaultGameObjectInjectionWorld;
-                var entityManager = world.EntityManager;
                 using var ecb = new EntityCommandBuffer(Allocator.Temp);
                 var entity = ecb.CreateEntity();
-                ecb.AddComponent(entity, new LoadTrackStyleEvent { TrackStyle = TrackStyle });
+                ecb.AddComponent(entity, new LoadTrackStyleEvent {
+                    Target = coaster,
+                    TrackStyle = TrackStyle
+                });
                 ecb.SetName(entity, "Load Track Style Event");
                 ecb.Playback(entityManager);
             }
         }
 
-        [Serializable]
-        public class TrackStyleData {
-            public List<TrackStyleMeshData> Styles = new();
-            public int DefaultStyle;
-            public bool AutoStyle;
-        }
-
-        [Serializable]
-        public class TrackStyleMeshData {
-            public List<DuplicationMeshSettings> DuplicationMeshes = new();
-            public List<ExtrusionMeshSettings> ExtrusionMeshes = new();
-            public List<CapMeshSettings> StartCapMeshes = new();
-            public List<CapMeshSettings> EndCapMeshes = new();
-            public float Spacing;
-            public float Threshold;
-        }
     }
 }

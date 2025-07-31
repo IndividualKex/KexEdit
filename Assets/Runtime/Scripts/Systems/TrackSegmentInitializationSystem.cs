@@ -12,13 +12,9 @@ namespace KexEdit {
 
         protected override void OnCreate() {
             _segmentQuery = EntityManager.CreateEntityQuery(typeof(SectionReference));
-            RequireForUpdate<TrackStyleSettings>();
         }
 
         protected override void OnUpdate() {
-            var settings = SystemAPI.ManagedAPI.GetSingleton<TrackStyleSettings>();
-            if (settings.Styles.Count == 0) return;
-
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
             int count = _segmentQuery.CalculateEntityCount();
@@ -30,8 +26,8 @@ namespace KexEdit {
                 }
             }
 
-            foreach (var (render, trackStyleBuffer, entity) in SystemAPI
-                .Query<Render, DynamicBuffer<TrackStyleKeyframe>>()
+            foreach (var (coaster, render, trackStyleBuffer, entity) in SystemAPI
+                .Query<CoasterReference, Render, DynamicBuffer<TrackStyleKeyframe>>()
                 .WithAll<Point>()
                 .WithEntityAccess()
             ) {
@@ -39,6 +35,13 @@ namespace KexEdit {
 
                 var points = SystemAPI.GetBuffer<Point>(entity);
                 if (points.Length == 0) continue;
+
+                if (!SystemAPI.HasComponent<TrackStyleReference>(coaster)) continue;
+
+                Entity styleEntity = SystemAPI.GetComponent<TrackStyleReference>(coaster);
+                if (!SystemAPI.ManagedAPI.HasComponent<TrackStyleSettings>(styleEntity)) continue;
+
+                var settings = SystemAPI.ManagedAPI.GetComponent<TrackStyleSettings>(styleEntity);
 
                 uint styleHash = SystemAPI.GetComponent<StyleHash>(entity);
                 var overrides = SystemAPI.GetComponent<PropertyOverrides>(entity);
@@ -53,9 +56,11 @@ namespace KexEdit {
                     var selectedStyle = settings.Styles[styleIndex];
 
                     var segmentEntity = ecb.CreateEntity();
+                    ecb.AddComponent<CoasterReference>(segmentEntity, coaster);
                     ecb.AddComponent<SectionReference>(segmentEntity, entity);
                     ecb.AddComponent<SelectedBlend>(segmentEntity);
                     ecb.AddComponent<TrackHash>(segmentEntity);
+                    ecb.AddComponent<TrackColliderHash>(segmentEntity);
                     ecb.AddComponent<Render>(segmentEntity, render);
                     ecb.AddComponent(segmentEntity, new Segment {
                         StartTime = breakpoint.StartTime,
@@ -72,6 +77,7 @@ namespace KexEdit {
                         Version = settings.Version
                     });
                     ecb.AddBuffer<TrackPoint>(segmentEntity);
+                    ecb.AddBuffer<TrackColliderReference>(segmentEntity);
                     ecb.SetName(segmentEntity, $"Segment {i}");
                 }
 

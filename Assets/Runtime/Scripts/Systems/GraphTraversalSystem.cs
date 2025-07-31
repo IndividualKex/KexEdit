@@ -6,39 +6,39 @@ namespace KexEdit {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [BurstCompile]
     public partial struct GraphTraversalSystem : ISystem {
-        private EntityQuery _rootQuery;
         private EntityQuery _nodeQuery;
         private EntityQuery _connectionQuery;
 
+        [BurstCompile]
         public void OnCreate(ref SystemState state) {
-            _rootQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<NodeGraphRoot>()
-                .Build(state.EntityManager);
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAspect<NodeAspect>()
                 .Build(state.EntityManager);
             _connectionQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Connection>()
                 .Build(state.EntityManager);
+
+            state.RequireForUpdate<Coaster>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            if (_rootQuery.IsEmpty) {
-                using var ecb = new EntityCommandBuffer(Allocator.Temp);
-                var rootEntity = ecb.CreateEntity();
-                ecb.AddComponent<NodeGraphRoot>(rootEntity);
-                ecb.SetName(rootEntity, "NodeGraphRoot");
-                ecb.Playback(state.EntityManager);
+            var nodes = _nodeQuery.ToEntityArray(Allocator.Temp);
+            foreach (var (coasterRW, entity) in SystemAPI.Query<RefRW<Coaster>>().WithEntityAccess()) {
+                ref var coaster = ref coasterRW.ValueRW;
+                var coasterNodes = new NativeList<Entity>(nodes.Length, Allocator.Temp);
+                foreach (var nodeEntity in nodes) {
+                    var node = SystemAPI.GetAspect<NodeAspect>(nodeEntity);
+                    if (node.Coaster != entity) continue;
+                    coasterNodes.Add(nodeEntity);
+                }
+                coaster.RootNode = FindGraphRoot(ref state, entity, coasterNodes);
+                coasterNodes.Dispose();
             }
-
-            ref var root = ref SystemAPI.GetSingletonRW<NodeGraphRoot>().ValueRW;
-            root = FindGraphRoot(ref state);
+            nodes.Dispose();
         }
 
-        private Entity FindGraphRoot(ref SystemState state) {
-            using var nodes = _nodeQuery.ToEntityArray(Allocator.Temp);
-
+        private Entity FindGraphRoot(ref SystemState state, in Entity coaster, in NativeList<Entity> nodes) {
             if (nodes.Length == 0) return Entity.Null;
 
             using var connections = _connectionQuery.ToComponentDataArray<Connection>(Allocator.Temp);
@@ -48,7 +48,7 @@ namespace KexEdit {
 
             foreach (var nodeEntity in nodes) {
                 var node = SystemAPI.GetAspect<NodeAspect>(nodeEntity);
-                if (node.Type == NodeType.Mesh) continue;
+                if (node.Type == NodeType.Mesh || node.Type == NodeType.Append) continue;
                 foreach (var inputPort in node.InputPorts) {
                     nodeMap.Add(inputPort, nodeEntity);
                 }
@@ -59,14 +59,13 @@ namespace KexEdit {
             var connectionPriorities = new NativeHashMap<Entity, int>(connections.Length, Allocator.Temp);
 
             foreach (var connection in connections) {
-                if (nodeMap.TryGetValue(connection.Target, out var targetNode) &&
-                    nodePriorityMap.TryGetValue(targetNode, out var priority)) {
+                if (!nodeMap.TryGetValue(connection.Target, out var targetNode) ||
+                    !nodePriorityMap.TryGetValue(targetNode, out var priority)) continue;
 
-                    if (!connectionPriorities.TryGetValue(connection.Source, out var currentPriority) ||
-                        priority > currentPriority) {
-                        connectionMap[connection.Source] = connection.Target;
-                        connectionPriorities[connection.Source] = priority;
-                    }
+                if (!connectionPriorities.TryGetValue(connection.Source, out var currentPriority) ||
+                    priority > currentPriority) {
+                    connectionMap[connection.Source] = connection.Target;
+                    connectionPriorities[connection.Source] = priority;
                 }
             }
 
@@ -78,15 +77,45 @@ namespace KexEdit {
 
             Entity bestRoot = Entity.Null;
             int highestPriority = int.MinValue;
-
+            
+            var potentialRoots = new NativeList<Entity>(nodes.Length, Allocator.Temp);
+            
             foreach (var nodeEntity in nodes) {
-                if (!incomingConnections.Contains(nodeEntity)) {
-                    if (nodePriorityMap.TryGetValue(nodeEntity, out var priority) && priority > highestPriority) {
+                if (incomingConnections.Contains(nodeEntity)) continue;
+                
+                if (nodePriorityMap.TryGetValue(nodeEntity, out var priority)) {
+                    if (priority > highestPriority) {
                         highestPriority = priority;
-                        bestRoot = nodeEntity;
+                        potentialRoots.Clear();
+                        potentialRoots.Add(nodeEntity);
+                    }
+                    else if (priority == highestPriority) {
+                        potentialRoots.Add(nodeEntity);
                     }
                 }
             }
+            
+            if (potentialRoots.Length == 1) {
+                bestRoot = potentialRoots[0];
+            }
+            else if (potentialRoots.Length > 1) {
+                int longestPathLength = 0;
+                
+                foreach (var rootCandidate in potentialRoots) {
+                    var tempGraph = new NativeHashMap<Entity, Entity>(nodes.Length, Allocator.Temp);
+                    TraverseGraph(ref state, rootCandidate, ref tempGraph, nodeMap, connectionMap);
+                    int pathLength = tempGraph.Count;
+                    
+                    if (pathLength > longestPathLength) {
+                        longestPathLength = pathLength;
+                        bestRoot = rootCandidate;
+                    }
+                    
+                    tempGraph.Dispose();
+                }
+            }
+            
+            potentialRoots.Dispose();
 
             if (bestRoot != Entity.Null) {
                 var rawGraph = new NativeHashMap<Entity, Entity>(nodes.Length, Allocator.Temp);

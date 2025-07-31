@@ -15,10 +15,18 @@ namespace KexEdit.UI {
         private VideoControls _videoControls;
         private Vector2 _lastMousePosition;
 
+        private EntityQuery _coasterQuery;
+
         public static bool IsFullscreen => Instance?._data.IsFullscreen ?? false;
 
         public VideoControlSystem() {
             Instance = this;
+        }
+
+        protected override void OnCreate() {
+            _coasterQuery = new EntityQueryBuilder(Allocator.Temp)
+                .WithAll<Coaster, EditorCoasterTag>()
+                .Build(EntityManager);
         }
 
         protected override void OnStartRunning() {
@@ -50,17 +58,19 @@ namespace KexEdit.UI {
                 ToggleFullscreen();
             }
 
-            var rootEntity = SystemAPI.HasSingleton<NodeGraphRoot>() ?
-                SystemAPI.GetSingleton<NodeGraphRoot>().Value :
-                Entity.Null;
+            Entity root = Entity.Null;
+            if (!_coasterQuery.IsEmpty) {
+                var coaster = _coasterQuery.GetSingleton<Coaster>();
+                root = coaster.RootNode;
+            }
 
-            if (rootEntity == Entity.Null) {
+            if (root == Entity.Null) {
                 _data.TotalLength = 0f;
                 _data.Progress = 0f;
                 return;
             }
 
-            CalculateTotalLength(rootEntity);
+            CalculateTotalLength(root);
 
             if (_data.TotalLength <= 0f) return;
 
@@ -69,7 +79,7 @@ namespace KexEdit.UI {
                 return;
             }
 
-            float currentDistance = CalculateDistanceToSection(rootEntity, cart.Section) + cart.Position;
+            float currentDistance = CalculateDistanceToSection(root, cart.Section) + cart.Position;
             _data.Progress = _data.TotalLength > 0f ? currentDistance / _data.TotalLength : 0f;
         }
 
@@ -181,7 +191,7 @@ namespace KexEdit.UI {
 
         private bool GetActiveCart(out Entity cartEntity, out Cart cart) {
             foreach (var (cartComponent, entity) in SystemAPI.Query<Cart>().WithEntityAccess()) {
-                if (cartComponent.Active && !cartComponent.Kinematic) {
+                if (cartComponent.Enabled && !cartComponent.Kinematic) {
                     cartEntity = entity;
                     cart = cartComponent;
                     return true;
@@ -195,35 +205,34 @@ namespace KexEdit.UI {
         private void SetProgress(float progress) {
             _data.Progress = progress;
 
-            var rootEntity = SystemAPI.HasSingleton<NodeGraphRoot>() ?
-                SystemAPI.GetSingleton<NodeGraphRoot>().Value :
-                Entity.Null;
+            var coaster = _coasterQuery.GetSingleton<Coaster>();
+            Entity root = coaster.RootNode;
 
-            if (rootEntity == Entity.Null || _data.TotalLength <= 0f) return;
+            if (root == Entity.Null || _data.TotalLength <= 0f) return;
 
             var targetDistance = _data.Progress * _data.TotalLength;
             foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
-                if (cart.ValueRO.Active && !cart.ValueRO.Kinematic) {
-                    SetCartPosition(ref cart.ValueRW, rootEntity, targetDistance);
+                if (cart.ValueRO.Enabled && !cart.ValueRO.Kinematic) {
+                    SetCartPosition(ref cart.ValueRW, root, targetDistance);
                     break;
                 }
             }
         }
 
-        private void SetCartPosition(ref Cart cart, Entity startEntity, float targetDistance) {
+        private void SetCartPosition(ref Cart cart, Entity start, float targetDistance) {
             float currentDistance = 0f;
-            Entity currentEntity = startEntity;
+            Entity current = start;
             var processedEntities = new NativeHashSet<Entity>(16, Allocator.Temp);
 
-            while (currentEntity != Entity.Null && !processedEntities.Contains(currentEntity)) {
-                processedEntities.Add(currentEntity);
+            while (current != Entity.Null && !processedEntities.Contains(current)) {
+                processedEntities.Add(current);
 
-                if (SystemAPI.HasBuffer<Point>(currentEntity)) {
-                    var points = SystemAPI.GetBuffer<Point>(currentEntity);
+                if (SystemAPI.HasBuffer<Point>(current)) {
+                    var points = SystemAPI.GetBuffer<Point>(current);
                     float sectionLength = points.Length;
 
                     if (currentDistance + sectionLength >= targetDistance) {
-                        cart.Section = currentEntity;
+                        cart.Section = current;
                         cart.Position = Mathf.Clamp(targetDistance - currentDistance, 0f, points.Length - 1f);
                         processedEntities.Dispose();
                         return;
@@ -232,9 +241,9 @@ namespace KexEdit.UI {
                     currentDistance += sectionLength;
                 }
 
-                if (SystemAPI.HasComponent<Node>(currentEntity)) {
-                    var node = SystemAPI.GetComponent<Node>(currentEntity);
-                    currentEntity = node.Next;
+                if (SystemAPI.HasComponent<Node>(current)) {
+                    var node = SystemAPI.GetComponent<Node>(current);
+                    current = node.Next;
                 }
                 else {
                     break;

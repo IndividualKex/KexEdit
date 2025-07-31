@@ -2,6 +2,7 @@ using Unity.Entities;
 
 namespace KexEdit {
     public class LoadTrackStyleEvent : IComponentData {
-        public TrackLoader.TrackStyleData TrackStyle;
+        public Entity Target;
+        public TrackStyleData TrackStyle;
     }
 }
