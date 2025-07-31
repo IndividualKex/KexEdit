@@ -107,7 +107,10 @@ namespace KexEdit.UI {
         public void HandleFocus() {
             if (CanFocus) {
                 BeginMenuInteraction();
-                GetEffectiveHandler().Focus();
+                foreach (var handler in _handlers) {
+                    if (!handler.CanFocus()) continue;
+                    handler.Focus();
+                }
                 EndMenuInteraction();
             }
         }

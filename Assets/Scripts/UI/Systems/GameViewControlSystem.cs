@@ -178,7 +178,7 @@ namespace KexEdit.UI {
         public bool CanCut() => false;
         public bool CanSelectAll() => _nodeGraphData.Nodes.Count > 0;
         public bool CanDeselectAll() => _nodeGraphData.HasSelectedNodes;
-        public bool CanFocus() => TryGetSelectionBounds(out _);
+        public bool CanFocus() => true;
 
         public void Copy() { }
         public void Paste(float2? worldPosition = null) { }
