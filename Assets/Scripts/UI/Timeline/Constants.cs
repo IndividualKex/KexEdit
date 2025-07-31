@@ -20,7 +20,7 @@ namespace KexEdit.UI.Timeline {
         public static readonly string s_ResistanceName = "Resistance";
         public static readonly string s_TrackStyleName = "Track Style";
 
-        public const float RESOLUTION = 240f;
+        public const float RESOLUTION = 128f;
         public const float LEFT_PADDING = 32f;
         public const float ROW_HEIGHT = 20f;
         public const float TICK_SPACING = 24f;

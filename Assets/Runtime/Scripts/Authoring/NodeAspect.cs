@@ -6,7 +6,7 @@ namespace KexEdit {
         public readonly Entity Self;
 
         private readonly RefRO<Node> NodeRO;
-
+        private readonly RefRO<CoasterReference> CoasterReferenceRO;
         private readonly RefRW<Dirty> DirtyRW;
 
         public readonly DynamicBuffer<InputPortReference> InputPorts;
@@ -16,6 +16,8 @@ namespace KexEdit {
         public NodeType Type => NodeRO.ValueRO.Type;
         public int Priority => NodeRO.ValueRO.Priority;
         public bool Selected => NodeRO.ValueRO.Selected;
+
+        public Entity Coaster => CoasterReferenceRO.ValueRO.Value;
 
         public bool Dirty {
             get => DirtyRW.ValueRO.Value;

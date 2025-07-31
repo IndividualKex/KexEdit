@@ -135,7 +135,7 @@ namespace KexEdit.UI {
 
         private (Entity cartEntity, Cart cart) GetActiveCart() {
             foreach (var (cartComponent, entity) in SystemAPI.Query<Cart>().WithEntityAccess()) {
-                if (cartComponent.Active && !cartComponent.Kinematic) {
+                if (cartComponent.Enabled && !cartComponent.Kinematic) {
                     return (entity, cartComponent);
                 }
             }

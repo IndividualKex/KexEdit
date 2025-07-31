@@ -113,16 +113,20 @@ namespace KexEdit.UI {
                 dataSourcePath = new PropertyPath(nameof(_data.MinValue)),
                 bindingMode = BindingMode.ToTarget,
             };
-            minBinding.sourceToUiConverters.AddConverter((ref float value) =>
-                FormatValueOnly(value));
+            minBinding.sourceToUiConverters.AddConverter((ref float value) => {
+                _gradientBar.MarkDirtyRepaint();
+                return FormatValueOnly(value);
+            });
             _minLabel.SetBinding("text", minBinding);
 
             var maxBinding = new DataBinding {
                 dataSourcePath = new PropertyPath(nameof(_data.MaxValue)),
                 bindingMode = BindingMode.ToTarget,
             };
-            maxBinding.sourceToUiConverters.AddConverter((ref float value) =>
-                FormatValueOnly(value));
+            maxBinding.sourceToUiConverters.AddConverter((ref float value) => {
+                _gradientBar.MarkDirtyRepaint();
+                return FormatValueOnly(value);
+            });
             _maxLabel.SetBinding("text", maxBinding);
 
             var unitsBinding = new DataBinding {
@@ -130,6 +134,16 @@ namespace KexEdit.UI {
                 bindingMode = BindingMode.ToTarget,
             };
             _unitsLabel.SetBinding("text", unitsBinding);
+
+            var gradientTypeBinding = new DataBinding {
+                dataSourcePath = new PropertyPath(nameof(_data.GradientType)),
+                bindingMode = BindingMode.ToTarget,
+            };
+            gradientTypeBinding.sourceToUiConverters.AddConverter((ref VisualizationGradientType value) => {
+                _gradientBar.MarkDirtyRepaint();
+                return value;
+            });
+            SetBinding("GradientType", gradientTypeBinding);
         }
 
         private void OnGenerateGradient(MeshGenerationContext ctx) {
@@ -141,7 +155,23 @@ namespace KexEdit.UI {
 
             for (int i = 0; i < gradientSteps; i++) {
                 float t = i / (float)(gradientSteps - 1);
-                Color color = Color.Lerp(Color.green, Color.red, t);
+                Color color;
+
+                if (_data.GradientType == VisualizationGradientType.TwoColorPositive) {
+                    color = Color.Lerp(Color.white, Color.red, t);
+                } else {
+                    float minValue = _data.MinValue;
+                    float maxValue = _data.MaxValue;
+                    float zeroPosition = minValue >= 0 ? 0f : Mathf.InverseLerp(minValue, maxValue, 0f);
+                    
+                    if (t < zeroPosition) {
+                        float blueT = t / zeroPosition;
+                        color = Color.Lerp(Color.blue, Color.white, blueT);
+                    } else {
+                        float redT = (t - zeroPosition) / (1f - zeroPosition);
+                        color = Color.Lerp(Color.white, Color.red, redT);
+                    }
+                }
 
                 painter.fillColor = color;
                 painter.BeginPath();

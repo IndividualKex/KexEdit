@@ -60,6 +60,11 @@ namespace KexEdit.UI {
         public static readonly string s_UnitsSuffixOneOverMicrometers = "(1/μm)";
 
         public const float NODE_GRID_SIZE = 24f;
-        public const float DEFAULT_RIDE_CAMERA_HEIGHT = 1.1f;
+        public const float DEFAULT_RIDE_CAMERA_POSITION_X = 0f;
+        public const float DEFAULT_RIDE_CAMERA_POSITION_Y = 1.1f;
+        public const float DEFAULT_RIDE_CAMERA_POSITION_Z = 0f;
+        public const float DEFAULT_RIDE_CAMERA_ROTATION_X = 0f;
+        public const float DEFAULT_RIDE_CAMERA_ROTATION_Y = 0f;
+        public const float DEFAULT_RIDE_CAMERA_ROTATION_Z = 0f;
     }
 }

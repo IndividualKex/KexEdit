@@ -2,40 +2,32 @@ using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class EditOperationsSystem : SystemBase {
-        private static List<IEditableHandler> _handlers = new();
-        private static IEditableHandler _activeHandler;
-        private static bool _menuInteractionActive;
+        public static EditOperationsSystem Instance { get; private set; }
 
-        private VisualElement _root;
+        private List<IEditableHandler> _handlers = new();
+        private IEditableHandler _activeHandler;
+        private IEditableHandler _lastActiveHandler;
+        private bool _menuInteractionActive;
 
-        protected override void OnStartRunning() {
-            _root = UIService.Instance.UIDocument.rootVisualElement;
+        public EditOperationsSystem() {
+            Instance = this;
         }
 
+
         protected override void OnUpdate() {
-            UpdateActiveHandler();
             ProcessKeyboardShortcuts();
         }
 
-        private void UpdateActiveHandler() {
+        public void SetActiveHandler(IEditableHandler handler) {
             if (_menuInteractionActive) return;
-            Vector2 mousePosition = Mouse.current.position.ReadValue();
-
-            float uiScale = UIScaleSystem.Instance.CurrentScale;
-            mousePosition /= uiScale;
-
-            mousePosition.y = _root.worldBound.height - mousePosition.y;
-            foreach (var handler in _handlers) {
-                if (!handler.IsInBounds(mousePosition)) continue;
-                _activeHandler = handler;
-                return;
+            _activeHandler = handler;
+            if (handler != null) {
+                _lastActiveHandler = handler;
             }
-            _activeHandler = null;
         }
 
         private void ProcessKeyboardShortcuts() {
@@ -55,80 +47,82 @@ namespace KexEdit.UI {
             }
         }
 
-        public static void RegisterHandler(IEditableHandler handler) => _handlers.Add(handler);
+        public void RegisterHandler(IEditableHandler handler) => _handlers.Add(handler);
 
-        public static void UnregisterHandler(IEditableHandler handler) => _handlers.Remove(handler);
+        public void UnregisterHandler(IEditableHandler handler) => _handlers.Remove(handler);
 
-        public static void HandleCopy() {
+        public void HandleCopy() {
             if (CanCopy) {
                 BeginMenuInteraction();
-                _activeHandler.Copy();
+                GetEffectiveHandler().Copy();
                 EndMenuInteraction();
             }
         }
 
-        public static void HandlePaste() => HandlePaste(null);
+        public void HandlePaste() => HandlePaste(null);
 
-        public static void HandlePaste(Vector2? worldPosition) {
+        public void HandlePaste(Vector2? worldPosition) {
             if (CanPaste) {
                 BeginMenuInteraction();
                 Undo.Record();
-                _activeHandler.Paste(worldPosition);
+                GetEffectiveHandler().Paste(worldPosition);
                 EndMenuInteraction();
             }
         }
 
-        public static void HandleDelete() {
+        public void HandleDelete() {
             if (CanDelete) {
                 BeginMenuInteraction();
                 Undo.Record();
-                _activeHandler.Delete();
+                GetEffectiveHandler().Delete();
                 EndMenuInteraction();
             }
         }
 
-        public static void HandleCut() {
+        public void HandleCut() {
             if (CanCut) {
                 BeginMenuInteraction();
                 Undo.Record();
-                _activeHandler.Cut();
+                GetEffectiveHandler().Cut();
                 EndMenuInteraction();
             }
         }
 
-        public static void HandleSelectAll() {
+        public void HandleSelectAll() {
             if (CanSelectAll) {
                 BeginMenuInteraction();
-                _activeHandler.SelectAll();
+                GetEffectiveHandler().SelectAll();
                 EndMenuInteraction();
             }
         }
 
-        public static void HandleDeselectAll() {
+        public void HandleDeselectAll() {
             if (CanDeselectAll) {
                 BeginMenuInteraction();
-                _activeHandler.DeselectAll();
+                GetEffectiveHandler().DeselectAll();
                 EndMenuInteraction();
             }
         }
 
-        public static void HandleFocus() {
+        public void HandleFocus() {
             if (CanFocus) {
                 BeginMenuInteraction();
-                _activeHandler.Focus();
+                GetEffectiveHandler().Focus();
                 EndMenuInteraction();
             }
         }
 
-        private static void BeginMenuInteraction() => _menuInteractionActive = true;
-        private static void EndMenuInteraction() => _menuInteractionActive = false;
+        private void BeginMenuInteraction() => _menuInteractionActive = true;
+        private void EndMenuInteraction() => _menuInteractionActive = false;
 
-        public static bool CanCopy => _activeHandler?.CanCopy() == true;
-        public static bool CanPaste => _activeHandler?.CanPaste() == true;
-        public static bool CanDelete => _activeHandler?.CanDelete() == true;
-        public static bool CanCut => _activeHandler?.CanCut() == true;
-        public static bool CanSelectAll => _activeHandler?.CanSelectAll() == true;
-        public static bool CanDeselectAll => _activeHandler?.CanDeselectAll() == true;
-        public static bool CanFocus => _activeHandler?.CanFocus() == true;
+        private IEditableHandler GetEffectiveHandler() => _activeHandler ?? _lastActiveHandler;
+
+        public bool CanCopy => GetEffectiveHandler()?.CanCopy() == true;
+        public bool CanPaste => GetEffectiveHandler()?.CanPaste() == true;
+        public bool CanDelete => GetEffectiveHandler()?.CanDelete() == true;
+        public bool CanCut => GetEffectiveHandler()?.CanCut() == true;
+        public bool CanSelectAll => GetEffectiveHandler()?.CanSelectAll() == true;
+        public bool CanDeselectAll => GetEffectiveHandler()?.CanDeselectAll() == true;
+        public bool CanFocus => GetEffectiveHandler()?.CanFocus() == true;
     }
 }

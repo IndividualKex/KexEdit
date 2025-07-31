@@ -362,6 +362,7 @@ MonoBehaviour:
   MaximizeTexture: {fileID: 6192944022281365145, guid: df21d85b996e7eb4b8226b3bb54e37ad, type: 3}
   MinimizeTexture: {fileID: 6192944022281365145, guid: 1676725e0cfa7ed4897864734b2d994a, type: 3}
   GridMaterial: {fileID: 2100000, guid: 8748f8bf0cfcfc844add25eef2c2f777, type: 2}
+  GridMaterialNoFade: {fileID: 2100000, guid: eaae0548f6aa16143ad9fb0b90960c1a, type: 2}
 --- !u!114 &690885153
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -498,43 +499,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 154059183}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!84 &1156570385
-RenderTexture:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  m_ImageContentsHash:
-    serializedVersion: 2
-    Hash: 00000000000000000000000000000000
-  m_IsAlphaChannelOptional: 0
-  serializedVersion: 6
-  m_Width: 1280
-  m_Height: 716
-  m_AntiAliasing: 4
-  m_MipCount: -1
-  m_DepthStencilFormat: 94
-  m_ColorFormat: 4
-  m_MipMap: 0
-  m_GenerateMips: 0
-  m_SRGB: 1
-  m_UseDynamicScale: 0
-  m_UseDynamicScaleExplicit: 0
-  m_BindMS: 0
-  m_EnableCompatibleFormat: 1
-  m_EnableRandomWrite: 0
-  m_TextureSettings:
-    serializedVersion: 2
-    m_FilterMode: 1
-    m_Aniso: 1
-    m_MipBias: 0
-    m_WrapU: 1
-    m_WrapV: 1
-    m_WrapW: 1
-  m_Dimension: 2
-  m_VolumeDepth: 1
-  m_ShadowSamplingMode: 2
 --- !u!1 &1334216155
 GameObject:
   m_ObjectHideFlags: 0
@@ -828,7 +792,7 @@ Camera:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 1156570385}
+  m_TargetTexture: {fileID: 1528206815}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -870,6 +834,43 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   CustomBlends: {fileID: 0}
+--- !u!84 &1528206815
+RenderTexture:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 6
+  m_Width: 1280
+  m_Height: 716
+  m_AntiAliasing: 4
+  m_MipCount: -1
+  m_DepthStencilFormat: 94
+  m_ColorFormat: 4
+  m_MipMap: 0
+  m_GenerateMips: 0
+  m_SRGB: 1
+  m_UseDynamicScale: 0
+  m_UseDynamicScaleExplicit: 0
+  m_BindMS: 0
+  m_EnableCompatibleFormat: 1
+  m_EnableRandomWrite: 0
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 1
+    m_WrapV: 1
+    m_WrapW: 1
+  m_Dimension: 2
+  m_VolumeDepth: 1
+  m_ShadowSamplingMode: 2
 --- !u!1 &1537195312
 GameObject:
   m_ObjectHideFlags: 0

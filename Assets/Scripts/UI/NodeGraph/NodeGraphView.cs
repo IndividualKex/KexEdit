@@ -4,7 +4,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static KexEdit.Constants;
 using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI.NodeGraph {

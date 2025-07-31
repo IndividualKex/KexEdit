@@ -9,32 +9,30 @@ namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [BurstCompile]
     public partial struct CartSystem : ISystem {
-        private BufferLookup<Point> _pointLookup;
         private ComponentLookup<Node> _nodeLookup;
+        private ComponentLookup<Coaster> _coasterLookup;
+        private BufferLookup<Point> _pointLookup;
 
         public void OnCreate(ref SystemState state) {
-            _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
             _nodeLookup = SystemAPI.GetComponentLookup<Node>(true);
+            _coasterLookup = SystemAPI.GetComponentLookup<Coaster>(true);
+            _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
 
             state.RequireForUpdate<PauseSingleton>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            _pointLookup.Update(ref state);
             _nodeLookup.Update(ref state);
-
-            Entity rootEntity = Entity.Null;
-            if (SystemAPI.HasSingleton<NodeGraphRoot>()) {
-                rootEntity = SystemAPI.GetSingleton<NodeGraphRoot>().Value;
-            }
+            _coasterLookup.Update(ref state);
+            _pointLookup.Update(ref state);
 
             bool paused = SystemAPI.GetSingleton<PauseSingleton>().IsPaused;
 
             state.Dependency = new Job {
-                PointLookup = _pointLookup,
                 NodeLookup = _nodeLookup,
-                RootEntity = rootEntity,
+                CoasterLookup = _coasterLookup,
+                PointLookup = _pointLookup,
                 DeltaTime = SystemAPI.Time.DeltaTime,
                 Paused = paused,
             }.ScheduleParallel(state.Dependency);
@@ -43,13 +41,13 @@ namespace KexEdit {
         [BurstCompile]
         private partial struct Job : IJobEntity {
             [ReadOnly]
-            public BufferLookup<Point> PointLookup;
-
-            [ReadOnly]
             public ComponentLookup<Node> NodeLookup;
 
             [ReadOnly]
-            public Entity RootEntity;
+            public ComponentLookup<Coaster> CoasterLookup;
+
+            [ReadOnly]
+            public BufferLookup<Point> PointLookup;
 
             [ReadOnly]
             public float DeltaTime;
@@ -57,8 +55,10 @@ namespace KexEdit {
             [ReadOnly]
             public bool Paused;
 
-            public void Execute(ref Cart cart, ref LocalTransform transform) {
-                if (!cart.Active || RootEntity == Entity.Null) {
+            public void Execute(in CoasterReference coasterEntity, ref Cart cart, ref LocalTransform transform) {
+                if (!cart.Enabled ||
+                    !CoasterLookup.TryGetComponent(coasterEntity.Value, out var coaster) ||
+                    coaster.RootNode == Entity.Null) {
                     transform.Position = new float3(0f, -999f, 0f);
                     return;
                 }
@@ -66,7 +66,7 @@ namespace KexEdit {
                 if (cart.Section == Entity.Null ||
                     !PointLookup.TryGetBuffer(cart.Section, out var points) ||
                     points.Length < 2) {
-                    Reset(ref cart);
+                    Reset(coaster, ref cart);
                     return;
                 }
 
@@ -81,7 +81,7 @@ namespace KexEdit {
                             points = PointLookup[cart.Section];
                         }
                         else {
-                            Reset(ref cart);
+                            Reset(coaster, ref cart);
                             return;
                         }
                     }
@@ -171,8 +171,8 @@ namespace KexEdit {
                 }
             }
 
-            private void Reset(ref Cart cart) {
-                cart.Section = RootEntity;
+            private void Reset(in Coaster coaster, ref Cart cart) {
+                cart.Section = coaster.RootNode;
                 cart.Position = 1f;
             }
 

@@ -17,6 +17,7 @@ namespace KexEdit.UI {
             { NodeType.Reverse, "Reverse" },
             { NodeType.ReversePath, "Reverse Path" },
             { NodeType.Mesh, "Mesh" },
+            { NodeType.Append, "Append (Experimental)" },
         };
 
         private static readonly Dictionary<PortType, string> s_InputPortNames = new() {
@@ -491,6 +492,14 @@ namespace KexEdit.UI {
             var root = element.panel.visualTree.Q<TemplateContainer>();
             KexTime.Pause();
             var dialog = new TrackColorPickerDialog(KexTime.Unpause);
+            root.Add(dialog);
+            return dialog;
+        }
+        
+        public static VisualizationRangeDialog ShowVisualizationRangeDialog(this VisualElement element) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new VisualizationRangeDialog(KexTime.Unpause);
             root.Add(dialog);
             return dialog;
         }

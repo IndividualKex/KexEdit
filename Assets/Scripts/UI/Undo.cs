@@ -11,9 +11,9 @@ namespace KexEdit.UI {
             remove => SerializationSystem.Recorded -= value;
         }
 
-        public static void Record() => SerializationSystem.Instance.Record();
-        public static void Execute() => SerializationSystem.Instance.Undo();
-        public static void Redo() => SerializationSystem.Instance.Redo();
+        public static void Record() => ProjectOperationsSystem.Instance.Record();
+        public static void Execute() => ProjectOperationsSystem.Instance.Undo();
+        public static void Redo() => ProjectOperationsSystem.Instance.Redo();
         public static void Clear() => SerializationSystem.Instance.Clear();
     }
 }

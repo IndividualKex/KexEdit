@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIInitializationSystemGroup))]
-    [UpdateAfter(typeof(CartMeshLoadingSystem))]
+    [UpdateAfter(typeof(CartStyleAssetLoadingSystem))]
     public partial class CartMeshInitializationSystem : SystemBase {
         protected override void OnCreate() {
             RequireForUpdate<GlobalSettings>();
@@ -14,11 +14,12 @@ namespace KexEdit.UI {
             var globalSettings = SystemAPI.ManagedAPI.GetSingleton<GlobalSettings>();
             var styleSettings = SystemAPI.ManagedAPI.GetSingleton<CartStyleSettings>();
 
-            foreach (var (style, mesh, entity) in SystemAPI
-                .Query<RefRW<CartStyleReference>, CartMeshReference>()
+            foreach (var (style, mesh, coaster, entity) in SystemAPI
+                .Query<RefRW<CartStyleReference>, CartMeshReference, CoasterReference>()
                 .WithEntityAccess()
             ) {
-                if (style.ValueRO.Version == styleSettings.Version) continue;
+                if (!SystemAPI.HasComponent<EditorCoasterTag>(coaster) ||
+                    style.ValueRO.Version == styleSettings.Version) continue;
 
                 if (mesh.Value != null) {
                     Object.Destroy(mesh.Value.gameObject);

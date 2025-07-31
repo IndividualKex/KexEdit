@@ -11,6 +11,7 @@ namespace KexEdit.UI {
         public static GridSystem Instance { get; private set; }
 
         private Material _gridMaterial;
+        private Material _gridMaterialNoFade;
         private GameObject _groundPlane;
         private GraphicsBuffer _vertexBuffer;
         private GraphicsBuffer _indexBuffer;
@@ -19,9 +20,9 @@ namespace KexEdit.UI {
         private UnityEngine.Camera _camera;
         private Vector3 _lastGridCenter;
 
-        private bool _showGrid = true;
-        private int _gridSize = 250;
         private float _gridSpacing = 10f;
+        private int _gridSize = 250;
+        private bool _showGrid = true;
 
         public bool ShowGrid => _showGrid;
 
@@ -29,11 +30,16 @@ namespace KexEdit.UI {
             Instance = this;
         }
 
+        protected override void OnCreate() {
+            RequireForUpdate<CameraState>();
+        }
+
         protected override void OnStartRunning() {
             _groundPlane = GameObject.Find("GroundPlane");
             _bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
             _camera = UnityEngine.Camera.main;
             _gridMaterial = UIService.Instance.GridMaterial;
+            _gridMaterialNoFade = UIService.Instance.GridMaterialNoFade;
             GenerateGridMesh();
             _groundPlane.SetActive(_showGrid);
         }
@@ -47,6 +53,9 @@ namespace KexEdit.UI {
         protected override void OnUpdate() {
             if (!_showGrid || _camera == null) return;
 
+            var cameraState = SystemAPI.GetSingleton<CameraState>();
+            bool shouldFaceCamera = cameraState.TargetOrthographic && math.abs(cameraState.TargetPitch) < 0.1f;
+
             Vector3 cameraPos = _camera.transform.position;
             Vector3 gridCenter = new(
                 Mathf.Round(cameraPos.x / _gridSpacing) * _gridSpacing,
@@ -57,10 +66,11 @@ namespace KexEdit.UI {
 
             if (Vector3.Distance(gridCenter, _lastGridCenter) > _gridSpacing * 0.5f) {
                 _lastGridCenter = gridCenter;
-                GenerateGridMesh(gridCenter);
+                GenerateGridMesh(gridCenter, shouldFaceCamera, cameraState.TargetYaw);
             }
 
-            RenderParams rp = new(_gridMaterial) {
+            Material materialToUse = shouldFaceCamera ? _gridMaterialNoFade : _gridMaterial;
+            RenderParams rp = new(materialToUse) {
                 worldBounds = _bounds,
                 matProps = _matProps
             };
@@ -72,7 +82,7 @@ namespace KexEdit.UI {
             );
         }
 
-        private void GenerateGridMesh(Vector3 center = default) {
+        private void GenerateGridMesh(Vector3 center = default, bool faceCamera = false, float yaw = 0f) {
             int vertexCount = (_gridSize + 1) * 4;
             int indexCount = (_gridSize + 1) * 4;
 
@@ -83,6 +93,8 @@ namespace KexEdit.UI {
                 GridSize = _gridSize,
                 GridSpacing = _gridSpacing,
                 Center = center,
+                FaceCamera = faceCamera,
+                Yaw = yaw,
                 Vertices = vertices,
                 Indices = indices
             }.Run();
@@ -123,6 +135,8 @@ namespace KexEdit.UI {
             public int GridSize;
             public float GridSpacing;
             public float3 Center;
+            public bool FaceCamera;
+            public float Yaw;
 
             public NativeArray<float3> Vertices;
             public NativeArray<uint> Indices;
@@ -131,28 +145,70 @@ namespace KexEdit.UI {
                 int halfSize = GridSize / 2;
                 int indexCounter = 0;
 
-                for (int x = -halfSize; x <= halfSize; x++) {
-                    float xPos = Center.x + x * GridSpacing;
+                if (FaceCamera) {
+                    bool isSideView = math.abs(Yaw - 90f) < 0.1f || math.abs(Yaw + 90f) < 0.1f;
+                    
+                    if (isSideView) {
+                        for (int y = -halfSize; y <= halfSize; y++) {
+                            float yPos = Center.y + y * GridSpacing;
+                            int baseIndex = y + halfSize;
+                            Vertices[baseIndex * 2] = new float3(Center.x + 0.01f, yPos, Center.z + (-halfSize * GridSpacing));
+                            Vertices[baseIndex * 2 + 1] = new float3(Center.x + 0.01f, yPos, Center.z + (halfSize * GridSpacing));
+                            Indices[indexCounter++] = (uint)(baseIndex * 2);
+                            Indices[indexCounter++] = (uint)(baseIndex * 2 + 1);
+                        }
 
-                    int baseIndex = x + halfSize;
-                    Vertices[baseIndex * 2] = new float3(xPos, 0.01f, Center.z + (-halfSize * GridSpacing));
-                    Vertices[baseIndex * 2 + 1] = new float3(xPos, 0.01f, Center.z + (halfSize * GridSpacing));
+                        int zLinesOffset = (GridSize + 1) * 2;
+                        for (int z = -halfSize; z <= halfSize; z++) {
+                            float zPos = Center.z + z * GridSpacing;
+                            int baseIndex = z + halfSize;
+                            int vertexOffset = zLinesOffset + baseIndex * 2;
+                            Vertices[vertexOffset] = new float3(Center.x + 0.01f, Center.y + (-halfSize * GridSpacing), zPos);
+                            Vertices[vertexOffset + 1] = new float3(Center.x + 0.01f, Center.y + (halfSize * GridSpacing), zPos);
+                            Indices[indexCounter++] = (uint)vertexOffset;
+                            Indices[indexCounter++] = (uint)(vertexOffset + 1);
+                        }
+                    } else {
+                        for (int y = -halfSize; y <= halfSize; y++) {
+                            float yPos = Center.y + y * GridSpacing;
+                            int baseIndex = y + halfSize;
+                            Vertices[baseIndex * 2] = new float3(Center.x + (-halfSize * GridSpacing), yPos, Center.z + 0.01f);
+                            Vertices[baseIndex * 2 + 1] = new float3(Center.x + (halfSize * GridSpacing), yPos, Center.z + 0.01f);
+                            Indices[indexCounter++] = (uint)(baseIndex * 2);
+                            Indices[indexCounter++] = (uint)(baseIndex * 2 + 1);
+                        }
 
-                    Indices[indexCounter++] = (uint)(baseIndex * 2);
-                    Indices[indexCounter++] = (uint)(baseIndex * 2 + 1);
-                }
+                        int xLinesOffset = (GridSize + 1) * 2;
+                        for (int x = -halfSize; x <= halfSize; x++) {
+                            float xPos = Center.x + x * GridSpacing;
+                            int baseIndex = x + halfSize;
+                            int vertexOffset = xLinesOffset + baseIndex * 2;
+                            Vertices[vertexOffset] = new float3(xPos, Center.y + (-halfSize * GridSpacing), Center.z + 0.01f);
+                            Vertices[vertexOffset + 1] = new float3(xPos, Center.y + (halfSize * GridSpacing), Center.z + 0.01f);
+                            Indices[indexCounter++] = (uint)vertexOffset;
+                            Indices[indexCounter++] = (uint)(vertexOffset + 1);
+                        }
+                    }
+                } else {
+                    for (int x = -halfSize; x <= halfSize; x++) {
+                        float xPos = Center.x + x * GridSpacing;
+                        int baseIndex = x + halfSize;
+                        Vertices[baseIndex * 2] = new float3(xPos, 0.01f, Center.z + (-halfSize * GridSpacing));
+                        Vertices[baseIndex * 2 + 1] = new float3(xPos, 0.01f, Center.z + (halfSize * GridSpacing));
+                        Indices[indexCounter++] = (uint)(baseIndex * 2);
+                        Indices[indexCounter++] = (uint)(baseIndex * 2 + 1);
+                    }
 
-                int zLinesOffset = (GridSize + 1) * 2;
-                for (int z = -halfSize; z <= halfSize; z++) {
-                    float zPos = Center.z + z * GridSpacing;
-
-                    int baseIndex = z + halfSize;
-                    int vertexOffset = zLinesOffset + baseIndex * 2;
-                    Vertices[vertexOffset] = new float3(Center.x + (-halfSize * GridSpacing), 0.01f, zPos);
-                    Vertices[vertexOffset + 1] = new float3(Center.x + (halfSize * GridSpacing), 0.01f, zPos);
-
-                    Indices[indexCounter++] = (uint)vertexOffset;
-                    Indices[indexCounter++] = (uint)(vertexOffset + 1);
+                    int zLinesOffset = (GridSize + 1) * 2;
+                    for (int z = -halfSize; z <= halfSize; z++) {
+                        float zPos = Center.z + z * GridSpacing;
+                        int baseIndex = z + halfSize;
+                        int vertexOffset = zLinesOffset + baseIndex * 2;
+                        Vertices[vertexOffset] = new float3(Center.x + (-halfSize * GridSpacing), 0.01f, zPos);
+                        Vertices[vertexOffset + 1] = new float3(Center.x + (halfSize * GridSpacing), 0.01f, zPos);
+                        Indices[indexCounter++] = (uint)vertexOffset;
+                        Indices[indexCounter++] = (uint)(vertexOffset + 1);
+                    }
                 }
             }
         }

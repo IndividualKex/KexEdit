@@ -1,21 +1,21 @@
-using Unity.Entities;
+using Unity.Burst;
 using Unity.Collections;
+using Unity.Entities;
 
 namespace KexEdit {
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
-    public partial class ConnectionCleanupSystem : SystemBase {
-        protected override void OnUpdate() {
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
-
+    [UpdateInGroup(typeof(CleanupSystemGroup))]
+    [BurstCompile]
+    public partial struct ConnectionCleanupSystem : ISystem {
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state) {
+            using var ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (connection, entity) in SystemAPI.Query<Connection>().WithEntityAccess()) {
-                if (!EntityManager.Exists(connection.Source) ||
-                    !EntityManager.Exists(connection.Target)) {
+                if (!SystemAPI.HasComponent<Port>(connection.Source) ||
+                    !SystemAPI.HasComponent<Port>(connection.Target)) {
                     ecb.DestroyEntity(entity);
                 }
             }
-
-            ecb.Playback(EntityManager);
-            ecb.Dispose();
+            ecb.Playback(state.EntityManager);
         }
     }
 }

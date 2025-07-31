@@ -13,6 +13,7 @@ namespace KexEdit.UI.NodeGraph {
             { NodeType.Reverse, 4 },
             { NodeType.ReversePath, 4 },
             { NodeType.Mesh, 4 },
+            { NodeType.Append, 4 },
         };
 
         private readonly Dictionary<NodeType, Stack<NodeGraphNode>> _pools = new();

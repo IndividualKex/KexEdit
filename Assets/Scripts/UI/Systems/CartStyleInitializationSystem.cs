@@ -15,11 +15,13 @@ namespace KexEdit.UI {
                 ecb.AddComponent(entity, new CartStyleSettings());
             }
 
-            foreach (var (_, entity) in SystemAPI
-                .Query<Cart>()
+            foreach (var (coaster, entity) in SystemAPI
+                .Query<CoasterReference>()
+                .WithAll<Cart>()
                 .WithNone<CartStyleReference>()
                 .WithEntityAccess()
             ) {
+                if (!SystemAPI.HasComponent<EditorCoasterTag>(coaster)) continue;
                 ecb.AddComponent(entity, new CartStyleReference {
                     StyleIndex = 0,
                     Version = 0

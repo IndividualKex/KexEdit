@@ -114,6 +114,13 @@ namespace KexEdit.UI {
             _panel.style.transitionDuration = new List<TimeValue> { new(100, TimeUnit.Millisecond) };
             _panel.style.transitionTimingFunction = new List<EasingFunction> { EasingMode.EaseOutCubic };
 
+            RegisterCallback<MouseDownEvent>(evt => {
+                if (evt.target == this) {
+                    Close();
+                    evt.StopPropagation();
+                }
+            });
+
             RegisterCallback<KeyDownEvent>(evt => {
                 if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter) {
                     Export();

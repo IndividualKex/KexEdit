@@ -19,6 +19,7 @@ namespace KexEdit.UI {
         public Texture2D MaximizeTexture;
         public Texture2D MinimizeTexture;
         public Material GridMaterial;
+        public Material GridMaterialNoFade;
 
         public static UIService Instance { get; private set; }
         public static UnityEngine.UIElements.Cursor TextCursor { get; private set; }

@@ -3,7 +3,8 @@ using Unity.Entities;
 using UnityEngine;
 
 namespace KexEdit.UI.NodeGraph {
-    public class NodeGraphData {
+    public class NodeGraphData : IComponentData {
+        public Entity Coaster;
         public Dictionary<Entity, NodeData> Nodes = new();
         public Dictionary<Entity, EdgeData> Edges = new();
         public Vector2 Pan;

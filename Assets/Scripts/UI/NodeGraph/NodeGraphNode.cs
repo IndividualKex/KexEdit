@@ -268,7 +268,7 @@ namespace KexEdit.UI.NodeGraph {
                     _itemsContainer.Add(_renderToggle);
                 }
 
-                if (_type != NodeType.Mesh) {
+                if (_type != NodeType.Mesh && _type != NodeType.Append) {
                     _priorityField = new PriorityField();
                     _itemsContainer.Add(_priorityField);
                 }

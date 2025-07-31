@@ -159,4 +159,6 @@ namespace KexEdit.UI.Timeline {
     public class TimelineZoomChangeEvent : TimelineEvent<TimelineZoomChangeEvent> {
         public float Zoom;
     }
+
+    public class ForceUpdateEvent : TimelineEvent<ForceUpdateEvent> { }
 }

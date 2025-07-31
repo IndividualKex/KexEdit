@@ -10,6 +10,7 @@ namespace KexEdit {
         private EntityQuery _nodeQuery;
         private EntityQuery _connectionQuery;
 
+        [BurstCompile]
         public void OnCreate(ref SystemState state) {
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAspect<NodeAspect>()
@@ -73,9 +74,10 @@ namespace KexEdit {
                     }
                     else if (type == PortType.Position) {
                         float3 position = SystemAPI.GetComponent<PositionPort>(inputPort);
-                        if (SystemAPI.GetComponent<Node>(nodeEntity).Type == NodeType.Mesh) {
+                        if (node.Type == NodeType.Mesh) {
                             anchor.Value.Position = position;
-                        } else {
+                        }
+                        else {
                             anchor.Value.SetPosition(position);
                         }
                     }

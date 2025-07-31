@@ -26,6 +26,17 @@ namespace KexEdit.UI {
             onSuccess?.Invoke(path);
         }
 
+        public static void ShowImportDialog(VisualElement root, ExtensionFilter[] extensions, Action<string> onSuccess = null) {
+            string path = FileManager.ShowOpenFileDialog(extensions);
+
+            if (string.IsNullOrEmpty(path)) {
+                Debug.Log("Import canceled or no file selected.");
+                return;
+            }
+
+            onSuccess?.Invoke(path);
+        }
+
         public static async void ImportGltfFileAsync(string path, Action<GameObject> onSuccess = null) {
             var gltf = new GltfImport();
             bool success = await gltf.Load(path);

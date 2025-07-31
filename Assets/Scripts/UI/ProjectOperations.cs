@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using KexEdit.Serialization;
+using Unity.Entities;
 
 namespace KexEdit.UI {
     public static class ProjectOperations {
@@ -29,24 +30,26 @@ namespace KexEdit.UI {
             UnsavedChangesChanged?.Invoke(false);
         }
 
-        public static void CreateNewProject() {
+        public static Entity CreateNewProject() {
             CurrentFilePath = null;
-            SerializationSystem.Instance.DeserializeGraph(new byte[0]);
+            Entity coaster = SerializationSystem.Instance.DeserializeGraph(new byte[0]);
             Undo.Clear();
             HasUnsavedChanges = false;
 
             FilePathChanged?.Invoke(CurrentFilePath);
             UnsavedChangesChanged?.Invoke(false);
+
+            return coaster;
         }
 
-        public static void OpenProject(string filePath) {
-            if (string.IsNullOrEmpty(filePath)) return;
+        public static Entity OpenProject(string filePath) {
+            if (string.IsNullOrEmpty(filePath)) return Entity.Null;
 
             try {
                 byte[] graphData = File.ReadAllBytes(filePath);
-                if (graphData == null || graphData.Length == 0) return;
+                if (graphData == null || graphData.Length == 0) return Entity.Null;
 
-                SerializationSystem.Instance.DeserializeGraph(graphData);
+                Entity coaster = SerializationSystem.Instance.DeserializeGraph(graphData);
 
                 if (filePath.EndsWith(".kex1")) {
                     string fileName = Path.GetFileName(filePath);
@@ -61,6 +64,8 @@ namespace KexEdit.UI {
                 HasUnsavedChanges = false;
                 FilePathChanged?.Invoke(CurrentFilePath);
                 UnsavedChangesChanged?.Invoke(false);
+
+                return coaster;
             }
             catch (Exception ex) {
                 Debug.LogError($"Failed to open project: {ex.Message}");
@@ -76,7 +81,7 @@ namespace KexEdit.UI {
             }
 
             try {
-                FileManager.SaveGraph(SerializationSystem.Instance.SerializeGraph(), targetPath);
+                FileManager.SaveGraph(ProjectOperationsSystem.Instance.SerializeGraph(), targetPath);
 
                 if (targetPath != CurrentFilePath) {
                     CurrentFilePath = targetPath;
@@ -159,27 +164,7 @@ namespace KexEdit.UI {
                 .ToArray();
         }
 
-        public static void RecoverLastSession() {
-            try {
-                string mostRecentFile = FindMostRecentValidFile();
-
-                if (mostRecentFile != null) {
-                    Debug.Log($"Found most recent valid file: {mostRecentFile}");
-                    OpenProject(mostRecentFile);
-                    return;
-                }
-            }
-            catch (Exception ex) {
-                Debug.LogError($"Failed to recover last session: {ex.Message}");
-            }
-
-            // No valid files found, start with empty project
-            Debug.Log("No valid recent files found, starting with empty project");
-            CurrentFilePath = null;
-            FilePathChanged?.Invoke(CurrentFilePath);
-        }
-
-        private static string FindMostRecentValidFile() {
+        public static string FindMostRecentValidFile() {
             string dir = Path.Combine(Application.persistentDataPath, "Tracks");
             if (!Directory.Exists(dir)) return null;
 

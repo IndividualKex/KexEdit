@@ -1,20 +1,16 @@
+using KexEdit.UI.NodeGraph;
+using KexEdit.UI.Timeline;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class UIInitializationSystem : SystemBase {
         private bool _initialized;
 
-        private EntityQuery _initializeEventQuery;
-
         protected override void OnCreate() {
-            _initializeEventQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<InitializeUIEvent>()
-                .Build(EntityManager);
-            RequireForUpdate(_initializeEventQuery);
+            RequireForUpdate<InitializeUIEvent>();
         }
 
         protected override void OnUpdate() {
@@ -24,6 +20,7 @@ namespace KexEdit.UI {
 
             World.GetOrCreateSystemManaged<UIInitializationSystemGroup>().Enabled = true;
             World.GetOrCreateSystemManaged<UISimulationSystemGroup>().Enabled = true;
+            World.GetOrCreateSystemManaged<UIFixedStepSimulationSystemGroup>().Enabled = true;
             World.GetOrCreateSystemManaged<UIPresentationSystemGroup>().Enabled = true;
 
             var ecb = new EntityCommandBuffer(Allocator.Temp);
@@ -39,6 +36,7 @@ namespace KexEdit.UI {
             var stateEntity = ecb.CreateEntity();
             float3 defaultPosition = new(6f, 6f, 6f);
             float3 defaultEuler = new(30f, -135f, 0f);
+            ecb.AddComponent<UIStateSingleton>(stateEntity);
             ecb.AddComponent(stateEntity, new TimelineState {
                 Offset = 0f,
                 Zoom = 1f
@@ -62,25 +60,14 @@ namespace KexEdit.UI {
                 Orthographic = false,
                 TargetOrthographic = false
             });
+            ecb.AddComponent(stateEntity, new NodeGraphData());
+            ecb.AddComponent(stateEntity, new TimelineData());
+            ecb.AddComponent<GameViewData>(stateEntity);
             ecb.AddComponent<Gizmos>(stateEntity);
             ecb.SetName(stateEntity, "UI State");
 
-            var playheadGizmoEntity = ecb.CreateEntity();
-            ecb.AddComponent(playheadGizmoEntity, LocalTransform.Identity);
-            ecb.AddComponent(playheadGizmoEntity, new Cart {
-                Position = 1f,
-                Active = true,
-                Kinematic = true
-            });
-            ecb.AddComponent(playheadGizmoEntity, new CartStyleReference {
-                StyleIndex = 0,
-                Version = 0
-            });
-            ecb.AddComponent(playheadGizmoEntity, new CartMeshReference());
-            ecb.AddComponent(playheadGizmoEntity, new RenderTag {
-                Type = RenderTagType.Playhead
-            });
-            ecb.SetName(playheadGizmoEntity, "Playhead Gizmo");
+            var loadEntity = ecb.CreateEntity();
+            ecb.AddComponent<ReloadTrackStyleEvent>(loadEntity);
 
             ecb.Playback(EntityManager);
             ecb.Dispose();

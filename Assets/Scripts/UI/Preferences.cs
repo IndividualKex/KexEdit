@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine;
 using static KexEdit.UI.Constants;
 
@@ -9,7 +10,12 @@ namespace KexEdit.UI {
         private const string PREF_SPEED_UNITS = "SpeedUnits";
 
         private const string PREF_NODE_GRID_SNAPPING = "NodeGridSnapping";
-        private const string PREF_RIDE_CAMERA_HEIGHT = "RideCameraHeight";
+        private const string PREF_RIDE_CAMERA_POSITION_X = "RideCameraPositionX";
+        private const string PREF_RIDE_CAMERA_POSITION_Y = "RideCameraPositionY";
+        private const string PREF_RIDE_CAMERA_POSITION_Z = "RideCameraPositionZ";
+        private const string PREF_RIDE_CAMERA_ROTATION_X = "RideCameraRotationX";
+        private const string PREF_RIDE_CAMERA_ROTATION_Y = "RideCameraRotationY";
+        private const string PREF_RIDE_CAMERA_ROTATION_Z = "RideCameraRotationZ";
         private const string PREF_UI_SCALE = "UIScale";
         private const string PREF_SHOW_STATS = "ShowStats";
         private const string PREF_SYNC_PLAYBACK = "SyncPlayback";
@@ -19,6 +25,20 @@ namespace KexEdit.UI {
         private const string PREF_CURRENT_CART_STYLE = "CurrentCartStyle";
         private const string PREF_CURRENT_TRACK_STYLE = "CurrentTrackStyle";
         private const string PREF_AUTO_STYLE = "AutoStyle";
+        private const string PREF_VIS_VELOCITY_MIN = "VisVelocityMin";
+        private const string PREF_VIS_VELOCITY_MAX = "VisVelocityMax";
+        private const string PREF_VIS_NORMAL_FORCE_MIN = "VisNormalForceMin";
+        private const string PREF_VIS_NORMAL_FORCE_MAX = "VisNormalForceMax";
+        private const string PREF_VIS_LATERAL_FORCE_MIN = "VisLateralForceMin";
+        private const string PREF_VIS_LATERAL_FORCE_MAX = "VisLateralForceMax";
+        private const string PREF_VIS_ROLL_SPEED_MIN = "VisRollSpeedMin";
+        private const string PREF_VIS_ROLL_SPEED_MAX = "VisRollSpeedMax";
+        private const string PREF_VIS_PITCH_SPEED_MIN = "VisPitchSpeedMin";
+        private const string PREF_VIS_PITCH_SPEED_MAX = "VisPitchSpeedMax";
+        private const string PREF_VIS_YAW_SPEED_MIN = "VisYawSpeedMin";
+        private const string PREF_VIS_YAW_SPEED_MAX = "VisYawSpeedMax";
+        private const string PREF_VIS_CURVATURE_MIN = "VisCurvatureMin";
+        private const string PREF_VIS_CURVATURE_MAX = "VisCurvatureMax";
 
         private static DistanceUnitsType s_DistanceUnits;
         private static AngleUnitsType s_AngleUnits;
@@ -27,7 +47,12 @@ namespace KexEdit.UI {
 
         private static string s_CurrentCartStyle;
         private static string s_CurrentTrackStyle;
-        private static float s_RideCameraHeight;
+        private static float s_RideCameraPositionX;
+        private static float s_RideCameraPositionY;
+        private static float s_RideCameraPositionZ;
+        private static float s_RideCameraRotationX;
+        private static float s_RideCameraRotationY;
+        private static float s_RideCameraRotationZ;
         private static float s_UIScale;
         private static SkyType s_SkyType;
         private static bool s_NodeGridSnapping;
@@ -113,11 +138,56 @@ namespace KexEdit.UI {
             }
         }
 
-        public static float RideCameraHeight {
-            get => s_RideCameraHeight;
+        public static float RideCameraPositionX {
+            get => s_RideCameraPositionX;
             set {
-                s_RideCameraHeight = value;
-                PlayerPrefs.SetFloat(PREF_RIDE_CAMERA_HEIGHT, value);
+                s_RideCameraPositionX = value;
+                PlayerPrefs.SetFloat(PREF_RIDE_CAMERA_POSITION_X, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static float RideCameraPositionY {
+            get => s_RideCameraPositionY;
+            set {
+                s_RideCameraPositionY = value;
+                PlayerPrefs.SetFloat(PREF_RIDE_CAMERA_POSITION_Y, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static float RideCameraPositionZ {
+            get => s_RideCameraPositionZ;
+            set {
+                s_RideCameraPositionZ = value;
+                PlayerPrefs.SetFloat(PREF_RIDE_CAMERA_POSITION_Z, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static float RideCameraRotationX {
+            get => s_RideCameraRotationX;
+            set {
+                s_RideCameraRotationX = value;
+                PlayerPrefs.SetFloat(PREF_RIDE_CAMERA_ROTATION_X, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static float RideCameraRotationY {
+            get => s_RideCameraRotationY;
+            set {
+                s_RideCameraRotationY = value;
+                PlayerPrefs.SetFloat(PREF_RIDE_CAMERA_ROTATION_Y, value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static float RideCameraRotationZ {
+            get => s_RideCameraRotationZ;
+            set {
+                s_RideCameraRotationZ = value;
+                PlayerPrefs.SetFloat(PREF_RIDE_CAMERA_ROTATION_Z, value);
                 PlayerPrefs.Save();
             }
         }
@@ -192,7 +262,12 @@ namespace KexEdit.UI {
 
             s_CurrentCartStyle = PlayerPrefs.GetString(PREF_CURRENT_CART_STYLE, "Default.json");
             s_CurrentTrackStyle = PlayerPrefs.GetString(PREF_CURRENT_TRACK_STYLE, "Default.json");
-            s_RideCameraHeight = PlayerPrefs.GetFloat(PREF_RIDE_CAMERA_HEIGHT, DEFAULT_RIDE_CAMERA_HEIGHT);
+            s_RideCameraPositionX = PlayerPrefs.GetFloat(PREF_RIDE_CAMERA_POSITION_X, DEFAULT_RIDE_CAMERA_POSITION_X);
+            s_RideCameraPositionY = PlayerPrefs.GetFloat(PREF_RIDE_CAMERA_POSITION_Y, DEFAULT_RIDE_CAMERA_POSITION_Y);
+            s_RideCameraPositionZ = PlayerPrefs.GetFloat(PREF_RIDE_CAMERA_POSITION_Z, DEFAULT_RIDE_CAMERA_POSITION_Z);
+            s_RideCameraRotationX = PlayerPrefs.GetFloat(PREF_RIDE_CAMERA_ROTATION_X, DEFAULT_RIDE_CAMERA_ROTATION_X);
+            s_RideCameraRotationY = PlayerPrefs.GetFloat(PREF_RIDE_CAMERA_ROTATION_Y, DEFAULT_RIDE_CAMERA_ROTATION_Y);
+            s_RideCameraRotationZ = PlayerPrefs.GetFloat(PREF_RIDE_CAMERA_ROTATION_Z, DEFAULT_RIDE_CAMERA_ROTATION_Z);
             s_UIScale = PlayerPrefs.GetFloat(PREF_UI_SCALE, GetDefaultUIScale());
             s_SkyType = (SkyType)PlayerPrefs.GetInt(PREF_SKY_TYPE, (int)SkyType.Solid);
             s_NodeGridSnapping = PlayerPrefs.GetInt(PREF_NODE_GRID_SNAPPING, 0) == 1;
@@ -201,6 +276,92 @@ namespace KexEdit.UI {
             s_KeyframeEditor = PlayerPrefs.GetInt(PREF_KEYFRAME_EDITOR, 0) == 1;
             s_ShowGizmos = PlayerPrefs.GetInt(PREF_SHOW_GIZMOS, 0) == 1;
             s_AutoStyle = PlayerPrefs.GetInt(PREF_AUTO_STYLE, 0) == 1;
+        }
+
+        public static float2 GetVisualizationRange(VisualizationMode mode) {
+            return mode switch {
+                VisualizationMode.Velocity => new float2(
+                    PlayerPrefs.GetFloat(PREF_VIS_VELOCITY_MIN, 0f),
+                    PlayerPrefs.GetFloat(PREF_VIS_VELOCITY_MAX, 50f)
+                ),
+                VisualizationMode.NormalForce => new float2(
+                    PlayerPrefs.GetFloat(PREF_VIS_NORMAL_FORCE_MIN, -2f),
+                    PlayerPrefs.GetFloat(PREF_VIS_NORMAL_FORCE_MAX, 5f)
+                ),
+                VisualizationMode.LateralForce => new float2(
+                    PlayerPrefs.GetFloat(PREF_VIS_LATERAL_FORCE_MIN, -2f),
+                    PlayerPrefs.GetFloat(PREF_VIS_LATERAL_FORCE_MAX, 2f)
+                ),
+                VisualizationMode.RollSpeed => new float2(
+                    PlayerPrefs.GetFloat(PREF_VIS_ROLL_SPEED_MIN, -3f),
+                    PlayerPrefs.GetFloat(PREF_VIS_ROLL_SPEED_MAX, 3f)
+                ),
+                VisualizationMode.PitchSpeed => new float2(
+                    PlayerPrefs.GetFloat(PREF_VIS_PITCH_SPEED_MIN, -1f),
+                    PlayerPrefs.GetFloat(PREF_VIS_PITCH_SPEED_MAX, 1f)
+                ),
+                VisualizationMode.YawSpeed => new float2(
+                    PlayerPrefs.GetFloat(PREF_VIS_YAW_SPEED_MIN, -1f),
+                    PlayerPrefs.GetFloat(PREF_VIS_YAW_SPEED_MAX, 1f)
+                ),
+                VisualizationMode.Curvature => new float2(
+                    PlayerPrefs.GetFloat(PREF_VIS_CURVATURE_MIN, 0f),
+                    PlayerPrefs.GetFloat(PREF_VIS_CURVATURE_MAX, 1f)
+                ),
+                _ => new float2(0f, 1f)
+            };
+        }
+
+        public static void SetVisualizationRange(VisualizationMode mode, float min, float max) {
+            switch (mode) {
+                case VisualizationMode.Velocity:
+                    PlayerPrefs.SetFloat(PREF_VIS_VELOCITY_MIN, min);
+                    PlayerPrefs.SetFloat(PREF_VIS_VELOCITY_MAX, max);
+                    break;
+                case VisualizationMode.NormalForce:
+                    PlayerPrefs.SetFloat(PREF_VIS_NORMAL_FORCE_MIN, min);
+                    PlayerPrefs.SetFloat(PREF_VIS_NORMAL_FORCE_MAX, max);
+                    break;
+                case VisualizationMode.LateralForce:
+                    PlayerPrefs.SetFloat(PREF_VIS_LATERAL_FORCE_MIN, min);
+                    PlayerPrefs.SetFloat(PREF_VIS_LATERAL_FORCE_MAX, max);
+                    break;
+                case VisualizationMode.RollSpeed:
+                    PlayerPrefs.SetFloat(PREF_VIS_ROLL_SPEED_MIN, min);
+                    PlayerPrefs.SetFloat(PREF_VIS_ROLL_SPEED_MAX, max);
+                    break;
+                case VisualizationMode.PitchSpeed:
+                    PlayerPrefs.SetFloat(PREF_VIS_PITCH_SPEED_MIN, min);
+                    PlayerPrefs.SetFloat(PREF_VIS_PITCH_SPEED_MAX, max);
+                    break;
+                case VisualizationMode.YawSpeed:
+                    PlayerPrefs.SetFloat(PREF_VIS_YAW_SPEED_MIN, min);
+                    PlayerPrefs.SetFloat(PREF_VIS_YAW_SPEED_MAX, max);
+                    break;
+                case VisualizationMode.Curvature:
+                    PlayerPrefs.SetFloat(PREF_VIS_CURVATURE_MIN, min);
+                    PlayerPrefs.SetFloat(PREF_VIS_CURVATURE_MAX, max);
+                    break;
+            }
+            PlayerPrefs.Save();
+        }
+
+        public static void ResetVisualizationRanges() {
+            PlayerPrefs.DeleteKey(PREF_VIS_VELOCITY_MIN);
+            PlayerPrefs.DeleteKey(PREF_VIS_VELOCITY_MAX);
+            PlayerPrefs.DeleteKey(PREF_VIS_NORMAL_FORCE_MIN);
+            PlayerPrefs.DeleteKey(PREF_VIS_NORMAL_FORCE_MAX);
+            PlayerPrefs.DeleteKey(PREF_VIS_LATERAL_FORCE_MIN);
+            PlayerPrefs.DeleteKey(PREF_VIS_LATERAL_FORCE_MAX);
+            PlayerPrefs.DeleteKey(PREF_VIS_ROLL_SPEED_MIN);
+            PlayerPrefs.DeleteKey(PREF_VIS_ROLL_SPEED_MAX);
+            PlayerPrefs.DeleteKey(PREF_VIS_PITCH_SPEED_MIN);
+            PlayerPrefs.DeleteKey(PREF_VIS_PITCH_SPEED_MAX);
+            PlayerPrefs.DeleteKey(PREF_VIS_YAW_SPEED_MIN);
+            PlayerPrefs.DeleteKey(PREF_VIS_YAW_SPEED_MAX);
+            PlayerPrefs.DeleteKey(PREF_VIS_CURVATURE_MIN);
+            PlayerPrefs.DeleteKey(PREF_VIS_CURVATURE_MAX);
+            PlayerPrefs.Save();
         }
     }
 }

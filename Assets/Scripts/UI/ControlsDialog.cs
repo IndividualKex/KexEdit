@@ -94,7 +94,8 @@ namespace KexEdit.UI {
                     ("Mouse Wheel", "Zoom Timeline"),
                     ("Middle Mouse Drag", "Pan Timeline"),
                     ("Alt + Right Mouse Drag".ToPlatformShortcut(), "Pan Timeline"),
-                    ("I", "Add Keyframe at Current Time")
+                    ("I", "Add Keyframe at Current Time"),
+                    ("Shift+1-9", "Property Selection")
                 }),
                 ("Visualization", new[] {
                     ("Ctrl+1".ToPlatformShortcut(), "Velocity Visualization"),

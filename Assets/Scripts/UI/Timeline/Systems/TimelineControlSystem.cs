@@ -1,8 +1,7 @@
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Transforms;
 using Unity.Mathematics;
-using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
 using System;
@@ -15,19 +14,30 @@ using static KexEdit.UI.Timeline.Constants;
 namespace KexEdit.UI.Timeline {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class TimelineControlSystem : SystemBase, IEditableHandler {
+        private Dictionary<Entity, TimelineState> _stateCache = new();
         private List<KeyframeData> _clipboard = new();
         private TimelineData _data;
         private Timeline _timeline;
 
         private BufferLookup<Point> _pointLookup;
 
-        private EntityQuery _playheadQuery;
+        private EntityQuery _coasterQuery;
         private EntityQuery _nodeQuery;
 
         protected override void OnCreate() {
-            _data = new TimelineData {
-                EnableKeyframeEditor = Preferences.KeyframeEditor
-            };
+            _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
+
+            _coasterQuery = GetEntityQuery(typeof(Coaster), typeof(EditorCoasterTag));
+            _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
+                .WithAspect<NodeAspect>()
+                .WithAll<Point>()
+                .Build(EntityManager);
+
+            RequireForUpdate<TimelineState>();
+        }
+
+        protected override void OnStartRunning() {
+            _data = SystemAPI.ManagedAPI.GetSingleton<TimelineData>();
 
             foreach (PropertyType propertyType in System.Enum.GetValues(typeof(PropertyType))) {
                 _data.OrderedProperties.Add(propertyType);
@@ -37,22 +47,6 @@ namespace KexEdit.UI.Timeline {
                 });
             }
 
-            _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
-
-            _playheadQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<Cart, LocalTransform, RenderTag>()
-                .Build(EntityManager);
-
-            _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAspect<NodeAspect>()
-                .WithAll<Point>()
-                .Build(EntityManager);
-
-            RequireForUpdate(_playheadQuery);
-            RequireForUpdate<TimelineState>();
-        }
-
-        protected override void OnStartRunning() {
             var root = UIService.Instance.UIDocument.rootVisualElement;
             _timeline = root.Q<Timeline>();
 
@@ -85,21 +79,24 @@ namespace KexEdit.UI.Timeline {
             _timeline.RegisterCallback<AddKeyframeEvent>(OnAddKeyframe);
             _timeline.RegisterCallback<TimelineOffsetChangeEvent>(OnTimelineOffsetChange);
             _timeline.RegisterCallback<TimelineZoomChangeEvent>(OnTimelineZoomChange);
+            _timeline.RegisterCallback<ForceUpdateEvent>(OnForceUpdate);
+            _timeline.RegisterCallback<FocusInEvent>(OnFocusIn);
+            _timeline.RegisterCallback<FocusOutEvent>(OnFocusOut);
 
-            EditOperationsSystem.RegisterHandler(this);
+            EditOperations.RegisterHandler(this);
         }
 
         protected override void OnDestroy() {
-            EditOperationsSystem.UnregisterHandler(this);
-            _data.Dispose();
+            EditOperations.UnregisterHandler(this);
         }
 
         protected override void OnUpdate() {
-            SyncUIState();
             UpdateActive();
+            SyncUIState();
             SyncWithPlayback();
             UpdatePlayhead();
             UpdateTimelineData();
+            ProcessShortcuts();
             _timeline.Draw();
         }
 
@@ -107,15 +104,23 @@ namespace KexEdit.UI.Timeline {
             var timelineState = SystemAPI.GetSingleton<TimelineState>();
             _data.Offset = timelineState.Offset;
             _data.Zoom = timelineState.Zoom;
+            if (_data.Entity != Entity.Null) {
+                _stateCache[_data.Entity] = timelineState;
+            }
         }
 
         private void UpdateActive() {
+            Entity previousEntity = _data.Entity;
             _data.Active = false;
             _data.Entity = Entity.Null;
+
+            if (_coasterQuery.IsEmpty) return;
+            var coasterEntity = _coasterQuery.GetSingletonEntity();
+
             using var entities = _nodeQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities) {
                 var node = SystemAPI.GetAspect<NodeAspect>(entity);
-                if (!node.Selected) continue;
+                if (!node.Selected || node.Coaster != coasterEntity) continue;
                 if (_data.Entity != Entity.Null) {
                     _data.Entity = Entity.Null;
                     return;
@@ -123,15 +128,24 @@ namespace KexEdit.UI.Timeline {
                 _data.Entity = entity;
             }
             _data.Active = _data.Entity != Entity.Null;
+            if (_data.Active && _data.Entity != previousEntity) {
+                if (!_stateCache.TryGetValue(_data.Entity, out var state)) {
+                    state = TimelineState.Default;
+                    _stateCache[previousEntity] = state;
+                }
+                ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
+                timelineState = state;
+            }
         }
 
         private void SyncWithPlayback() {
-            if (!Preferences.SyncPlayback || !_data.Active) return;
+            if (!Preferences.SyncPlayback || !_data.Active ||
+                SystemAPI.GetSingleton<PauseSingleton>().IsPaused) return;
 
             foreach (var cart in SystemAPI.Query<Cart>()) {
-                if (cart.Active && !cart.Kinematic && cart.Section == _data.Entity) {
+                if (cart.Enabled && !cart.Kinematic && cart.Section == _data.Entity) {
                     float timelineTime = CartPositionToTime(cart.Position);
-                    if (math.abs(_data.Time - timelineTime) > 1e-3f) {
+                    if (math.abs(_data.Time - timelineTime) > 1e-2f) {
                         _data.Time = math.clamp(timelineTime, 0f, _data.Duration);
                     }
                     return;
@@ -140,21 +154,23 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void UpdatePlayhead() {
-            ref Cart playhead = ref SystemAPI.GetComponentRW<Cart>(_playheadQuery.GetSingletonEntity()).ValueRW;
+            if (!SystemAPI.HasSingleton<PlayheadGizmoReference>()) return;
+            Entity playheadEntity = SystemAPI.GetSingleton<PlayheadGizmoReference>();
+            ref Cart playhead = ref SystemAPI.GetComponentRW<Cart>(playheadEntity).ValueRW;
             playhead.Section = _data.Entity;
 
             bool isSynced = false;
             if (Preferences.SyncPlayback && _data.Active) {
                 foreach (var cart in SystemAPI.Query<Cart>()) {
-                    if (cart.Active && !cart.Kinematic && cart.Section == _data.Entity) {
+                    if (cart.Enabled && !cart.Kinematic && cart.Section == _data.Entity) {
                         isSynced = true;
                         break;
                     }
                 }
             }
-            playhead.Active = _data.Active && !isSynced;
+            playhead.Enabled = _data.Active && !isSynced;
 
-            if (!playhead.Active) return;
+            if (!playhead.Enabled) return;
 
             if (_data.Time < 0f) {
                 playhead.Position = 0f;
@@ -208,6 +224,39 @@ namespace KexEdit.UI.Timeline {
             UpdateKeyframes();
             UpdateValues();
             UpdateValueBounds();
+        }
+
+        private void ProcessShortcuts() {
+            if (!_data.Active) return;
+
+            var kb = Keyboard.current;
+            if (!kb.leftShiftKey.isPressed && !kb.rightShiftKey.isPressed) return;
+
+            var visibleProperties = new List<PropertyType>();
+            foreach (var propertyType in _data.OrderedProperties) {
+                if (_data.Properties[propertyType].Visible) {
+                    visibleProperties.Add(propertyType);
+                }
+            }
+
+            for (int i = 0; i < 9; i++) {
+                Key digitKey = (Key)((int)Key.Digit1 + i);
+                if (!kb[digitKey].wasPressedThisFrame) continue;
+                if (i >= visibleProperties.Count) return;
+
+                PropertyType propertyType = visibleProperties[i];
+                var propertyData = _data.Properties[propertyType];
+
+                if (propertyData.Selected) {
+                    DeselectAllKeyframesForProperty(propertyType);
+                    DeselectProperty(propertyType);
+                }
+                else {
+                    SelectProperty(propertyType);
+                    SelectAllKeyframesForProperty(propertyType);
+                }
+                return;
+            }
         }
 
         private void UpdateProperties() {
@@ -778,7 +827,7 @@ namespace KexEdit.UI.Timeline {
 
             if (Preferences.SyncPlayback && _data.Active) {
                 foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
-                    if (cart.ValueRO.Active && !cart.ValueRO.Kinematic) {
+                    if (cart.ValueRO.Enabled && !cart.ValueRO.Kinematic) {
                         cart.ValueRW.Section = _data.Entity;
                         cart.ValueRW.Position = TimeToCartPosition(_data.Time);
                         break;
@@ -824,10 +873,14 @@ namespace KexEdit.UI.Timeline {
             var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
             if (pointBuffer.Length < 2) return 0f;
 
+            if (targetDistance < pointBuffer[0].Value.TotalLength) {
+                return 0f;
+            }
+
             for (int i = 0; i < pointBuffer.Length - 1; i++) {
                 float currentDistance = pointBuffer[i].Value.TotalLength;
                 float nextDistance = pointBuffer[i + 1].Value.TotalLength;
-                if (targetDistance >= currentDistance && targetDistance <= nextDistance) {
+                if (targetDistance >= currentDistance && targetDistance < nextDistance) {
                     float t = (nextDistance - currentDistance) > 0 ?
                         (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;
                     return i + t;
@@ -1038,14 +1091,14 @@ namespace KexEdit.UI.Timeline {
         private void OnViewRightClick(ViewRightClickEvent evt) {
             bool hasSelection = _data.SelectedKeyframeCount > 0;
             bool hasMultiSelection = _data.SelectedKeyframeCount > 1;
-            bool canPaste = EditOperationsSystem.CanPaste;
+            bool canPaste = EditOperations.CanPaste;
 
             if (!hasSelection && !canPaste) return;
 
             VisualElement target = evt.target as VisualElement;
             target.ShowContextMenu(evt.MousePosition, menu => {
-                bool canCut = EditOperationsSystem.CanCut;
-                bool canCopy = EditOperationsSystem.CanCopy;
+                bool canCut = EditOperations.CanCut;
+                bool canCopy = EditOperations.CanCopy;
 
                 if (hasSelection && !hasMultiSelection) {
                     menu.AddItem("Edit", () => {
@@ -1108,9 +1161,9 @@ namespace KexEdit.UI.Timeline {
                     ShowKeyframeValueEditor(keyframe, evt.MousePosition);
                 }, "V");
                 menu.AddSeparator();
-                menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", EditOperationsSystem.HandleCut, "Ctrl+X", enabled: canCut && hasSelection);
-                menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", EditOperationsSystem.HandleCopy, "Ctrl+C", enabled: canCopy && hasSelection);
-                menu.AddPlatformItem(canPaste ? "Paste" : "Cannot Paste", EditOperationsSystem.HandlePaste, "Ctrl+V", enabled: canPaste);
+                menu.AddPlatformItem(canCut ? "Cut" : "Cannot Cut", EditOperations.HandleCut, "Ctrl+X", enabled: canCut && hasSelection);
+                menu.AddPlatformItem(canCopy ? "Copy" : "Cannot Copy", EditOperations.HandleCopy, "Ctrl+C", enabled: canCopy && hasSelection);
+                menu.AddPlatformItem(canPaste ? "Paste" : "Cannot Paste", EditOperations.HandlePaste, "Ctrl+V", enabled: canPaste);
                 menu.AddItem(hasSelection ? "Delete" : "Cannot Delete", () => {
                     if (hasSelection) {
                         Undo.Record();
@@ -1422,7 +1475,7 @@ namespace KexEdit.UI.Timeline {
             var optimizer = new Optimizer(_data.Entity, keyframe, optimizerData);
 
             while (!optimizerData.IsComplete && !optimizerData.IsCanceled) {
-                if (!EntityManager.Exists(_data.Entity) || !_data.Active) {
+                if (!SystemAPI.Exists(_data.Entity) || !_data.Active) {
                     optimizerData.IsCanceled = true;
                     break;
                 }
@@ -1448,14 +1501,17 @@ namespace KexEdit.UI.Timeline {
                 }
 
                 SystemAPI.SetComponent<Dirty>(_data.Entity, true);
-                while (SystemAPI.GetComponent<Dirty>(_data.Entity).Value) {
+                while (
+                    SystemAPI.HasComponent<Dirty>(_data.Entity) &&
+                    SystemAPI.GetComponent<Dirty>(_data.Entity).Value) {
                     yield return null;
                 }
             }
         }
 
         private PointData GetPlayheadPoint() {
-            Entity playheadEntity = _playheadQuery.GetSingletonEntity();
+            if (!SystemAPI.HasSingleton<PlayheadGizmoReference>()) return PointData.Create();
+            Entity playheadEntity = SystemAPI.GetSingleton<PlayheadGizmoReference>();
             Cart playhead = SystemAPI.GetComponent<Cart>(playheadEntity);
             float playheadPosition = playhead.Position;
             int index = (int)math.floor(playheadPosition);
@@ -1547,7 +1603,7 @@ namespace KexEdit.UI.Timeline {
 
                 if (Preferences.SyncPlayback && _data.Active) {
                     foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
-                        if (cart.ValueRO.Active && !cart.ValueRO.Kinematic) {
+                        if (cart.ValueRO.Enabled && !cart.ValueRO.Kinematic) {
                             cart.ValueRW.Section = _data.Entity;
                             cart.ValueRW.Position = TimeToCartPosition(_data.Time);
                             break;
@@ -1883,9 +1939,6 @@ namespace KexEdit.UI.Timeline {
 
         public void Focus() { }
 
-        public bool IsInBounds(Vector2 mousePosition) {
-            return _timeline.worldBound.Contains(mousePosition);
-        }
 
         private void ApplyEasingToSelectedKeyframes(EasingType easing) {
             Undo.Record();
@@ -2029,6 +2082,18 @@ namespace KexEdit.UI.Timeline {
         private void OnTimelineZoomChange(TimelineZoomChangeEvent evt) {
             ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
             timelineState.Zoom = evt.Zoom;
+        }
+
+        private void OnForceUpdate(ForceUpdateEvent evt) {
+            OnUpdate();
+        }
+
+        private void OnFocusIn(FocusInEvent evt) {
+            EditOperations.SetActiveHandler(this);
+        }
+
+        private void OnFocusOut(FocusOutEvent evt) {
+            EditOperations.SetActiveHandler(null);
         }
     }
 }
