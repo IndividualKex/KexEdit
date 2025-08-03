@@ -23,7 +23,7 @@ namespace KexEdit.UI.Timeline {
         public const float RESOLUTION = 128f;
         public const float LEFT_PADDING = 32f;
         public const float ROW_HEIGHT = 20f;
-        public const float TICK_SPACING = 24f;
+        public const float TICK_SPACING = 12.8f;
         public const float MIN_MAJOR_SPACING = 50f;
         public const float VALUE_PADDING = 20f;
         public const float KEYFRAME_SIZE = 8f;
