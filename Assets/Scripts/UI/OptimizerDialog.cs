@@ -298,8 +298,13 @@ namespace KexEdit.UI {
             if (_data.IsStarted && !_data.IsComplete) {
                 _data.IsCanceled = true;
             }
-            RemoveFromHierarchy();
-            _onClose?.Invoke();
+            _targetField.Blur();
+
+
+            schedule.Execute(() => {
+                RemoveFromHierarchy();
+                _onClose?.Invoke();
+            });
         }
     }
 }

@@ -123,7 +123,7 @@ public class SerializationTests {
     public void TestEmptyGraphSerialization() {
         // Test full empty graph serialization
         var graph = new SerializedGraph {
-            Version = SerializationVersion.CURRENT,
+            Version = SerializationVersion.NODE_ID,
             UIState = new SerializedUIState {
                 TimelineOffset = 100f,
                 TimelineZoom = 1.5f,
@@ -294,7 +294,7 @@ public class SerializationTests {
                 Debug.Log($"Deserialized {bytesRead} bytes, version: {graph.Version}");
 
                 // Should have migrated to current version
-                Assert.AreEqual(SerializationVersion.CURRENT, graph.Version);
+                Assert.AreEqual(SerializationVersion.NODE_ID, graph.Version);
 
                 // Verify UI state has default values for migrated files
                 Assert.AreEqual(0f, graph.UIState.TimelineOffset, 0.001f);

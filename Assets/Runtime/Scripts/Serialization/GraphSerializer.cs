@@ -1,5 +1,7 @@
+using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Entities;
 using Unity.Mathematics;
 
 namespace KexEdit.Serialization {
@@ -40,6 +42,33 @@ namespace KexEdit.Serialization {
             };
         }
     }
+
+    [System.Serializable]
+    internal struct NodeV1 {
+#pragma warning disable 0649
+        public float2 Position;
+        public NodeType Type;
+        public int Priority;
+        [MarshalAs(UnmanagedType.U1)]
+        public bool Selected;
+
+        public Entity Next;
+        public Entity Previous;
+#pragma warning restore 0649
+
+        public Node ToCurrentNode(uint id) {
+            return new Node {
+                Id = id,
+                Position = Position,
+                Type = Type,
+                Priority = Priority,
+                Selected = Selected,
+                Next = Next,
+                Previous = Previous
+            };
+        }
+    }
+
     [BurstCompile]
     public static class GraphSerializer {
         [BurstCompile]
@@ -128,9 +157,10 @@ namespace KexEdit.Serialization {
             int nodeCount = reader.Read<int>();
             graph.Nodes = new(nodeCount, Allocator.Temp);
 
+            uint counter = 1;
             for (int i = 0; i < nodeCount; i++) {
                 var node = new SerializedNode();
-                DeserializeNode(ref node, ref reader, fileVersion);
+                DeserializeNode(ref node, ref reader, fileVersion, ref counter);
                 graph.Nodes[i] = node;
             }
 
@@ -171,26 +201,30 @@ namespace KexEdit.Serialization {
             writer.WriteArray(node.TrackStyleKeyframes);
         }
 
-        private static void DeserializeNode(ref SerializedNode node, ref BinaryReader reader, int version) {
-            node.Node = reader.Read<Node>();
+        private static void DeserializeNode(ref SerializedNode node, ref BinaryReader reader, int version, ref uint counter) {
+            if (version < SerializationVersion.NODE_ID) {
+                var nodeV1 = reader.Read<NodeV1>();
+                node.Node = nodeV1.ToCurrentNode(counter++);
+            }
+            else {
+                node.Node = reader.Read<Node>();
+            }
             node.Anchor = reader.Read<PointData>();
 
-            if (version >= SerializationVersion.INITIAL) {
-                uint flags = reader.Read<uint>();
-                node.FieldFlags = (NodeFieldFlags)flags;
+            uint flags = reader.Read<uint>();
+            node.FieldFlags = (NodeFieldFlags)flags;
 
-                // Read BooleanFlags if either Render or Selected flags are set
-                if ((node.FieldFlags & (NodeFieldFlags.HasRender | NodeFieldFlags.HasSelected)) != 0) {
-                    node.BooleanFlags = (NodeFlags)reader.Read<byte>();
-                }
-
-                // Read optional fields based on flags - add new fields here following this pattern
-                node.PropertyOverrides = (node.FieldFlags & NodeFieldFlags.HasPropertyOverrides) != 0 ? reader.Read<PropertyOverrides>() : default;
-                node.SelectedProperties = (node.FieldFlags & NodeFieldFlags.HasSelectedProperties) != 0 ? reader.Read<SelectedProperties>() : default;
-                node.CurveData = (node.FieldFlags & NodeFieldFlags.HasCurveData) != 0 ? reader.Read<CurveData>() : default;
-                node.Duration = (node.FieldFlags & NodeFieldFlags.HasDuration) != 0 ? reader.Read<Duration>() : default;
-                node.MeshFilePath = (node.FieldFlags & NodeFieldFlags.HasMeshFilePath) != 0 ? reader.Read<FixedString512Bytes>() : default;
+            // Read BooleanFlags if either Render or Selected flags are set
+            if ((node.FieldFlags & (NodeFieldFlags.HasRender | NodeFieldFlags.HasSelected)) != 0) {
+                node.BooleanFlags = (NodeFlags)reader.Read<byte>();
             }
+
+            // Read optional fields based on flags - add new fields here following this pattern
+            node.PropertyOverrides = (node.FieldFlags & NodeFieldFlags.HasPropertyOverrides) != 0 ? reader.Read<PropertyOverrides>() : default;
+            node.SelectedProperties = (node.FieldFlags & NodeFieldFlags.HasSelectedProperties) != 0 ? reader.Read<SelectedProperties>() : default;
+            node.CurveData = (node.FieldFlags & NodeFieldFlags.HasCurveData) != 0 ? reader.Read<CurveData>() : default;
+            node.Duration = (node.FieldFlags & NodeFieldFlags.HasDuration) != 0 ? reader.Read<Duration>() : default;
+            node.MeshFilePath = (node.FieldFlags & NodeFieldFlags.HasMeshFilePath) != 0 ? reader.Read<FixedString512Bytes>() : default;
 
             reader.ReadArray(out node.InputPorts, Allocator.Temp);
             reader.ReadArray(out node.OutputPorts, Allocator.Temp);
@@ -200,21 +234,21 @@ namespace KexEdit.Serialization {
             if (version < SerializationVersion.COPY_PATH_TRIM_PORTS && node.Node.Type == NodeType.CopyPathSection) {
                 var oldInputPorts = node.InputPorts;
                 node.InputPorts = new NativeArray<SerializedPort>(oldInputPorts.Length + 2, Allocator.Temp);
-                
+
                 for (int i = 0; i < oldInputPorts.Length; i++) {
                     node.InputPorts[i] = oldInputPorts[i];
                 }
-                
+
                 node.InputPorts[oldInputPorts.Length] = new SerializedPort {
                     Port = Port.Create(PortType.Start, true, id++),
                     Value = new PointData { Roll = 0f }
                 };
-                
+
                 node.InputPorts[oldInputPorts.Length + 1] = new SerializedPort {
                     Port = Port.Create(PortType.End, true, id++),
                     Value = new PointData { Roll = -1f }
                 };
-                
+
                 oldInputPorts.Dispose();
             }
 
@@ -231,10 +265,11 @@ namespace KexEdit.Serialization {
                 reader.ReadArray(out node.HeartKeyframes, Allocator.Temp);
                 reader.ReadArray(out node.FrictionKeyframes, Allocator.Temp);
                 reader.ReadArray(out node.ResistanceKeyframes, Allocator.Temp);
-                
+
                 if (version >= SerializationVersion.TRACK_STYLE_PROPERTY) {
                     reader.ReadArray(out node.TrackStyleKeyframes, Allocator.Temp);
-                } else {
+                }
+                else {
                     node.TrackStyleKeyframes = new NativeArray<TrackStyleKeyframe>(0, Allocator.Temp);
                 }
             }

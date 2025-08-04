@@ -20,7 +20,8 @@ namespace KexEdit.Serialization {
         public const int UI_STATE_SERIALIZATION = 3;
         public const int TRACK_STYLE_PROPERTY = 4;
         public const int COPY_PATH_TRIM_PORTS = 5;
-        public const int CURRENT = COPY_PATH_TRIM_PORTS;
+        public const int NODE_ID = 6;
+        public const int CURRENT = NODE_ID;
     }
 
     [Flags]

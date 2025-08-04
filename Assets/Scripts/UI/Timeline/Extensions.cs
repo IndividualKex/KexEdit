@@ -143,13 +143,6 @@ namespace KexEdit.UI.Timeline {
             float maxX = data.TimeToPixel(data.Duration);
 
             if (propertyData.Keyframes.Count == 0) {
-                if (propertyData.Values.Length < 2) return;
-                float value = propertyData.Values[1];
-                float startY = bounds.ValueToPixel(value, rect.height);
-                float endY = bounds.ValueToPixel(value, rect.height);
-                Vector2 start = new(minX, startY);
-                Vector2 end = new(maxX, endY);
-                painter.DrawLine(rect, start, end, color, true);
                 return;
             }
 

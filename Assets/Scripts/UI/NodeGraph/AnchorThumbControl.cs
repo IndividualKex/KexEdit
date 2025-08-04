@@ -31,6 +31,7 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void OnMouseOver(MouseOverEvent evt) {
+            if (NodeGraphPort.IsDragging) return;
             SetBorderColor(s_BlueOutlineTransparent);
             evt.StopPropagation();
         }

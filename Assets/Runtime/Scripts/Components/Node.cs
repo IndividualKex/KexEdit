@@ -6,6 +6,7 @@ using Unity.Mathematics;
 namespace KexEdit {
     [Serializable]
     public struct Node : IComponentData {
+        public uint Id;
         public float2 Position;
         public NodeType Type;
         public int Priority;
@@ -16,6 +17,7 @@ namespace KexEdit {
         public Entity Previous;
 
         public static Node Create(float2 position, NodeType type) => new() {
+            Id = Uuid.Create(),
             Position = position,
             Type = type,
             Priority = 0,

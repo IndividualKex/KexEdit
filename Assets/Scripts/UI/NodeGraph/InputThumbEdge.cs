@@ -5,9 +5,11 @@ using static KexEdit.UI.Constants;
 namespace KexEdit.UI.NodeGraph {
     public class InputThumbEdge : VisualElement {
         private InputThumb _thumb;
+        private bool _vertical;
 
-        public InputThumbEdge(InputThumb thumb) {
+        public InputThumbEdge(InputThumb thumb, bool vertical = false) {
             _thumb = thumb;
+            _vertical = vertical;
 
             style.width = 0f;
             style.height = 0f;
@@ -15,10 +17,11 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void OnGenerateVisualContent(MeshGenerationContext ctx) {
-            Vector2 start = Vector2.zero;
+            Vector2 start = _vertical ? new Vector2(0f, 4f) : Vector2.zero;
 
             Vector2 end = _thumb.parent.worldBound.center;
-            end = this.WorldToLocal(end) + new Vector2(-4f, 0f);
+            Vector2 offset = _vertical ? new Vector2(0f, -4f) : new Vector2(-4f, 0f);
+            end = this.WorldToLocal(end) + offset;
 
             var painter = ctx.painter2D;
             painter.lineWidth = 2f;

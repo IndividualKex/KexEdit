@@ -510,7 +510,7 @@ namespace KexEdit.UI.NodeGraph {
 
             var targetNode = _data.Nodes[evt.Port.Node];
 
-            float2 sourcePosition = targetNode.Position + new float2(-350f, 0f);
+            float2 sourcePosition = targetNode.Position + new float2(0f, -280f);
             var node = AddNode(sourcePosition, NodeType.Anchor);
 
             var sourcePort = SystemAPI.GetBuffer<OutputPortReference>(node)[0];
@@ -1246,7 +1246,8 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void AddConnectedNode(PortData source, float2 position, NodeType nodeType, int index) {
-            var node = AddNode(position, nodeType);
+            float2 adjustedPosition = position + new float2(-56f, -56f);
+            var node = AddNode(adjustedPosition, nodeType);
             Entity sourceEntity = Entity.Null;
             Entity targetEntity = Entity.Null;
             var inputs = SystemAPI.GetBuffer<InputPortReference>(node);

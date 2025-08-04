@@ -135,15 +135,23 @@ namespace KexEdit.UI {
         }
 
         private void Export() {
-            float value = _metersField.value;
-            if (value <= 0f) return;
-            _onExport?.Invoke(value);
-            Close();
+            _metersField.Blur();
+
+            schedule.Execute(() => {
+                float value = _metersField.value;
+                if (value <= 0f) return;
+                _onExport?.Invoke(value);
+                Close();
+            });
         }
 
         private void Close() {
-            RemoveFromHierarchy();
-            _onClose?.Invoke();
+            _metersField.Blur();
+
+            schedule.Execute(() => {
+                RemoveFromHierarchy();
+                _onClose?.Invoke();
+            });
         }
     }
 }

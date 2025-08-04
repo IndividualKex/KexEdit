@@ -45,12 +45,12 @@ namespace KexEdit.UI.NodeGraph {
             float lineWidth = _data.Hovered ? HOVER_WIDTH : NORMAL_WIDTH;
             Color color = _data.Selected ? s_BlueOutline : s_YellowOutline;
 
-            float dist = Mathf.Abs(_end.x - _start.x);
-            float maxWidth = dist * 0.5f;
-            float width = Mathf.Min(maxWidth, 50f);
-            float dx = _source.Data.Port.IsInput ? -width : width;
-            Vector2 control1 = _start + new Vector2(dx, 0f);
-            Vector2 control2 = _end - new Vector2(dx, 0f);
+            float dist = Mathf.Abs(_end.y - _start.y);
+            float maxHeight = dist * 0.5f;
+            float height = Mathf.Min(maxHeight, 50f);
+            float dy = _source.Data.Port.IsInput ? -height : height;
+            Vector2 control1 = _start + new Vector2(0f, dy);
+            Vector2 control2 = _end - new Vector2(0f, dy);
 
             var painter = ctx.painter2D;
             painter.lineWidth = lineWidth;
@@ -106,7 +106,8 @@ namespace KexEdit.UI.NodeGraph {
                 e.ShiftKey = evt.shiftKey;
                 this.SendEvent(e);
             }
-            else if (evt.button == 1 && evt.altKey) {
+            
+            if (evt.button == 1 && !evt.altKey) {
                 var e = this.GetPooled<EdgeRightClickEvent>();
                 e.MousePosition = evt.localMousePosition;
                 this.SendEvent(e);
@@ -118,12 +119,12 @@ namespace KexEdit.UI.NodeGraph {
                 return false;
             }
 
-            float dist = Mathf.Abs(_end.x - _start.x);
-            float maxWidth = dist * 0.5f;
-            float width = Mathf.Min(maxWidth, 50f);
-            float dx = _source.Data.Port.IsInput ? -width : width;
-            Vector2 control1 = _start + new Vector2(dx, 0f);
-            Vector2 control2 = _end - new Vector2(dx, 0f);
+            float dist = Mathf.Abs(_end.y - _start.y);
+            float maxHeight = dist * 0.5f;
+            float height = Mathf.Min(maxHeight, 50f);
+            float dy = _source.Data.Port.IsInput ? -height : height;
+            Vector2 control1 = _start + new Vector2(0f, dy);
+            Vector2 control2 = _end - new Vector2(0f, dy);
 
             return point.DistanceToQuadraticBezier(_start, control1, control2, _end) <= HIT_DISTANCE;
         }
@@ -133,12 +134,12 @@ namespace KexEdit.UI.NodeGraph {
                 return false;
             }
 
-            float dist = Mathf.Abs(_end.x - _start.x);
-            float maxWidth = dist * 0.5f;
-            float width = Mathf.Min(maxWidth, 50f);
-            float dx = _source.Data.Port.IsInput ? -width : width;
-            Vector2 control1 = _start + new Vector2(dx, 0f);
-            Vector2 control2 = _end - new Vector2(dx, 0f);
+            float dist = Mathf.Abs(_end.y - _start.y);
+            float maxHeight = dist * 0.5f;
+            float height = Mathf.Min(maxHeight, 50f);
+            float dy = _source.Data.Port.IsInput ? -height : height;
+            Vector2 control1 = _start + new Vector2(0f, dy);
+            Vector2 control2 = _end - new Vector2(0f, dy);
 
             const int samples = 20;
             for (int i = 0; i <= samples; i++) {

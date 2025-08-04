@@ -14,7 +14,7 @@ using static KexEdit.UI.Timeline.Constants;
 namespace KexEdit.UI.Timeline {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class TimelineControlSystem : SystemBase, IEditableHandler {
-        private Dictionary<Entity, TimelineState> _stateCache = new();
+        private Dictionary<uint, TimelineState> _stateCache = new();
         private List<KeyframeData> _clipboard = new();
         private TimelineData _data;
         private Timeline _timeline;
@@ -57,6 +57,7 @@ namespace KexEdit.UI.Timeline {
             _timeline.Initialize(_data);
 
             _timeline.RegisterCallback<CurveButtonClickEvent>(OnCurveButtonClick);
+            _timeline.RegisterCallback<ReadOnlyButtonClickEvent>(OnReadOnlyButtonClick);
             _timeline.RegisterCallback<TimeChangeEvent>(OnTimeChange);
             _timeline.RegisterCallback<DurationChangeEvent>(OnDurationChange);
             _timeline.RegisterCallback<AddPropertyClickEvent>(OnAddPropertyClick);
@@ -104,8 +105,9 @@ namespace KexEdit.UI.Timeline {
             var timelineState = SystemAPI.GetSingleton<TimelineState>();
             _data.Offset = timelineState.Offset;
             _data.Zoom = timelineState.Zoom;
-            if (_data.Entity != Entity.Null) {
-                _stateCache[_data.Entity] = timelineState;
+            if (_data.Entity != Entity.Null && SystemAPI.HasComponent<Node>(_data.Entity)) {
+                var node = SystemAPI.GetComponent<Node>(_data.Entity);
+                _stateCache[node.Id] = timelineState;
             }
         }
 
@@ -129,9 +131,10 @@ namespace KexEdit.UI.Timeline {
             }
             _data.Active = _data.Entity != Entity.Null;
             if (_data.Active && _data.Entity != previousEntity) {
-                if (!_stateCache.TryGetValue(_data.Entity, out var state)) {
+                var node = SystemAPI.GetComponent<Node>(_data.Entity);
+                if (!_stateCache.TryGetValue(node.Id, out var state)) {
                     state = TimelineState.Default;
-                    _stateCache[previousEntity] = state;
+                    _stateCache[node.Id] = state;
                 }
                 ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
                 timelineState = state;
@@ -274,7 +277,9 @@ namespace KexEdit.UI.Timeline {
                 propertyData.Visible = IsPropertyVisible(property);
                 propertyData.HasActiveKeyframe = FindKeyframe(property, _data.Time, out _);
                 propertyData.Selected = IsPropertySelected(property);
-                propertyData.DrawReadOnly &= !propertyData.Visible && !propertyData.Selected;
+                if (propertyData.Visible) {
+                    propertyData.DrawReadOnly = false;
+                }
                 propertyData.Value = EvaluateAt(property, _data.Time);
                 propertyData.Units = property.GetUnits(_data.DurationType);
                 _data.DrawAnyReadOnly |= propertyData.DrawReadOnly;
@@ -790,11 +795,10 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void OnCurveButtonClick(CurveButtonClickEvent evt) {
-            if (!evt.IsRightClick) {
-                ToggleCurveView();
-                return;
-            }
+            ToggleCurveView();
+        }
 
+        private void OnReadOnlyButtonClick(ReadOnlyButtonClickEvent evt) {
             (evt.target as VisualElement).ShowContextMenu(evt.MousePosition, menu => {
                 foreach (var (type, propertyData) in _data.Properties) {
                     if (propertyData.Visible || !propertyData.IsReadable) continue;

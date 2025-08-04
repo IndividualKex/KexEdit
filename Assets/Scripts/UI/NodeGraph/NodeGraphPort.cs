@@ -8,8 +8,12 @@ namespace KexEdit.UI.NodeGraph {
         private static NodeGraphPort s_DraggedPort = null;
         private static NodeGraphPort s_HoveredPort = null;
 
+        public static bool IsDragging => s_DraggedPort != null;
+
         private Connector _connector;
         private InputThumb _thumb;
+        private InputLabel _inputLabel;
+        private OutputThumb _outputThumb;
         private Label _label;
         private Label _unitsLabel;
         private NodeGraphEdge _dragEdge;
@@ -19,31 +23,82 @@ namespace KexEdit.UI.NodeGraph {
 
         public PortData Data => _data;
 
-        public NodeGraphPort(NodeGraphView view, PortData data) {
+        public NodeGraphPort(NodeGraphView view, PortData data, bool connectableOnly = false, bool vertical = false) {
             _view = view;
             _data = data;
             dataSource = _data;
 
-            style.position = Position.Relative;
-            style.flexGrow = 0f;
-            style.flexDirection = data.Port.IsInput ? FlexDirection.Row : FlexDirection.RowReverse;
-            style.justifyContent = Justify.FlexStart;
-            style.alignItems = Align.Center;
-            style.height = 24f;
-            style.paddingLeft = 4f;
-            style.paddingRight = 4f;
-            style.paddingBottom = 0f;
-            style.paddingTop = 0f;
-            style.marginLeft = 0f;
-            style.marginRight = 0f;
-            style.marginTop = 0f;
-            style.marginBottom = 0f;
+            if (connectableOnly) {
+                style.position = Position.Relative;
+                style.flexGrow = 0f;
+                style.justifyContent = Justify.Center;
+                style.alignItems = Align.Center;
+                style.width = 20f;
+                style.height = 20f;
+                style.paddingLeft = 0f;
+                style.paddingRight = 0f;
+                style.paddingTop = 0f;
+                style.paddingBottom = 0f;
+                style.marginLeft = 0f;
+                style.marginRight = 0f;
+                style.marginTop = 0f;
+                style.marginBottom = 0f;
 
-            _connector = new Connector();
-            Add(_connector);
+                _connector = new Connector();
+                Add(_connector);
+            } else if (vertical) {
+                style.position = Position.Relative;
+                style.flexGrow = 0f;
+                style.flexDirection = FlexDirection.Column;
+                style.justifyContent = Justify.FlexStart;
+                style.alignItems = Align.Center;
+                style.paddingLeft = 0f;
+                style.paddingRight = 0f;
+                style.paddingTop = 0f;
+                style.paddingBottom = 0f;
+                style.marginLeft = 0f;
+                style.marginRight = 0f;
+                style.marginTop = 0f;
+                style.marginBottom = 0f;
 
-            string name = _data.Port.Type.GetDisplayName(_data.Port.IsInput);
-            _label = new Label(name) {
+                _connector = new Connector();
+                Add(_connector);
+
+                if (_data.Port.IsInput && _data.Port.Type == PortType.Anchor) {
+                    _thumb = new InputThumb(_data, vertical: true);
+                    _connector.Add(_thumb);
+                }
+
+                if (_data.Port.IsInput && _data.Port.Type == PortType.Path) {
+                    _inputLabel = new InputLabel(_data);
+                    Add(_inputLabel);
+                }
+
+                if (!_data.Port.IsInput) {
+                    _outputThumb = new OutputThumb(_data);
+                    Add(_outputThumb);
+                }
+            } else {
+                style.position = Position.Relative;
+                style.flexGrow = 0f;
+                style.flexDirection = data.Port.IsInput ? FlexDirection.Row : FlexDirection.RowReverse;
+                style.justifyContent = Justify.FlexStart;
+                style.alignItems = Align.Center;
+                style.height = 24f;
+                style.paddingLeft = 4f;
+                style.paddingRight = 4f;
+                style.paddingBottom = 0f;
+                style.paddingTop = 0f;
+                style.marginLeft = 0f;
+                style.marginRight = 0f;
+                style.marginTop = 0f;
+                style.marginBottom = 0f;
+
+                _connector = new Connector();
+                Add(_connector);
+
+                string name = _data.Port.Type.GetDisplayName(_data.Port.IsInput);
+                _label = new Label(name) {
                 style = {
                     marginLeft = 4f,
                     marginRight = 4f,
@@ -54,29 +109,30 @@ namespace KexEdit.UI.NodeGraph {
                     paddingTop = 0f,
                     paddingBottom = 0f,
                 }
-            };
-            Add(_label);
-
-            if (_data.Units != UnitsType.None) {
-                _unitsLabel = new Label {
-                    style = {
-                        marginLeft = 0f,
-                        marginRight = 4f,
-                        marginTop = 2f,
-                        marginBottom = 0f,
-                        paddingLeft = 0f,
-                        paddingRight = 0f,
-                        paddingTop = 0f,
-                        paddingBottom = 0f,
-                        color = s_MutedTextColor
-                    }
                 };
-                Add(_unitsLabel);
-            }
+                Add(_label);
 
-            if (_data.Port.IsInput) {
-                _thumb = new InputThumb(_data);
-                _connector.Add(_thumb);
+                if (_data.Units != UnitsType.None) {
+                    _unitsLabel = new Label {
+                        style = {
+                            marginLeft = 0f,
+                            marginRight = 4f,
+                            marginTop = 2f,
+                            marginBottom = 0f,
+                            paddingLeft = 0f,
+                            paddingRight = 0f,
+                            paddingTop = 0f,
+                            paddingBottom = 0f,
+                            color = s_MutedTextColor
+                        }
+                    };
+                    Add(_unitsLabel);
+                }
+
+                if (_data.Port.IsInput) {
+                    _thumb = new InputThumb(_data);
+                    _connector.Add(_thumb);
+                }
             }
 
             _connector.RegisterCallback<MouseOverEvent>(OnMouseOver);
@@ -123,6 +179,28 @@ namespace KexEdit.UI.NodeGraph {
                 _thumb.SetBinding("style.display", thumbBinding);
             }
 
+            if (_inputLabel != null) {
+                var inputLabelBinding = new DataBinding {
+                    dataSourcePath = new PropertyPath(nameof(PortData.InteractionState)),
+                    bindingMode = BindingMode.ToTarget
+                };
+                inputLabelBinding.sourceToUiConverters.AddConverter((ref PortState value) =>
+                    new StyleEnum<DisplayStyle>(value.HasFlag(PortState.Connected) ? DisplayStyle.None : DisplayStyle.Flex)
+                );
+                _inputLabel.SetBinding("style.display", inputLabelBinding);
+            }
+
+            if (_outputThumb != null) {
+                var outputThumbBinding = new DataBinding {
+                    dataSourcePath = new PropertyPath(nameof(PortData.InteractionState)),
+                    bindingMode = BindingMode.ToTarget
+                };
+                outputThumbBinding.sourceToUiConverters.AddConverter((ref PortState value) =>
+                    new StyleEnum<DisplayStyle>(value.HasFlag(PortState.Connected) ? DisplayStyle.None : DisplayStyle.Flex)
+                );
+                _outputThumb.SetBinding("style.display", outputThumbBinding);
+            }
+
             if (_unitsLabel != null) {
                 var unitsBinding = new DataBinding {
                     dataSourcePath = new PropertyPath(nameof(PortData.Units)),
@@ -141,6 +219,7 @@ namespace KexEdit.UI.NodeGraph {
 
             s_HoveredPort = this;
             _data.InteractionState |= PortState.Hovered;
+            evt.StopPropagation();
         }
 
         private void OnMouseOut(MouseOutEvent evt) {
@@ -148,6 +227,7 @@ namespace KexEdit.UI.NodeGraph {
                 s_HoveredPort = null;
                 _data.InteractionState &= ~PortState.Hovered;
             }
+            evt.StopPropagation();
         }
 
         private void OnMouseDown(MouseDownEvent evt) {
