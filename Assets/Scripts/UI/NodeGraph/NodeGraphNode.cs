@@ -8,19 +8,22 @@ using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI.NodeGraph {
     public class NodeGraphNode : VisualElement {
+        private VisualElement _topPortsContainer;
+        private VisualElement _mainBody;
+        private VisualElement _contentArea;
         private VisualElement _header;
         private VisualElement _headerDivider;
         private VisualElement _contents;
         private VisualElement _inputsContainer;
-        private VisualElement _portsDivider;
-        private VisualElement _outputsContainer;
+        private VisualElement _footerDivider;
+        private VisualElement _footer;
         private DurationTypeField _durationTypeField;
         private RenderToggle _renderToggle;
         private PriorityField _priorityField;
-        private VisualElement _footerDivider;
-        private VisualElement _footer;
+        private VisualElement _foldout;
         private VisualElement _itemsContainer;
         private Label _collapseButton;
+        private VisualElement _bottomPortsContainer;
 
         private Dictionary<Entity, NodeGraphPort> _ports = new();
         private NodeGraphView _view;
@@ -71,9 +74,35 @@ namespace KexEdit.UI.NodeGraph {
             style.transitionDuration = new List<TimeValue> { new(100, TimeUnit.Millisecond) };
             style.transitionTimingFunction = new List<EasingFunction> { EasingMode.EaseOutCubic };
 
-            _header = new VisualElement {
+            _topPortsContainer = new VisualElement {
+                name = "TopPortsContainer",
+                style = {
+                    position = Position.Absolute,
+                    top = -10f,
+                    left = 0f,
+                    right = 0f,
+                    height = 20f,
+                    flexDirection = FlexDirection.Row,
+                    justifyContent = Justify.Center,
+                    alignItems = Align.Center,
+                    paddingLeft = 0f,
+                    paddingRight = 0f,
+                    paddingTop = 0f,
+                    paddingBottom = 0f,
+                    marginLeft = 0f,
+                    marginRight = -24f,
+                    marginTop = 0f,
+                    marginBottom = 0f
+                },
+                pickingMode = PickingMode.Ignore
+            };
+
+            _mainBody = new VisualElement {
+                name = "MainBody",
                 style = {
                     position = Position.Relative,
+                    flexDirection = FlexDirection.Row,
+                    alignItems = Align.Stretch,
                     flexGrow = 1f,
                     marginLeft = 0f,
                     marginRight = 0f,
@@ -81,9 +110,44 @@ namespace KexEdit.UI.NodeGraph {
                     marginBottom = 0f,
                     paddingLeft = 0f,
                     paddingRight = 0f,
-                    paddingTop = 4f,
-                    paddingBottom = 4f,
+                    paddingTop = 0f,
+                    paddingBottom = 0f,
                     backgroundColor = s_AltBackgroundColor
+                }
+            };
+
+            _contentArea = new VisualElement {
+                name = "ContentArea",
+                style = {
+                    position = Position.Relative,
+                    flexDirection = FlexDirection.Column,
+                    alignItems = Align.Stretch,
+                    flexGrow = 1f,
+                    marginLeft = 0f,
+                    marginRight = 0f,
+                    marginTop = 0f,
+                    marginBottom = 0f,
+                    paddingLeft = 0f,
+                    paddingRight = 0f,
+                    paddingTop = 0f,
+                    paddingBottom = 0f,
+                    minWidth = 144f
+                }
+            };
+
+            _header = new VisualElement {
+                name = "Header",
+                style = {
+                    position = Position.Relative,
+                    flexGrow = 0f,
+                    marginLeft = 0f,
+                    marginRight = 0f,
+                    marginTop = 0f,
+                    marginBottom = 0f,
+                    paddingLeft = 0f,
+                    paddingRight = 0f,
+                    paddingTop = 6f,
+                    paddingBottom = 4f,
                 }
             };
             _header.Add(new Label(_type.GetDisplayName()) {
@@ -98,13 +162,14 @@ namespace KexEdit.UI.NodeGraph {
                     paddingBottom = 0f
                 }
             });
-            Add(_header);
+            _contentArea.Add(_header);
 
             _headerDivider = new VisualElement {
+                name = "HeaderDivider",
                 style = {
                     position = Position.Relative,
                     height = 1f,
-                    flexGrow = 1f,
+                    flexGrow = 0f,
                     backgroundColor = s_DividerColor,
                     paddingLeft = 0f,
                     paddingRight = 0f,
@@ -116,34 +181,15 @@ namespace KexEdit.UI.NodeGraph {
                     marginBottom = 0f
                 }
             };
-            Add(_headerDivider);
-
-            _contents = new VisualElement {
-                style = {
-                    position = Position.Relative,
-                    flexGrow = 1f,
-                    flexDirection = FlexDirection.Row,
-                    alignItems = Align.Stretch,
-                    justifyContent = Justify.FlexEnd,
-                    marginLeft = 0f,
-                    marginRight = 0f,
-                    marginTop = 0f,
-                    marginBottom = 0f,
-                    paddingLeft = 0f,
-                    paddingRight = 0f,
-                    paddingTop = 0f,
-                    paddingBottom = 0f,
-                }
-            };
-            Add(_contents);
+            _contentArea.Add(_headerDivider);
 
             _inputsContainer = new VisualElement {
+                name = "InputsContainer",
                 style = {
                     position = Position.Relative,
                     flexDirection = FlexDirection.Column,
                     justifyContent = Justify.FlexStart,
                     alignItems = Align.FlexStart,
-                    backgroundColor = s_AltBackgroundColor,
                     paddingLeft = 0f,
                     paddingRight = 0f,
                     paddingTop = 4f,
@@ -154,46 +200,15 @@ namespace KexEdit.UI.NodeGraph {
                     marginBottom = 0f
                 }
             };
-            _contents.Add(_inputsContainer);
-
-            _portsDivider = new VisualElement {
-                style = {
-                    position = Position.Relative,
-                    width = 1f,
-                    backgroundColor = s_DividerColor,
-                    marginLeft = 0f,
-                    marginRight = 0f,
-                    marginTop = 0f,
-                    marginBottom = 0f,
-                    paddingLeft = 0f,
-                    paddingRight = 0f,
-                    paddingTop = 0f,
-                    paddingBottom = 0f
-                }
-            };
-            _contents.Add(_portsDivider);
-
-            _outputsContainer = new VisualElement {
-                style = {
-                    position = Position.Relative,
-                    flexDirection = FlexDirection.Column,
-                    justifyContent = Justify.FlexStart,
-                    alignItems = Align.FlexEnd,
-                    backgroundColor = s_AltBackgroundColor,
-                    paddingLeft = 0f,
-                    paddingRight = 0f,
-                    paddingTop = 4f,
-                    paddingBottom = 4f,
-                    marginLeft = 0f,
-                    marginRight = 0f,
-                }
-            };
-            _contents.Add(_outputsContainer);
+            _contentArea.Add(_inputsContainer);
 
             _footerDivider = new VisualElement {
+                name = "FooterDivider",
                 style = {
                     position = Position.Relative,
                     height = 1f,
+                    flexGrow = 0f,
+                    backgroundColor = s_DividerColor,
                     paddingLeft = 0f,
                     paddingRight = 0f,
                     paddingTop = 0f,
@@ -201,18 +216,38 @@ namespace KexEdit.UI.NodeGraph {
                     marginLeft = 0f,
                     marginRight = 0f,
                     marginTop = 0f,
-                    marginBottom = 0f,
-                    backgroundColor = s_DividerColor
+                    marginBottom = 0f
                 }
             };
-            Add(_footerDivider);
+            _contentArea.Add(_footerDivider);
 
             _footer = new VisualElement {
+                name = "Footer",
                 style = {
                     position = Position.Relative,
-                    flexDirection = FlexDirection.Column,
+                    height = 20f,
+                    flexGrow = 0f,
+                    paddingLeft = 0f,
+                    paddingRight = 0f,
+                    paddingTop = 0f,
+                    paddingBottom = 0f,
+                    marginLeft = 0f,
+                    marginRight = 0f,
+                    marginTop = 0f,
+                    marginBottom = 0f
+                }
+            };
+            _contentArea.Add(_footer);
+
+            _foldout = new VisualElement {
+                name = "Foldout",
+                style = {
+                    position = Position.Relative,
+                    flexDirection = FlexDirection.Row,
                     alignItems = Align.Stretch,
-                    minHeight = 12f,
+                    flexGrow = 0f,
+                    flexShrink = 0f,
+                    width = 24f,
                     paddingLeft = 0f,
                     paddingRight = 0f,
                     paddingTop = 0f,
@@ -221,10 +256,38 @@ namespace KexEdit.UI.NodeGraph {
                     marginRight = 0f,
                     marginTop = 0f,
                     marginBottom = 0f,
-                    backgroundColor = s_AltBackgroundColor
+                    borderLeftWidth = 1f,
+                    borderLeftColor = s_DividerColor
                 }
             };
-            Add(_footer);
+            _contentArea.Add(_topPortsContainer);
+            _mainBody.Add(_contentArea);
+            _mainBody.Add(_foldout);
+            Add(_mainBody);
+
+            _bottomPortsContainer = new VisualElement {
+                name = "BottomPortsContainer",
+                style = {
+                    position = Position.Absolute,
+                    bottom = -10f,
+                    left = 0f,
+                    right = 0f,
+                    height = 20f,
+                    flexDirection = FlexDirection.Row,
+                    justifyContent = Justify.Center,
+                    alignItems = Align.Center,
+                    paddingLeft = 0f,
+                    paddingRight = 0f,
+                    paddingTop = 0f,
+                    paddingBottom = 0f,
+                    marginLeft = 0f,
+                    marginRight = -24f,
+                    marginTop = 0f,
+                    marginBottom = 0f
+                },
+                pickingMode = PickingMode.Ignore
+            };
+            _contentArea.Add(_bottomPortsContainer);
 
             if (_type == NodeType.ForceSection
                 || _type == NodeType.GeometricSection
@@ -234,24 +297,25 @@ namespace KexEdit.UI.NodeGraph {
                 || _type == NodeType.ReversePath
                 || _type == NodeType.Mesh) {
                 _itemsContainer = new VisualElement {
+                    name = "ItemsContainer",
                     style = {
                         position = Position.Relative,
                         flexDirection = FlexDirection.Column,
                         alignItems = Align.Stretch,
                         justifyContent = Justify.FlexStart,
-                        paddingLeft = 0f,
-                        paddingRight = 0f,
+                        flexGrow = 1f,
+                        paddingLeft = 4f,
+                        paddingRight = 4f,
                         paddingTop = 4f,
                         paddingBottom = 4f,
                         marginLeft = 0f,
                         marginRight = 0f,
                         marginTop = 0f,
                         marginBottom = 0f,
-                        backgroundColor = s_AltBackgroundColor,
                         display = DisplayStyle.None
                     }
                 };
-                _footer.Add(_itemsContainer);
+                _foldout.Add(_itemsContainer);
 
                 if (_type == NodeType.ForceSection
                     || _type == NodeType.GeometricSection) {
@@ -273,23 +337,29 @@ namespace KexEdit.UI.NodeGraph {
                     _itemsContainer.Add(_priorityField);
                 }
 
-                _collapseButton = new Label("▼") {
+                _collapseButton = new Label("►") {
+                    name = "CollapseButton",
                     style = {
                         position = Position.Relative,
+                        flexGrow = 0f,
+                        flexShrink = 0f,
+                        width = 24f,
                         paddingLeft = 0f,
                         paddingRight = 0f,
-                        paddingTop = 3f,
-                        paddingBottom = 3f,
+                        paddingTop = 0f,
+                        paddingBottom = 0f,
                         marginLeft = 0f,
                         marginRight = 0f,
                         marginTop = 0f,
                         marginBottom = 0f,
                         backgroundColor = Color.clear,
                         fontSize = 9f,
-                        unityTextAlign = TextAnchor.MiddleCenter
+                        unityTextAlign = TextAnchor.MiddleCenter,
+                        justifyContent = Justify.Center,
+                        alignItems = Align.Center
                     }
                 };
-                _footer.Add(_collapseButton);
+                _foldout.Add(_collapseButton);
             }
 
             _interactionStateBinding = new DataBinding {
@@ -333,17 +403,31 @@ namespace KexEdit.UI.NodeGraph {
             _renderToggle?.Bind(_data);
             _priorityField?.Bind(_data);
 
+            bool hasNonVerticalInputs = false;
             foreach (var portData in _data.Inputs.Values) {
-                var port = new NodeGraphPort(_view, portData);
-                _ports.Add(portData.Entity, port);
-                _inputsContainer.Add(port);
+                if (portData.Port.Type == PortType.Anchor || portData.Port.Type == PortType.Path) {
+                    var port = new NodeGraphPort(_view, portData, vertical: true);
+                    _ports.Add(portData.Entity, port);
+                    _topPortsContainer.Add(port);
+                }
+                else {
+                    var port = new NodeGraphPort(_view, portData);
+                    _ports.Add(portData.Entity, port);
+                    _inputsContainer.Add(port);
+                    hasNonVerticalInputs = true;
+                }
             }
 
+            _inputsContainer.style.display = hasNonVerticalInputs ? DisplayStyle.Flex : DisplayStyle.None;
+            _footerDivider.style.display = hasNonVerticalInputs ? DisplayStyle.Flex : DisplayStyle.None;
+
             foreach (var portData in _data.Outputs.Values) {
-                var port = new NodeGraphPort(_view, portData);
+                var port = new NodeGraphPort(_view, portData, vertical: true);
                 _ports.Add(portData.Entity, port);
-                _outputsContainer.Add(port);
+                _bottomPortsContainer.Add(port);
             }
+
+            AdjustConnectablePortSpacing();
 
             SetBinding("style.borderTopColor", _interactionStateBinding);
             SetBinding("style.borderBottomColor", _interactionStateBinding);
@@ -351,6 +435,29 @@ namespace KexEdit.UI.NodeGraph {
             SetBinding("style.borderRightColor", _interactionStateBinding);
             SetBinding("style.left", _leftBinding);
             SetBinding("style.top", _topBinding);
+        }
+
+        private void AdjustConnectablePortSpacing() {
+            PositionPortsAbsolute(_topPortsContainer);
+            PositionPortsAbsolute(_bottomPortsContainer);
+        }
+
+        private void PositionPortsAbsolute(VisualElement container) {
+            for (int i = 0; i < container.childCount; i++) {
+                if (container[i] is NodeGraphPort port) {
+                    port.style.position = Position.Absolute;
+                    port.style.top = 0;
+
+                    if (port.Data.Port.Type == PortType.Anchor) {
+                        port.style.left = new StyleLength(new Length(33.33f, LengthUnit.Percent));
+                    }
+                    else if (port.Data.Port.Type == PortType.Path) {
+                        port.style.left = new StyleLength(new Length(66.67f, LengthUnit.Percent));
+                    }
+
+                    port.style.translate = new StyleTranslate(new Translate(new Length(-50f, LengthUnit.Percent), 0));
+                }
+            }
         }
 
         private void Unbind() {
@@ -362,7 +469,8 @@ namespace KexEdit.UI.NodeGraph {
             _priorityField?.Unbind();
 
             _inputsContainer.Clear();
-            _outputsContainer.Clear();
+            _topPortsContainer.Clear();
+            _bottomPortsContainer.Clear();
             _ports.Clear();
 
             ClearBindings();
@@ -395,6 +503,7 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void OnMouseOver(MouseOverEvent evt) {
+            if (NodeGraphPort.IsDragging) return;
             _data.InteractionState |= InteractionState.Hovered;
         }
 
@@ -470,7 +579,8 @@ namespace KexEdit.UI.NodeGraph {
             bool collapsed = _itemsContainer.style.display == DisplayStyle.None;
             collapsed = !collapsed;
             _itemsContainer.style.display = collapsed ? DisplayStyle.None : DisplayStyle.Flex;
-            _collapseButton.text = collapsed ? "▼" : "▲";
+            _foldout.style.width = collapsed ? 24f : 168f;
+            _collapseButton.text = collapsed ? "►" : "◄";
 
             evt.StopPropagation();
         }

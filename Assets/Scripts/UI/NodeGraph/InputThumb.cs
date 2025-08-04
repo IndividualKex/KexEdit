@@ -10,30 +10,48 @@ namespace KexEdit.UI.NodeGraph {
 
         public PortData Data => _data;
 
-        public InputThumb(PortData data) {
+        public InputThumb(PortData data, bool vertical = false) {
             _data = data;
 
-            style.position = Position.Absolute;
-            style.flexDirection = FlexDirection.Row;
-            style.alignItems = Align.Stretch;
-            style.height = 18f;
-            style.right = 0f;
-            style.paddingLeft = 0f;
-            style.paddingRight = 0f;
-            style.paddingTop = 0f;
-            style.paddingBottom = 0f;
-            style.marginLeft = 0f;
-            style.marginRight = 32f;
-            style.marginTop = 0f;
-            style.marginBottom = 0f;
-            style.backgroundColor = s_AltBackgroundColor;
+            if (vertical) {
+                style.position = Position.Absolute;
+                style.flexDirection = FlexDirection.Column;
+                style.alignItems = Align.Center;
+                style.justifyContent = Justify.FlexStart;
+                style.top = 0f;
+                style.marginTop = -22f;
+                style.paddingLeft = 4f;
+                style.paddingRight = 4f;
+                style.paddingTop = 4f;
+                style.paddingBottom = 4f;
+                style.marginLeft = 0f;
+                style.marginRight = 0f;
+                style.marginBottom = 0f;
+                style.backgroundColor = s_AltBackgroundColor;
+            }
+            else {
+                style.position = Position.Absolute;
+                style.flexDirection = FlexDirection.Row;
+                style.alignItems = Align.Stretch;
+                style.height = 18f;
+                style.right = 0f;
+                style.paddingLeft = 0f;
+                style.paddingRight = 0f;
+                style.paddingTop = 0f;
+                style.paddingBottom = 0f;
+                style.marginLeft = 0f;
+                style.marginRight = 32f;
+                style.marginTop = 0f;
+                style.marginBottom = 0f;
+                style.backgroundColor = s_AltBackgroundColor;
+            }
 
             var container = new VisualElement {
                 style = {
                     position = Position.Relative,
-                    flexDirection = FlexDirection.Row,
+                    flexDirection = vertical ? FlexDirection.Column : FlexDirection.Row,
                     alignItems = Align.Center,
-                    paddingLeft = 8f,
+                    paddingLeft = vertical ? 0f : 8f,
                     paddingRight = 0f,
                     paddingTop = 0f,
                     paddingBottom = 0f,
@@ -47,10 +65,22 @@ namespace KexEdit.UI.NodeGraph {
             Add(container);
 
             if (_data.Port.Type == PortType.Anchor) {
-                container.Add(new Label("Anchor"));
+                var label = new Label("Anchor") {
+                    style = {
+                        fontSize = 10f,
+                        unityTextAlign = vertical ? TextAnchor.MiddleCenter : TextAnchor.MiddleLeft
+                    }
+                };
+                container.Add(label);
             }
             else if (_data.Port.Type == PortType.Path) {
-                container.Add(new Label("Path"));
+                var label = new Label("Path") {
+                    style = {
+                        fontSize = 10f,
+                        unityTextAlign = vertical ? TextAnchor.MiddleCenter : TextAnchor.MiddleLeft
+                    }
+                };
+                container.Add(label);
             }
             else if (_data.Port.Type == PortType.Position ||
                 _data.Port.Type == PortType.Rotation) {
@@ -80,56 +110,62 @@ namespace KexEdit.UI.NodeGraph {
                 throw new System.NotImplementedException();
             }
 
-            var connector = new VisualElement {
-                style = {
-                    position = Position.Relative,
-                    justifyContent = Justify.Center,
-                    alignItems = Align.Center,
-                    width = 16f,
-                }
-            };
-            Add(connector);
+            if (vertical) {
+                _edge = new InputThumbEdge(this, vertical);
+                Add(_edge);
+            }
+            else {
+                var connector = new VisualElement {
+                    style = {
+                        position = Position.Relative,
+                        justifyContent = Justify.Center,
+                        alignItems = Align.Center,
+                        width = 16f,
+                    }
+                };
+                Add(connector);
 
-            var circle = new VisualElement {
-                style = {
-                    position = Position.Relative,
-                    justifyContent = Justify.Center,
-                    alignItems = Align.Center,
-                    marginTop = 0f,
-                    marginBottom = 0f,
-                    paddingLeft = 0f,
-                    paddingRight = 0f,
-                    paddingTop = 0f,
-                    paddingBottom = 0f,
-                    width = 8f,
-                    height = 8f,
-                    borderTopLeftRadius = 8f,
-                    borderTopRightRadius = 8f,
-                    borderBottomLeftRadius = 8f,
-                    borderBottomRightRadius = 8f,
-                    backgroundColor = s_DarkBackgroundColor
-                }
-            };
-            connector.Add(circle);
+                var circle = new VisualElement {
+                    style = {
+                        position = Position.Relative,
+                        justifyContent = Justify.Center,
+                        alignItems = Align.Center,
+                        marginTop = 0f,
+                        marginBottom = 0f,
+                        paddingLeft = 0f,
+                        paddingRight = 0f,
+                        paddingTop = 0f,
+                        paddingBottom = 0f,
+                        width = 8f,
+                        height = 8f,
+                        borderTopLeftRadius = 8f,
+                        borderTopRightRadius = 8f,
+                        borderBottomLeftRadius = 8f,
+                        borderBottomRightRadius = 8f,
+                        backgroundColor = s_DarkBackgroundColor
+                    }
+                };
+                connector.Add(circle);
 
-            var cap = new VisualElement {
-                style = {
-                    position = Position.Relative,
-                    justifyContent = Justify.Center,
-                    alignItems = Align.Center,
-                    width = 4f,
-                    height = 4f,
-                    backgroundColor = s_YellowOutline,
-                    borderTopLeftRadius = 4f,
-                    borderTopRightRadius = 4f,
-                    borderBottomLeftRadius = 4f,
-                    borderBottomRightRadius = 4f
-                }
-            };
-            circle.Add(cap);
+                var cap = new VisualElement {
+                    style = {
+                        position = Position.Relative,
+                        justifyContent = Justify.Center,
+                        alignItems = Align.Center,
+                        width = 4f,
+                        height = 4f,
+                        backgroundColor = s_YellowOutline,
+                        borderTopLeftRadius = 4f,
+                        borderTopRightRadius = 4f,
+                        borderBottomLeftRadius = 4f,
+                        borderBottomRightRadius = 4f
+                    }
+                };
+                circle.Add(cap);
 
-            _edge = new InputThumbEdge(this);
-            cap.Add(_edge);
+                _edge = new InputThumbEdge(this, vertical);
+                cap.Add(_edge);
+            }
 
             if (_data.Port.Type == PortType.Anchor) {
                 Add(new AnchorThumbControl(_data));

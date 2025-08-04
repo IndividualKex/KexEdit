@@ -1,21 +1,21 @@
 using Unity.Properties;
+using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI.Timeline {
-    public class CurveButton : VisualElement {
+    public class ReadOnlyButton : Label {
         private TimelineData _data;
 
-        public CurveButton() {
+        public ReadOnlyButton() {
             style.width = 14f;
             style.height = 14f;
             style.backgroundColor = s_BackgroundColor;
-            style.unityBackgroundImageTintColor = s_MutedTextColor;
             style.borderTopWidth = 0f;
             style.borderBottomWidth = 0f;
             style.borderLeftWidth = 0f;
             style.borderRightWidth = 0f;
-            style.marginLeft = 8f;
+            style.marginLeft = 0f;
             style.marginRight = 0f;
             style.marginTop = 0f;
             style.marginBottom = 0f;
@@ -23,6 +23,11 @@ namespace KexEdit.UI.Timeline {
             style.paddingRight = 0f;
             style.paddingTop = 0f;
             style.paddingBottom = 0f;
+            style.unityTextAlign = TextAnchor.MiddleCenter;
+            style.fontSize = 6f;
+            style.color = s_TextColor;
+
+            text = "▼";
         }
 
         public void Initialize(TimelineData data) {
@@ -33,42 +38,39 @@ namespace KexEdit.UI.Timeline {
             RegisterCallback<MouseDownEvent>(OnMouseDown);
 
             var backgroundBinding = new DataBinding {
-                dataSourcePath = new PropertyPath(nameof(_data.ViewMode)),
+                dataSourcePath = new PropertyPath(nameof(_data.DrawAnyReadOnly)),
                 bindingMode = BindingMode.ToTarget,
             };
-            backgroundBinding.sourceToUiConverters.AddConverter((ref TimelineViewMode viewMode) =>
-                (StyleColor)(viewMode == TimelineViewMode.Curve ? s_ActiveColor : s_BackgroundColor));
+            backgroundBinding.sourceToUiConverters.AddConverter((ref bool drawAnyReadOnly) =>
+                (StyleColor)(drawAnyReadOnly ? s_ActiveColor : s_BackgroundColor));
 
-            var tintBinding = new DataBinding {
-                dataSourcePath = new PropertyPath(nameof(_data.ViewMode)),
+            var colorBinding = new DataBinding {
+                dataSourcePath = new PropertyPath(nameof(_data.DrawAnyReadOnly)),
                 bindingMode = BindingMode.ToTarget,
             };
-            tintBinding.sourceToUiConverters.AddConverter((ref TimelineViewMode viewMode) =>
-                (StyleColor)(viewMode == TimelineViewMode.Curve ? s_ActiveTextColor : s_TextColor));
-
-            style.backgroundImage = UIService.Instance.CurveButtonTexture;
+            colorBinding.sourceToUiConverters.AddConverter((ref bool drawAnyReadOnly) =>
+                (StyleColor)(drawAnyReadOnly ? s_ActiveTextColor : s_TextColor));
 
             SetBinding("style.backgroundColor", backgroundBinding);
-            SetBinding("style.unityBackgroundImageTintColor", tintBinding);
+            SetBinding("style.color", colorBinding);
         }
 
         private void OnMouseEnter(MouseEnterEvent evt) {
-            if (_data.ViewMode != TimelineViewMode.Curve) {
+            if (!_data.DrawAnyReadOnly) {
                 style.backgroundColor = s_HoverColor;
             }
         }
 
         private void OnMouseLeave(MouseLeaveEvent evt) {
-            if (_data.ViewMode != TimelineViewMode.Curve) {
+            if (!_data.DrawAnyReadOnly) {
                 style.backgroundColor = s_BackgroundColor;
             }
         }
 
         private void OnMouseDown(MouseDownEvent evt) {
-            if (evt.button != 0 && evt.button != 1) return;
-            var e = this.GetPooled<CurveButtonClickEvent>();
+            if (evt.button != 0) return;
+            var e = this.GetPooled<ReadOnlyButtonClickEvent>();
             e.MousePosition = evt.localMousePosition;
-            e.IsRightClick = evt.button == 1;
             this.Send(e);
             evt.StopPropagation();
         }

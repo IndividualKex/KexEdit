@@ -280,8 +280,16 @@ namespace KexEdit.UI {
         }
 
         private void Close() {
-            RemoveFromHierarchy();
-            _onClose?.Invoke();
+            foreach (var colorRow in _colorRows) {
+                colorRow.RField.Blur();
+                colorRow.GField.Blur();
+                colorRow.BField.Blur();
+            }
+
+            schedule.Execute(() => {
+                RemoveFromHierarchy();
+                _onClose?.Invoke();
+            });
         }
     }
 }

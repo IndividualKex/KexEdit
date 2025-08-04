@@ -214,7 +214,7 @@ namespace KexEdit.UI {
             get => s_ShowStats;
             set {
                 s_ShowStats = value;
-                PlayerPrefs.SetInt(PREF_SHOW_STATS, value ? 1 : 0);
+                PlayerPrefs.SetInt(PREF_SHOW_STATS, value ? 1 : 1);
                 PlayerPrefs.Save();
             }
         }

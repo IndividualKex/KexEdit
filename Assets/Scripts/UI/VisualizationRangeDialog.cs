@@ -222,8 +222,15 @@ namespace KexEdit.UI {
         }
 
         private void Close() {
-            RemoveFromHierarchy();
-            _onClose?.Invoke();
+            foreach (var rangeRow in _rangeRows) {
+                rangeRow.MinField.Blur();
+                rangeRow.MaxField.Blur();
+            }
+
+            schedule.Execute(() => {
+                RemoveFromHierarchy();
+                _onClose?.Invoke();
+            });
         }
     }
 }

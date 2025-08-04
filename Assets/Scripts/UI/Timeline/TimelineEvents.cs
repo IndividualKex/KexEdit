@@ -44,6 +44,10 @@ namespace KexEdit.UI.Timeline {
         public bool IsRightClick;
     }
 
+    public class ReadOnlyButtonClickEvent : TimelineEvent<ReadOnlyButtonClickEvent> {
+        public Vector2 MousePosition;
+    }
+
     public class OutlineMouseDownEvent : TimelineEvent<OutlineMouseDownEvent> { }
 
     public class AddPropertyClickEvent : TimelineEvent<AddPropertyClickEvent> {

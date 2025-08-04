@@ -12,9 +12,10 @@ When a node with controllable properties is selected, the Timeline displays:
 1. **Properties** - List of controllable properties
 2. **Add Property Button** - Add an optional override property
 3. **Toggle Curve View Button** - Switch between dope sheet and curve editor
-4. **Ruler** - Time (s) or distance (m), depending on the node's duration type (`Time` or `Distance`)
-5. **Playhead** - Current position indicator, also shown as a transparent cart in the [Game View](game-view.md)
-6. **Dope Sheet/Curve View** - Keyframe editing area
+4. **Read-Only Curves Button** - Toggle display of read-only property curves
+5. **Ruler** - Time (s) or distance (m), depending on the node's duration type (`Time` or `Distance`)
+6. **Playhead** - Current position indicator, also shown as a transparent cart in the [Game View](game-view.md)
+7. **Dope Sheet/Curve View** - Keyframe editing area
 
 ## Timeline Controls
 
@@ -38,11 +39,11 @@ When a node with controllable properties is selected, the Timeline displays:
 
 ### View Controls
 
-| Input                           | Action              | Notes                                                    |
-| ------------------------------- | ------------------- | -------------------------------------------------------- |
-| `Toggle Curve View Button`      | Switch View Mode    | Toggle between dope sheet and curve editor               |
-| `Eye Icon (Curve View)`         | Toggle Visibility   | Show/hide individual property curves in curve view       |
-| `Right-click Toggle Curve View` | Curve Visualization | Enable/disable read-only curve display (legacy behavior) |
+| Input                      | Action            | Notes                                                      |
+| -------------------------- | ----------------- | ---------------------------------------------------------- |
+| `Toggle Curve View Button` | Switch View Mode  | Toggle between dope sheet and curve editor                 |
+| `Read-Only Curves Button`  | Toggle Read-Only  | Show/hide read-only property curves (e.g., forces, speeds) |
+| `Eye Icon (Curve View)`    | Toggle Visibility | Show/hide individual property curves in curve view         |
 
 ## Keyframe Editing
 
@@ -120,6 +121,7 @@ Double-clicking a keyframe opens a detailed editor with advanced options:
 -   **Precise curve editing**: Direct manipulation of bezier handles
 -   **Visual curve shapes**: See the actual animation curves
 -   **Individual visibility**: Toggle curves on/off with eye icons
+-   **Read-only curves**: View computed properties (forces, speeds) using the read-only curves button
 -   **Value-focused editing**: Fine-tune animation curves and easing
 
 ## Property Types

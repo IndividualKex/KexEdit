@@ -9,6 +9,7 @@ namespace KexEdit.UI.Timeline {
         private Label _headerLabel;
         private FloatField _timeField;
         private CurveButton _curveButton;
+        private ReadOnlyButton _readOnlyButton;
         private VisualElement _propertiesContainer;
         private AddPropertyButton _addPropertyButton;
 
@@ -67,12 +68,16 @@ namespace KexEdit.UI.Timeline {
                     paddingBottom = 0f,
                     marginTop = 2f,
                     marginBottom = 2f,
+                    marginRight = 4f,
                 }
             };
             _header.Add(_timeField);
 
             _curveButton = new CurveButton();
             _header.Add(_curveButton);
+
+            _readOnlyButton = new ReadOnlyButton();
+            _header.Add(_readOnlyButton);
 
             var content = new VisualElement {
                 style = {
@@ -131,6 +136,7 @@ namespace KexEdit.UI.Timeline {
             _data = data;
 
             _curveButton.Initialize(data);
+            _readOnlyButton.Initialize(data);
             _addPropertyButton.Initialize(data);
 
             foreach (var property in data.OrderedProperties) {

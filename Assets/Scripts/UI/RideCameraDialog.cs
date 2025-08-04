@@ -262,8 +262,17 @@ namespace KexEdit.UI {
         }
 
         private void Close() {
-            RemoveFromHierarchy();
-            _onClose?.Invoke();
+            _positionXField.Blur();
+            _positionYField.Blur();
+            _positionZField.Blur();
+            _rotationXField.Blur();
+            _rotationYField.Blur();
+            _rotationZField.Blur();
+
+            schedule.Execute(() => {
+                RemoveFromHierarchy();
+                _onClose?.Invoke();
+            });
         }
     }
 }
