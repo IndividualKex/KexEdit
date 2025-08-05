@@ -2,7 +2,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 namespace KexEdit {
-    public struct Gizmos : IComponentData {        
+    public struct Preferences : IComponentData {
         public float2 VelocityRange;
         public float2 NormalForceRange;
         public float2 LateralForceRange;
@@ -11,8 +11,8 @@ namespace KexEdit {
         public float2 YawSpeedRange;
         public float2 CurvatureRange;
         public bool DrawGizmos;
-        
-        public static Gizmos Default => new() {
+
+        public static Preferences Default => new() {
             VelocityRange = new float2(0f, 50f),
             NormalForceRange = new float2(-2f, 5f),
             LateralForceRange = new float2(-2f, 2f),

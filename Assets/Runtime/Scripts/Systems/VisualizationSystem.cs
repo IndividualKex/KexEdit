@@ -30,7 +30,7 @@ namespace KexEdit {
                 .Build(EntityManager);
 
             RequireForUpdate<GlobalSettings>();
-            RequireForUpdate<Gizmos>();
+            RequireForUpdate<Preferences>();
         }
 
         protected override void OnStartRunning() {
@@ -62,15 +62,15 @@ namespace KexEdit {
                 return;
             }
 
-            var gizmos = SystemAPI.GetSingleton<Gizmos>();
+            var preferences = SystemAPI.GetSingleton<Preferences>();
             var range = _currentMode switch {
-                VisualizationMode.Velocity => gizmos.VelocityRange,
-                VisualizationMode.NormalForce => gizmos.NormalForceRange,
-                VisualizationMode.LateralForce => gizmos.LateralForceRange,
-                VisualizationMode.RollSpeed => gizmos.RollSpeedRange,
-                VisualizationMode.PitchSpeed => gizmos.PitchSpeedRange,
-                VisualizationMode.YawSpeed => gizmos.YawSpeedRange,
-                VisualizationMode.Curvature => gizmos.CurvatureRange,   
+                VisualizationMode.Velocity => preferences.VelocityRange,
+                VisualizationMode.NormalForce => preferences.NormalForceRange,
+                VisualizationMode.LateralForce => preferences.LateralForceRange,
+                VisualizationMode.RollSpeed => preferences.RollSpeedRange,
+                VisualizationMode.PitchSpeed => preferences.PitchSpeedRange,
+                VisualizationMode.YawSpeed => preferences.YawSpeedRange,
+                VisualizationMode.Curvature => preferences.CurvatureRange,
                 _ => new float2(0f, 1f)
             };
             Shader.SetGlobalFloat("_MinValue", range.x);

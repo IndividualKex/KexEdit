@@ -63,7 +63,7 @@ namespace KexEdit.UI {
             ecb.AddComponent(stateEntity, new NodeGraphData());
             ecb.AddComponent(stateEntity, new TimelineData());
             ecb.AddComponent<GameViewData>(stateEntity);
-            ecb.AddComponent<Gizmos>(stateEntity);
+            ecb.AddComponent<KexEdit.Preferences>(stateEntity);
             ecb.SetName(stateEntity, "UI State");
 
             var loadEntity = ecb.CreateEntity();
