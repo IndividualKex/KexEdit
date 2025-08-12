@@ -18,7 +18,7 @@ namespace KexEdit.UI {
 
             for (int i = 0; i < styleSettings.Styles.Count; i++) {
                 var cartStyle = styleSettings.Styles[i];
-                if (cartStyle.Loaded || cartStyle.Mesh != null) continue;
+                if (cartStyle.Loaded || cartStyle.Mesh != Entity.Null) continue;
                 cartStyle.Loaded = true;
                 string fullPath = System.IO.Path.Combine(
                     UnityEngine.Application.streamingAssetsPath,
@@ -27,28 +27,13 @@ namespace KexEdit.UI {
                 );
 
                 if (cartStyle.MeshPath.EndsWith(".glb") || cartStyle.MeshPath.EndsWith(".gltf")) {
-                    ImportManager.ImportGltfFileAsync(fullPath, gameObject => {
-                        gameObject.name = cartStyle.MeshPath;
-                        gameObject.SetActive(false);
-                        SetLayerRecursive(gameObject, _cartLayer);
-                        cartStyle.Mesh = gameObject;
+                    ImportManager.ImportGltfFile(fullPath, EntityManager, _cartLayer, result => {
+                        cartStyle.Mesh = result;
                     });
                 }
                 else if (cartStyle.MeshPath.EndsWith(".obj")) {
-                    ImportManager.ImportObjFile(fullPath, gameObject => {
-                        gameObject.name = cartStyle.MeshPath;
-                        gameObject.SetActive(false);
-                        SetLayerRecursive(gameObject, _cartLayer);
-                        cartStyle.Mesh = gameObject;
-                    });
+                    cartStyle.Mesh = ImportManager.ImportObjFile(fullPath, EntityManager, _cartLayer);
                 }
-            }
-        }
-
-        private void SetLayerRecursive(GameObject gameObject, int layer) {
-            gameObject.layer = layer;
-            foreach (Transform child in gameObject.transform) {
-                SetLayerRecursive(child.gameObject, layer);
             }
         }
     }

@@ -317,8 +317,8 @@ namespace KexEdit.UI.NodeGraph {
                             Undo.Record();
                             var node = AddNode(evt.ContentPosition, NodeType.Mesh);
                             EntityManager.AddComponentData<MeshReference>(node, new MeshReference {
+                                Value = Entity.Null,
                                 FilePath = filePath,
-                                Value = null,
                                 Loaded = false
                             });
                         });
@@ -727,11 +727,11 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void LinkMesh(NodeData nodeData) {
-            var meshReference = SystemAPI.ManagedAPI.GetComponent<MeshReference>(nodeData.Entity);
             ImportManager.ShowImportDialog(_view, filePath => {
                 Undo.Record();
-                meshReference.FilePath = filePath;
-                meshReference.Value = null;
+                ref var meshReference = ref SystemAPI.GetComponentRW<MeshReference>(nodeData.Entity).ValueRW;
+                meshReference.Value = Entity.Null;
+                meshReference.FilePath = new FixedString512Bytes(filePath);
                 meshReference.Loaded = false;
             });
         }

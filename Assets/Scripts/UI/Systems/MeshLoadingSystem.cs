@@ -1,30 +1,36 @@
+using Unity.Collections;
 using Unity.Entities;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class MeshLoadingSystem : SystemBase {
         protected override void OnUpdate() {
+            using var entitiesToLoad = new NativeList<Entity>(Allocator.Temp);
             foreach (var (meshReference, render, entity) in SystemAPI.Query<MeshReference, Render>().WithEntityAccess()) {
-                if (meshReference.Loaded || 
-                    meshReference.FilePath.IsEmpty || 
-                    meshReference.Value != null) continue;
+                if (meshReference.Loaded ||
+                    meshReference.FilePath.IsEmpty ||
+                    meshReference.Value != Entity.Null) continue;
+                entitiesToLoad.Add(entity);
+            }
+
+            foreach (var entity in entitiesToLoad) {
+                ref var meshReference = ref SystemAPI.GetComponentRW<MeshReference>(entity).ValueRW;
                 meshReference.Loaded = true;
                 string filePath = meshReference.FilePath.ToString();
                 if (filePath.EndsWith(".glb") || filePath.EndsWith(".gltf")) {
-                    ImportManager.ImportGltfFileAsync(filePath, gameObject => {
-                        var nodeMesh = gameObject.AddComponent<NodeMesh>();
-                        meshReference.Value = nodeMesh;
-                        nodeMesh.Node = entity;
-                        gameObject.SetActive(render.Value);
+                    ImportManager.ImportGltfFile(filePath, EntityManager, 0, result => {
+                        if (!SystemAPI.HasComponent<MeshReference>(entity)) return;
+                        ref var meshReference = ref SystemAPI.GetComponentRW<MeshReference>(entity).ValueRW;
+                        meshReference.Value = result;
+                        EntityManager.AddComponentData(result, new NodeMesh { Node = entity });
                     });
                 }
                 else if (filePath.EndsWith(".obj")) {
-                    ImportManager.ImportObjFile(filePath, gameObject => {
-                        var nodeMesh = gameObject.AddComponent<NodeMesh>();
-                        meshReference.Value = nodeMesh;
-                        nodeMesh.Node = entity;
-                        gameObject.SetActive(render.Value);
-                    });
+                    var result = ImportManager.ImportObjFile(filePath, EntityManager, 0);
+                    if (result != Entity.Null) {
+                        meshReference.Value = result;
+                        EntityManager.AddComponentData(result, new NodeMesh { Node = entity });
+                    }
                 }
                 else {
                     UnityEngine.Debug.LogError($"Unsupported file type: {filePath}");

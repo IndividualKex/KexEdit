@@ -39,7 +39,7 @@ namespace KexEdit.UI {
                 var styleConfig = config.Styles[i];
 
                 var cartStyle = new CartStyle {
-                    Mesh = null,
+                    Mesh = Entity.Null,
                     MeshPath = styleConfig.MeshPath,
                     Loaded = false,
                 };
@@ -52,9 +52,9 @@ namespace KexEdit.UI {
 
         private void Dispose(CartStyleSettings settings) {
             foreach (var style in settings.Styles) {
-                if (style.Mesh == null) continue;
-                UnityEngine.Object.Destroy(style.Mesh);
-                style.Mesh = null;
+                if (style.Mesh == Entity.Null) continue;
+                EntityManager.DestroyEntity(style.Mesh);
+                style.Mesh = Entity.Null;
             }
         }
     }

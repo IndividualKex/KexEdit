@@ -70,6 +70,7 @@ namespace KexEdit.UI {
                     nodeClickEvent.Node = intersectionKeyframe.Node;
                     nodeClickEvent.ShiftKey = false;
                     _nodeGraphView.Send(nodeClickEvent);
+                    _nodeGraphView.Focus();
                     _timelineView.Send<ForceUpdateEvent>();
                 }
 
@@ -104,6 +105,7 @@ namespace KexEdit.UI {
                     e.Node = entity;
                     e.ShiftKey = shiftPressed;
                     _nodeGraphView.Send(e);
+                    _nodeGraphView.Focus();
                 }
             }
             else if (!shiftPressed) {

@@ -1,11 +1,17 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UIElements;
-using GLTFast;
 using SFB;
+using Unity.Entities;
+using Unity.Collections;
+using Unity.Rendering;
+using ComponentType = Unity.Entities.ComponentType;
+using Unity.Entities.Graphics;
+using Unity.Transforms;
+using Unity.Mathematics;
+using System.Threading.Tasks;
+using GLTFast;
 
 namespace KexEdit.UI {
     public static class ImportManager {
@@ -37,7 +43,7 @@ namespace KexEdit.UI {
             onSuccess?.Invoke(path);
         }
 
-        public static async void ImportGltfFileAsync(string path, Action<GameObject> onSuccess = null) {
+        public static async void ImportGltfFile(string path, EntityManager entityManager, int layer, Action<Entity> onSuccess = null) {
             var gltf = new GltfImport();
             bool success = await gltf.Load(path);
 
@@ -46,165 +52,124 @@ namespace KexEdit.UI {
                 return;
             }
 
-            var rootGO = new GameObject($"Imported glTF: {Path.GetFileNameWithoutExtension(path)}");
+            string name = $"Imported glTF: {Path.GetFileNameWithoutExtension(path)}";
+            var entity = entityManager.CreateEntity(typeof(LocalTransform), typeof(LocalToWorld));
+            entityManager.SetName(entity, name);
+            entityManager.SetComponentData(entity, LocalTransform.Identity);
+            entityManager.SetComponentData(entity, new LocalToWorld { Value = float4x4.identity });
 
-            success = await gltf.InstantiateMainSceneAsync(rootGO.transform);
+            var settings = new InstantiationSettings {
+                SceneObjectCreation = SceneObjectCreation.Never
+            };
+            var instantiator = new EntityInstantiator(gltf, entity, null, settings);
+            success = await gltf.InstantiateMainSceneAsync(instantiator);
 
             if (!success) {
                 Debug.LogError("Failed to instantiate glTF.");
-                GameObject.Destroy(rootGO);
+                return;
             }
-            else {
-                onSuccess?.Invoke(rootGO);
-            }
+
+            await Task.Yield();
+
+            InitializeEntityHierarchy(entityManager, entity, layer);
+            onSuccess?.Invoke(entity);
         }
 
-        public static void ImportObjFile(string path, Action<GameObject> onSuccess = null) {
+        public static Entity ImportObjFile(string path, EntityManager entityManager, int layer) {
             try {
-                Mesh mesh = ParseObjFile(path);
+                Mesh mesh = ObjLoader.LoadMesh(path);
+                Material material = Resources.Load<Material>("Default-PBR");
 
                 if (mesh == null) {
                     Debug.LogError("Failed to parse OBJ file.");
-                    return;
+                    return Entity.Null;
                 }
 
-                var rootGO = new GameObject($"Imported OBJ: {Path.GetFileNameWithoutExtension(path)}");
-                var meshFilter = rootGO.AddComponent<MeshFilter>();
-                var meshRenderer = rootGO.AddComponent<MeshRenderer>();
+                string name = $"Imported OBJ: {Path.GetFileNameWithoutExtension(path)}";
+                var entity = entityManager.CreateEntity();
+                using var ecb = new EntityCommandBuffer(Allocator.Temp);
+                ecb.SetName(entity, name);
+                AddRenderingComponents(entity, ecb, mesh, Resources.Load<Material>("Default-PBR"), layer);
+                ecb.Playback(entityManager);
 
-                meshFilter.mesh = mesh;
-
-                meshRenderer.material = Resources.Load<Material>("Default-PBR");
-
-                onSuccess?.Invoke(rootGO);
+                return entity;
             }
             catch (Exception e) {
                 Debug.LogError($"Error importing OBJ file: {e.Message}");
+                return Entity.Null;
             }
         }
 
-        public static Mesh ParseObjFile(string path) {
-            var vertices = new List<Vector3>();
-            var normals = new List<Vector3>();
-            var uvs = new List<Vector2>();
-            var triangles = new List<int>();
+        private static void AddRenderingComponents(
+            Entity entity,
+            EntityCommandBuffer ecb,
+            Mesh mesh,
+            Material material,
+            int layer
+        ) {
+            var renderMeshArray = new RenderMeshArray(new[] { material }, new[] { mesh });
+            var materialMeshInfo = MaterialMeshInfo.FromRenderMeshArrayIndices(0, 0);
 
-            var finalVertices = new List<Vector3>();
-            var finalNormals = new List<Vector3>();
-            var finalUvs = new List<Vector2>();
+            var componentTypes = new FixedList128Bytes<ComponentType>() {
+                ComponentType.ReadWrite<LocalTransform>(),
+                ComponentType.ReadWrite<WorldRenderBounds>(),
+                ComponentType.ReadWrite<RenderFilterSettings>(),
+                ComponentType.ReadWrite<MaterialMeshInfo>(),
+                ComponentType.ChunkComponent<ChunkWorldRenderBounds>(),
+                ComponentType.ChunkComponent<EntitiesGraphicsChunkInfo>(),
+                ComponentType.ReadWrite<WorldToLocal_Tag>(),
+                ComponentType.ReadWrite<RenderBounds>(),
+                ComponentType.ReadWrite<PerInstanceCullingTag>(),
+                ComponentType.ReadWrite<RenderMeshArray>(),
+                ComponentType.ReadWrite<LocalToWorld>()
+            };
 
-            var vertexDict = new Dictionary<string, int>();
+            ecb.AddComponent(entity, new ComponentTypeSet(componentTypes));
 
-            string[] lines = File.ReadAllLines(path);
+            var renderFilterSettings = RenderFilterSettings.Default;
+            renderFilterSettings.Layer = layer;
+            ecb.SetSharedComponent(entity, renderFilterSettings);
+            ecb.SetSharedComponentManaged(entity, renderMeshArray);
+            ecb.SetComponent(entity, materialMeshInfo);
+            ecb.SetComponent(entity, new RenderBounds { Value = mesh.bounds.ToAABB() });
+        }
 
-            foreach (string line in lines) {
-                string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        private static void InitializeEntityHierarchy(EntityManager entityManager, Entity rootEntity, int layer) {
+            using var ecb = new EntityCommandBuffer(Allocator.Temp);
+            using var entities = new NativeList<Entity>(Allocator.Temp) {
+                rootEntity
+            };
 
-                if (parts.Length == 0) continue;
+            for (int i = 0; i < entities.Length; i++) {
+                var entity = entities[i];
 
-                switch (parts[0]) {
-                    case "v":
-                        if (parts.Length != 4) {
-                            Debug.LogError($"Invalid vertex line: {line}, expected 3 values.");
-                            continue;
-                        }
+                if (entityManager.HasComponent<Disabled>(entity)) {
+                    ecb.RemoveComponent<Disabled>(entity);
+                }
 
-                        float x = float.Parse(parts[1], CultureInfo.InvariantCulture);
-                        float y = float.Parse(parts[2], CultureInfo.InvariantCulture);
-                        float z = float.Parse(parts[3], CultureInfo.InvariantCulture);
-                        vertices.Add(new Vector3(x, y, z));
-                        break;
+                if (entityManager.HasComponent<RenderFilterSettings>(entity)) {
+                    var renderFilterSettings = entityManager.GetSharedComponent<RenderFilterSettings>(entity);
+                    renderFilterSettings.Layer = layer;
+                    ecb.SetSharedComponent(entity, renderFilterSettings);
+                }
 
-                    case "vn":
-                        if (parts.Length != 4) {
-                            Debug.LogError($"Invalid normal line: {line}, expected 3 values.");
-                            continue;
-                        }
-
-                        float xn = float.Parse(parts[1], CultureInfo.InvariantCulture);
-                        float yn = float.Parse(parts[2], CultureInfo.InvariantCulture);
-                        float zn = float.Parse(parts[3], CultureInfo.InvariantCulture);
-                        normals.Add(new Vector3(xn, yn, zn));
-                        break;
-
-                    case "vt":
-                        if (parts.Length != 3) {
-                            Debug.LogError($"Invalid uv line: {line}, expected 2 values.");
-                            continue;
-                        }
-
-                        float u = float.Parse(parts[1], CultureInfo.InvariantCulture);
-                        float v = float.Parse(parts[2], CultureInfo.InvariantCulture);
-                        uvs.Add(new Vector2(u, v));
-                        break;
-
-                    case "f":
-                        if (parts.Length != 4) {
-                            Debug.LogError($"Invalid face line: {line}. Only triangles are supported.");
-                            continue;
-                        }
-
-                        for (int i = 1; i < parts.Length; i++) {
-                            string vertexKey = parts[i];
-
-                            if (!vertexDict.ContainsKey(vertexKey)) {
-                                string[] indices = vertexKey.Split('/');
-
-                                int vertexIndex = int.Parse(indices[0]) - 1;
-                                int uvIndex = indices.Length > 1 && !string.IsNullOrEmpty(indices[1]) ? int.Parse(indices[1]) - 1 : -1;
-                                int normalIndex = indices.Length > 2 && !string.IsNullOrEmpty(indices[2]) ? int.Parse(indices[2]) - 1 : -1;
-
-                                finalVertices.Add(vertices[vertexIndex]);
-
-                                if (uvIndex >= 0 && uvIndex < uvs.Count) {
-                                    finalUvs.Add(uvs[uvIndex]);
-
-                                }
-                                else {
-                                    finalUvs.Add(Vector2.zero);
-                                }
-
-                                if (normalIndex >= 0 && normalIndex < normals.Count) {
-                                    finalNormals.Add(normals[normalIndex]);
-                                }
-                                else {
-                                    finalNormals.Add(Vector3.up);
-                                }
-
-                                vertexDict[vertexKey] = finalVertices.Count - 1;
-                            }
-
-                            triangles.Add(vertexDict[vertexKey]);
-                        }
-                        break;
+                if (entityManager.HasBuffer<Child>(entity)) {
+                    var children = entityManager.GetBuffer<Child>(entity);
+                    foreach (var child in children) {
+                        entities.Add(child.Value);
+                    }
                 }
             }
 
-            if (finalVertices.Count == 0) {
-                Debug.LogError("No vertices found in OBJ file.");
-                return null;
+            var linkedEntityGroup = entityManager.AddBuffer<LinkedEntityGroup>(rootEntity);
+            linkedEntityGroup.Add(rootEntity);
+            foreach (var entity in entities) {
+                linkedEntityGroup.Add(entity);
             }
 
-            var mesh = new Mesh {
-                vertices = finalVertices.ToArray(),
-                triangles = triangles.ToArray()
-            };
+            ecb.SetComponent(rootEntity, LocalTransform.FromPosition(new float3(0f, -999f, 0f)));
 
-            if (finalUvs.Count > 0) {
-                mesh.uv = finalUvs.ToArray();
-            }
-
-            if (finalNormals.Count > 0) {
-                mesh.normals = finalNormals.ToArray();
-            }
-            else {
-                mesh.RecalculateNormals();
-            }
-
-            mesh.RecalculateBounds();
-            mesh.name = Path.GetFileNameWithoutExtension(path);
-
-            return mesh;
+            ecb.Playback(entityManager);
         }
     }
 }

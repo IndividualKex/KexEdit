@@ -1,41 +1,51 @@
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class CartMeshLoadingSystem : SystemBase {
+        private EntityQuery _query;
+
         protected override void OnCreate() {
-            RequireForUpdate<LoadCartMeshEvent>();
+            _query = SystemAPI.QueryBuilder()
+                .WithAll<LoadCartMeshEvent>()
+                .Build();
+            
+            RequireForUpdate(_query);
         }
 
         protected override void OnUpdate() {
+            using var events = _query.ToEntityArray(Allocator.Temp);
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (evt, entity) in SystemAPI.Query<LoadCartMeshEvent>().WithEntityAccess()) {
+
+            for (int i = 0; i < events.Length; i++) {
+                var entity = events[i];
+                var evt = SystemAPI.GetComponent<LoadCartMeshEvent>(entity);
+
                 if (evt.Target == Entity.Null) {
                     UnityEngine.Debug.LogError("LoadCartMeshEvent missing Target entity");
                     ecb.DestroyEntity(entity);
                     continue;
                 }
 
-                if (!SystemAPI.ManagedAPI.HasComponent<CartMeshReference>(evt.Target)) {
+                if (!SystemAPI.HasComponent<CartMeshReference>(evt.Target)) {
                     UnityEngine.Debug.LogError("Target entity missing CartMeshReference component");
                     ecb.DestroyEntity(entity);
                     continue;
                 }
 
-                var cartMeshReference = SystemAPI.ManagedAPI.GetComponent<CartMeshReference>(evt.Target);
-                if (cartMeshReference.Value != null) {
-                    Object.Destroy(cartMeshReference.Value.gameObject);
+                ref var cartMeshReference = ref SystemAPI.GetComponentRW<CartMeshReference>(evt.Target).ValueRW;
+                if (cartMeshReference.Value != Entity.Null) {
+                    ecb.DestroyEntity(cartMeshReference.Value);
                 }
 
-                var cartMesh = Object.Instantiate(evt.Cart).AddComponent<CartMesh>();
-                cartMesh.Cart = evt.Target;
+                Entity cartMesh = EntityManager.Instantiate(evt.Cart);
                 cartMeshReference.Value = cartMesh;
-                cartMesh.gameObject.SetActive(true);
-                cartMesh.gameObject.layer = LayerMask.NameToLayer("Cart");
+                ecb.AddComponent(cartMesh, new CartMesh { Cart = evt.Target });
+
                 ecb.DestroyEntity(entity);
             }
+            
             ecb.Playback(EntityManager);
         }
     }
