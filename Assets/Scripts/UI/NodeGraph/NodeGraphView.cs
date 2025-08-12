@@ -4,6 +4,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
+using KexEdit.UI;
 using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI.NodeGraph {
@@ -351,6 +352,7 @@ namespace KexEdit.UI.NodeGraph {
 
             if (_panning) {
                 Vector2 delta = evt.localMousePosition - _startMousePosition;
+                delta = Preferences.AdjustPointerDelta(delta);
                 _data.Pan += delta;
                 _content.transform.position = _data.Pan;
                 _startMousePosition = evt.localMousePosition;
@@ -384,7 +386,7 @@ namespace KexEdit.UI.NodeGraph {
             Vector2 mousePos = evt.mousePosition;
             Vector2 contentSpaceMousePos = (mousePos - _data.Pan) / _data.Zoom;
 
-            float zoomDelta = -evt.delta.y * ZOOM_SPEED;
+            float zoomDelta = -Preferences.AdjustScroll(evt.delta.y) * ZOOM_SPEED;
             float multiplier = zoomDelta > 0 ? 1.1f : 1f / 1.1f;
             _data.Zoom = Mathf.Clamp(_data.Zoom * Mathf.Pow(multiplier, Mathf.Abs(zoomDelta)), MIN_ZOOM, MAX_ZOOM);
 

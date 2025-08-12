@@ -40,6 +40,11 @@ namespace KexEdit.UI {
         private const string PREF_VIS_CURVATURE_MIN = "VisCurvatureMin";
         private const string PREF_VIS_CURVATURE_MAX = "VisCurvatureMax";
 
+        private const string PREF_SCROLL_INVERT = "ScrollInvert";
+        private const string PREF_SCROLL_SENSITIVITY = "ScrollSensitivity";
+        private const string PREF_POINTER_SENSITIVITY = "PointerSensitivity";
+        private const string PREF_ENABLE_TOPROW_VIEW_HOTKEYS = "EnableTopRowViewHotkeys";
+
         private static DistanceUnitsType s_DistanceUnits;
         private static AngleUnitsType s_AngleUnits;
         private static AngleChangeUnitsType s_AngleChangeUnits;
@@ -61,6 +66,11 @@ namespace KexEdit.UI {
         private static bool s_KeyframeEditor;
         private static bool s_ShowGizmos;
         private static bool s_AutoStyle;
+
+        private static bool s_ScrollInvert;
+        private static float s_ScrollSensitivity;
+        private static float s_PointerSensitivity;
+        private static bool s_EnableTopRowViewHotkeys;
 
         static Preferences() {
             LoadPreferences();
@@ -246,6 +256,55 @@ namespace KexEdit.UI {
             }
         }
 
+        public static bool InvertScroll {
+            get => s_ScrollInvert;
+            set {
+                s_ScrollInvert = value;
+                PlayerPrefs.SetInt(PREF_SCROLL_INVERT, value ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static float ScrollSensitivity {
+            get => s_ScrollSensitivity;
+            set {
+                s_ScrollSensitivity = Mathf.Clamp(value, 0.1f, 3f);
+                PlayerPrefs.SetFloat(PREF_SCROLL_SENSITIVITY, s_ScrollSensitivity);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static float PointerSensitivity {
+            get => s_PointerSensitivity;
+            set {
+                s_PointerSensitivity = Mathf.Clamp(value, 0.1f, 3f);
+                PlayerPrefs.SetFloat(PREF_POINTER_SENSITIVITY, s_PointerSensitivity);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static bool EnableTopRowViewHotkeys {
+            get => s_EnableTopRowViewHotkeys;
+            set {
+                s_EnableTopRowViewHotkeys = value;
+                PlayerPrefs.SetInt(PREF_ENABLE_TOPROW_VIEW_HOTKEYS, value ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static float AdjustScroll(float deltaY) {
+            float sign = s_ScrollInvert ? -1f : 1f;
+            return deltaY * sign * s_ScrollSensitivity;
+        }
+
+        public static float2 AdjustPointerDelta(float2 delta) {
+            return delta * s_PointerSensitivity;
+        }
+
+        public static Vector2 AdjustPointerDelta(Vector2 delta) {
+            return delta * s_PointerSensitivity;
+        }
+
         public static float GetDefaultUIScale() {
             float dpi = Screen.dpi;
             if (dpi <= 96f) return 1f;
@@ -276,6 +335,17 @@ namespace KexEdit.UI {
             s_KeyframeEditor = PlayerPrefs.GetInt(PREF_KEYFRAME_EDITOR, 0) == 1;
             s_ShowGizmos = PlayerPrefs.GetInt(PREF_SHOW_GIZMOS, 0) == 1;
             s_AutoStyle = PlayerPrefs.GetInt(PREF_AUTO_STYLE, 0) == 1;
+
+            bool isMac = Application.platform == RuntimePlatform.OSXEditor || Application.platform == RuntimePlatform.OSXPlayer;
+            float defaultScrollSensitivity = isMac ? 0.7f : 1f;
+            float defaultPointerSensitivity = isMac ? 0.8f : 1f;
+            bool defaultInvertScroll = isMac; // Match natural scroll on macOS
+            bool defaultEnableTopRow = true;
+
+            s_ScrollInvert = PlayerPrefs.GetInt(PREF_SCROLL_INVERT, defaultInvertScroll ? 1 : 0) == 1;
+            s_ScrollSensitivity = PlayerPrefs.GetFloat(PREF_SCROLL_SENSITIVITY, defaultScrollSensitivity);
+            s_PointerSensitivity = PlayerPrefs.GetFloat(PREF_POINTER_SENSITIVITY, defaultPointerSensitivity);
+            s_EnableTopRowViewHotkeys = PlayerPrefs.GetInt(PREF_ENABLE_TOPROW_VIEW_HOTKEYS, defaultEnableTopRow ? 1 : 0) == 1;
         }
 
         public static float2 GetVisualizationRange(VisualizationMode mode) {
