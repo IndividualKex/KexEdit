@@ -4,6 +4,7 @@ using Unity.Properties;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.Timeline.Constants;
 using Unity.Mathematics;
+using KexEdit.UI;
 
 namespace KexEdit.UI.Timeline {
     public class TimelineView : VisualElement {
@@ -18,6 +19,7 @@ namespace KexEdit.UI.Timeline {
 
         private Vector2 _prevMousePosition;
         private bool _panning;
+        private bool _isHovered;
 
         private TimelineData _data;
 
@@ -101,7 +103,12 @@ namespace KexEdit.UI.Timeline {
             RegisterCallback<MouseMoveEvent>(OnMouseMove);
             RegisterCallback<MouseUpEvent>(OnMouseUp);
             RegisterCallback<WheelEvent>(OnWheel);
+            RegisterCallback<MouseEnterEvent>(_ => _isHovered = true);
+            RegisterCallback<MouseLeaveEvent>(_ => _isHovered = false);
             RegisterCallback<KeyDownEvent>(OnKeyDown);
+
+            // Poll native trackpad gestures if enabled
+            schedule.Execute(PollTrackpadGestures).Every(16);
         }
 
         public void Draw() {
@@ -161,7 +168,9 @@ namespace KexEdit.UI.Timeline {
             if (!_data.Active) return;
 
             if (_panning) {
+                // Suppress underlying controls while panning
                 Vector2 delta = evt.localMousePosition - _prevMousePosition;
+                delta = Preferences.AdjustPointerDelta(delta);
                 _data.Offset -= delta.x;
                 _data.ClampOffset();
                 _prevMousePosition = evt.localMousePosition;
@@ -186,17 +195,17 @@ namespace KexEdit.UI.Timeline {
         private void OnWheel(WheelEvent evt) {
             if (!_data.Active) return;
 
-            if (evt.shiftKey) {
-                const float panSpeed = 15f;
-                _data.Offset += evt.delta.y * panSpeed;
+            bool blender = Preferences.ControlScheme == ControlScheme.Blender;
+            if (blender && !evt.ctrlKey && !evt.commandKey) {
+                // Blender-like: scroll pans by default
+                const float panSpeed = 10f;
+                _data.Offset += Preferences.AdjustScroll(evt.delta.y) * panSpeed;
                 _data.ClampOffset();
-                
                 var e = this.GetPooled<TimelineOffsetChangeEvent>();
                 e.Offset = _data.Offset;
                 this.Send(e);
-            }
-            else {
-                float zoomMultiplier = 1f - evt.delta.y * ZOOM_SPEED;
+            } else {
+                float zoomMultiplier = 1f - Preferences.AdjustScroll(evt.delta.y) * ZOOM_SPEED;
                 float newZoom = _data.Zoom * zoomMultiplier;
                 newZoom = Mathf.Clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
 
@@ -219,6 +228,34 @@ namespace KexEdit.UI.Timeline {
             }
 
             evt.StopPropagation();
+        }
+
+        private void PollTrackpadGestures() {
+            if (!Preferences.EnableTrackpadGestures || !_isHovered || !_data.Active) return;
+
+            // Pinch to zoom
+            if (TrackpadGestureProvider.Instance.TryGetMagnifyDelta(out float magnify) && Mathf.Abs(magnify) > 0.0001f) {
+                // Exponential response for smoother pinch
+                float factor = Mathf.Exp(-magnify * (ZOOM_SPEED * 2.0f));
+                float zoomMultiplier = factor;
+                float newZoom = Mathf.Clamp(_data.Zoom * zoomMultiplier, MIN_ZOOM, MAX_ZOOM);
+                if (Mathf.Abs(_data.Zoom - newZoom) > 1e-6f) {
+                    float oldZoom = _data.Zoom;
+                    _data.Zoom = newZoom;
+
+                    float mouseTime = _data.PixelToTime(_prevMousePosition.x);
+                    _data.Offset = mouseTime * RESOLUTION * (newZoom - oldZoom) + _data.Offset;
+                    _data.ClampOffset();
+
+                    var zoomEvent = this.GetPooled<TimelineZoomChangeEvent>();
+                    zoomEvent.Zoom = _data.Zoom;
+                    this.Send(zoomEvent);
+
+                    var offsetEvent = this.GetPooled<TimelineOffsetChangeEvent>();
+                    offsetEvent.Offset = _data.Offset;
+                    this.Send(offsetEvent);
+                }
+            }
         }
 
         private void OnKeyDown(KeyDownEvent evt) {

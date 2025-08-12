@@ -233,6 +233,7 @@ namespace KexEdit.UI.Timeline {
             if (!_data.Active) return;
 
             var kb = Keyboard.current;
+            if (UI.Extensions.IsTextInputActive()) return;
             if (!kb.leftShiftKey.isPressed && !kb.rightShiftKey.isPressed) return;
 
             var visibleProperties = new List<PropertyType>();

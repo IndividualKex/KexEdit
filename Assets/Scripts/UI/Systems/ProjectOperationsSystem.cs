@@ -47,6 +47,7 @@ namespace KexEdit.UI {
                 AddFileMenu(menuBar);
                 AddEditMenu(menuBar);
                 AddViewMenu(menuBar);
+                AddPreferencesMenu(menuBar);
                 AddHelpMenu(menuBar);
 
                 _titleLabel = new Label("Untitled") {
@@ -199,6 +200,7 @@ namespace KexEdit.UI {
                     submenu.AddItem("Left View", () => OrbitCameraSystem.SetOtherSideView(), "Ctrl+Numpad 3".ToPlatformShortcut());
                     submenu.AddItem("Top View", () => OrbitCameraSystem.SetTopView(), "Numpad 7");
                     submenu.AddItem("Bottom View", () => OrbitCameraSystem.SetBottomView(), "Ctrl+Numpad 7".ToPlatformShortcut());
+                    submenu.AddItem("Frame All (Reset Zoom)", () => GameViewControlSystem.FocusAll(), "Home");
                     submenu.AddSeparator();
                     submenu.AddItem("Toggle Orthographic", () => OrbitCameraSystem.ToggleOrthographic(), "Numpad 5");
                     submenu.AddSeparator();
@@ -275,6 +277,55 @@ namespace KexEdit.UI {
                         envSubmenu.AddItem("Sky", () => Preferences.SkyType = SkyType.Procedural,
                             isChecked: currentSkyType == SkyType.Procedural);
                     });
+                });
+            });
+        }
+
+        private void AddPreferencesMenu(MenuBar menuBar) {
+            menuBar.AddMenu("Preferences", menu => {
+                menu.AddSubmenu("Input", submenu => {
+                    submenu.AddItem("Invert Scroll Direction", () => Preferences.InvertScroll = !Preferences.InvertScroll,
+                        isChecked: Preferences.InvertScroll);
+                    submenu.AddSeparator();
+                    submenu.AddSubmenu("Control Scheme", scheme => {
+                        scheme.AddItem("Unity", () => Preferences.ControlScheme = ControlScheme.Unity,
+                            isChecked: Preferences.ControlScheme == ControlScheme.Unity);
+                        scheme.AddItem("Blender", () => Preferences.ControlScheme = ControlScheme.Blender,
+                            isChecked: Preferences.ControlScheme == ControlScheme.Blender);
+                    });
+                    submenu.AddItem("Enable Trackpad Gestures (macOS)", () => Preferences.EnableTrackpadGestures = !Preferences.EnableTrackpadGestures,
+                        isChecked: Preferences.EnableTrackpadGestures);
+                    submenu.AddSeparator();
+                    submenu.AddSubmenu("Scroll Sensitivity", sens => {
+                        sens.AddItem("0.5x", () => Preferences.ScrollSensitivity = 0.5f,
+                            isChecked: Mathf.Abs(Preferences.ScrollSensitivity - 0.5f) < 0.001f);
+                        sens.AddItem("0.75x", () => Preferences.ScrollSensitivity = 0.75f,
+                            isChecked: Mathf.Abs(Preferences.ScrollSensitivity - 0.75f) < 0.001f);
+                        sens.AddItem("1.0x", () => Preferences.ScrollSensitivity = 1.0f,
+                            isChecked: Mathf.Abs(Preferences.ScrollSensitivity - 1.0f) < 0.001f);
+                        sens.AddItem("1.5x", () => Preferences.ScrollSensitivity = 1.5f,
+                            isChecked: Mathf.Abs(Preferences.ScrollSensitivity - 1.5f) < 0.001f);
+                        sens.AddItem("2.0x", () => Preferences.ScrollSensitivity = 2.0f,
+                            isChecked: Mathf.Abs(Preferences.ScrollSensitivity - 2.0f) < 0.001f);
+                    });
+                    submenu.AddSubmenu("Pointer Sensitivity", sens => {
+                        sens.AddItem("0.5x", () => Preferences.PointerSensitivity = 0.5f,
+                            isChecked: Mathf.Abs(Preferences.PointerSensitivity - 0.5f) < 0.001f);
+                        sens.AddItem("0.75x", () => Preferences.PointerSensitivity = 0.75f,
+                            isChecked: Mathf.Abs(Preferences.PointerSensitivity - 0.75f) < 0.001f);
+                        sens.AddItem("1.0x", () => Preferences.PointerSensitivity = 1.0f,
+                            isChecked: Mathf.Abs(Preferences.PointerSensitivity - 1.0f) < 0.001f);
+                        sens.AddItem("1.5x", () => Preferences.PointerSensitivity = 1.5f,
+                            isChecked: Mathf.Abs(Preferences.PointerSensitivity - 1.5f) < 0.001f);
+                        sens.AddItem("2.0x", () => Preferences.PointerSensitivity = 2.0f,
+                            isChecked: Mathf.Abs(Preferences.PointerSensitivity - 2.0f) < 0.001f);
+                    });
+                });
+
+                menu.AddSubmenu("Hotkeys", submenu => {
+                    submenu.AddItem("Enable Top-Row Camera View Shortcuts (1/3/5/7)",
+                        () => Preferences.EnableTopRowViewHotkeys = !Preferences.EnableTopRowViewHotkeys,
+                        isChecked: Preferences.EnableTopRowViewHotkeys);
                 });
             });
         }
@@ -380,6 +431,7 @@ namespace KexEdit.UI {
 
         protected override void OnUpdate() {
             var kb = Keyboard.current;
+            bool textEditing = Extensions.IsTextInputActive();
 
             if (!kb.ctrlKey.isPressed && !kb.leftCommandKey.isPressed) {
                 if (kb.f1Key.wasPressedThisFrame) ToggleShowGizmos();
@@ -389,10 +441,14 @@ namespace KexEdit.UI {
                 else if (kb.f11Key.wasPressedThisFrame) VideoControlSystem.Instance?.ToggleFullscreen();
                 else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
                 else if (kb.tKey.wasPressedThisFrame) ToggleSyncPlayback();
-                else if (!Extensions.IsTextInputActive() && kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetFrontView();
-                else if (!Extensions.IsTextInputActive() && kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetSideView();
-                else if (!Extensions.IsTextInputActive() && kb.numpad5Key.wasPressedThisFrame) OrbitCameraSystem.ToggleOrthographic();
-                else if (!Extensions.IsTextInputActive() && kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetTopView();
+                else if (!textEditing && kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetFrontView();
+                else if (!textEditing && kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetSideView();
+                else if (!textEditing && kb.numpad5Key.wasPressedThisFrame) OrbitCameraSystem.ToggleOrthographic();
+                else if (!textEditing && kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetTopView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit1Key.wasPressedThisFrame) OrbitCameraSystem.SetFrontView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit3Key.wasPressedThisFrame) OrbitCameraSystem.SetSideView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit5Key.wasPressedThisFrame) OrbitCameraSystem.ToggleOrthographic();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit7Key.wasPressedThisFrame) OrbitCameraSystem.SetTopView();
             }
 
             if (kb.ctrlKey.isPressed || kb.leftCommandKey.isPressed) {
@@ -404,19 +460,22 @@ namespace KexEdit.UI {
                 else if (kb.nKey.wasPressedThisFrame) NewProject();
                 else if (kb.oKey.wasPressedThisFrame) OpenProject();
                 else if (kb.sKey.wasPressedThisFrame) SaveProject();
-                else if (kb.hKey.wasPressedThisFrame) ShowControls();
+                else if (!textEditing && kb.hKey.wasPressedThisFrame) ShowControls();
                 else if (kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomIn();
                 else if (kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomOut();
-                else if (kb.digit1Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.Velocity);
-                else if (kb.digit2Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.Curvature);
-                else if (kb.digit3Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.NormalForce);
-                else if (kb.digit4Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.LateralForce);
-                else if (kb.digit5Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.RollSpeed);
-                else if (kb.digit6Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.PitchSpeed);
-                else if (kb.digit7Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.YawSpeed);
-                else if (!Extensions.IsTextInputActive() && kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetBackView();
-                else if (!Extensions.IsTextInputActive() && kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetOtherSideView();
-                else if (!Extensions.IsTextInputActive() && kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetBottomView();
+                else if (!textEditing && kb.digit1Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.Velocity);
+                else if (!textEditing && kb.digit2Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.Curvature);
+                else if (!textEditing && kb.digit3Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.NormalForce);
+                else if (!textEditing && kb.digit4Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.LateralForce);
+                else if (!textEditing && kb.digit5Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.RollSpeed);
+                else if (!textEditing && kb.digit6Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.PitchSpeed);
+                else if (!textEditing && kb.digit7Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.YawSpeed);
+                else if (!textEditing && kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetBackView();
+                else if (!textEditing && kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetOtherSideView();
+                else if (!textEditing && kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetBottomView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit1Key.wasPressedThisFrame) OrbitCameraSystem.SetBackView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit3Key.wasPressedThisFrame) OrbitCameraSystem.SetOtherSideView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit7Key.wasPressedThisFrame) OrbitCameraSystem.SetBottomView();
             }
         }
 

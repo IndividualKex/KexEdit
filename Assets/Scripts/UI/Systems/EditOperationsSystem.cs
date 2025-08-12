@@ -33,7 +33,10 @@ namespace KexEdit.UI {
         private void ProcessKeyboardShortcuts() {
             var kb = Keyboard.current;
 
-            if (kb.deleteKey.wasPressedThisFrame) HandleDelete();
+            // Do not process global edit shortcuts when typing into text inputs
+            if (Extensions.IsTextInputActive()) return;
+
+            if (kb.deleteKey.wasPressedThisFrame || kb.backspaceKey.wasPressedThisFrame) HandleDelete();
             else if (kb.fKey.wasPressedThisFrame) HandleFocus();
 
             if (kb.ctrlKey.isPressed || kb.leftCommandKey.isPressed) {

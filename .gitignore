@@ -89,3 +89,6 @@ crashlytics-build.properties
 # IDE
 CLAUDE.md
 .claude/
+
+# Mac DS_Stores
+.DS_Store
