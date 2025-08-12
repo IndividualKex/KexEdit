@@ -12,7 +12,7 @@ namespace KexEdit {
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (mesh, anchor, render, dirtyRW) in SystemAPI.Query<MeshReference, Anchor, Render, RefRW<Dirty>>()) {
+            foreach (var (mesh, anchor, render, dirtyRW) in SystemAPI.Query<NodeMeshReference, Anchor, Render, RefRW<Dirty>>()) {
                 if (mesh.Value == Entity.Null) continue;
 
                 if (render.Value && SystemAPI.HasComponent<DisableRendering>(mesh.Value)) {

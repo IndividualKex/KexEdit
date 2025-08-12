@@ -20,10 +20,14 @@ namespace KexEdit {
 
             state.RequireForUpdate(_query);
             state.RequireForUpdate<TrackColliderTemplate>();
+            state.RequireForUpdate<Preferences>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
+            var preferences = SystemAPI.GetSingleton<Preferences>();
+            if (!preferences.EnableColliders) return;
+
             Entity updateEntity = Entity.Null;
             Entity sectionEntity = Entity.Null;
             foreach (var (trackHash, colliderHashRW, render, section, entity) in SystemAPI

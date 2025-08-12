@@ -7,7 +7,8 @@ using static KexEdit.Constants;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
-    public partial class TrackPointSystem : SystemBase {
+    [BurstCompile]
+    public partial struct TrackPointSystem : ISystem {
         private BufferLookup<Point> _pointLookup;
         private BufferLookup<TrackPoint> _trackPointLookup;
 
@@ -19,24 +20,29 @@ namespace KexEdit {
             public int LCM;
         }
 
-        protected override void OnCreate() {
+        [BurstCompile]
+        public void OnCreate(ref SystemState state) {
             _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
             _trackPointLookup = SystemAPI.GetBufferLookup<TrackPoint>(false);
 
             _query = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<SectionReference, TrackPoint, TrackHash, TrackStyle, Segment>()
-                .Build(EntityManager);
+                .WithAll<SectionReference, Segment, TrackPoint, TrackHash>()
+                .Build(state.EntityManager);
 
             _countQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<SectionReference, TrackStyle, Segment>()
-                .Build(EntityManager);
+                .WithAll<SectionReference, Segment>()
+                .Build(state.EntityManager);
 
-            RequireForUpdate(_query);
+            state.RequireForUpdate(_query);
+            state.RequireForUpdate<Preferences>();
         }
 
-        protected override void OnUpdate() {
-            _pointLookup.Update(this);
-            _trackPointLookup.Update(this);
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state) {
+            _pointLookup.Update(ref state);
+            _trackPointLookup.Update(ref state);
+
+            var preferences = SystemAPI.GetSingleton<Preferences>();
 
             int count = _countQuery.CalculateEntityCount();
             var countMap = new NativeParallelHashMap<Entity, int>(count, Allocator.TempJob);
@@ -46,16 +52,21 @@ namespace KexEdit {
             var segments = new NativeArray<Segment>(count, Allocator.TempJob);
 
             int index = 0;
-            foreach (var (section, style, segment, entity) in SystemAPI
-                .Query<SectionReference, TrackStyle, Segment>()
+            foreach (var (section, segment, entity) in SystemAPI
+                .Query<SectionReference, Segment>()
                 .WithEntityAccess()
             ) {
+                if (!SystemAPI.HasComponent<TrackStyle>(segment.Style)) continue;
+
+                var style = SystemAPI.GetComponent<TrackStyle>(segment.Style);
+                var duplicationMeshes = SystemAPI.GetBuffer<DuplicationMeshReference>(segment.Style);
+
                 entities[index] = entity;
                 sections[index] = section;
 
                 int lcm = 1;
-                foreach (var duplicationMesh in style.DuplicationMeshes) {
-                    lcm = LCM(lcm, duplicationMesh.Step);
+                foreach (var duplicationMesh in duplicationMeshes) {
+                    lcm = LCM(lcm, SystemAPI.GetComponent<DuplicationMeshSettings>(duplicationMesh).Step);
                 }
 
                 styleData[index] = new TrackStyleData {
@@ -76,7 +87,7 @@ namespace KexEdit {
                 CountMap = countMap.AsParallelWriter()
             };
 
-            var countHandle = countJob.Schedule(count, 32, Dependency);
+            var countHandle = countJob.Schedule(count, 32, state.Dependency);
 
             using var disposeJobs = new NativeArray<JobHandle>(4, Allocator.Temp) {
                 [0] = entities.Dispose(countHandle),
@@ -86,14 +97,14 @@ namespace KexEdit {
             };
             var disposalHandle = JobHandle.CombineDependencies(disposeJobs);
 
-            Dependency = new BuildJob {
+            state.Dependency = new BuildJob {
                 PointLookup = _pointLookup,
                 TrackPointLookup = _trackPointLookup,
                 CountMap = countMap,
-                VisualizationMode = VisualizationSystem.CurrentMode
+                VisualizationMode = preferences.VisualizationMode
             }.ScheduleParallel(_query, countHandle);
 
-            Dependency = countMap.Dispose(Dependency);
+            state.Dependency = countMap.Dispose(state.Dependency);
         }
 
         [BurstCompile]
@@ -113,6 +124,8 @@ namespace KexEdit {
 
             public void Execute(int index) {
                 var entity = Entities[index];
+                if (entity == Entity.Null) return;
+
                 var section = Sections[index];
                 var style = StyleData[index];
                 var segment = Segments[index];
@@ -236,8 +249,8 @@ namespace KexEdit {
 
                 if (points.Length < 2) return;
 
-                int desiredCount = CountMap[entity];
-                if (desiredCount < 2) return;
+                if (!CountMap.TryGetValue(entity, out int desiredCount) ||
+                    desiredCount < 2) return;
 
                 var (startIndex, endIndex) = GetPointRange(points, segment);
                 if (endIndex <= startIndex) return;

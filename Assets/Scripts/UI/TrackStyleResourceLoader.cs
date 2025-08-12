@@ -32,12 +32,12 @@ namespace KexEdit.UI {
             return config;
         }
 
-        public static List<DuplicationMeshSettings> LoadDuplicationMeshes(
+        public static List<DuplicationMeshSettingsData> LoadDuplicationMeshes(
             List<DuplicationMeshConfig> configs,
             Material defaultMaterial,
             TrackStyleConfig trackConfig
         ) {
-            var settings = new List<DuplicationMeshSettings>();
+            var settings = new List<DuplicationMeshSettingsData>();
 
             foreach (var config in configs) {
                 var mesh = LoadMesh(config.MeshPath);
@@ -62,7 +62,7 @@ namespace KexEdit.UI {
                 int clampedOffset = config.Step > 0 ? config.Offset % config.Step : 0;
                 if (clampedOffset < 0) clampedOffset += config.Step;
 
-                settings.Add(new DuplicationMeshSettings {
+                settings.Add(new DuplicationMeshSettingsData {
                     Mesh = mesh,
                     Material = material,
                     Step = config.Step,
@@ -73,12 +73,12 @@ namespace KexEdit.UI {
             return settings;
         }
 
-        public static List<ExtrusionMeshSettings> LoadExtrusionMeshes(
+        public static List<ExtrusionMeshSettingsData> LoadExtrusionMeshes(
             List<ExtrusionMeshConfig> configs,
             Material defaultMaterial,
             TrackStyleConfig trackConfig
         ) {
-            var settings = new List<ExtrusionMeshSettings>();
+            var settings = new List<ExtrusionMeshSettingsData>();
 
             foreach (var config in configs) {
                 var mesh = LoadMesh(config.MeshPath);
@@ -111,7 +111,7 @@ namespace KexEdit.UI {
                     }
                 }
 
-                settings.Add(new ExtrusionMeshSettings {
+                settings.Add(new ExtrusionMeshSettingsData {
                     Mesh = mesh,
                     Material = material
                 });
@@ -120,12 +120,12 @@ namespace KexEdit.UI {
             return settings;
         }
 
-        public static List<CapMeshSettings> LoadCapMeshes(
+        public static List<CapMeshSettingsData> LoadCapMeshes(
             List<CapMeshConfig> configs,
             Material defaultMaterial,
             TrackStyleConfig trackConfig
         ) {
-            var settings = new List<CapMeshSettings>();
+            var settings = new List<CapMeshSettingsData>();
 
             foreach (var config in configs) {
                 var mesh = LoadMesh(config.MeshPath);
@@ -147,7 +147,7 @@ namespace KexEdit.UI {
                     }
                 }
 
-                settings.Add(new CapMeshSettings {
+                settings.Add(new CapMeshSettingsData {
                     Mesh = mesh,
                     Material = material
                 });

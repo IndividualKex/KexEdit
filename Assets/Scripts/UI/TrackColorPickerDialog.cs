@@ -253,16 +253,10 @@ namespace KexEdit.UI {
         }
 
         private void TriggerTrackStyleReload() {
-            try {
-                var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-                using var ecb = new EntityCommandBuffer(Allocator.Temp);
-                var loadEntity = ecb.CreateEntity();
-                ecb.AddComponent<ReloadTrackStyleEvent>(loadEntity);
-                ecb.Playback(entityManager);
-            }
-            catch (System.Exception ex) {
-                Debug.LogError($"Failed to trigger track style reload: {ex.Message}");
-            }
+            var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
+            var query = entityManager.CreateEntityQuery(typeof(EditorTrackStyleSettingsSingleton));
+            ref var singleton = ref query.GetSingletonRW<EditorTrackStyleSettingsSingleton>().ValueRW;
+            singleton.Dirty = true;
         }
 
         private void ResetToDefaults() {

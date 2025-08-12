@@ -316,10 +316,10 @@ namespace KexEdit.UI.NodeGraph {
                         ImportManager.ShowImportDialog(_view, filePath => {
                             Undo.Record();
                             var node = AddNode(evt.ContentPosition, NodeType.Mesh);
-                            EntityManager.AddComponentData<MeshReference>(node, new MeshReference {
+                            EntityManager.AddComponentData(node, new NodeMeshReference {
                                 Value = Entity.Null,
                                 FilePath = filePath,
-                                Loaded = false
+                                Loaded = false,
                             });
                         });
                     });
@@ -331,9 +331,9 @@ namespace KexEdit.UI.NodeGraph {
                         ImportManager.ShowImportDialog(_view, kexExtensions, filePath => {
                             Undo.Record();
                             var node = AddNode(evt.ContentPosition, NodeType.Append);
-                            EntityManager.AddComponentData<AppendReference>(node, new AppendReference {
-                                FilePath = filePath,
+                            EntityManager.AddComponentData(node, new AppendReference {
                                 Value = Entity.Null,
+                                FilePath = filePath,
                                 Loaded = false
                             });
                         });
@@ -729,7 +729,7 @@ namespace KexEdit.UI.NodeGraph {
         private void LinkMesh(NodeData nodeData) {
             ImportManager.ShowImportDialog(_view, filePath => {
                 Undo.Record();
-                ref var meshReference = ref SystemAPI.GetComponentRW<MeshReference>(nodeData.Entity).ValueRW;
+                ref var meshReference = ref SystemAPI.GetComponentRW<NodeMeshReference>(nodeData.Entity).ValueRW;
                 meshReference.Value = Entity.Null;
                 meshReference.FilePath = new FixedString512Bytes(filePath);
                 meshReference.Loaded = false;

@@ -15,49 +15,41 @@ namespace KexEdit {
         public List<ExtrusionGizmoBuffers> ExtrusionGizmoBuffers = new();
         public int Count;
 
-        public MeshBuffers(
-            int count,
-            List<DuplicationMeshSettings> duplicationMeshes,
-            List<ExtrusionMeshSettings> extrusionMeshes,
-            List<CapMeshSettings> startCapMeshes,
-            List<CapMeshSettings> endCapMeshes,
-            List<DuplicationGizmoSettings> duplicationGizmos,
-            List<ExtrusionGizmoSettings> extrusionGizmos
-        ) {
+        public MeshBuffers(int count) {
             Count = count;
 
             PointsBuffer = new ComputeBuffer(count, Marshal.SizeOf<TrackPoint>());
             VisualizationDataBuffer = new ComputeBuffer(count, sizeof(float) * 4);
+        }
 
-            foreach (var settings in duplicationMeshes) {
-                var buffer = new DuplicationMeshBuffers(this, settings);
-                DuplicationBuffers.Add(buffer);
-            }
+        public void AddDuplicationMesh(DuplicationMeshSettings settings, Mesh mesh, Material material) {
+            var buffer = new DuplicationMeshBuffers(this, settings, mesh, material);
+            DuplicationBuffers.Add(buffer);
+        }
 
-            foreach (var settings in extrusionMeshes) {
-                var buffer = new ExtrusionMeshBuffers(this, settings);
-                ExtrusionBuffers.Add(buffer);
-            }
+        public void AddExtrusionMesh(Mesh mesh, Material material) {
+            var buffer = new ExtrusionMeshBuffers(this, mesh, material);
+            ExtrusionBuffers.Add(buffer);
+        }
 
-            foreach (var settings in startCapMeshes) {
-                var buffer = new CapMeshBuffers(this, settings.Mesh, settings.Material, 1);
-                StartCapBuffers.Add(buffer);
-            }
+        public void AddStartCapMesh(Mesh mesh, Material material) {
+            var buffer = new CapMeshBuffers(this, mesh, material, 1);
+            StartCapBuffers.Add(buffer);
+        }
 
-            foreach (var settings in endCapMeshes) {
-                var buffer = new CapMeshBuffers(this, settings.Mesh, settings.Material, 1);
-                EndCapBuffers.Add(buffer);
-            }
+        public void AddEndCapMesh(Mesh mesh, Material material) {
+            var buffer = new CapMeshBuffers(this, mesh, material, 1);
+            EndCapBuffers.Add(buffer);
+        }
 
-            foreach (var settings in duplicationGizmos) {
-                var buffer = new DuplicationGizmoBuffers(this, settings);
-                DuplicationGizmoBuffers.Add(buffer);
-            }
+        public void AddDuplicationGizmo(DuplicationGizmoSettings settings) {
+            var buffer = new DuplicationGizmoBuffers(this, settings);
+            DuplicationGizmoBuffers.Add(buffer);
+        }
 
-            foreach (var settings in extrusionGizmos) {
-                var buffer = new ExtrusionGizmoBuffers(this, settings);
-                ExtrusionGizmoBuffers.Add(buffer);
-            }
+        public void AddExtrusionGizmo(ExtrusionGizmoSettings settings) {
+            var buffer = new ExtrusionGizmoBuffers(this, settings);
+            ExtrusionGizmoBuffers.Add(buffer);
         }
 
         public void Dispose() {

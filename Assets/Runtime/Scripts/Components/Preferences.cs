@@ -10,7 +10,10 @@ namespace KexEdit {
         public float2 PitchSpeedRange;
         public float2 YawSpeedRange;
         public float2 CurvatureRange;
+        public VisualizationMode VisualizationMode;
         public bool DrawGizmos;
+        public bool EnableShadows;
+        public bool EnableColliders;
 
         public static Preferences Default => new() {
             VelocityRange = new float2(0f, 50f),
@@ -20,7 +23,10 @@ namespace KexEdit {
             PitchSpeedRange = new float2(-1f, 1f),
             YawSpeedRange = new float2(-1f, 1f),
             CurvatureRange = new float2(0f, 1f),
+            VisualizationMode = VisualizationMode.None,
             DrawGizmos = false,
+            EnableShadows = false,
+            EnableColliders = true,
         };
     }
 }

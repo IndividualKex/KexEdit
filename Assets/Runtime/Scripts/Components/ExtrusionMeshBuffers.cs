@@ -3,7 +3,8 @@ using System;
 
 namespace KexEdit {
     public class ExtrusionMeshBuffers : IDisposable {
-        public ExtrusionMeshSettings Settings;
+        public Mesh Mesh;
+        public Material Material;
         public GraphicsBuffer CrossSectionVerticesBuffer;
         public GraphicsBuffer CrossSectionUVsBuffer;
         public GraphicsBuffer CrossSectionNormalsBuffer;
@@ -16,36 +17,39 @@ namespace KexEdit {
 
         public ExtrusionMeshBuffers(
             MeshBuffers meshBuffers,
-            ExtrusionMeshSettings settings
+            Mesh mesh,
+            Material material
         ) {
+            Mesh = mesh;
+            Material = material;
+
             int count = meshBuffers.Count;
-            Settings = settings;
 
             CrossSectionVerticesBuffer = new GraphicsBuffer(
                 GraphicsBuffer.Target.Structured,
-                settings.Mesh.vertices.Length,
+                mesh.vertices.Length,
                 sizeof(float) * 3
             );
             CrossSectionUVsBuffer = new GraphicsBuffer(
                 GraphicsBuffer.Target.Structured,
-                settings.Mesh.uv.Length,
+                mesh.uv.Length,
                 sizeof(float) * 2
             );
             CrossSectionNormalsBuffer = new GraphicsBuffer(
                 GraphicsBuffer.Target.Structured,
-                settings.Mesh.normals.Length,
+                mesh.normals.Length,
                 sizeof(float) * 3
             );
             CrossSectionTriangulationBuffer = new GraphicsBuffer(
                 GraphicsBuffer.Target.Structured,
-                settings.Mesh.triangles.Length,
+                mesh.triangles.Length,
                 sizeof(uint)
             );
 
-            CrossSectionVerticesBuffer.SetData(settings.Mesh.vertices);
-            CrossSectionUVsBuffer.SetData(settings.Mesh.uv);
-            CrossSectionNormalsBuffer.SetData(settings.Mesh.normals);
-            CrossSectionTriangulationBuffer.SetData(settings.Mesh.triangles);
+            CrossSectionVerticesBuffer.SetData(mesh.vertices);
+            CrossSectionUVsBuffer.SetData(mesh.uv);
+            CrossSectionNormalsBuffer.SetData(mesh.normals);
+            CrossSectionTriangulationBuffer.SetData(mesh.triangles);
 
             ExtrusionVerticesBuffer = new ComputeBuffer(count * CrossSectionVerticesBuffer.count, sizeof(float) * 3);
             ExtrusionNormalsBuffer = new ComputeBuffer(count * CrossSectionVerticesBuffer.count, sizeof(float) * 3);

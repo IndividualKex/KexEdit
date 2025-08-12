@@ -14,9 +14,9 @@ namespace KexEdit.UI {
             if (_editorCoasterQuery.IsEmpty) return;
 
             Entity editorCoaster = _editorCoasterQuery.GetSingletonEntity();
-            if (!SystemAPI.HasComponent<TrackStyleReference>(editorCoaster)) return;
+            if (!SystemAPI.HasComponent<TrackStyleSettingsReference>(editorCoaster)) return;
 
-            Entity editorStyleReference = SystemAPI.GetComponent<TrackStyleReference>(editorCoaster).Value;
+            Entity editorStyleReference = SystemAPI.GetComponent<TrackStyleSettingsReference>(editorCoaster).Value;
             if (editorStyleReference == Entity.Null) return;
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
@@ -28,10 +28,10 @@ namespace KexEdit.UI {
 
                 bool needsStyleUpdate = false;
 
-                if (SystemAPI.HasComponent<TrackStyleReference>(entity)) {
-                    Entity currentStyleReference = SystemAPI.GetComponent<TrackStyleReference>(entity).Value;
+                if (SystemAPI.HasComponent<TrackStyleSettingsReference>(entity)) {
+                    Entity currentStyleReference = SystemAPI.GetComponent<TrackStyleSettingsReference>(entity).Value;
                     if (currentStyleReference != editorStyleReference) {
-                        ecb.RemoveComponent<TrackStyleReference>(entity);
+                        ecb.RemoveComponent<TrackStyleSettingsReference>(entity);
                         needsStyleUpdate = true;
                     }
                 }
@@ -40,7 +40,7 @@ namespace KexEdit.UI {
                 }
 
                 if (needsStyleUpdate) {
-                    ecb.AddComponent(entity, new TrackStyleReference { Value = editorStyleReference });
+                    ecb.AddComponent(entity, new TrackStyleSettingsReference { Value = editorStyleReference });
                 }
             }
 

@@ -1,6 +1,5 @@
 using Unity.Entities;
 
 namespace KexEdit.UI {
-    public struct NeedsLinkedEntityGroup : IComponentData {
-    }
+    public struct NeedsLinkedEntityGroup : IComponentData { }
 }

@@ -37,13 +37,11 @@ namespace KexEdit {
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            bool enableShadows = false;
             foreach (var (evt, entity) in SystemAPI.Query<InitializeEvent>().WithEntityAccess()) {
                 ecb.DestroyEntity(entity);
                 if (_initialized) {
                     throw new System.Exception("Runtime already initialized");
                 }
-                enableShadows = evt.EnableShadows;
                 _initialized = true;
             }
 
@@ -74,14 +72,12 @@ namespace KexEdit {
                 ExtrusionMaterial = extrusionMaterial,
                 GizmoMaterial = gizmoMaterial,
             });
-
-            var gizmoSettings = new GizmoSettings {
-                EnableShadows = enableShadows
-            };
+            ecb.AddComponent(settingsEntity, Preferences.Default);
 
             var defaultGizmoMaterial = new UnityEngine.Material(gizmoMaterial);
             defaultGizmoMaterial.SetColor("_Color", new(0.7f, 0.7f, 0.7f));
 
+            var gizmoSettings = new GizmoSettings();
             gizmoSettings.ExtrusionGizmos.Add(new ExtrusionGizmoSettings {
                 Material = defaultGizmoMaterial,
                 Heart = 0f

@@ -37,7 +37,7 @@ namespace KexEdit.UI {
 
         private static void ExportTrackMeshInternal(string filePath) {
             var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            var trackStyleQuery = entityManager.CreateEntityQuery(typeof(TrackStyle), typeof(Segment), typeof(SectionReference));
+            var trackStyleQuery = entityManager.CreateEntityQuery(typeof(Segment), typeof(SectionReference));
 
             if (trackStyleQuery.IsEmpty) {
                 Debug.LogWarning("No track sections found to export");
@@ -50,10 +50,9 @@ namespace KexEdit.UI {
             try {
                 for (int segmentIndex = 0; segmentIndex < entities.Length; segmentIndex++) {
                     var entity = entities[segmentIndex];
-                    var trackStyle = entityManager.GetComponentData<TrackStyle>(entity);
-                    if (trackStyle.CurrentBuffers == null) continue;
-
                     var segment = entityManager.GetComponentData<Segment>(entity);
+                    if (!segment.HasBuffers) continue;
+
                     var sectionReference = entityManager.GetComponentData<SectionReference>(entity);
 
                     if (!entityManager.HasComponent<RenderedStyleHash>(sectionReference.Value) ||
@@ -61,7 +60,8 @@ namespace KexEdit.UI {
                         continue;
                     }
 
-                    ExtractAndCombineSegmentMeshes(trackStyle.CurrentBuffers, segmentIndex, ref meshes);
+                    var buffers = entityManager.GetComponentObject<TrackStyleBuffers>(entity);
+                    ExtractAndCombineSegmentMeshes(buffers.CurrentBuffers, segmentIndex, ref meshes);
                 }
 
                 entities.Dispose();
@@ -163,8 +163,13 @@ namespace KexEdit.UI {
             uvs.Dispose();
         }
 
-        private static void ExtractDuplicationBuffer(DuplicationMeshBuffers duplicationBuffer, int index, int segmentId, ref NativeList<MeshData> meshes) {
-            if (duplicationBuffer.Settings.Mesh == null) return;
+        private static void ExtractDuplicationBuffer(
+            DuplicationMeshBuffers duplicationBuffer, 
+            int index, 
+            int segmentId, 
+            ref NativeList<MeshData> meshes
+        ) {
+            if (duplicationBuffer.Mesh == null) return;
 
             var matrixReadback = AsyncGPUReadback.Request(duplicationBuffer.MatricesBuffer);
             matrixReadback.WaitForCompletion();
@@ -172,10 +177,10 @@ namespace KexEdit.UI {
             if (matrixReadback.hasError) return;
 
             var matrices = matrixReadback.GetData<float4x4>();
-            var sourceMesh = duplicationBuffer.Settings.Mesh;
+            var sourceMesh = duplicationBuffer.Mesh;
 
             if (matrices.Length == 0) return;
-            
+
             var vertices = new NativeArray<float3>(sourceMesh.vertices.Length, Allocator.TempJob);
             var normals = new NativeArray<float3>(sourceMesh.normals.Length, Allocator.TempJob);
             var uvs = new NativeArray<float2>(sourceMesh.uv.Length, Allocator.TempJob);
@@ -225,7 +230,7 @@ namespace KexEdit.UI {
 
                 for (int i = 0; i < individualMeshes.Length; i++) {
                     var mesh = individualMeshes[i];
-                    
+
                     NativeArray<VertexData>.Copy(mesh.Vertices, 0, combinedVertices, vertexOffset, mesh.VertexCount);
                     NativeArray<int>.Copy(mesh.Triangles, 0, combinedTriangles, triangleOffset, mesh.TriangleCount);
 
@@ -298,7 +303,7 @@ namespace KexEdit.UI {
             for (int i = 0; i < triangleCount; i += 3) {
                 if (i + 2 < triangleCount) {
                     meshTriangles[i] = (int)indices[i + 2];
-                    meshTriangles[i + 1] = (int)indices[i + 1]; 
+                    meshTriangles[i + 1] = (int)indices[i + 1];
                     meshTriangles[i + 2] = (int)indices[i];
                 }
             }

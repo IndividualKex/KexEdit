@@ -1,43 +1,34 @@
 using Unity.Entities;
 using Unity.Collections;
+using Unity.Burst;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(CleanupSystemGroup))]
     [UpdateAfter(typeof(TrackColliderCleanupSystem))]
-    public partial class TrackSegmentCleanupSystem : SystemBase {
-        protected override void OnUpdate() {
+    [BurstCompile]
+    public partial struct TrackSegmentCleanupSystem : ISystem {
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state) {
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (coaster, section, segment, trackStyle, entity) in SystemAPI
-                .Query<CoasterReference, SectionReference, Segment, TrackStyle>()
+            foreach (var (coaster, section, segment, entity) in SystemAPI
+                .Query<CoasterReference, SectionReference, Segment>()
                 .WithEntityAccess()
             ) {
-                if (!SystemAPI.HasBuffer<Point>(section) ||
+                if (!SystemAPI.HasComponent<TrackStyle>(segment.Style) ||
+                    !SystemAPI.HasBuffer<Point>(section) ||
                     !SystemAPI.HasComponent<StyleHash>(section) ||
-                    !SystemAPI.HasComponent<TrackStyleReference>(coaster)) {
+                    !SystemAPI.HasComponent<TrackStyleSettingsReference>(coaster)) {
                     ecb.DestroyEntity(entity);
                     continue;
                 }
 
-                Entity styleEntity = SystemAPI.GetComponent<TrackStyleReference>(coaster);
-                if (!SystemAPI.ManagedAPI.HasComponent<TrackStyleSettings>(styleEntity)) {
+                var settingsEntity = SystemAPI.GetComponent<TrackStyleSettingsReference>(coaster);
+                if (!SystemAPI.HasComponent<TrackStyleSettings>(settingsEntity)) {
                     ecb.DestroyEntity(entity);
                     continue;
-                }
-
-                var settings = SystemAPI.ManagedAPI.GetComponent<TrackStyleSettings>(styleEntity);
-                if (trackStyle.Version != settings.Version) {
-                    ecb.DestroyEntity(entity);
-                    continue;
-                }
-
-                var sectionRenderVersion = SystemAPI.GetComponent<RenderedStyleHash>(section);
-                var sectionStyleHash = SystemAPI.GetComponent<StyleHash>(section);
-
-                if (segment.StyleHash != sectionStyleHash.Value && segment.StyleHash != sectionRenderVersion.Value) {
-                    ecb.DestroyEntity(entity);
                 }
             }
-            ecb.Playback(EntityManager);
+            ecb.Playback(state.EntityManager);
         }
     }
 }
