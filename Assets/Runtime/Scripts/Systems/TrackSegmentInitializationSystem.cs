@@ -7,97 +7,145 @@ using static KexEdit.Constants;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    public partial class TrackSegmentInitializationSystem : SystemBase {
+    [BurstCompile]
+    public partial struct TrackSegmentInitializationSystem : ISystem {
         private EntityQuery _segmentQuery;
 
-        protected override void OnCreate() {
-            _segmentQuery = EntityManager.CreateEntityQuery(typeof(SectionReference));
+        [BurstCompile]
+        public void OnCreate(ref SystemState state) {
+            _segmentQuery = SystemAPI.QueryBuilder().WithAll<SectionReference>().Build();
         }
 
-        protected override void OnUpdate() {
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state) {
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
-
-            int count = _segmentQuery.CalculateEntityCount();
-            using var existing = new NativeParallelHashSet<Entity>(count, Allocator.Temp);
-            foreach (var (section, segment) in SystemAPI.Query<SectionReference, Segment>()) {
-                var sectionStyleHash = SystemAPI.GetComponent<StyleHash>(section);
-                if (segment.StyleHash == sectionStyleHash.Value) {
-                    existing.Add(section);
-                }
-            }
 
             foreach (var (coaster, render, trackStyleBuffer, entity) in SystemAPI
                 .Query<CoasterReference, Render, DynamicBuffer<TrackStyleKeyframe>>()
                 .WithAll<Point>()
                 .WithEntityAccess()
             ) {
-                if (!render || existing.Contains(entity)) continue;
+                if (!render) continue;
 
                 var points = SystemAPI.GetBuffer<Point>(entity);
                 if (points.Length == 0) continue;
 
-                if (!SystemAPI.HasComponent<TrackStyleReference>(coaster)) continue;
+                if (!SystemAPI.HasComponent<TrackStyleSettingsReference>(coaster)) continue;
 
-                Entity styleEntity = SystemAPI.GetComponent<TrackStyleReference>(coaster);
-                if (!SystemAPI.ManagedAPI.HasComponent<TrackStyleSettings>(styleEntity)) continue;
+                Entity styleEntity = SystemAPI.GetComponent<TrackStyleSettingsReference>(coaster);
+                if (!SystemAPI.HasComponent<TrackStyleSettings>(styleEntity)) continue;
 
-                var settings = SystemAPI.ManagedAPI.GetComponent<TrackStyleSettings>(styleEntity);
+                var settings = SystemAPI.GetComponent<TrackStyleSettings>(styleEntity);
+                var styleReferences = SystemAPI.GetBuffer<TrackStyleReference>(styleEntity);
 
                 uint styleHash = SystemAPI.GetComponent<StyleHash>(entity);
                 var overrides = SystemAPI.GetComponent<PropertyOverrides>(entity);
 
                 var breakpoints = overrides.TrackStyle
-                    ? DetectManualStyleBreakpoints(trackStyleBuffer, points, settings)
-                    : DetectAutoStyleBreakpoints(points, settings);
+                    ? DetectManualStyleBreakpoints(ref state, trackStyleBuffer, points, styleReferences.Length)
+                    : DetectAutoStyleBreakpoints(ref state, points, settings, styleReferences);
+
+                var existingSegments = new NativeList<Entity>(Allocator.Temp);
+                var existingSegmentData = new NativeList<Segment>(Allocator.Temp);
+                
+                foreach (var (section, segment, segmentEntity) in SystemAPI
+                    .Query<SectionReference, Segment>()
+                    .WithEntityAccess()
+                ) {
+                    if (section.Value == entity) {
+                        existingSegments.Add(segmentEntity);
+                        existingSegmentData.Add(segment);
+                    }
+                }
+
+                var usedSegments = new NativeArray<bool>(existingSegments.Length, Allocator.Temp);
+                var segmentIndex = 0;
 
                 for (int i = 0; i < breakpoints.Length; i++) {
                     var breakpoint = breakpoints[i];
                     int styleIndex = breakpoint.StyleIndex;
-                    var selectedStyle = settings.Styles[styleIndex];
+                    Entity targetStyle = styleReferences[styleIndex];
 
-                    var segmentEntity = ecb.CreateEntity();
-                    ecb.AddComponent<CoasterReference>(segmentEntity, coaster);
-                    ecb.AddComponent<SectionReference>(segmentEntity, entity);
-                    ecb.AddComponent<SelectedBlend>(segmentEntity);
-                    ecb.AddComponent<TrackHash>(segmentEntity);
-                    ecb.AddComponent<TrackColliderHash>(segmentEntity);
-                    ecb.AddComponent<Render>(segmentEntity, render);
-                    ecb.AddComponent(segmentEntity, new Segment {
-                        StartTime = breakpoint.StartTime,
-                        EndTime = breakpoint.EndTime,
-                        StyleHash = styleHash
-                    });
-                    ecb.AddComponent(segmentEntity, new TrackStyle {
-                        DuplicationMeshes = new(selectedStyle.DuplicationMeshes),
-                        ExtrusionMeshes = new(selectedStyle.ExtrusionMeshes),
-                        StartCapMeshes = new(selectedStyle.StartCapMeshes),
-                        EndCapMeshes = new(selectedStyle.EndCapMeshes),
-                        Spacing = selectedStyle.Spacing,
-                        Threshold = selectedStyle.Threshold,
-                        Version = settings.Version
-                    });
-                    ecb.AddBuffer<TrackPoint>(segmentEntity);
-                    ecb.AddBuffer<TrackColliderReference>(segmentEntity);
-                    ecb.SetName(segmentEntity, $"Segment {i}");
+                    Entity segmentEntity = Entity.Null;
+                    bool foundMatch = false;
+
+                    for (int j = 0; j < existingSegments.Length; j++) {
+                        if (usedSegments[j]) continue;
+
+                        var existing = existingSegmentData[j];
+                        if (math.abs(existing.StartTime - breakpoint.StartTime) < 0.001f &&
+                            math.abs(existing.EndTime - breakpoint.EndTime) < 0.001f &&
+                            existing.Style == targetStyle) {
+                            segmentEntity = existingSegments[j];
+                            usedSegments[j] = true;
+                            foundMatch = true;
+
+                            if (existing.StyleVersion != settings.Version || existing.StyleHash != styleHash) {
+                                ecb.SetComponent(segmentEntity, new Segment {
+                                    Style = targetStyle,
+                                    StartTime = breakpoint.StartTime,
+                                    EndTime = breakpoint.EndTime,
+                                    StyleVersion = settings.Version,
+                                    StyleHash = styleHash,
+                                    HasBuffers = existing.HasBuffers
+                                });
+                            }
+                            break;
+                        }
+                    }
+
+                    if (!foundMatch) {
+                        segmentEntity = ecb.CreateEntity();
+                        ecb.AddComponent<CoasterReference>(segmentEntity, coaster);
+                        ecb.AddComponent<SectionReference>(segmentEntity, entity);
+                        ecb.AddComponent<SelectedBlend>(segmentEntity);
+                        ecb.AddComponent<TrackHash>(segmentEntity);
+                        ecb.AddComponent<TrackColliderHash>(segmentEntity);
+                        ecb.AddComponent<Render>(segmentEntity, render);
+                        ecb.AddComponent(segmentEntity, new Segment {
+                            Style = targetStyle,
+                            StartTime = breakpoint.StartTime,
+                            EndTime = breakpoint.EndTime,
+                            StyleVersion = settings.Version,
+                            StyleHash = styleHash,
+                            HasBuffers = false
+                        });
+
+                        ecb.AddBuffer<TrackPoint>(segmentEntity);
+                        ecb.AddBuffer<TrackColliderReference>(segmentEntity);
+                        ecb.SetName(segmentEntity, $"Segment {segmentIndex}");
+                    }
+
+                    segmentIndex++;
                 }
 
+                for (int j = 0; j < existingSegments.Length; j++) {
+                    if (!usedSegments[j]) {
+                        ecb.DestroyEntity(existingSegments[j]);
+                    }
+                }
+
+                existingSegments.Dispose();
+                existingSegmentData.Dispose();
+                usedSegments.Dispose();
                 breakpoints.Dispose();
             }
 
-            ecb.Playback(EntityManager);
+            ecb.Playback(state.EntityManager);
         }
 
         private NativeArray<StyleBreakpoint> DetectManualStyleBreakpoints(
+            ref SystemState state,
             DynamicBuffer<TrackStyleKeyframe> keyframes,
             DynamicBuffer<Point> points,
-            TrackStyleSettings settings
+            int styleCount
         ) {
             var breakpoints = new NativeList<StyleBreakpoint>(Allocator.TempJob);
 
             new ManualBreakpointJob {
                 Keyframes = keyframes,
                 Points = points,
-                MaxStyleCount = settings.Styles.Count,
+                MaxStyleCount = styleCount,
                 Breakpoints = breakpoints
             }.Run();
 
@@ -109,18 +157,20 @@ namespace KexEdit {
         }
 
         private NativeArray<StyleBreakpoint> DetectAutoStyleBreakpoints(
+            ref SystemState state,
             DynamicBuffer<Point> points,
-            TrackStyleSettings settings
+            TrackStyleSettings settings,
+            DynamicBuffer<TrackStyleReference> styleReferences
         ) {
             if (!settings.AutoStyle) {
-                return DetectDefaultStyleBreakpoints(points, settings);
+                return DetectDefaultStyleBreakpoints(ref state, points, settings, styleReferences.Length);
             }
 
             var breakpoints = new NativeList<StyleBreakpoint>(Allocator.TempJob);
-            var thresholds = new NativeArray<float>(settings.Styles.Count, Allocator.TempJob);
+            var thresholds = new NativeArray<float>(styleReferences.Length, Allocator.TempJob);
 
-            for (int i = 0; i < settings.Styles.Count; i++) {
-                thresholds[i] = settings.Styles[i].Threshold;
+            for (int i = 0; i < styleReferences.Length; i++) {
+                thresholds[i] = SystemAPI.GetComponent<TrackStyle>(styleReferences[i]).Threshold;
             }
 
             new StressBreakpointJob {
@@ -138,10 +188,12 @@ namespace KexEdit {
         }
 
         private NativeArray<StyleBreakpoint> DetectDefaultStyleBreakpoints(
+            ref SystemState state,
             DynamicBuffer<Point> points,
-            TrackStyleSettings settings
+            TrackStyleSettings settings,
+            int styleCount
         ) {
-            int defaultStyleIndex = math.clamp(settings.DefaultStyle, 0, settings.Styles.Count - 1);
+            int defaultStyleIndex = math.clamp(settings.DefaultStyle, 0, styleCount - 1);
             var breakpoints = new NativeList<StyleBreakpoint>(Allocator.TempJob);
 
             new DefaultStyleBreakpointJob {

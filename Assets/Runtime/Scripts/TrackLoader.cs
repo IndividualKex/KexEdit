@@ -1,7 +1,6 @@
 using UnityEngine;
 using KexEdit.Serialization;
 using Unity.Entities;
-using Unity.Collections;
 using System.Collections;
 
 namespace KexEdit {
@@ -22,14 +21,12 @@ namespace KexEdit {
             }
 
             if (TrackStyle != null) {
-                using var ecb = new EntityCommandBuffer(Allocator.Temp);
-                var entity = ecb.CreateEntity();
-                ecb.AddComponent(entity, new LoadTrackStyleEvent {
-                    Target = coaster,
-                    TrackStyle = TrackStyle
+                var entity = entityManager.CreateEntity();
+                entityManager.AddComponentData(entity, new LoadTrackStyleSettingsEvent {
+                    Data = TrackStyle
                 });
-                ecb.SetName(entity, "Load Track Style Event");
-                ecb.Playback(entityManager);
+                entityManager.AddComponentData<TrackStyleSettingsReference>(coaster, entity);
+                entityManager.SetName(entity, "Load Track Style Settings Event");
             }
         }
 

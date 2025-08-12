@@ -1,10 +1,11 @@
-using Unity.Collections;
+using UnityEngine;
 using Unity.Entities;
 
 namespace KexEdit {
-    public struct MeshReference : IComponentData {
-        public Entity Value;
-        public FixedString512Bytes FilePath;
-        public bool Loaded;
+    public class MeshReference : IComponentData {
+        public Mesh Value;
+
+        public static implicit operator Mesh(MeshReference reference) => reference.Value;
+        public static implicit operator MeshReference(Mesh mesh) => new() { Value = mesh };
     }
 }

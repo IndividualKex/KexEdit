@@ -9,8 +9,8 @@ namespace KexEdit {
         public GraphicsBuffer CapBuffer;
         public MaterialPropertyBlock MatProps;
 
-        public CapMeshBuffers(MeshBuffers meshBuffers, Mesh capMesh, Material material, int capCount) {
-            Mesh = capMesh;
+        public CapMeshBuffers(MeshBuffers meshBuffers, Mesh mesh, Material material, int capCount) {
+            Mesh = mesh;
             Material = material;
 
             MatricesBuffer = new ComputeBuffer(capCount, 16 * sizeof(float));
@@ -21,7 +21,7 @@ namespace KexEdit {
             );
 
             var capData = new GraphicsBuffer.IndirectDrawIndexedArgs[1];
-            capData[0].indexCountPerInstance = capMesh.GetIndexCount(0);
+            capData[0].indexCountPerInstance = mesh.GetIndexCount(0);
             capData[0].instanceCount = (uint)capCount;
             CapBuffer.SetData(capData);
 

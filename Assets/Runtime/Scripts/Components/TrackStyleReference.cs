@@ -1,7 +1,7 @@
 using Unity.Entities;
 
 namespace KexEdit {
-    public struct TrackStyleReference : IComponentData {
+    public struct TrackStyleReference : IBufferElementData {
         public Entity Value;
 
         public static implicit operator Entity(TrackStyleReference reference) => reference.Value;

@@ -343,7 +343,7 @@ namespace KexEdit.Serialization {
                 _ => default,
             };
             FixedString512Bytes meshFilePath = node.Type switch {
-                NodeType.Mesh => SystemAPI.GetComponent<MeshReference>(entity).FilePath,
+                NodeType.Mesh => SystemAPI.GetComponent<NodeMeshReference>(entity).FilePath,
                 NodeType.Append => SystemAPI.GetComponent<AppendReference>(entity).FilePath,
                 _ => default,
             };
@@ -710,7 +710,7 @@ namespace KexEdit.Serialization {
                 ecb.AddComponent<ReversePathTag>(entity);
             }
             else if (type == NodeType.Mesh) {
-                ecb.AddComponent(entity, new MeshReference {
+                ecb.AddComponent(entity, new NodeMeshReference {
                     Value = Entity.Null,
                     FilePath = node.MeshFilePath,
                     Loaded = false

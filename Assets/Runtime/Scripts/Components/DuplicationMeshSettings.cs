@@ -1,12 +1,8 @@
-using UnityEngine;
-using System;
+using Unity.Entities;
 
 namespace KexEdit {
-    [Serializable]
-    public class DuplicationMeshSettings {
-        public Mesh Mesh;
-        public Material Material;
-        public int Step = 1;
-        public int Offset = 0;
+    public struct DuplicationMeshSettings : IComponentData {
+        public int Step;
+        public int Offset;
     }
 }

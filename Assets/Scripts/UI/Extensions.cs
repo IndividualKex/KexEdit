@@ -472,6 +472,14 @@ namespace KexEdit.UI {
             return dialog;
         }
 
+        public static SensitivityDialog ShowSensitivityDialog(this VisualElement element) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new SensitivityDialog(KexTime.Unpause);
+            root.Add(dialog);
+            return dialog;
+        }
+
         public static OptimizerDialog ShowOptimizerDialog(this VisualElement element, OptimizerData optimizerData) {
             var root = element.panel.visualTree.Q<TemplateContainer>();
             KexTime.Pause();

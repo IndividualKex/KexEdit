@@ -6,7 +6,7 @@ namespace KexEdit.UI {
     public partial class MeshLoadingSystem : SystemBase {
         protected override void OnUpdate() {
             using var entitiesToLoad = new NativeList<Entity>(Allocator.Temp);
-            foreach (var (meshReference, render, entity) in SystemAPI.Query<MeshReference, Render>().WithEntityAccess()) {
+            foreach (var (meshReference, render, entity) in SystemAPI.Query<NodeMeshReference, Render>().WithEntityAccess()) {
                 if (meshReference.Loaded ||
                     meshReference.FilePath.IsEmpty ||
                     meshReference.Value != Entity.Null) continue;
@@ -14,13 +14,13 @@ namespace KexEdit.UI {
             }
 
             foreach (var entity in entitiesToLoad) {
-                ref var meshReference = ref SystemAPI.GetComponentRW<MeshReference>(entity).ValueRW;
+                ref var meshReference = ref SystemAPI.GetComponentRW<NodeMeshReference>(entity).ValueRW;
                 meshReference.Loaded = true;
                 string filePath = meshReference.FilePath.ToString();
                 if (filePath.EndsWith(".glb") || filePath.EndsWith(".gltf")) {
                     ImportManager.ImportGltfFile(filePath, EntityManager, 0, result => {
-                        if (!SystemAPI.HasComponent<MeshReference>(entity)) return;
-                        ref var meshReference = ref SystemAPI.GetComponentRW<MeshReference>(entity).ValueRW;
+                        if (!SystemAPI.HasComponent<NodeMeshReference>(entity)) return;
+                        ref var meshReference = ref SystemAPI.GetComponentRW<NodeMeshReference>(entity).ValueRW;
                         meshReference.Value = result;
                         EntityManager.AddComponentData(result, new NodeMesh { Node = entity });
                     });

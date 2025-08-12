@@ -55,8 +55,9 @@ namespace KexEdit.UI {
             string name = $"Imported glTF: {Path.GetFileNameWithoutExtension(path)}";
             var entity = entityManager.CreateEntity(typeof(LocalTransform), typeof(LocalToWorld));
             entityManager.SetName(entity, name);
-            entityManager.SetComponentData(entity, LocalTransform.Identity);
-            entityManager.SetComponentData(entity, new LocalToWorld { Value = float4x4.identity });
+            var transform = LocalTransform.FromPosition(new float3(0f, -999f, 0f));
+            entityManager.SetComponentData(entity, transform);
+            entityManager.SetComponentData(entity, new LocalToWorld { Value = transform.ToMatrix() });
 
             var settings = new InstantiationSettings {
                 SceneObjectCreation = SceneObjectCreation.Never
@@ -126,9 +127,13 @@ namespace KexEdit.UI {
 
             ecb.AddComponent(entity, new ComponentTypeSet(componentTypes));
 
+            var transform = LocalTransform.FromPosition(new float3(0f, -999f, 0f));
+            ecb.SetComponent(entity, transform);
+
             var renderFilterSettings = RenderFilterSettings.Default;
             renderFilterSettings.Layer = layer;
             ecb.SetSharedComponent(entity, renderFilterSettings);
+
             ecb.SetSharedComponentManaged(entity, renderMeshArray);
             ecb.SetComponent(entity, materialMeshInfo);
             ecb.SetComponent(entity, new RenderBounds { Value = mesh.bounds.ToAABB() });

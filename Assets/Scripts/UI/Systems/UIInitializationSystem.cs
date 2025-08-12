@@ -62,11 +62,11 @@ namespace KexEdit.UI {
             ecb.AddComponent(stateEntity, new NodeGraphData());
             ecb.AddComponent(stateEntity, new TimelineData());
             ecb.AddComponent<GameViewData>(stateEntity);
-            ecb.AddComponent<KexEdit.Preferences>(stateEntity);
+            ecb.AddComponent(stateEntity, new EditorTrackStyleSettingsSingleton {
+                Settings = Entity.Null,
+                Dirty = true
+            });
             ecb.SetName(stateEntity, "UI State");
-
-            var loadEntity = ecb.CreateEntity();
-            ecb.AddComponent<ReloadTrackStyleEvent>(loadEntity);
 
             ecb.Playback(EntityManager);
             ecb.Dispose();

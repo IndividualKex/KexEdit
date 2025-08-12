@@ -20,7 +20,7 @@ namespace KexEdit.UI {
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (evt, entity) in SystemAPI.Query<LoadCartStyleConfigEvent>().WithEntityAccess()) {
-                Dispose(settings);
+                Dispose(settings, ecb);
                 LoadPalette(settings, globalSettings);
                 ecb.DestroyEntity(entity);
             }
@@ -50,10 +50,10 @@ namespace KexEdit.UI {
             settings.Version++;
         }
 
-        private void Dispose(CartStyleSettings settings) {
+        private void Dispose(CartStyleSettings settings, EntityCommandBuffer ecb) {
             foreach (var style in settings.Styles) {
                 if (style.Mesh == Entity.Null) continue;
-                EntityManager.DestroyEntity(style.Mesh);
+                ecb.DestroyEntity(style.Mesh);
                 style.Mesh = Entity.Null;
             }
         }

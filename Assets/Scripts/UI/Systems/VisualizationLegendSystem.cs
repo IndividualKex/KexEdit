@@ -26,7 +26,7 @@ namespace KexEdit.UI {
         }
 
         protected override void OnUpdate() {
-            var currentMode = VisualizationSystem.CurrentMode;
+            var currentMode = Preferences.VisualizationMode;
 
             if (currentMode != _lastMode) {
                 _lastMode = currentMode;

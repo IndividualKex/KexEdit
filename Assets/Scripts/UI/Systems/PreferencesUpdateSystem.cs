@@ -17,7 +17,7 @@ namespace KexEdit.UI {
             gizmos.PitchSpeedRange = Preferences.GetVisualizationRange(VisualizationMode.PitchSpeed);
             gizmos.YawSpeedRange = Preferences.GetVisualizationRange(VisualizationMode.YawSpeed);
             gizmos.CurvatureRange = Preferences.GetVisualizationRange(VisualizationMode.Curvature);
-
+            gizmos.VisualizationMode = Preferences.VisualizationMode;
             gizmos.DrawGizmos = Preferences.ShowGizmos && !OrbitCameraSystem.IsRideCameraActive;
         }
     }
