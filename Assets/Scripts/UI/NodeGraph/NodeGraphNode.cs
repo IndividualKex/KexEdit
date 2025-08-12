@@ -295,6 +295,7 @@ namespace KexEdit.UI.NodeGraph {
                 || _type == NodeType.CopyPathSection
                 || _type == NodeType.Reverse
                 || _type == NodeType.ReversePath
+                || _type == NodeType.Bridge
                 || _type == NodeType.Mesh) {
                 _itemsContainer = new VisualElement {
                     name = "ItemsContainer",
@@ -327,6 +328,7 @@ namespace KexEdit.UI.NodeGraph {
                     || _type == NodeType.GeometricSection
                     || _type == NodeType.CurvedSection
                     || _type == NodeType.CopyPathSection
+                    || _type == NodeType.Bridge
                     || _type == NodeType.Mesh) {
                     _renderToggle = new RenderToggle();
                     _itemsContainer.Add(_renderToggle);
@@ -443,16 +445,40 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void PositionPortsAbsolute(VisualElement container) {
+            int anchorCount = 0;
+            int pathCount = 0;
+            
+            for (int i = 0; i < container.childCount; i++) {
+                if (container[i] is NodeGraphPort port) {
+                    if (port.Data.Port.Type == PortType.Anchor) {
+                        anchorCount++;
+                    }
+                    else if (port.Data.Port.Type == PortType.Path) {
+                        pathCount++;
+                    }
+                }
+            }
+            
+            int anchorIndex = 0;
+            int pathIndex = 0;
+            
             for (int i = 0; i < container.childCount; i++) {
                 if (container[i] is NodeGraphPort port) {
                     port.style.position = Position.Absolute;
                     port.style.top = 0;
 
                     if (port.Data.Port.Type == PortType.Anchor) {
-                        port.style.left = new StyleLength(new Length(33.33f, LengthUnit.Percent));
+                        if (_type == NodeType.Bridge && anchorCount == 2) {
+                            port.style.left = new StyleLength(new Length(anchorIndex == 0 ? 33.33f : 66.67f, LengthUnit.Percent));
+                        }
+                        else {
+                            port.style.left = new StyleLength(new Length(33.33f, LengthUnit.Percent));
+                        }
+                        anchorIndex++;
                     }
                     else if (port.Data.Port.Type == PortType.Path) {
                         port.style.left = new StyleLength(new Length(66.67f, LengthUnit.Percent));
+                        pathIndex++;
                     }
 
                     port.style.translate = new StyleTranslate(new Translate(new Length(-50f, LengthUnit.Percent), 0));

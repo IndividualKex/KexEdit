@@ -1,8 +1,7 @@
 using Unity.Entities;
-using UnityEngine;
 
 namespace KexEdit {
-    public class CartMesh : MonoBehaviour {
+    public struct CartMesh : IComponentData {
         public Entity Cart;
     }
 }

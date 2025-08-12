@@ -78,7 +78,7 @@ namespace KexEdit.UI {
             _resistanceLookup = SystemAPI.GetBufferLookup<ResistanceKeyframe>(true);
             _trackStyleLookup = SystemAPI.GetBufferLookup<TrackStyleKeyframe>(true);
 
-            RequireForUpdate<Gizmos>();
+            RequireForUpdate<KexEdit.Preferences>();
             RequireForUpdate<GameViewData>();
         }
 
@@ -110,7 +110,7 @@ namespace KexEdit.UI {
         }
 
         protected override void OnUpdate() {
-            var gizmos = SystemAPI.GetSingleton<Gizmos>();
+            var gizmos = SystemAPI.GetSingleton<KexEdit.Preferences>();
             ref var gameViewData = ref SystemAPI.GetSingletonRW<GameViewData>().ValueRW;
             if (!gizmos.DrawGizmos) {
                 gameViewData.IntersectionKeyframe = default;

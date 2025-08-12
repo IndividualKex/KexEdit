@@ -19,6 +19,9 @@ namespace KexEdit {
             var globalSettings = SystemAPI.ManagedAPI.GetSingleton<GlobalSettings>();
             var gizmoSettings = SystemAPI.ManagedAPI.GetSingleton<GizmoSettings>();
 
+            ShadowCastingMode shadowCastingMode = gizmoSettings.EnableShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
+            bool receiveShadows = gizmoSettings.EnableShadows;
+
             foreach (var (style, segment, section, render, entity) in SystemAPI
                 .Query<TrackStyle, Segment, SectionReference, Render>()
                 .WithAll<TrackPoint>()
@@ -57,7 +60,9 @@ namespace KexEdit {
                 foreach (var buffer in style.CurrentBuffers.DuplicationBuffers) {
                     var rp = new RenderParams(buffer.Settings.Material) {
                         worldBounds = _bounds,
-                        matProps = buffer.MatProps
+                        matProps = buffer.MatProps,
+                        shadowCastingMode = shadowCastingMode,
+                        receiveShadows = receiveShadows
                     };
 
                     Graphics.RenderMeshIndirect(
@@ -70,7 +75,9 @@ namespace KexEdit {
                 foreach (var buffer in style.CurrentBuffers.ExtrusionBuffers) {
                     var rp = new RenderParams(buffer.Settings.Material) {
                         worldBounds = _bounds,
-                        matProps = buffer.MatProps
+                        matProps = buffer.MatProps,
+                        shadowCastingMode = shadowCastingMode,
+                        receiveShadows = receiveShadows
                     };
 
                     Graphics.RenderPrimitives(
@@ -84,7 +91,9 @@ namespace KexEdit {
                 foreach (var buffer in style.CurrentBuffers.StartCapBuffers) {
                     var rp = new RenderParams(buffer.Material) {
                         worldBounds = _bounds,
-                        matProps = buffer.MatProps
+                        matProps = buffer.MatProps,
+                        shadowCastingMode = shadowCastingMode,
+                        receiveShadows = receiveShadows
                     };
 
                     Graphics.RenderMeshIndirect(
@@ -97,7 +106,9 @@ namespace KexEdit {
                 foreach (var buffer in style.CurrentBuffers.EndCapBuffers) {
                     var rp = new RenderParams(buffer.Material) {
                         worldBounds = _bounds,
-                        matProps = buffer.MatProps
+                        matProps = buffer.MatProps,
+                        shadowCastingMode = shadowCastingMode,
+                        receiveShadows = receiveShadows
                     };
 
                     Graphics.RenderMeshIndirect(
@@ -107,12 +118,12 @@ namespace KexEdit {
                     );
                 }
 
-                if (SystemAPI.HasSingleton<Gizmos>() &&
-                    SystemAPI.GetSingleton<Gizmos>().DrawGizmos) {
+                if (SystemAPI.HasSingleton<Preferences>() &&
+                    SystemAPI.GetSingleton<Preferences>().DrawGizmos) {
                     foreach (var buffer in style.CurrentBuffers.DuplicationGizmoBuffers) {
                         var rp = new RenderParams(buffer.Settings.Material) {
                             worldBounds = _bounds,
-                            matProps = buffer.MatProps
+                            matProps = buffer.MatProps,
                         };
 
                         Graphics.RenderPrimitives(
@@ -125,7 +136,7 @@ namespace KexEdit {
                     foreach (var buffer in style.CurrentBuffers.ExtrusionGizmoBuffers) {
                         var rp = new RenderParams(buffer.Settings.Material) {
                             worldBounds = _bounds,
-                            matProps = buffer.MatProps
+                            matProps = buffer.MatProps,
                         };
 
                         Graphics.RenderPrimitives(

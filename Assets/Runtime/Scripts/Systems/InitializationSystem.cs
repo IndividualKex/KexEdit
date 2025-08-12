@@ -37,18 +37,20 @@ namespace KexEdit {
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            foreach (var (_, entity) in SystemAPI.Query<InitializeEvent>().WithEntityAccess()) {
+            bool enableShadows = false;
+            foreach (var (evt, entity) in SystemAPI.Query<InitializeEvent>().WithEntityAccess()) {
                 ecb.DestroyEntity(entity);
                 if (_initialized) {
                     throw new System.Exception("Runtime already initialized");
                 }
+                enableShadows = evt.EnableShadows;
                 _initialized = true;
             }
 
             var boxGeometry = new BoxGeometry {
-                Center = float3.zero,
+                Center = new float3(0f, -0.185f, 0f),
+                Size = new float3(1.5f, 0.475f, 0.5f),
                 Orientation = quaternion.identity,
-                Size = new float3(1.1f, 0.5f, 0.5f)
             };
 
             _trackColliderBlob = BoxCollider.Create(boxGeometry, CollisionFilter.Default, Material.Default);
@@ -73,7 +75,9 @@ namespace KexEdit {
                 GizmoMaterial = gizmoMaterial,
             });
 
-            var gizmoSettings = new GizmoSettings();
+            var gizmoSettings = new GizmoSettings {
+                EnableShadows = enableShadows
+            };
 
             var defaultGizmoMaterial = new UnityEngine.Material(gizmoMaterial);
             defaultGizmoMaterial.SetColor("_Color", new(0.7f, 0.7f, 0.7f));

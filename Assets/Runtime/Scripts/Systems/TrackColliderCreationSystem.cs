@@ -7,7 +7,6 @@ using Unity.Mathematics;
 using Unity.Physics;
 
 namespace KexEdit {
-    [UpdateInGroup(typeof(FixedStepSimulationSystemGroup))]
     [BurstCompile]
     public partial struct TrackColliderCreationSystem : ISystem {
         private EntityQuery _query;

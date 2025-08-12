@@ -1,15 +1,18 @@
+using Unity.Burst;
 using Unity.Entities;
 using Unity.Transforms;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(CartSystem))]
-    public partial class CartMeshUpdateSystem : SystemBase {
-        protected override void OnUpdate() {
+    [BurstCompile]
+    public partial struct CartMeshUpdateSystem : ISystem {
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state) {
             foreach (var (mesh, transform) in SystemAPI.Query<CartMeshReference, LocalTransform>()) {
-                if (mesh.Value == null) continue;
-                mesh.Value.transform.SetPositionAndRotation(transform.Position, transform.Rotation);
-                mesh.Value.transform.localScale = UnityEngine.Vector3.one * transform.Scale;
+                if (mesh.Value == Entity.Null || !SystemAPI.HasComponent<LocalTransform>(mesh.Value)) continue;
+                ref var meshTransform = ref SystemAPI.GetComponentRW<LocalTransform>(mesh.Value).ValueRW;
+                meshTransform = transform;
             }
         }
     }

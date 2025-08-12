@@ -1,6 +1,5 @@
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
@@ -9,8 +8,12 @@ namespace KexEdit.UI {
         private EntityQuery _loadCartMeshEventQuery;
 
         protected override void OnCreate() {
-            _editorCoasterQuery = GetEntityQuery(typeof(Coaster), typeof(EditorCoasterTag));
-            _loadCartMeshEventQuery = GetEntityQuery(typeof(LoadCartMeshEvent));
+            _editorCoasterQuery = SystemAPI.QueryBuilder()
+                .WithAll<Coaster, EditorCoasterTag>()
+                .Build();
+            _loadCartMeshEventQuery = SystemAPI.QueryBuilder()
+                .WithAll<LoadCartMeshEvent>()
+                .Build();
             RequireForUpdate<CartStyleSettings>();
         }
 
@@ -30,7 +33,7 @@ namespace KexEdit.UI {
             if (editorCartStyleRef.StyleIndex >= styleSettings.Styles.Count) return;
             
             var cartStyle = styleSettings.Styles[editorCartStyleRef.StyleIndex];
-            if (cartStyle.Mesh == null) return;
+            if (cartStyle.Mesh == Entity.Null) return;
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
@@ -48,12 +51,12 @@ namespace KexEdit.UI {
 
                 Entity cart = SystemAPI.GetComponent<CartReference>(entity).Value;
                 if (cart == Entity.Null) continue;
-                if (!SystemAPI.ManagedAPI.HasComponent<CartMeshReference>(cart)) continue;
+                if (!SystemAPI.HasComponent<CartMeshReference>(cart)) continue;
 
-                var cartMesh = SystemAPI.ManagedAPI.GetComponent<CartMeshReference>(cart);
+                var cartMesh = SystemAPI.GetComponent<CartMeshReference>(cart);
 
                 bool needsStyleReference = false;
-                bool needsCartMesh = cartMesh.Value == null;
+                bool needsCartMesh = cartMesh.Value == Entity.Null;
                 
                 if (SystemAPI.HasComponent<CartStyleReference>(cart)) {
                     var cartStyleRef = SystemAPI.GetComponent<CartStyleReference>(cart);
@@ -82,9 +85,8 @@ namespace KexEdit.UI {
                 }
 
                 if (needsCartMesh && !existing.Contains(cart)) {
-                    if (cartMesh.Value != null) {
-                        Object.Destroy(cartMesh.Value.gameObject);
-                        cartMesh.Value = null;
+                    if (cartMesh.Value != Entity.Null) {
+                        ecb.DestroyEntity(cartMesh.Value);
                     }
 
                     var loadEventEntity = ecb.CreateEntity();

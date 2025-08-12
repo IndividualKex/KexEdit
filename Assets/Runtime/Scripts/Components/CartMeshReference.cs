@@ -1,7 +1,7 @@
 using Unity.Entities;
 
 namespace KexEdit {
-    public class CartMeshReference : IComponentData {
-        public CartMesh Value;
+    public struct CartMeshReference : IComponentData {
+        public Entity Value;
     }
 }

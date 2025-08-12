@@ -1,14 +1,26 @@
+using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
+using Unity.Mathematics;
+using Unity.Rendering;
+using Unity.Transforms;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    public partial class MeshUpdateSystem : SystemBase {
-        protected override void OnUpdate() {
+    [BurstCompile]
+    public partial struct MeshUpdateSystem : ISystem {
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state) {
+            using var ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (mesh, anchor, render, dirtyRW) in SystemAPI.Query<MeshReference, Anchor, Render, RefRW<Dirty>>()) {
-                if (mesh.Value == null) continue;
+                if (mesh.Value == Entity.Null) continue;
 
-                mesh.Value.gameObject.SetActive(render.Value);
+                if (render.Value && SystemAPI.HasComponent<DisableRendering>(mesh.Value)) {
+                    ecb.RemoveComponent<DisableRendering>(mesh.Value);
+                }
+                else if (!render.Value && !SystemAPI.HasComponent<DisableRendering>(mesh.Value)) {
+                    ecb.AddComponent<DisableRendering>(mesh.Value);
+                }
 
                 if (!render.Value) continue;
 
@@ -16,17 +28,18 @@ namespace KexEdit {
                 if (!dirty) continue;
                 dirty = false;
 
-                Vector3 position = anchor.Value.Position;
-                Quaternion rotation = Quaternion.Euler(
-                    anchor.Value.Roll,
-                    anchor.Value.Velocity,
-                    anchor.Value.Energy
+                float3 position = anchor.Value.Position;
+                quaternion rotation = quaternion.Euler(
+                    math.radians(anchor.Value.Roll),
+                    math.radians(anchor.Value.Velocity),
+                    math.radians(anchor.Value.Energy)
                 );
-                Vector3 scale = Vector3.one * anchor.Value.NormalForce;
+                float scale = anchor.Value.NormalForce;
 
-                mesh.Value.transform.SetPositionAndRotation(position, rotation);
-                mesh.Value.transform.localScale = scale;
+                ref var transform = ref SystemAPI.GetComponentRW<LocalTransform>(mesh.Value).ValueRW;
+                transform = LocalTransform.FromPositionRotationScale(position, rotation, scale);
             }
+            ecb.Playback(state.EntityManager);
         }
     }
 }

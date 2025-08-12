@@ -1,15 +1,19 @@
+using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(CleanupSystemGroup))]
-    public partial class CartMeshCleanupSystem : SystemBase {
-        protected override void OnUpdate() {
-            foreach (var mesh in GameObject.FindObjectsByType<CartMesh>(FindObjectsSortMode.None)) {
-                if (SystemAPI.ManagedAPI.HasComponent<CartMeshReference>(mesh.Cart) &&
-                    SystemAPI.ManagedAPI.GetComponent<CartMeshReference>(mesh.Cart).Value == mesh) continue;
-                GameObject.Destroy(mesh.gameObject);
+    [BurstCompile]
+    public partial struct CartMeshCleanupSystem : ISystem {
+        public void OnUpdate(ref SystemState state) {
+            using var ecb = new EntityCommandBuffer(Allocator.Temp);
+            foreach (var (cartMesh, entity) in SystemAPI.Query<CartMesh>().WithEntityAccess()) {
+                if (SystemAPI.HasComponent<CartMeshReference>(cartMesh.Cart) &&
+                    SystemAPI.GetComponent<CartMeshReference>(cartMesh.Cart).Value == entity) continue;
+                ecb.DestroyEntity(entity);
             }
+            ecb.Playback(state.EntityManager);
         }
     }
 }

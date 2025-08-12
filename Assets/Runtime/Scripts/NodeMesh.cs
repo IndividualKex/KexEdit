@@ -1,8 +1,7 @@
 using Unity.Entities;
-using UnityEngine;
 
 namespace KexEdit {
-    public class NodeMesh : MonoBehaviour {
+    public struct NodeMesh : IComponentData {
         public Entity Node;
     }
 }

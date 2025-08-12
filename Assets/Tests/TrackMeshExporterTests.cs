@@ -119,7 +119,7 @@ public class TrackMeshExporterTests {
             // Validate OBJ can be parsed by ImportManager
             Mesh importedMesh = null;
             Assert.DoesNotThrow(() => {
-                importedMesh = ImportManager.ParseObjFile(testFilePath);
+                importedMesh = ObjLoader.LoadMesh(testFilePath);
             });
 
             Assert.IsNotNull(importedMesh, "ImportManager should successfully parse the exported OBJ");
@@ -173,7 +173,7 @@ public class TrackMeshExporterTests {
             // Validate OBJ can be parsed
             Mesh importedMesh = null;
             Assert.DoesNotThrow(() => {
-                importedMesh = ImportManager.ParseObjFile(testFilePath);
+                importedMesh = ObjLoader.LoadMesh(testFilePath);
             });
 
             Assert.IsNotNull(importedMesh, "Multi-mesh OBJ should be parseable");
@@ -342,7 +342,7 @@ public class TrackMeshExporterTests {
             var totalExportTime = stringBuildTime + fileWriteTime;
 
             // Quick validation
-            var importedMesh = ImportManager.ParseObjFile(testFilePath);
+            var importedMesh = ObjLoader.LoadMesh(testFilePath);
 
             // Performance reporting
             UnityEngine.Debug.Log($"Performance Test Results:");

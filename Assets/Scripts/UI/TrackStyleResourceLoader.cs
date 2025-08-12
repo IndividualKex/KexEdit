@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
+using System;
+using System.Globalization;
 
 namespace KexEdit.UI {
     public static class TrackStyleResourceLoader {
@@ -158,7 +160,7 @@ namespace KexEdit.UI {
             string fullPath = Path.Combine(TrackStylesPath, path);
             if (path.EndsWith(".obj")) {
                 try {
-                    var mesh = ImportManager.ParseObjFile(fullPath);
+                    var mesh = ParseTriangulatedObj(fullPath);
                     if (mesh != null) {
                         return mesh;
                     }
@@ -171,7 +173,7 @@ namespace KexEdit.UI {
                     Debug.LogWarning($"Mesh {path} failed to load, attempting fallback to FallbackRail.obj");
                     var fallbackPath = Path.Combine(TrackStylesPath, "FallbackRail.obj");
                     try {
-                        var fallbackMesh = ImportManager.ParseObjFile(fallbackPath);
+                        var fallbackMesh = ParseTriangulatedObj(fallbackPath);
                         if (fallbackMesh != null) {
                             return fallbackMesh;
                         }
@@ -206,7 +208,7 @@ namespace KexEdit.UI {
                 }
                 else {
                     Debug.LogError($"Failed to load texture {path}");
-                    Object.DestroyImmediate(texture);
+                    UnityEngine.Object.DestroyImmediate(texture);
                 }
             }
             catch (System.Exception e) {
@@ -259,10 +261,134 @@ namespace KexEdit.UI {
                             }
                         }
                     }
-                }
+                },
+                SourceFileName = "Default.json"
             };
-            config.SourceFileName = "Default.json";
             return config;
+        }
+
+        private static Mesh ParseTriangulatedObj(string path) {
+            var vertices = new List<Vector3>();
+            var normals = new List<Vector3>();
+            var uvs = new List<Vector2>();
+            var triangles = new List<int>();
+
+            var finalVertices = new List<Vector3>();
+            var finalNormals = new List<Vector3>();
+            var finalUvs = new List<Vector2>();
+
+            var vertexDict = new Dictionary<string, int>();
+
+            string[] lines = File.ReadAllLines(path);
+
+            foreach (string line in lines) {
+                string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                if (parts.Length == 0) continue;
+
+                switch (parts[0]) {
+                    case "v":
+                        if (parts.Length != 4) {
+                            Debug.LogError($"Invalid vertex line: {line}, expected 3 values.");
+                            continue;
+                        }
+
+                        float x = float.Parse(parts[1], CultureInfo.InvariantCulture);
+                        float y = float.Parse(parts[2], CultureInfo.InvariantCulture);
+                        float z = float.Parse(parts[3], CultureInfo.InvariantCulture);
+                        vertices.Add(new Vector3(x, y, z));
+                        break;
+
+                    case "vn":
+                        if (parts.Length != 4) {
+                            Debug.LogError($"Invalid normal line: {line}, expected 3 values.");
+                            continue;
+                        }
+
+                        float xn = float.Parse(parts[1], CultureInfo.InvariantCulture);
+                        float yn = float.Parse(parts[2], CultureInfo.InvariantCulture);
+                        float zn = float.Parse(parts[3], CultureInfo.InvariantCulture);
+                        normals.Add(new Vector3(xn, yn, zn));
+                        break;
+
+                    case "vt":
+                        if (parts.Length != 3) {
+                            Debug.LogError($"Invalid uv line: {line}, expected 2 values.");
+                            continue;
+                        }
+
+                        float u = float.Parse(parts[1], CultureInfo.InvariantCulture);
+                        float v = float.Parse(parts[2], CultureInfo.InvariantCulture);
+                        uvs.Add(new Vector2(u, v));
+                        break;
+
+                    case "f":
+                        if (parts.Length != 4) {
+                            Debug.LogError($"Invalid face line: {line}. Only triangles are supported.");
+                            continue;
+                        }
+
+                        for (int i = 1; i < parts.Length; i++) {
+                            string vertexKey = parts[i];
+
+                            if (!vertexDict.ContainsKey(vertexKey)) {
+                                string[] indices = vertexKey.Split('/');
+
+                                int vertexIndex = int.Parse(indices[0]) - 1;
+                                int uvIndex = indices.Length > 1 && !string.IsNullOrEmpty(indices[1]) ? int.Parse(indices[1]) - 1 : -1;
+                                int normalIndex = indices.Length > 2 && !string.IsNullOrEmpty(indices[2]) ? int.Parse(indices[2]) - 1 : -1;
+
+                                finalVertices.Add(vertices[vertexIndex]);
+
+                                if (uvIndex >= 0 && uvIndex < uvs.Count) {
+                                    finalUvs.Add(uvs[uvIndex]);
+
+                                }
+                                else {
+                                    finalUvs.Add(Vector2.zero);
+                                }
+
+                                if (normalIndex >= 0 && normalIndex < normals.Count) {
+                                    finalNormals.Add(normals[normalIndex]);
+                                }
+                                else {
+                                    finalNormals.Add(Vector3.up);
+                                }
+
+                                vertexDict[vertexKey] = finalVertices.Count - 1;
+                            }
+
+                            triangles.Add(vertexDict[vertexKey]);
+                        }
+                        break;
+                }
+            }
+
+            if (finalVertices.Count == 0) {
+                Debug.LogError("No vertices found in OBJ file.");
+                return null;
+            }
+
+            var mesh = new Mesh {
+                vertices = finalVertices.ToArray(),
+                triangles = triangles.ToArray()
+            };
+
+            if (finalUvs.Count > 0) {
+                mesh.uv = finalUvs.ToArray();
+            }
+
+            if (finalNormals.Count > 0) {
+                mesh.normals = finalNormals.ToArray();
+            }
+            else {
+                mesh.RecalculateNormals();
+            }
+
+            mesh.RecalculateBounds();
+            mesh.name = Path.GetFileNameWithoutExtension(path);
+
+            return mesh;
         }
     }
 }
