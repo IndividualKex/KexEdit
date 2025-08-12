@@ -20,12 +20,21 @@ namespace KexEdit {
         public void OnUpdate(ref SystemState state) {
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
+            int count = _segmentQuery.CalculateEntityCount();
+            using var existing = new NativeParallelHashSet<Entity>(count, Allocator.Temp);
+            foreach (var (section, segment) in SystemAPI.Query<SectionReference, Segment>()) {
+                var sectionStyleHash = SystemAPI.GetComponent<StyleHash>(section);
+                if (segment.StyleHash == sectionStyleHash.Value) {
+                    existing.Add(section);
+                }
+            }
+
             foreach (var (coaster, render, trackStyleBuffer, entity) in SystemAPI
                 .Query<CoasterReference, Render, DynamicBuffer<TrackStyleKeyframe>>()
                 .WithAll<Point>()
                 .WithEntityAccess()
             ) {
-                if (!render) continue;
+                if (!render || existing.Contains(entity)) continue;
 
                 var points = SystemAPI.GetBuffer<Point>(entity);
                 if (points.Length == 0) continue;
@@ -41,94 +50,35 @@ namespace KexEdit {
                 uint styleHash = SystemAPI.GetComponent<StyleHash>(entity);
                 var overrides = SystemAPI.GetComponent<PropertyOverrides>(entity);
 
-                var breakpoints = overrides.TrackStyle
+                using var breakpoints = overrides.TrackStyle
                     ? DetectManualStyleBreakpoints(ref state, trackStyleBuffer, points, styleReferences.Length)
                     : DetectAutoStyleBreakpoints(ref state, points, settings, styleReferences);
-
-                var existingSegments = new NativeList<Entity>(Allocator.Temp);
-                var existingSegmentData = new NativeList<Segment>(Allocator.Temp);
-                
-                foreach (var (section, segment, segmentEntity) in SystemAPI
-                    .Query<SectionReference, Segment>()
-                    .WithEntityAccess()
-                ) {
-                    if (section.Value == entity) {
-                        existingSegments.Add(segmentEntity);
-                        existingSegmentData.Add(segment);
-                    }
-                }
-
-                var usedSegments = new NativeArray<bool>(existingSegments.Length, Allocator.Temp);
-                var segmentIndex = 0;
 
                 for (int i = 0; i < breakpoints.Length; i++) {
                     var breakpoint = breakpoints[i];
                     int styleIndex = breakpoint.StyleIndex;
                     Entity targetStyle = styleReferences[styleIndex];
 
-                    Entity segmentEntity = Entity.Null;
-                    bool foundMatch = false;
+                    Entity segmentEntity = segmentEntity = ecb.CreateEntity();
+                    ecb.AddComponent<CoasterReference>(segmentEntity, coaster);
+                    ecb.AddComponent<SectionReference>(segmentEntity, entity);
+                    ecb.AddComponent<SelectedBlend>(segmentEntity);
+                    ecb.AddComponent<TrackHash>(segmentEntity);
+                    ecb.AddComponent<TrackColliderHash>(segmentEntity);
+                    ecb.AddComponent<Render>(segmentEntity, render);
+                    ecb.AddComponent(segmentEntity, new Segment {
+                        Style = targetStyle,
+                        StartTime = breakpoint.StartTime,
+                        EndTime = breakpoint.EndTime,
+                        StyleVersion = settings.Version,
+                        StyleHash = styleHash,
+                        HasBuffers = false
+                    });
 
-                    for (int j = 0; j < existingSegments.Length; j++) {
-                        if (usedSegments[j]) continue;
-
-                        var existing = existingSegmentData[j];
-                        if (math.abs(existing.StartTime - breakpoint.StartTime) < 0.001f &&
-                            math.abs(existing.EndTime - breakpoint.EndTime) < 0.001f &&
-                            existing.Style == targetStyle) {
-                            segmentEntity = existingSegments[j];
-                            usedSegments[j] = true;
-                            foundMatch = true;
-
-                            if (existing.StyleVersion != settings.Version || existing.StyleHash != styleHash) {
-                                ecb.SetComponent(segmentEntity, new Segment {
-                                    Style = targetStyle,
-                                    StartTime = breakpoint.StartTime,
-                                    EndTime = breakpoint.EndTime,
-                                    StyleVersion = settings.Version,
-                                    StyleHash = styleHash,
-                                    HasBuffers = existing.HasBuffers
-                                });
-                            }
-                            break;
-                        }
-                    }
-
-                    if (!foundMatch) {
-                        segmentEntity = ecb.CreateEntity();
-                        ecb.AddComponent<CoasterReference>(segmentEntity, coaster);
-                        ecb.AddComponent<SectionReference>(segmentEntity, entity);
-                        ecb.AddComponent<SelectedBlend>(segmentEntity);
-                        ecb.AddComponent<TrackHash>(segmentEntity);
-                        ecb.AddComponent<TrackColliderHash>(segmentEntity);
-                        ecb.AddComponent<Render>(segmentEntity, render);
-                        ecb.AddComponent(segmentEntity, new Segment {
-                            Style = targetStyle,
-                            StartTime = breakpoint.StartTime,
-                            EndTime = breakpoint.EndTime,
-                            StyleVersion = settings.Version,
-                            StyleHash = styleHash,
-                            HasBuffers = false
-                        });
-
-                        ecb.AddBuffer<TrackPoint>(segmentEntity);
-                        ecb.AddBuffer<TrackColliderReference>(segmentEntity);
-                        ecb.SetName(segmentEntity, $"Segment {segmentIndex}");
-                    }
-
-                    segmentIndex++;
+                    ecb.AddBuffer<TrackPoint>(segmentEntity);
+                    ecb.AddBuffer<TrackColliderReference>(segmentEntity);
+                    ecb.SetName(segmentEntity, $"Segment {i}");
                 }
-
-                for (int j = 0; j < existingSegments.Length; j++) {
-                    if (!usedSegments[j]) {
-                        ecb.DestroyEntity(existingSegments[j]);
-                    }
-                }
-
-                existingSegments.Dispose();
-                existingSegmentData.Dispose();
-                usedSegments.Dispose();
-                breakpoints.Dispose();
             }
 
             ecb.Playback(state.EntityManager);
