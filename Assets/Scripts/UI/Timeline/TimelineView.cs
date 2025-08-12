@@ -4,6 +4,7 @@ using Unity.Properties;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.Timeline.Constants;
 using Unity.Mathematics;
+using KexEdit.UI;
 
 namespace KexEdit.UI.Timeline {
     public class TimelineView : VisualElement {
@@ -162,6 +163,7 @@ namespace KexEdit.UI.Timeline {
 
             if (_panning) {
                 Vector2 delta = evt.localMousePosition - _prevMousePosition;
+                delta = Preferences.AdjustPointerDelta(delta);
                 _data.Offset -= delta.x;
                 _data.ClampOffset();
                 _prevMousePosition = evt.localMousePosition;
@@ -188,7 +190,7 @@ namespace KexEdit.UI.Timeline {
 
             if (evt.shiftKey) {
                 const float panSpeed = 15f;
-                _data.Offset += evt.delta.y * panSpeed;
+                _data.Offset += Preferences.AdjustScroll(evt.delta.y) * panSpeed;
                 _data.ClampOffset();
                 
                 var e = this.GetPooled<TimelineOffsetChangeEvent>();
@@ -196,7 +198,7 @@ namespace KexEdit.UI.Timeline {
                 this.Send(e);
             }
             else {
-                float zoomMultiplier = 1f - evt.delta.y * ZOOM_SPEED;
+                float zoomMultiplier = 1f - Preferences.AdjustScroll(evt.delta.y) * ZOOM_SPEED;
                 float newZoom = _data.Zoom * zoomMultiplier;
                 newZoom = Mathf.Clamp(newZoom, MIN_ZOOM, MAX_ZOOM);
 

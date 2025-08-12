@@ -70,13 +70,13 @@ namespace KexEdit.UI {
                     ("Mouse Wheel", "Zoom")
                 }),
                 ("Camera Views", new[] {
-                    ("Numpad 1", "Front View"),
-                    ("Ctrl+Numpad 1".ToPlatformShortcut(), "Back View"),
-                    ("Numpad 3", "Right View"),
-                    ("Ctrl+Numpad 3".ToPlatformShortcut(), "Left View"),
-                    ("Numpad 5", "Toggle Orthographic"),
-                    ("Numpad 7", "Top View"),
-                    ("Ctrl+Numpad 7".ToPlatformShortcut(), "Bottom View")
+                    (Preferences.EnableTopRowViewHotkeys ? "1 or Numpad 1" : "Numpad 1", "Front View"),
+                    (Preferences.EnableTopRowViewHotkeys ? "Ctrl+1 or Ctrl+Numpad 1".ToPlatformShortcut() : "Ctrl+Numpad 1".ToPlatformShortcut(), "Back View"),
+                    (Preferences.EnableTopRowViewHotkeys ? "3 or Numpad 3" : "Numpad 3", "Right View"),
+                    (Preferences.EnableTopRowViewHotkeys ? "Ctrl+3 or Ctrl+Numpad 3".ToPlatformShortcut() : "Ctrl+Numpad 3".ToPlatformShortcut(), "Left View"),
+                    (Preferences.EnableTopRowViewHotkeys ? "5 or Numpad 5" : "Numpad 5", "Toggle Orthographic"),
+                    (Preferences.EnableTopRowViewHotkeys ? "7 or Numpad 7" : "Numpad 7", "Top View"),
+                    (Preferences.EnableTopRowViewHotkeys ? "Ctrl+7 or Ctrl+Numpad 7".ToPlatformShortcut() : "Ctrl+Numpad 7".ToPlatformShortcut(), "Bottom View")
                 }),
                 ("Free Look Mode", new[] {
                     ("Right-Click + Hold", "Activate Free Look"),
