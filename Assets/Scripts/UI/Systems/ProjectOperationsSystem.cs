@@ -16,7 +16,6 @@ namespace KexEdit.UI {
         private Timeline.Timeline _timeline;
         private Label _titleLabel;
 
-        private Entity _currentStyleEntity;
         private bool _initialized;
 
         private EntityQuery _coasterQuery;
@@ -110,52 +109,63 @@ namespace KexEdit.UI {
                     submenu.AddItem("Track Mesh", TrackMeshExporter.ExportTrackMesh);
                 });
                 menu.AddSeparator();
-                menu.AddSubmenu("Units", submenu => {
-                    submenu.AddItem("Metric", () => {
-                        Preferences.DistanceUnits = DistanceUnitsType.Meters;
-                        if (Preferences.SpeedUnits != SpeedUnitsType.MetersPerSecond &&
-                            Preferences.SpeedUnits != SpeedUnitsType.KilometersPerHour) {
+                menu.AddSubmenu("Preferences", submenu => {
+                    submenu.AddSubmenu("Units", unitsSubmenu => {
+                        unitsSubmenu.AddItem("Metric", () => {
+                            Preferences.DistanceUnits = DistanceUnitsType.Meters;
+                            if (Preferences.SpeedUnits != SpeedUnitsType.MetersPerSecond &&
+                                Preferences.SpeedUnits != SpeedUnitsType.KilometersPerHour) {
+                                Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond;
+                            }
+                        });
+                        unitsSubmenu.AddItem("Imperial", () => {
+                            Preferences.DistanceUnits = DistanceUnitsType.Feet;
+                            Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour;
+                        });
+                        unitsSubmenu.AddSeparator();
+                        unitsSubmenu.AddSubmenu("Distance", distSubmenu => {
+                            distSubmenu.AddItem("Meters", () => Preferences.DistanceUnits = DistanceUnitsType.Meters,
+                                isChecked: Preferences.DistanceUnits == DistanceUnitsType.Meters);
+                            distSubmenu.AddItem("Feet", () => Preferences.DistanceUnits = DistanceUnitsType.Feet,
+                                isChecked: Preferences.DistanceUnits == DistanceUnitsType.Feet);
+                        });
+                        unitsSubmenu.AddSubmenu("Velocity", velSubmenu => {
+                            velSubmenu.AddItem("Meters Per Second", () => Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond,
+                                isChecked: Preferences.SpeedUnits == SpeedUnitsType.MetersPerSecond);
+                            velSubmenu.AddItem("Kilometers Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.KilometersPerHour,
+                                isChecked: Preferences.SpeedUnits == SpeedUnitsType.KilometersPerHour);
+                            velSubmenu.AddItem("Miles Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour,
+                                isChecked: Preferences.SpeedUnits == SpeedUnitsType.MilesPerHour);
+                        });
+                        unitsSubmenu.AddSubmenu("Angle", angleSubmenu => {
+                            angleSubmenu.AddItem("Degrees", () => Preferences.AngleUnits = AngleUnitsType.Degrees,
+                                isChecked: Preferences.AngleUnits == AngleUnitsType.Degrees);
+                            angleSubmenu.AddItem("Radians", () => Preferences.AngleUnits = AngleUnitsType.Radians,
+                                isChecked: Preferences.AngleUnits == AngleUnitsType.Radians);
+                        });
+                        unitsSubmenu.AddSubmenu("Angle Change", angleChangeSubmenu => {
+                            angleChangeSubmenu.AddItem("Degrees", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Degrees,
+                                isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Degrees);
+                            angleChangeSubmenu.AddItem("Radians", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians,
+                                isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Radians);
+                        });
+                        unitsSubmenu.AddSeparator();
+                        unitsSubmenu.AddItem("Reset to Default", () => {
+                            Preferences.DistanceUnits = DistanceUnitsType.Meters;
                             Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond;
-                        }
+                            Preferences.AngleUnits = AngleUnitsType.Degrees;
+                            Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians;
+                        });
                     });
-                    submenu.AddItem("Imperial", () => {
-                        Preferences.DistanceUnits = DistanceUnitsType.Feet;
-                        Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour;
-                    });
+
                     submenu.AddSeparator();
-                    submenu.AddSubmenu("Distance", submenu => {
-                        submenu.AddItem("Meters", () => Preferences.DistanceUnits = DistanceUnitsType.Meters,
-                            isChecked: Preferences.DistanceUnits == DistanceUnitsType.Meters);
-                        submenu.AddItem("Feet", () => Preferences.DistanceUnits = DistanceUnitsType.Feet,
-                            isChecked: Preferences.DistanceUnits == DistanceUnitsType.Feet);
-                    });
-                    submenu.AddSubmenu("Velocity", submenu => {
-                        submenu.AddItem("Meters Per Second", () => Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond,
-                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.MetersPerSecond);
-                        submenu.AddItem("Kilometers Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.KilometersPerHour,
-                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.KilometersPerHour);
-                        submenu.AddItem("Miles Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour,
-                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.MilesPerHour);
-                    });
-                    submenu.AddSubmenu("Angle", submenu => {
-                        submenu.AddItem("Degrees", () => Preferences.AngleUnits = AngleUnitsType.Degrees,
-                            isChecked: Preferences.AngleUnits == AngleUnitsType.Degrees);
-                        submenu.AddItem("Radians", () => Preferences.AngleUnits = AngleUnitsType.Radians,
-                            isChecked: Preferences.AngleUnits == AngleUnitsType.Radians);
-                    });
-                    submenu.AddSubmenu("Angle Change", submenu => {
-                        submenu.AddItem("Degrees", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Degrees,
-                            isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Degrees);
-                        submenu.AddItem("Radians", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians,
-                            isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Radians);
-                    });
+                    submenu.AddItem("Invert Scroll", () => Preferences.InvertScroll = !Preferences.InvertScroll,
+                        isChecked: Preferences.InvertScroll);
+                    submenu.AddItem("Sensitivity...", ShowSensitivityDialog);
+                    
                     submenu.AddSeparator();
-                    submenu.AddItem("Reset to Default", () => {
-                        Preferences.DistanceUnits = DistanceUnitsType.Meters;
-                        Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond;
-                        Preferences.AngleUnits = AngleUnitsType.Degrees;
-                        Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians;
-                    });
+                    submenu.AddItem("Emulate Numpad", () => Preferences.EnableTopRowViewHotkeys = !Preferences.EnableTopRowViewHotkeys,
+                        isChecked: Preferences.EnableTopRowViewHotkeys);
                 });
                 menu.AddSeparator();
                 menu.AddItem("Quit", QuitWithConfirmation);
@@ -220,20 +230,20 @@ namespace KexEdit.UI {
                 });
                 menu.AddSeparator();
                 menu.AddSubmenu("Visualization", submenu => {
-                    var currentMode = VisualizationSystem.CurrentMode;
-                    submenu.AddItem("Velocity", () => VisualizationSystem.SetMode(VisualizationMode.Velocity), "Ctrl+1".ToPlatformShortcut(),
+                    var currentMode = Preferences.VisualizationMode;
+                    submenu.AddItem("Velocity", () => ToggleVisualizationMode(VisualizationMode.Velocity), "Ctrl+1".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.Velocity);
-                    submenu.AddItem("Curvature", () => VisualizationSystem.SetMode(VisualizationMode.Curvature), "Ctrl+2".ToPlatformShortcut(),
+                    submenu.AddItem("Curvature", () => ToggleVisualizationMode(VisualizationMode.Curvature), "Ctrl+2".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.Curvature);
-                    submenu.AddItem("Normal Force", () => VisualizationSystem.SetMode(VisualizationMode.NormalForce), "Ctrl+3".ToPlatformShortcut(),
+                    submenu.AddItem("Normal Force", () => ToggleVisualizationMode(VisualizationMode.NormalForce), "Ctrl+3".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.NormalForce);
-                    submenu.AddItem("Lateral Force", () => VisualizationSystem.SetMode(VisualizationMode.LateralForce), "Ctrl+4".ToPlatformShortcut(),
+                    submenu.AddItem("Lateral Force", () => ToggleVisualizationMode(VisualizationMode.LateralForce), "Ctrl+4".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.LateralForce);
-                    submenu.AddItem("Roll Speed", () => VisualizationSystem.SetMode(VisualizationMode.RollSpeed), "Ctrl+5".ToPlatformShortcut(),
+                    submenu.AddItem("Roll Speed", () => ToggleVisualizationMode(VisualizationMode.RollSpeed), "Ctrl+5".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.RollSpeed);
-                    submenu.AddItem("Pitch Speed", () => VisualizationSystem.SetMode(VisualizationMode.PitchSpeed), "Ctrl+6".ToPlatformShortcut(),
+                    submenu.AddItem("Pitch Speed", () => ToggleVisualizationMode(VisualizationMode.PitchSpeed), "Ctrl+6".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.PitchSpeed);
-                    submenu.AddItem("Yaw Speed", () => VisualizationSystem.SetMode(VisualizationMode.YawSpeed), "Ctrl+7".ToPlatformShortcut(),
+                    submenu.AddItem("Yaw Speed", () => ToggleVisualizationMode(VisualizationMode.YawSpeed), "Ctrl+7".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.YawSpeed);
                     submenu.AddSeparator();
                     submenu.AddItem("Edit", ShowVisualizationRangeDialog);
@@ -279,6 +289,7 @@ namespace KexEdit.UI {
             });
         }
 
+
         private void AddHelpMenu(MenuBar menuBar) {
             menuBar.AddMenu("Help", menu => {
                 menu.AddItem("About", ShowAbout);
@@ -315,6 +326,10 @@ namespace KexEdit.UI {
             _root.ShowVisualizationRangeDialog();
         }
 
+        private void ShowSensitivityDialog() {
+            _root.ShowSensitivityDialog();
+        }
+
         private void ToggleNodeGridSnapping() {
             Preferences.NodeGridSnapping = !Preferences.NodeGridSnapping;
         }
@@ -335,51 +350,29 @@ namespace KexEdit.UI {
             Preferences.AutoStyle = !Preferences.AutoStyle;
 
             foreach (var style in SystemAPI
-                .Query<TrackStyleReference>()
+                .Query<TrackStyleSettingsReference>()
                 .WithAll<Coaster, EditorCoasterTag>()
             ) {
-                if (!SystemAPI.ManagedAPI.HasComponent<TrackStyleSettings>(style)) continue;
-                var settings = SystemAPI.ManagedAPI.GetComponent<TrackStyleSettings>(style);
+                if (!SystemAPI.HasComponent<TrackStyleSettings>(style)) continue;
+                ref var settings = ref SystemAPI.GetComponentRW<TrackStyleSettings>(style).ValueRW;
                 settings.Version++;
                 settings.AutoStyle = Preferences.AutoStyle;
             }
         }
 
         private void InitializeCoaster(Entity entity) {
-            using var ecb = new EntityCommandBuffer(Allocator.Temp);
-            ecb.AddComponent<EditorCoasterTag>(entity);
-
-            if (_currentStyleEntity != Entity.Null) {
-                ecb.AddComponent<TrackStyleReference>(entity, _currentStyleEntity);
-            }
-            else {
-                var loadEntity = ecb.CreateEntity();
-                ecb.AddComponent(loadEntity, new LoadTrackStyleConfigEvent {
-                    Target = entity,
-                    ConfigFilename = Preferences.CurrentTrackStyle
-                });
-                ecb.SetName(loadEntity, "Load Track Style Config Event");
-            }
-
-            ecb.Playback(EntityManager);
+            EntityManager.AddComponent<EditorCoasterTag>(entity);
         }
 
         private void LoadTrackStyleConfig(string filename) {
-            _currentStyleEntity = Entity.Null;
-            using var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (_, coaster) in SystemAPI.Query<Coaster>().WithAll<EditorCoasterTag>().WithEntityAccess()) {
-                var loadEntity = ecb.CreateEntity();
-                ecb.AddComponent(loadEntity, new LoadTrackStyleConfigEvent {
-                    Target = coaster,
-                    ConfigFilename = filename
-                });
-                ecb.SetName(loadEntity, "Load Track Style Config Event");
-            }
-            ecb.Playback(EntityManager);
+            Preferences.CurrentTrackStyle = filename;
+            ref var singleton = ref SystemAPI.GetSingletonRW<EditorTrackStyleSettingsSingleton>().ValueRW;
+            singleton.Dirty = true;
         }
 
         protected override void OnUpdate() {
             var kb = Keyboard.current;
+            bool textEditing = Extensions.IsTextInputActive();
 
             if (!kb.ctrlKey.isPressed && !kb.leftCommandKey.isPressed) {
                 if (kb.f1Key.wasPressedThisFrame) ToggleShowGizmos();
@@ -389,10 +382,14 @@ namespace KexEdit.UI {
                 else if (kb.f11Key.wasPressedThisFrame) VideoControlSystem.Instance?.ToggleFullscreen();
                 else if (kb.iKey.wasPressedThisFrame) AddKeyframe();
                 else if (kb.tKey.wasPressedThisFrame) ToggleSyncPlayback();
-                else if (!Extensions.IsTextInputActive() && kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetFrontView();
-                else if (!Extensions.IsTextInputActive() && kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetSideView();
-                else if (!Extensions.IsTextInputActive() && kb.numpad5Key.wasPressedThisFrame) OrbitCameraSystem.ToggleOrthographic();
-                else if (!Extensions.IsTextInputActive() && kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetTopView();
+                else if (!textEditing && kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetFrontView();
+                else if (!textEditing && kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetSideView();
+                else if (!textEditing && kb.numpad5Key.wasPressedThisFrame) OrbitCameraSystem.ToggleOrthographic();
+                else if (!textEditing && kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetTopView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit1Key.wasPressedThisFrame) OrbitCameraSystem.SetFrontView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit3Key.wasPressedThisFrame) OrbitCameraSystem.SetSideView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit5Key.wasPressedThisFrame) OrbitCameraSystem.ToggleOrthographic();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit7Key.wasPressedThisFrame) OrbitCameraSystem.SetTopView();
             }
 
             if (kb.ctrlKey.isPressed || kb.leftCommandKey.isPressed) {
@@ -404,19 +401,22 @@ namespace KexEdit.UI {
                 else if (kb.nKey.wasPressedThisFrame) NewProject();
                 else if (kb.oKey.wasPressedThisFrame) OpenProject();
                 else if (kb.sKey.wasPressedThisFrame) SaveProject();
-                else if (kb.hKey.wasPressedThisFrame) ShowControls();
+                else if (!textEditing && kb.hKey.wasPressedThisFrame) ShowControls();
                 else if (kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomIn();
                 else if (kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomOut();
-                else if (kb.digit1Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.Velocity);
-                else if (kb.digit2Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.Curvature);
-                else if (kb.digit3Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.NormalForce);
-                else if (kb.digit4Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.LateralForce);
-                else if (kb.digit5Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.RollSpeed);
-                else if (kb.digit6Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.PitchSpeed);
-                else if (kb.digit7Key.wasPressedThisFrame) VisualizationSystem.SetMode(VisualizationMode.YawSpeed);
-                else if (!Extensions.IsTextInputActive() && kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetBackView();
-                else if (!Extensions.IsTextInputActive() && kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetOtherSideView();
-                else if (!Extensions.IsTextInputActive() && kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetBottomView();
+                else if (!textEditing && kb.digit1Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.Velocity);
+                else if (!textEditing && kb.digit2Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.Curvature);
+                else if (!textEditing && kb.digit3Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.NormalForce);
+                else if (!textEditing && kb.digit4Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.LateralForce);
+                else if (!textEditing && kb.digit5Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.RollSpeed);
+                else if (!textEditing && kb.digit6Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.PitchSpeed);
+                else if (!textEditing && kb.digit7Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.YawSpeed);
+                else if (!textEditing && kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetBackView();
+                else if (!textEditing && kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetOtherSideView();
+                else if (!textEditing && kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetBottomView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit1Key.wasPressedThisFrame) OrbitCameraSystem.SetBackView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit3Key.wasPressedThisFrame) OrbitCameraSystem.SetOtherSideView();
+                else if (Preferences.EnableTopRowViewHotkeys && !textEditing && kb.digit7Key.wasPressedThisFrame) OrbitCameraSystem.SetBottomView();
             }
         }
 
@@ -502,7 +502,6 @@ namespace KexEdit.UI {
         public void Undo() {
             if (!UI.Undo.CanUndo) return;
             var previous = _coasterQuery.GetSingletonEntity();
-            _currentStyleEntity = Entity.Null;
             var coaster = SerializationSystem.Instance.Undo(previous);
             if (coaster != Entity.Null) {
                 InitializeCoaster(coaster);
@@ -513,7 +512,6 @@ namespace KexEdit.UI {
         public void Redo() {
             if (!UI.Undo.CanRedo) return;
             var previous = _coasterQuery.GetSingletonEntity();
-            _currentStyleEntity = Entity.Null;
             var coaster = SerializationSystem.Instance.Redo(previous);
             if (coaster != Entity.Null) {
                 InitializeCoaster(coaster);
@@ -539,6 +537,15 @@ namespace KexEdit.UI {
             }
             else {
                 QuitApplication();
+            }
+        }
+
+        private void ToggleVisualizationMode(VisualizationMode mode) {
+            if (Preferences.VisualizationMode == mode) {
+                Preferences.VisualizationMode = VisualizationMode.None;
+            }
+            else {
+                Preferences.VisualizationMode = mode;
             }
         }
 

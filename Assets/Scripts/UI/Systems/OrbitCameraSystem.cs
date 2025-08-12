@@ -134,6 +134,7 @@ namespace KexEdit.UI {
 
             if (_isOrbiting || _isPanning || _isFreeLooking) {
                 mouseDelta = currentMousePosition - _lastMousePosition;
+                mouseDelta = Preferences.AdjustPointerDelta(mouseDelta);
             }
 
             if (_isOverGameView) {
@@ -196,7 +197,7 @@ namespace KexEdit.UI {
                 _freeLookPitch -= mouseDelta.y * CameraProperties.FreeLookSpeed * 0.01f;
                 _freeLookPitch = math.clamp(_freeLookPitch, -89f, 89f);
 
-                float scroll = mouse.scroll.ReadValue().y;
+                float scroll = Preferences.AdjustScroll(mouse.scroll.ReadValue().y);
                 if (math.abs(scroll) > 0.01f) {
                     if (scroll > 0f) {
                         cameraState.SpeedMultiplier += CameraProperties.SpeedMultiplierStep;
@@ -248,7 +249,7 @@ namespace KexEdit.UI {
             }
 
             if (_isOverGameView && !_isFreeLooking) {
-                float scroll = mouse.scroll.ReadValue().y;
+                float scroll = Preferences.AdjustScroll(mouse.scroll.ReadValue().y);
                 if (math.abs(scroll) > 0.01f) {
                     float zoomAmount = scroll * CameraProperties.ZoomSpeed * cameraState.TargetDistance;
                     cameraState.TargetDistance -= zoomAmount;
