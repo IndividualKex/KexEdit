@@ -44,6 +44,8 @@ namespace KexEdit.UI {
         private const string PREF_SCROLL_SENSITIVITY = "ScrollSensitivity";
         private const string PREF_POINTER_SENSITIVITY = "PointerSensitivity";
         private const string PREF_ENABLE_TOPROW_VIEW_HOTKEYS = "EnableTopRowViewHotkeys";
+        private const string PREF_CONTROL_SCHEME = "ControlScheme";
+        private const string PREF_ENABLE_TRACKPAD_GESTURES = "EnableTrackpadGestures";
 
         private static DistanceUnitsType s_DistanceUnits;
         private static AngleUnitsType s_AngleUnits;
@@ -71,6 +73,8 @@ namespace KexEdit.UI {
         private static float s_ScrollSensitivity;
         private static float s_PointerSensitivity;
         private static bool s_EnableTopRowViewHotkeys;
+        private static ControlScheme s_ControlScheme;
+        private static bool s_EnableTrackpadGestures;
 
         static Preferences() {
             LoadPreferences();
@@ -292,6 +296,24 @@ namespace KexEdit.UI {
             }
         }
 
+        public static ControlScheme ControlScheme {
+            get => s_ControlScheme;
+            set {
+                s_ControlScheme = value;
+                PlayerPrefs.SetInt(PREF_CONTROL_SCHEME, (int)value);
+                PlayerPrefs.Save();
+            }
+        }
+
+        public static bool EnableTrackpadGestures {
+            get => s_EnableTrackpadGestures;
+            set {
+                s_EnableTrackpadGestures = value;
+                PlayerPrefs.SetInt(PREF_ENABLE_TRACKPAD_GESTURES, value ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+        }
+
         public static float AdjustScroll(float deltaY) {
             float sign = s_ScrollInvert ? -1f : 1f;
             return deltaY * sign * s_ScrollSensitivity;
@@ -346,6 +368,11 @@ namespace KexEdit.UI {
             s_ScrollSensitivity = PlayerPrefs.GetFloat(PREF_SCROLL_SENSITIVITY, defaultScrollSensitivity);
             s_PointerSensitivity = PlayerPrefs.GetFloat(PREF_POINTER_SENSITIVITY, defaultPointerSensitivity);
             s_EnableTopRowViewHotkeys = PlayerPrefs.GetInt(PREF_ENABLE_TOPROW_VIEW_HOTKEYS, defaultEnableTopRow ? 1 : 0) == 1;
+
+            // Defaults: Blender scheme on mac, Unity elsewhere; gestures enabled on mac by default
+            int defaultScheme = isMac ? (int)ControlScheme.Blender : (int)ControlScheme.Unity;
+            s_ControlScheme = (ControlScheme)PlayerPrefs.GetInt(PREF_CONTROL_SCHEME, defaultScheme);
+            s_EnableTrackpadGestures = PlayerPrefs.GetInt(PREF_ENABLE_TRACKPAD_GESTURES, isMac ? 1 : 0) == 1;
         }
 
         public static float2 GetVisualizationRange(VisualizationMode mode) {

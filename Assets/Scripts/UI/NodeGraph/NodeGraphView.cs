@@ -13,6 +13,7 @@ namespace KexEdit.UI.NodeGraph {
         private const float MIN_ZOOM = 0.1f;
         private const float MAX_ZOOM = 10f;
         private const float ZOOM_SPEED = 0.3f;
+        private const float WHEEL_PAN_SPEED = 6f; // further reduced for mac trackpad feel
 
         private VisualElement _content;
         private VisualElement _edgeLayer;
@@ -31,6 +32,7 @@ namespace KexEdit.UI.NodeGraph {
         private Vector2 _startMousePosition;
         private bool _panning;
         private bool _boxSelecting;
+        private bool _isHovered;
 
         private NodeGraphData _data;
 
@@ -146,6 +148,11 @@ namespace KexEdit.UI.NodeGraph {
             RegisterCallback<MouseMoveEvent>(OnMouseMove);
             RegisterCallback<MouseUpEvent>(OnMouseUp, TrickleDown.TrickleDown);
             RegisterCallback<WheelEvent>(OnWheel);
+            RegisterCallback<MouseEnterEvent>(_ => _isHovered = true);
+            RegisterCallback<MouseLeaveEvent>(_ => _isHovered = false);
+
+            // Poll native trackpad gestures if enabled
+            schedule.Execute(PollTrackpadGestures).Every(16);
         }
 
         public void Draw() {
@@ -351,6 +358,7 @@ namespace KexEdit.UI.NodeGraph {
             }
 
             if (_panning) {
+                // Suppress value scroll changes while panning by stopping propagation early
                 Vector2 delta = evt.localMousePosition - _startMousePosition;
                 delta = Preferences.AdjustPointerDelta(delta);
                 _data.Pan += delta;
@@ -383,26 +391,83 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void OnWheel(WheelEvent evt) {
-            Vector2 mousePos = evt.mousePosition;
-            Vector2 contentSpaceMousePos = (mousePos - _data.Pan) / _data.Zoom;
+            bool blender = Preferences.ControlScheme == ControlScheme.Blender;
+            if (blender && !evt.ctrlKey && !evt.commandKey) {
+                // Blender-like: scroll pans by default
+                float dx = Preferences.AdjustScroll(evt.delta.x);
+                float dy = Preferences.AdjustScroll(evt.delta.y);
+                Vector2 panDelta = new Vector2(-dx, -dy) * WHEEL_PAN_SPEED;
+                ApplyPan(panDelta);
+            }
+            else {
+                // Zoom (Unity default, or Blender when Ctrl/Cmd held)
+                Vector2 mousePos = evt.mousePosition;
+                Vector2 contentSpaceMousePos = (mousePos - _data.Pan) / _data.Zoom;
 
-            float zoomDelta = -Preferences.AdjustScroll(evt.delta.y) * ZOOM_SPEED;
-            float multiplier = zoomDelta > 0 ? 1.1f : 1f / 1.1f;
-            _data.Zoom = Mathf.Clamp(_data.Zoom * Mathf.Pow(multiplier, Mathf.Abs(zoomDelta)), MIN_ZOOM, MAX_ZOOM);
+                float zoomDelta = -Preferences.AdjustScroll(evt.delta.y) * ZOOM_SPEED;
+                float multiplier = zoomDelta > 0 ? 1.1f : 1f / 1.1f;
+                _data.Zoom = Mathf.Clamp(_data.Zoom * Mathf.Pow(multiplier, Mathf.Abs(zoomDelta)), MIN_ZOOM, MAX_ZOOM);
 
-            _content.transform.scale = new Vector3(_data.Zoom, _data.Zoom, 1f);
-            _data.Pan = mousePos - contentSpaceMousePos * _data.Zoom;
-            _content.transform.position = _data.Pan;
+                _content.transform.scale = new Vector3(_data.Zoom, _data.Zoom, 1f);
+                _data.Pan = mousePos - contentSpaceMousePos * _data.Zoom;
+                _content.transform.position = _data.Pan;
 
-            var zoomEvent = this.GetPooled<NodeGraphZoomChangeEvent>();
-            zoomEvent.Zoom = _data.Zoom;
-            this.Send(zoomEvent);
+                var zoomEvent = this.GetPooled<NodeGraphZoomChangeEvent>();
+                zoomEvent.Zoom = _data.Zoom;
+                this.Send(zoomEvent);
 
-            var panEvent = this.GetPooled<NodeGraphPanChangeEvent>();
-            panEvent.Pan = _data.Pan;
-            this.Send(panEvent);
+                var panEvent = this.GetPooled<NodeGraphPanChangeEvent>();
+                panEvent.Pan = _data.Pan;
+                this.Send(panEvent);
+            }
 
             evt.StopPropagation();
+        }
+
+        private void PollTrackpadGestures() {
+            if (!Preferences.EnableTrackpadGestures || !_isHovered) return;
+
+            // Pinch to zoom
+            if (TrackpadGestureProvider.Instance.TryGetMagnifyDelta(out float magnify) && Mathf.Abs(magnify) > 0.0001f) {
+                Vector2 mousePos = this.WorldToLocal(this.worldBound.center);
+                Vector2 contentSpaceMousePos = (mousePos - _data.Pan) / _data.Zoom;
+                // Exponential response for faster, smoother pinch zoom
+                float factor = Mathf.Exp(-magnify * (ZOOM_SPEED * 2.0f));
+                _data.Zoom = Mathf.Clamp(_data.Zoom * factor, MIN_ZOOM, MAX_ZOOM);
+                _content.transform.scale = new Vector3(_data.Zoom, _data.Zoom, 1f);
+                _data.Pan = mousePos - contentSpaceMousePos * _data.Zoom;
+                _content.transform.position = _data.Pan;
+
+                var zoomEvent = this.GetPooled<NodeGraphZoomChangeEvent>();
+                zoomEvent.Zoom = _data.Zoom;
+                this.Send(zoomEvent);
+
+                var panEvent = this.GetPooled<NodeGraphPanChangeEvent>();
+                panEvent.Pan = _data.Pan;
+                this.Send(panEvent);
+            }
+
+            // Two-finger pan
+            if (TrackpadGestureProvider.Instance.TryGetTwoFingerPanDelta(out Unity.Mathematics.float2 pan)) {
+                // Reduce pan sensitivity and decouple axes to avoid diagonal bleed
+                float sx = Mathf.Sign(pan.x), sy = Mathf.Sign(pan.y);
+                float ax = Mathf.Abs(pan.x), ay = Mathf.Abs(pan.y);
+                if (ax > ay * 1.2f) sy = 0f; // lock vertical if horizontal dominates
+                if (ay > ax * 1.2f) sx = 0f; // lock horizontal if vertical dominates
+                float invert = Preferences.InvertScroll ? -1f : 1f; // respect invert scroll on mac
+                Vector2 panDelta = new Vector2(-sx * ax, -sy * ay) * 0.45f * invert;
+                panDelta = Preferences.AdjustPointerDelta(panDelta);
+                ApplyPan(panDelta);
+            }
+        }
+
+        private void ApplyPan(Vector2 delta) {
+            _data.Pan += delta;
+            _content.transform.position = _data.Pan;
+
+            var e = this.GetPooled<NodeGraphPanChangeEvent>();
+            e.Pan = _data.Pan;
+            this.Send(e);
         }
 
         public float2 SnapNodePosition(NodeGraphNode node, float2 desiredPosition) {

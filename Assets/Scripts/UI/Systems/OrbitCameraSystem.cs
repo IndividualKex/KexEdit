@@ -33,6 +33,10 @@ namespace KexEdit.UI {
         private float _freeLookPitch;
         private float _freeLookYaw;
 
+        private enum GestureMode { None, Orbit, Pan, Dolly }
+        private GestureMode _gestureMode;
+        private float _gestureModeCooldownUntil;
+
         public static OrbitCameraSystem Instance { get; private set; }
         public static bool IsRideCameraActive => Instance._isRideCameraActive;
 
@@ -50,6 +54,13 @@ namespace KexEdit.UI {
             _rideCamera = uiService.RideCamera;
             _defaultCullingMask = uiService.DefaultCullingMask;
             _rideCullingMask = uiService.RideCullingMask;
+
+#if UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+            if (Preferences.EnableTrackpadGestures) {
+                // Try to activate macOS gesture provider if plugin is present
+                TrackpadGestureProvider.SetProvider(new MacTrackpadGestureProvider());
+            }
+#endif
 
             var root = uiService.UIDocument.rootVisualElement;
             _gameView = root.Q<GameView>();
@@ -108,6 +119,7 @@ namespace KexEdit.UI {
         private void HandleInput() {
             var mouse = Mouse.current;
             var keyboard = Keyboard.current;
+            var controlScheme = Preferences.ControlScheme;
 
             if (keyboard.rKey.wasPressedThisFrame) {
                 ToggleRideCameraInternal();
@@ -141,26 +153,50 @@ namespace KexEdit.UI {
                 bool altOrCmdPressed = keyboard.leftAltKey.isPressed || keyboard.rightAltKey.isPressed ||
                                       keyboard.leftCommandKey.isPressed || keyboard.rightCommandKey.isPressed;
 
-                if (mouse.leftButton.wasPressedThisFrame && altOrCmdPressed) {
-                    _isOrbiting = true;
-                    cameraState.TargetOrthographic = false;
-                    _lastMousePosition = currentMousePosition;
+                if (controlScheme == ControlScheme.Blender) {
+                    // Blender style: MMB drag = orbit, Shift+MMB = pan, Ctrl+MMB = zoom (dolly)
+                    if (mouse.middleButton.wasPressedThisFrame && !keyboard.shiftKey.isPressed && !keyboard.ctrlKey.isPressed) {
+                        _isOrbiting = true;
+                        cameraState.TargetOrthographic = false;
+                        _lastMousePosition = currentMousePosition;
+                    }
+                    else if (mouse.middleButton.wasPressedThisFrame && keyboard.shiftKey.isPressed) {
+                        _isPanning = true;
+                        _lastMousePosition = currentMousePosition;
+                    }
+                    else if (mouse.middleButton.wasPressedThisFrame && keyboard.ctrlKey.isPressed) {
+                        // Ctrl+MMB dolly mode: use vertical motion while held
+                        _isFreeLooking = false; // disable fly when in Blender scheme
+                        _isOrbiting = false;
+                        _isPanning = false;
+                        _lastMousePosition = currentMousePosition;
+                        // Reuse panning branch to process dolly below (ctrl+MMB check)
+                        _isPanning = true;
+                    }
+                    // In Blender scheme, do NOT enable RMB free look or Alt+LMB orbit.
                 }
+                else { // Unity scheme (existing behavior)
+                    if (mouse.leftButton.wasPressedThisFrame && altOrCmdPressed) {
+                        _isOrbiting = true;
+                        cameraState.TargetOrthographic = false;
+                        _lastMousePosition = currentMousePosition;
+                    }
 
-                if (mouse.rightButton.wasPressedThisFrame && !altOrCmdPressed) {
-                    _isFreeLooking = true;
-                    cameraState.TargetOrthographic = false;
+                    if (mouse.rightButton.wasPressedThisFrame && !altOrCmdPressed) {
+                        _isFreeLooking = true;
+                        cameraState.TargetOrthographic = false;
 
-                    _freeLookPosition = _cinemachineCamera.transform.position;
-                    _freeLookPitch = _currentPitch;
-                    _freeLookYaw = _currentYaw;
-                    _lastMousePosition = currentMousePosition;
-                }
+                        _freeLookPosition = _cinemachineCamera.transform.position;
+                        _freeLookPitch = _currentPitch;
+                        _freeLookYaw = _currentYaw;
+                        _lastMousePosition = currentMousePosition;
+                    }
 
-                if (mouse.middleButton.wasPressedThisFrame ||
-                    (mouse.rightButton.wasPressedThisFrame && altOrCmdPressed)) {
-                    _isPanning = true;
-                    _lastMousePosition = currentMousePosition;
+                    if (mouse.middleButton.wasPressedThisFrame ||
+                        (mouse.rightButton.wasPressedThisFrame && altOrCmdPressed)) {
+                        _isPanning = true;
+                        _lastMousePosition = currentMousePosition;
+                    }
                 }
             }
 
@@ -232,6 +268,13 @@ namespace KexEdit.UI {
             }
 
             if (_isPanning) {
+                if (controlScheme == ControlScheme.Blender && keyboard.ctrlKey.isPressed && mouse.middleButton.isPressed) {
+                    // Ctrl+MMB zoom mode: convert vertical mouse delta to dolly
+                    float zoomAmount = -mouseDelta.y * 0.003f * cameraState.TargetDistance;
+                    cameraState.TargetDistance = math.clamp(
+                        cameraState.TargetDistance + zoomAmount,
+                        CameraProperties.MinDistance, CameraProperties.MaxDistance);
+                } else {
                 UnityEngine.Plane panPlane = new(_cinemachineCamera.transform.forward, cameraState.TargetPosition);
 
                 UnityEngine.Ray currentRay = _camera.ScreenPointToRay((UnityEngine.Vector2)currentMousePosition);
@@ -246,19 +289,106 @@ namespace KexEdit.UI {
                     float3 positionDelta = prevHitPoint - currentHitPoint;
                     cameraState.TargetPosition += positionDelta;
                 }
+                }
             }
 
             if (_isOverGameView && !_isFreeLooking) {
-                float scroll = Preferences.AdjustScroll(mouse.scroll.ReadValue().y);
-                if (math.abs(scroll) > 0.01f) {
-                    float zoomAmount = scroll * CameraProperties.ZoomSpeed * cameraState.TargetDistance;
-                    cameraState.TargetDistance -= zoomAmount;
-                    cameraState.TargetDistance = math.clamp(cameraState.TargetDistance, CameraProperties.MinDistance, CameraProperties.MaxDistance);
+                bool blender = controlScheme == ControlScheme.Blender;
 
+                // Pinch (magnify) always zooms when available
+                float pinchDelta = 0f;
+                bool usedPinch = false;
+                if (Preferences.EnableTrackpadGestures && TrackpadGestureProvider.Instance.TryGetMagnifyDelta(out float magnify)) {
+                    pinchDelta = magnify;
+                    usedPinch = math.abs(pinchDelta) > 0.0001f;
+                }
+
+                if (usedPinch) {
+                    // Exponential scaling for smooth feel
+                    float scale = math.exp(-pinchDelta * (CameraProperties.ZoomSpeed * 1.6f));
+                    cameraState.TargetDistance = math.clamp(cameraState.TargetDistance * scale,
+                        CameraProperties.MinDistance, CameraProperties.MaxDistance);
                     if (cameraState.TargetOrthographic) {
                         cameraState.TargetOrthographicSize = cameraState.TargetDistance * 0.6f;
                     }
                 }
+                else if (Preferences.EnableTrackpadGestures && blender) {
+                    // Use plugin two-finger delta; if absent, fall back to scroll as gesture delta
+                    float2 gesture;
+                    bool haveGesture = TrackpadGestureProvider.Instance.TryGetTwoFingerPanDelta(out gesture);
+                    if (!haveGesture) {
+                        var s = mouse.scroll.ReadValue(); // Vector2
+                        if (math.abs(s.x) > 0.001f || math.abs(s.y) > 0.001f) {
+                            // Apply invert and sensitivity on Y using AdjustScroll; mirror for X
+                            float sx = Preferences.ScrollSensitivity * (Preferences.InvertScroll ? -1f : 1f);
+                            gesture = new float2(s.x * sx, s.y * sx);
+                            haveGesture = true;
+                        }
+                    }
+
+                    if (haveGesture) {
+                        float2 scaled = Preferences.AdjustPointerDelta(gesture);
+                        bool shiftNow = keyboard.shiftKey.isPressed;
+                        bool ctrlOrCmdNow = keyboard.ctrlKey.isPressed || keyboard.leftCommandKey.isPressed || keyboard.rightCommandKey.isPressed;
+
+                        // Debounce: lock mode until gesture settles
+                        if (_gestureMode == GestureMode.None) {
+                            if (ctrlOrCmdNow) _gestureMode = GestureMode.Dolly;
+                            else if (shiftNow) _gestureMode = GestureMode.Pan;
+                            else _gestureMode = GestureMode.Orbit;
+                        }
+                        _gestureModeCooldownUntil = UnityEngine.Time.unscaledTime + 0.2f;
+
+                        if (_gestureMode == GestureMode.Pan) {
+                            // Pan: map screen delta to world plane
+                            UnityEngine.Plane panPlane = new(_cinemachineCamera.transform.forward, cameraState.TargetPosition);
+                            float invert = Preferences.InvertScroll ? -1f : 1f;
+                            float2 startPos = currentMousePosition + new float2(scaled.x, scaled.y) * invert;
+                            float2 endPos = currentMousePosition;
+                            UnityEngine.Ray startRay = _camera.ScreenPointToRay((UnityEngine.Vector2)startPos);
+                            UnityEngine.Ray endRay = _camera.ScreenPointToRay((UnityEngine.Vector2)endPos);
+                            if (panPlane.Raycast(startRay, out float startDist) && panPlane.Raycast(endRay, out float endDist)) {
+                                float3 startHit = startRay.GetPoint(startDist);
+                                float3 endHit = endRay.GetPoint(endDist);
+                                float3 worldDelta = startHit - endHit;
+                                cameraState.TargetPosition += worldDelta;
+                            }
+                        }
+                        else if (_gestureMode == GestureMode.Dolly) {
+                            // Dolly via vertical gesture delta (exponential)
+                            float scale = math.exp(-scaled.y * 0.025f);
+                            cameraState.TargetDistance = math.clamp(cameraState.TargetDistance * scale,
+                                CameraProperties.MinDistance, CameraProperties.MaxDistance);
+                            if (cameraState.TargetOrthographic) {
+                                cameraState.TargetOrthographicSize = cameraState.TargetDistance * 0.6f;
+                            }
+                        }
+                        else { // Orbit
+                            // Orbit
+                            cameraState.TargetYaw += scaled.x * CameraProperties.OrbitSpeed * 0.02f;
+                            cameraState.TargetPitch -= scaled.y * CameraProperties.OrbitSpeed * 0.02f;
+                            cameraState.TargetPitch = math.clamp(cameraState.TargetPitch, -89f, 89f);
+                        }
+                    }
+                }
+                else {
+                    // Unity scheme or gestures disabled: scroll to zoom (legacy)
+                    float scroll = Preferences.AdjustScroll(mouse.scroll.ReadValue().y);
+                    if (math.abs(scroll) > 0.01f) {
+                        float scale = math.exp(-scroll * CameraProperties.ZoomSpeed);
+                        cameraState.TargetDistance = math.clamp(cameraState.TargetDistance * scale,
+                            CameraProperties.MinDistance, CameraProperties.MaxDistance);
+                        if (cameraState.TargetOrthographic) {
+                            cameraState.TargetOrthographicSize = cameraState.TargetDistance * 0.6f;
+                        }
+                    }
+                }
+
+            }
+
+            // Clear gesture mode after cooldown if no active input
+            if (UnityEngine.Time.unscaledTime > _gestureModeCooldownUntil) {
+                _gestureMode = GestureMode.None;
             }
 
             _lastMousePosition = currentMousePosition;
@@ -351,19 +481,21 @@ namespace KexEdit.UI {
             float fov = _camera.fieldOfView;
             float aspect = _camera.aspect;
 
-            const float padding = 2f;
-            float3 extents = (float3)bounds.extents + new float3(padding, padding, padding);
-
-            float radius = math.length(extents);
+            const float padding = 1.2f; // percent padding around object
+            float3 size = (float3)bounds.size * padding;
+            float radius = math.length(size) * 0.5f;
 
             float verticalFovRad = math.radians(fov) * 0.5f;
             float horizontalFovRad = math.atan(math.tan(verticalFovRad) * aspect);
-
             float minFovRad = math.min(verticalFovRad, horizontalFovRad);
 
             float requiredDistance = radius / math.sin(minFovRad);
-
             cameraState.TargetDistance = math.clamp(requiredDistance, CameraProperties.MinDistance, CameraProperties.MaxDistance);
+
+            // Normalize pitch/yaw to sensible values if orthographic to avoid confusion
+            if (cameraState.TargetOrthographic) {
+                cameraState.TargetOrthographicSize = cameraState.TargetDistance * 0.6f;
+            }
         }
 
         public static void Focus(UnityEngine.Bounds bounds) {

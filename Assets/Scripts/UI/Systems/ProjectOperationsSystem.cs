@@ -200,6 +200,7 @@ namespace KexEdit.UI {
                     submenu.AddItem("Left View", () => OrbitCameraSystem.SetOtherSideView(), "Ctrl+Numpad 3".ToPlatformShortcut());
                     submenu.AddItem("Top View", () => OrbitCameraSystem.SetTopView(), "Numpad 7");
                     submenu.AddItem("Bottom View", () => OrbitCameraSystem.SetBottomView(), "Ctrl+Numpad 7".ToPlatformShortcut());
+                    submenu.AddItem("Frame All (Reset Zoom)", () => GameViewControlSystem.FocusAll(), "Home");
                     submenu.AddSeparator();
                     submenu.AddItem("Toggle Orthographic", () => OrbitCameraSystem.ToggleOrthographic(), "Numpad 5");
                     submenu.AddSeparator();
@@ -285,6 +286,15 @@ namespace KexEdit.UI {
                 menu.AddSubmenu("Input", submenu => {
                     submenu.AddItem("Invert Scroll Direction", () => Preferences.InvertScroll = !Preferences.InvertScroll,
                         isChecked: Preferences.InvertScroll);
+                    submenu.AddSeparator();
+                    submenu.AddSubmenu("Control Scheme", scheme => {
+                        scheme.AddItem("Unity", () => Preferences.ControlScheme = ControlScheme.Unity,
+                            isChecked: Preferences.ControlScheme == ControlScheme.Unity);
+                        scheme.AddItem("Blender", () => Preferences.ControlScheme = ControlScheme.Blender,
+                            isChecked: Preferences.ControlScheme == ControlScheme.Blender);
+                    });
+                    submenu.AddItem("Enable Trackpad Gestures (macOS)", () => Preferences.EnableTrackpadGestures = !Preferences.EnableTrackpadGestures,
+                        isChecked: Preferences.EnableTrackpadGestures);
                     submenu.AddSeparator();
                     submenu.AddSubmenu("Scroll Sensitivity", sens => {
                         sens.AddItem("0.5x", () => Preferences.ScrollSensitivity = 0.5f,

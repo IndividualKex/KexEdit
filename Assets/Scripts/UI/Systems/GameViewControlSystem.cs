@@ -206,6 +206,59 @@ namespace KexEdit.UI {
             }
         }
 
+        private bool TryGetAllBounds(out Bounds bounds) {
+            bounds = default;
+
+            float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
+            float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
+            bool foundAny = false;
+
+            foreach (var node in SystemAPI.Query<NodeAspect>().WithAll<Point>()) {
+                var pointBuffer = SystemAPI.GetBuffer<Point>(node.Self);
+                if (pointBuffer.Length == 0) continue;
+
+                // Sample endpoints and mid to avoid iterating thousands of points
+                int last = pointBuffer.Length - 1;
+                int mid = pointBuffer.Length / 2;
+
+                for (int i = 0; i < 3; i++) {
+                    int idx = i == 0 ? 0 : (i == 1 ? mid : last);
+                    PointData point = pointBuffer[idx];
+                    var pos = point.Position;
+                    if (pos.x < minX) minX = pos.x;
+                    if (pos.x > maxX) maxX = pos.x;
+                    if (pos.y < minY) minY = pos.y;
+                    if (pos.y > maxY) maxY = pos.y;
+                    if (pos.z < minZ) minZ = pos.z;
+                    if (pos.z > maxZ) maxZ = pos.z;
+                    foundAny = true;
+                }
+            }
+
+            if (!foundAny) return false;
+
+            Vector3 min = new(minX, minY, minZ);
+            Vector3 max = new(maxX, maxY, maxZ);
+            Vector3 center = (min + max) * 0.5f;
+            Vector3 size = max - min;
+
+            bounds = new Bounds(center, size);
+            return true;
+        }
+
+        private void FocusAllInternal() {
+            if (TryGetAllBounds(out var bounds)) {
+                OrbitCameraSystem.Focus(bounds);
+            }
+            else {
+                OrbitCameraSystem.ResetState();
+            }
+        }
+
+        public static void FocusAll() {
+            Instance?.FocusAllInternal();
+        }
+
         private void OnFocusIn(FocusInEvent evt) {
             EditOperations.SetActiveHandler(this);
         }
