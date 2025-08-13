@@ -3,7 +3,7 @@ void VisualizationColor_float(
     out float3 Out
 ) {
     float isPositive = step(0.0, Value);
-    float gamma = 0.4; // Power scaling gamma for better visual contrast
+    float gamma = 0.2; // Power scaling gamma for better visual contrast
     
     // Negative side: interpolate from MinColor to ZeroColor with power scaling
     float negativeT = saturate(Value / _MinValue); // MinValue is negative, so this goes 1->0

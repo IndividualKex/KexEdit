@@ -1,7 +1,6 @@
 #pragma kernel VisualizationKernel
 #pragma kernel DuplicationKernel
 #pragma kernel ExtrusionKernel
-#pragma kernel DuplicationGizmoKernel
 #pragma kernel ExtrusionGizmoKernel
 #pragma kernel StartCapKernel
 #pragma kernel EndCapKernel
@@ -19,10 +18,17 @@ struct Point {
 StructuredBuffer<Point> _Points;
 float _Count;
 
+StructuredBuffer<int2> _SegmentBoundaries;
+float _SegmentCount;
+
+StructuredBuffer<float> _SegmentSelections;
+
 RWStructuredBuffer<float4> _VisualizationData;
 float _Selected;
 
 RWStructuredBuffer<float4x4> _Matrices;
+RWStructuredBuffer<uint> _DuplicationVisualizationIndices;
+RWStructuredBuffer<uint> _CapVisualizationIndices;
 float _Step;
 float _Offset;
 
@@ -35,10 +41,6 @@ RWStructuredBuffer<uint> _ExtrusionIndices;
 RWStructuredBuffer<uint> _ExtrusionVisualizationIndices;
 float _CrossSectionVerticesLength;
 float _CrossSectionTriangulationLength;
-
-RWStructuredBuffer<float3> _DuplicationGizmoVertices;
-float _DuplicationGizmoStartHeart;
-float _DuplicationGizmoEndHeart;
 
 RWStructuredBuffer<float3> _ExtrusionGizmoVertices;
 float _ExtrusionGizmoHeart;
@@ -64,6 +66,38 @@ float4x4 TRS(float3 pos, float4x4 rot) {
     return result;
 }
 
+bool IsAtSegmentEnd(uint idx) {
+    uint segmentCount = (uint)_SegmentCount;
+    for (uint i = 0; i < segmentCount; i++) {
+        if (idx == (uint)_SegmentBoundaries[i].y) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool IsAtSegmentStart(uint idx) {
+    uint segmentCount = (uint)_SegmentCount;
+    for (uint i = 0; i < segmentCount; i++) {
+        if (idx == (uint)_SegmentBoundaries[i].x) {
+            return true;
+        }
+    }
+    return false;
+}
+
+uint GetSegmentIndex(uint idx) {
+    uint segmentCount = (uint)_SegmentCount;
+    for (uint i = 0; i < segmentCount; i++) {
+        uint segmentStart = (uint)_SegmentBoundaries[i].x;
+        uint segmentEnd = (uint)_SegmentBoundaries[i].y;
+        if (idx >= segmentStart && idx <= segmentEnd) {
+            return i;
+        }
+    }
+    return 0;
+}
+
 [numthreads(64, 1, 1)]
 void VisualizationKernel(uint3 id : SV_DispatchThreadID) {
     uint idx = id.x;
@@ -72,22 +106,51 @@ void VisualizationKernel(uint3 id : SV_DispatchThreadID) {
 
     Point p = _Points[idx];
 
-    _VisualizationData[idx] = float4(p.VisualizationValue, 0, 0, _Selected);
+    uint segmentIndex = GetSegmentIndex(idx);
+    float segmentSelection = _SegmentSelections[segmentIndex];
+
+    _VisualizationData[idx] = float4(p.VisualizationValue, 0, 0, segmentSelection);
 }
 
 [numthreads(64, 1, 1)]
 void DuplicationKernel(uint3 id : SV_DispatchThreadID) {
     uint idx = id.x;
     uint count = (uint)_Count;
-    if (idx >= count - 1 || (idx % (uint)_Step) != (uint)_Offset) return;
+    if (idx >= count || IsAtSegmentEnd(idx)) return;
 
     Point p = _Points[idx];
 
     float4x4 rotation = LookRotationMatrix(p.Direction, p.Normal);
     float4x4 trs = TRS(p.Position, rotation);
 
-    uint matrixIndex = (uint)((idx - _Offset) / _Step);
+    uint segmentCount = (uint)_SegmentCount;
+    uint matrixIndex = 0;
+    uint localIdx = idx;
+    bool foundSegment = false;
+    
+    for (uint i = 0; i < segmentCount; i++) {
+        uint segmentStart = (uint)_SegmentBoundaries[i].x;
+        uint segmentEnd = (uint)_SegmentBoundaries[i].y;
+        
+        if (idx >= segmentStart && idx <= segmentEnd) {
+            localIdx = idx - segmentStart;
+            foundSegment = true;
+            break;
+        }
+        
+        uint segmentLength = segmentEnd - segmentStart + 1;
+        uint effectiveLength = segmentLength - 1;
+        uint segmentMatrices = (uint)_Offset < effectiveLength
+            ? ((effectiveLength - 1 - (uint)_Offset) / (uint)_Step) + 1
+            : 0;
+        matrixIndex += segmentMatrices;
+    }
+    
+    if (!foundSegment || (localIdx % (uint)_Step) != (uint)_Offset) return;
+    
+    matrixIndex += (uint)((localIdx - (uint)_Offset) / (uint)_Step);
     _Matrices[matrixIndex] = trs;
+    _DuplicationVisualizationIndices[matrixIndex] = idx;
 }
 
 [numthreads(64, 1, 1)]
@@ -101,8 +164,8 @@ void ExtrusionKernel(uint3 id : SV_DispatchThreadID) {
     float4x4 rotation = LookRotationMatrix(p.Direction, p.Normal);
     float4x4 trs = TRS(p.Position, rotation);
 
-    uint N = _CrossSectionVerticesLength / 2;
-    uint M = _CrossSectionTriangulationLength;
+    uint N = (uint)_CrossSectionVerticesLength / 2;
+    uint M = (uint)_CrossSectionTriangulationLength;
 
     uint vertexOffset = idx * N;
     uint indexOffset = idx * M;
@@ -120,7 +183,8 @@ void ExtrusionKernel(uint3 id : SV_DispatchThreadID) {
     }
 
     bool isValid = length(p.Direction) > 0.001 && length(p.Normal) > 0.001;
-    if (isValid && idx < count - 1) {
+    bool isAtEnd = IsAtSegmentEnd(idx);
+    if (isValid && idx < count - 1 && !isAtEnd) {
         for (uint j = 0; j < M; j++) {
             uint index = _CrossSectionTriangulation[j];
             _ExtrusionIndices[indexOffset + j] = index + vertexOffset;
@@ -134,55 +198,53 @@ void ExtrusionKernel(uint3 id : SV_DispatchThreadID) {
 }
 
 [numthreads(64, 1, 1)]
-void DuplicationGizmoKernel(uint3 id : SV_DispatchThreadID) {
-    uint idx = id.x;
-    uint count = (uint)_Count;
-    if (idx >= count) return;
-
-    Point p = _Points[idx];
-
-    float3 p1 = p.Position + p.Normal * (p.Heart - _DuplicationGizmoStartHeart);
-    float3 p2 = p.Position + p.Normal * (p.Heart - _DuplicationGizmoEndHeart);
-
-    _DuplicationGizmoVertices[idx * 2] = p1;
-    _DuplicationGizmoVertices[idx * 2 + 1] = p2;
-}
-
-[numthreads(64, 1, 1)]
 void ExtrusionGizmoKernel(uint3 id : SV_DispatchThreadID) {
     uint idx = id.x;
     uint count = (uint)_Count;
     if (idx >= count) return;
     
     Point p = _Points[idx];
-
     float3 pos = p.Position + p.Normal * (p.Heart - _ExtrusionGizmoHeart);
-
-    _ExtrusionGizmoVertices[idx] = pos;
+    
+    _ExtrusionGizmoVertices[idx * 2] = pos;
+    
+    if (!IsAtSegmentEnd(idx) && idx < count - 1) {
+        Point nextP = _Points[idx + 1];
+        float3 nextPos = nextP.Position + nextP.Normal * (nextP.Heart - _ExtrusionGizmoHeart);
+        _ExtrusionGizmoVertices[idx * 2 + 1] = nextPos;
+    } else {
+        _ExtrusionGizmoVertices[idx * 2 + 1] = pos;
+    }
 }
 
-[numthreads(1, 1, 1)]
+[numthreads(64, 1, 1)]
 void StartCapKernel(uint3 id : SV_DispatchThreadID) {
-    uint count = (uint)_Count;
-    if (count == 0) return;
+    uint segmentIdx = id.x;
+    uint segmentCount = (uint)_SegmentCount;
+    if (segmentIdx >= segmentCount) return;
     
-    Point p = _Points[0];
+    uint startIdx = (uint)_SegmentBoundaries[segmentIdx].x;
+    Point p = _Points[startIdx];
     
     float4x4 rotation = LookRotationMatrix(p.Direction, p.Normal);
     float4x4 trs = TRS(p.Position, rotation);
     
-    _Matrices[0] = trs;
+    _Matrices[segmentIdx] = trs;
+    _CapVisualizationIndices[segmentIdx] = startIdx;
 }
 
-[numthreads(1, 1, 1)]
+[numthreads(64, 1, 1)]
 void EndCapKernel(uint3 id : SV_DispatchThreadID) {
-    uint count = (uint)_Count;
-    if (count == 0) return;
+    uint segmentIdx = id.x;
+    uint segmentCount = (uint)_SegmentCount;
+    if (segmentIdx >= segmentCount) return;
     
-    Point p = _Points[count - 1];
+    uint endIdx = (uint)_SegmentBoundaries[segmentIdx].y;
+    Point p = _Points[endIdx];
     
     float4x4 rotation = LookRotationMatrix(p.Direction, p.Normal);
     float4x4 trs = TRS(p.Position, rotation);
     
-    _Matrices[0] = trs;
+    _Matrices[segmentIdx] = trs;
+    _CapVisualizationIndices[segmentIdx] = endIdx;
 }

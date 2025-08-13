@@ -5,8 +5,7 @@ namespace KexEdit {
         public Entity Style;
         public float StartTime;
         public float EndTime;
-        public int StyleVersion;
+        public int StyleSettingsVersion;
         public uint StyleHash;
-        public bool HasBuffers;
     }
 }

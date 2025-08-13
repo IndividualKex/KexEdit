@@ -27,10 +27,13 @@ namespace KexEdit {
                     continue;
                 }
 
-                var sectionRenderVersion = SystemAPI.GetComponent<RenderedStyleHash>(section);
-                var sectionStyleHash = SystemAPI.GetComponent<StyleHash>(section);
+                var settings = SystemAPI.GetComponent<TrackStyleSettings>(settingsEntity);
+                if (segment.StyleSettingsVersion != settings.Version) {
+                    ecb.DestroyEntity(entity);
+                    continue;
+                }
 
-                if (segment.StyleHash != sectionStyleHash.Value && segment.StyleHash != sectionRenderVersion.Value) {
+                if (segment.StyleHash != SystemAPI.GetComponent<StyleHash>(section)) {
                     ecb.DestroyEntity(entity);
                 }
             }

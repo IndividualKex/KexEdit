@@ -11,9 +11,9 @@ namespace KexEdit {
         }
 
         protected override void OnStartRunning() {
-            Shader.SetGlobalColor("_MinColor", new Color(0f, 0f, 1f, 1f)); // Pure blue
-            Shader.SetGlobalColor("_MaxColor", new Color(1f, 0f, 0f, 1f)); // Pure red
-            Shader.SetGlobalColor("_ZeroColor", new Color(0.7f, 0.7f, 0.7f, 1f)); // Light gray
+            Shader.SetGlobalColor("_MinColor", Constants.VISUALIZATION_MIN_COLOR);
+            Shader.SetGlobalColor("_MaxColor", Constants.VISUALIZATION_MAX_COLOR);
+            Shader.SetGlobalColor("_ZeroColor", Constants.VISUALIZATION_ZERO_COLOR);
         }
 
         protected override void OnUpdate() {

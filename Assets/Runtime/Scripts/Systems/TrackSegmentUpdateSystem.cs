@@ -20,16 +20,6 @@ namespace KexEdit {
                 var sectionRender = SystemAPI.GetComponent<Render>(section);
                 renderRW.ValueRW = sectionRender;
                 blendRW.ValueRW.Value = math.lerp(blendRW.ValueRW.Value, node.Selected ? 1f : 0f, t);
-
-                if (!segment.HasBuffers) continue;
-
-                ref var renderedHash = ref SystemAPI.GetComponentRW<RenderedStyleHash>(section).ValueRW;
-                if (segment.StyleHash != renderedHash) {
-                    uint sectionStyleHash = SystemAPI.GetComponent<StyleHash>(section);
-                    if (segment.StyleHash == sectionStyleHash) {
-                        renderedHash = sectionStyleHash;
-                    }
-                }
             }
         }
     }

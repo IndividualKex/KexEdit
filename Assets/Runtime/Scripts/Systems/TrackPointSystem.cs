@@ -15,11 +15,6 @@ namespace KexEdit {
         private EntityQuery _query;
         private EntityQuery _countQuery;
 
-        private struct TrackStyleData {
-            public float Spacing;
-            public int LCM;
-        }
-
         [BurstCompile]
         public void OnCreate(ref SystemState state) {
             _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
@@ -48,7 +43,7 @@ namespace KexEdit {
             var countMap = new NativeParallelHashMap<Entity, int>(count, Allocator.TempJob);
             var entities = new NativeArray<Entity>(count, Allocator.TempJob);
             var sections = new NativeArray<SectionReference>(count, Allocator.TempJob);
-            var styleData = new NativeArray<TrackStyleData>(count, Allocator.TempJob);
+            var styleData = new NativeArray<TrackStyle>(count, Allocator.TempJob);
             var segments = new NativeArray<Segment>(count, Allocator.TempJob);
 
             int index = 0;
@@ -59,21 +54,9 @@ namespace KexEdit {
                 if (!SystemAPI.HasComponent<TrackStyle>(segment.Style)) continue;
 
                 var style = SystemAPI.GetComponent<TrackStyle>(segment.Style);
-                var duplicationMeshes = SystemAPI.GetBuffer<DuplicationMeshReference>(segment.Style);
-
                 entities[index] = entity;
                 sections[index] = section;
-
-                int lcm = 1;
-                foreach (var duplicationMesh in duplicationMeshes) {
-                    lcm = LCM(lcm, SystemAPI.GetComponent<DuplicationMeshSettings>(duplicationMesh).Step);
-                }
-
-                styleData[index] = new TrackStyleData {
-                    Spacing = style.Spacing,
-                    LCM = lcm
-                };
-
+                styleData[index] = style;
                 segments[index] = segment;
                 index++;
             }
@@ -114,7 +97,7 @@ namespace KexEdit {
             [ReadOnly]
             public NativeArray<SectionReference> Sections;
             [ReadOnly]
-            public NativeArray<TrackStyleData> StyleData;
+            public NativeArray<TrackStyle> StyleData;
             [ReadOnly]
             public NativeArray<Segment> Segments;
             [ReadOnly]
@@ -156,7 +139,7 @@ namespace KexEdit {
                 float nominalCount = trackLength / style.Spacing;
                 int baseCount = math.max(2, (int)math.round(nominalCount));
 
-                int finalCount = style.LCM == 1 ? baseCount : math.max(style.LCM, (baseCount / style.LCM) * style.LCM);
+                int finalCount = style.Step == 1 ? baseCount : math.max(style.Step, (baseCount / style.Step) * style.Step);
                 CountMap.TryAdd(entity, finalCount);
             }
 
@@ -210,19 +193,6 @@ namespace KexEdit {
 
                 return (startIndex, endIndex);
             }
-        }
-
-        private static int GCD(int a, int b) {
-            while (b != 0) {
-                int temp = b;
-                b = a % b;
-                a = temp;
-            }
-            return a;
-        }
-
-        private static int LCM(int a, int b) {
-            return (a * b) / GCD(a, b);
         }
 
         [BurstCompile]

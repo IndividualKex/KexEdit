@@ -20,13 +20,8 @@ namespace KexEdit {
             ShadowCastingMode shadowCastingMode = preferences.EnableShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
             bool receiveShadows = preferences.EnableShadows;
 
-            foreach (var (segment, buffers, section, render) in SystemAPI
-                .Query<Segment, TrackStyleBuffers, SectionReference, Render>()
-                .WithAll<TrackPoint>()
-            ) {
-                if (!render || !segment.HasBuffers ||
-                    !SystemAPI.HasComponent<RenderedStyleHash>(section) ||
-                    segment.StyleHash != SystemAPI.GetComponent<RenderedStyleHash>(section)) continue;
+            foreach (var buffers in SystemAPI.Query<TrackStyleBuffers>()) {
+                if (buffers.CurrentBuffers == null || buffers.CurrentBuffers.Count <= 1) continue;
 
                 foreach (var buffer in buffers.CurrentBuffers.DuplicationBuffers) {
                     var rp = new RenderParams(buffer.Material) {
@@ -57,7 +52,6 @@ namespace KexEdit {
                         buffer.ExtrusionIndicesBuffer.count
                     );
                 }
-
 
                 foreach (var buffer in buffers.CurrentBuffers.StartCapBuffers) {
                     var rp = new RenderParams(buffer.Material) {
@@ -90,8 +84,8 @@ namespace KexEdit {
                 }
 
                 if (preferences.DrawGizmos) {
-                    foreach (var buffer in buffers.CurrentBuffers.DuplicationGizmoBuffers) {
-                        var rp = new RenderParams(buffer.Settings.Material) {
+                    foreach (var buffer in buffers.CurrentBuffers.ExtrusionGizmoBuffers) {
+                        var rp = new RenderParams(buffer.Material) {
                             worldBounds = _bounds,
                             matProps = buffer.MatProps,
                         };
@@ -99,19 +93,6 @@ namespace KexEdit {
                         Graphics.RenderPrimitives(
                             rp,
                             MeshTopology.Lines,
-                            buffer.DuplicationVerticesBuffer.count
-                        );
-                    }
-
-                    foreach (var buffer in buffers.CurrentBuffers.ExtrusionGizmoBuffers) {
-                        var rp = new RenderParams(buffer.Settings.Material) {
-                            worldBounds = _bounds,
-                            matProps = buffer.MatProps,
-                        };
-
-                        Graphics.RenderPrimitives(
-                            rp,
-                            MeshTopology.LineStrip,
                             buffer.ExtrusionVerticesBuffer.count
                         );
                     }

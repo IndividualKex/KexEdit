@@ -21,5 +21,8 @@ namespace KexEdit {
         public const int STRESS_ROLLING_WINDOW = 50;
         
         public static readonly Color SELECTED_COLOR = Color.white;
+        public static readonly Color VISUALIZATION_MIN_COLOR = new Color(0f, 0f, 1f, 1f);
+        public static readonly Color VISUALIZATION_MAX_COLOR = new Color(1f, 0f, 0f, 1f);
+        public static readonly Color VISUALIZATION_ZERO_COLOR = new Color(0.7f, 0.7f, 0.7f, 1f);
     }
 }

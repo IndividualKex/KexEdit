@@ -12,6 +12,7 @@ namespace KexEdit.UI {
     public partial class KeyframeGizmoUpdateSystem : SystemBase {
         private ComputeBuffer _matrixBuffer;
         private ComputeBuffer _visualizationDataBuffer;
+        private ComputeBuffer _visualizationIndicesBuffer;
         private GraphicsBuffer _indirectArgsBuffer;
 
         private Camera _camera;
@@ -90,6 +91,10 @@ namespace KexEdit.UI {
             if (_visualizationDataBuffer != null) {
                 _visualizationDataBuffer.Release();
                 _visualizationDataBuffer = null;
+            }
+            if (_visualizationIndicesBuffer != null) {
+                _visualizationIndicesBuffer.Release();
+                _visualizationIndicesBuffer = null;
             }
             if (_indirectArgsBuffer != null) {
                 _indirectArgsBuffer.Release();
@@ -204,11 +209,20 @@ namespace KexEdit.UI {
             if (_matrixBuffer == null || _matrixBuffer?.count != count) {
                 _matrixBuffer?.Release();
                 _visualizationDataBuffer?.Release();
+                _visualizationIndicesBuffer?.Release();
                 _indirectArgsBuffer?.Release();
 
                 if (count > 0) {
                     _matrixBuffer = new ComputeBuffer(count, sizeof(float) * 16);
                     _visualizationDataBuffer = new ComputeBuffer(count, sizeof(float) * 4);
+                    _visualizationIndicesBuffer = new ComputeBuffer(count, sizeof(uint));
+                    
+                    var indices = new NativeArray<uint>(count, Allocator.Temp);
+                    for (int i = 0; i < count; i++) {
+                        indices[i] = (uint)i;
+                    }
+                    _visualizationIndicesBuffer.SetData(indices);
+                    indices.Dispose();
 
                     _indirectArgsBuffer = new GraphicsBuffer(
                         GraphicsBuffer.Target.IndirectArguments,
@@ -226,6 +240,7 @@ namespace KexEdit.UI {
 
                     _matProps.SetBuffer("_Matrices", _matrixBuffer);
                     _matProps.SetBuffer("_VisualizationData", _visualizationDataBuffer);
+                    _matProps.SetBuffer("_VisualizationIndices", _visualizationIndicesBuffer);
                 }
             }
 

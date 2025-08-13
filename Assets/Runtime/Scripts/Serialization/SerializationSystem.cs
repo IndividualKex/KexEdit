@@ -649,7 +649,6 @@ namespace KexEdit.Serialization {
                     ecb.AppendToBuffer(entity, keyframe);
                 }
                 ecb.AddComponent<StyleHash>(entity);
-                ecb.AddComponent<RenderedStyleHash>(entity);
             }
 
             if (type == NodeType.Mesh) {
