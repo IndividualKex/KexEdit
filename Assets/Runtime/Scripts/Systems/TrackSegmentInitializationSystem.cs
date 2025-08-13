@@ -70,9 +70,8 @@ namespace KexEdit {
                         Style = targetStyle,
                         StartTime = breakpoint.StartTime,
                         EndTime = breakpoint.EndTime,
-                        StyleVersion = settings.Version,
-                        StyleHash = styleHash,
-                        HasBuffers = false
+                        StyleSettingsVersion = settings.Version,
+                        StyleHash = styleHash
                     });
 
                     ecb.AddBuffer<TrackPoint>(segmentEntity);

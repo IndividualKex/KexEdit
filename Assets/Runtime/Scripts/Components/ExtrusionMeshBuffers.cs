@@ -5,10 +5,12 @@ namespace KexEdit {
     public class ExtrusionMeshBuffers : IDisposable {
         public Mesh Mesh;
         public Material Material;
+
         public GraphicsBuffer CrossSectionVerticesBuffer;
         public GraphicsBuffer CrossSectionUVsBuffer;
         public GraphicsBuffer CrossSectionNormalsBuffer;
         public GraphicsBuffer CrossSectionTriangulationBuffer;
+
         public ComputeBuffer ExtrusionVerticesBuffer;
         public ComputeBuffer ExtrusionNormalsBuffer;
         public ComputeBuffer ExtrusionIndicesBuffer;
@@ -16,14 +18,11 @@ namespace KexEdit {
         public MaterialPropertyBlock MatProps;
 
         public ExtrusionMeshBuffers(
-            MeshBuffers meshBuffers,
             Mesh mesh,
             Material material
         ) {
             Mesh = mesh;
             Material = material;
-
-            int count = meshBuffers.Count;
 
             CrossSectionVerticesBuffer = new GraphicsBuffer(
                 GraphicsBuffer.Target.Structured,
@@ -51,19 +50,27 @@ namespace KexEdit {
             CrossSectionNormalsBuffer.SetData(mesh.normals);
             CrossSectionTriangulationBuffer.SetData(mesh.triangles);
 
+            MatProps = new MaterialPropertyBlock();
+            MatProps.SetBuffer("_UVs", CrossSectionUVsBuffer);
+            MatProps.SetInt("_UVCount", CrossSectionUVsBuffer.count);
+        }
+
+        public void Initialize(int count, ComputeBuffer visualizationData) {
+            ExtrusionVerticesBuffer?.Dispose();
+            ExtrusionNormalsBuffer?.Dispose();
+            ExtrusionIndicesBuffer?.Dispose();
+            VisualizationIndicesBuffer?.Dispose();
+
             ExtrusionVerticesBuffer = new ComputeBuffer(count * CrossSectionVerticesBuffer.count, sizeof(float) * 3);
             ExtrusionNormalsBuffer = new ComputeBuffer(count * CrossSectionVerticesBuffer.count, sizeof(float) * 3);
             ExtrusionIndicesBuffer = new ComputeBuffer(count * CrossSectionTriangulationBuffer.count, sizeof(uint));
             VisualizationIndicesBuffer = new ComputeBuffer(count * CrossSectionVerticesBuffer.count, sizeof(uint));
 
-            MatProps = new MaterialPropertyBlock();
             MatProps.SetBuffer("_Vertices", ExtrusionVerticesBuffer);
-            MatProps.SetBuffer("_UVs", CrossSectionUVsBuffer);
             MatProps.SetBuffer("_Normals", ExtrusionNormalsBuffer);
             MatProps.SetBuffer("_Triangles", ExtrusionIndicesBuffer);
             MatProps.SetBuffer("_VisualizationIndices", VisualizationIndicesBuffer);
-            MatProps.SetBuffer("_VisualizationData", meshBuffers.VisualizationDataBuffer);
-            MatProps.SetInt("_UVCount", CrossSectionUVsBuffer.count);
+            MatProps.SetBuffer("_VisualizationData", visualizationData);
         }
 
         public void Dispose() {
@@ -71,6 +78,7 @@ namespace KexEdit {
             CrossSectionUVsBuffer?.Dispose();
             CrossSectionNormalsBuffer?.Dispose();
             CrossSectionTriangulationBuffer?.Dispose();
+
             ExtrusionVerticesBuffer?.Dispose();
             ExtrusionNormalsBuffer?.Dispose();
             ExtrusionIndicesBuffer?.Dispose();

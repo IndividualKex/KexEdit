@@ -1,4 +1,5 @@
 StructuredBuffer<float4x4> _Matrices;
+StructuredBuffer<uint> _VisualizationIndices;
 StructuredBuffer<float4> _VisualizationData;
 
 void TransformInstance_float(
@@ -27,5 +28,6 @@ void TransformInstance_float(
     float3 objectNormal = mul((float3x3)worldToObject, worldNormal);
     Normal = normalize(objectNormal);
     
-    VisualizationData = _VisualizationData[id];
+    uint pointIndex = _VisualizationIndices[id];
+    VisualizationData = _VisualizationData[pointIndex];
 }

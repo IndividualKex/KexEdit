@@ -85,13 +85,13 @@ namespace KexEdit.UI {
 
         private void CreateRangeFields() {
             var modes = new[] {
-                (VisualizationMode.Velocity, "Velocity (m/s)", 0f, 50f),
+                (VisualizationMode.Velocity, $"Velocity {Units.GetSpeedUnitsSuffix()}", 0f, 50f),
                 (VisualizationMode.NormalForce, "Normal Force (G)", -2f, 5f),
                 (VisualizationMode.LateralForce, "Lateral Force (G)", -2f, 2f),
-                (VisualizationMode.RollSpeed, "Roll Speed (rad/s)", -3f, 3f),
-                (VisualizationMode.PitchSpeed, "Pitch Speed (rad/s)", -1f, 1f),
-                (VisualizationMode.YawSpeed, "Yaw Speed (rad/s)", -1f, 1f),
-                (VisualizationMode.Curvature, "Curvature (rad/s)", 0f, 1f)
+                (VisualizationMode.RollSpeed, $"Roll Speed {Units.GetAnglePerTimeSuffix()}", -3f, 3f),
+                (VisualizationMode.PitchSpeed, $"Pitch Speed {Units.GetAnglePerTimeSuffix()}", -1f, 1f),
+                (VisualizationMode.YawSpeed, $"Yaw Speed {Units.GetAnglePerTimeSuffix()}", -1f, 1f),
+                (VisualizationMode.Curvature, $"Curvature {Units.GetAnglePerTimeSuffix()}", 0f, 1f)
             };
 
             foreach (var (mode, label, defaultMin, defaultMax) in modes) {
@@ -118,9 +118,13 @@ namespace KexEdit.UI {
             };
 
             var currentRange = Preferences.GetVisualizationRange(mode);
+            float displayMin = ConvertValueToDisplay(mode, currentRange.x);
+            float displayMax = ConvertValueToDisplay(mode, currentRange.y);
+            float displayDefaultMin = ConvertValueToDisplay(mode, defaultMin);
+            float displayDefaultMax = ConvertValueToDisplay(mode, defaultMax);
 
             var minField = new FloatField {
-                value = currentRange.x,
+                value = displayMin,
                 isDelayed = true,
                 style = { width = 60f, marginRight = 4f }
             };
@@ -135,7 +139,7 @@ namespace KexEdit.UI {
             };
 
             var maxField = new FloatField {
-                value = currentRange.y,
+                value = displayMax,
                 isDelayed = true,
                 style = { width = 60f }
             };
@@ -144,8 +148,8 @@ namespace KexEdit.UI {
                 Mode = mode,
                 MinField = minField,
                 MaxField = maxField,
-                DefaultMin = defaultMin,
-                DefaultMax = defaultMax
+                DefaultMin = displayDefaultMin,
+                DefaultMax = displayDefaultMax
             };
 
             _rangeRows.Add(rangeRow);
@@ -201,15 +205,17 @@ namespace KexEdit.UI {
         }
 
         private void OnRangeFieldChanged(RangeFieldRow rangeRow) {
-            float min = rangeRow.MinField.value;
-            float max = rangeRow.MaxField.value;
+            float displayMin = rangeRow.MinField.value;
+            float displayMax = rangeRow.MaxField.value;
 
-            if (max <= min) {
-                max = min + 0.1f;
-                rangeRow.MaxField.SetValueWithoutNotify(max);
+            if (displayMax <= displayMin) {
+                displayMax = displayMin + 0.1f;
+                rangeRow.MaxField.SetValueWithoutNotify(displayMax);
             }
 
-            Preferences.SetVisualizationRange(rangeRow.Mode, min, max);
+            float internalMin = ConvertDisplayToValue(rangeRow.Mode, displayMin);
+            float internalMax = ConvertDisplayToValue(rangeRow.Mode, displayMax);
+            Preferences.SetVisualizationRange(rangeRow.Mode, internalMin, internalMax);
         }
 
         private void ResetToDefaults() {
@@ -231,6 +237,28 @@ namespace KexEdit.UI {
                 RemoveFromHierarchy();
                 _onClose?.Invoke();
             });
+        }
+
+        private float ConvertValueToDisplay(VisualizationMode mode, float value) {
+            return mode switch {
+                VisualizationMode.Velocity => Units.SpeedToDisplay(value),
+                VisualizationMode.RollSpeed => Units.AnglePerTimeToDisplay(value),
+                VisualizationMode.PitchSpeed => Units.AnglePerTimeToDisplay(value),
+                VisualizationMode.YawSpeed => Units.AnglePerTimeToDisplay(value),
+                VisualizationMode.Curvature => Units.AnglePerTimeToDisplay(value),
+                _ => value
+            };
+        }
+
+        private float ConvertDisplayToValue(VisualizationMode mode, float displayValue) {
+            return mode switch {
+                VisualizationMode.Velocity => Units.DisplayToSpeed(displayValue),
+                VisualizationMode.RollSpeed => Units.DisplayToAnglePerTime(displayValue),
+                VisualizationMode.PitchSpeed => Units.DisplayToAnglePerTime(displayValue),
+                VisualizationMode.YawSpeed => Units.DisplayToAnglePerTime(displayValue),
+                VisualizationMode.Curvature => Units.DisplayToAnglePerTime(displayValue),
+                _ => displayValue
+            };
         }
     }
 }

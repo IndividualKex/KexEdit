@@ -5,5 +5,6 @@ namespace KexEdit {
         public Entity Settings;
         public float Spacing;
         public float Threshold;
+        public int Step;
     }
 }

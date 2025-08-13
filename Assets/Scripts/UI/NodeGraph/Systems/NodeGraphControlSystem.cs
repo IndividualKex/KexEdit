@@ -1167,7 +1167,6 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.AddBuffer<ResistanceKeyframe>(entity);
                 ecb.AddBuffer<TrackStyleKeyframe>(entity);
                 ecb.AddComponent<StyleHash>(entity);
-                ecb.AddComponent<RenderedStyleHash>(entity);
             }
 
             if (type == NodeType.Mesh) {

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
@@ -43,8 +42,14 @@ namespace KexEdit.UI {
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
+            int version = 0;
             if (SystemAPI.HasComponent<TrackStyleSettings>(singletonRW.ValueRO.Settings)) {
-                Dispose(singletonRW.ValueRO.Settings);
+                var settings = SystemAPI.GetComponent<TrackStyleSettings>(singletonRW.ValueRO.Settings);
+                version = settings.Version + 1;
+                if (SystemAPI.ManagedAPI.HasComponent<TrackStyleBuffers>(singletonRW.ValueRO.Settings)) {
+                    var buffers = SystemAPI.ManagedAPI.GetComponent<TrackStyleBuffers>(singletonRW.ValueRO.Settings);
+                    buffers.Dispose();
+                }
                 ecb.DestroyEntity(singletonRW.ValueRO.Settings);
                 singletonRW.ValueRW.Settings = Entity.Null;
             }
@@ -53,7 +58,7 @@ namespace KexEdit.UI {
             singletonRW.ValueRW.Settings = settingsEntity;
 
             var config = TrackStyleResourceLoader.LoadConfig(Preferences.CurrentTrackStyle);
-            var data = ConvertConfigToData(config, 0);
+            var data = ConvertConfigToData(config, version);
             ecb.AddComponent(settingsEntity, new LoadTrackStyleSettingsEvent {
                 Data = data
             });
@@ -62,9 +67,9 @@ namespace KexEdit.UI {
             ecb.Playback(EntityManager);
         }
 
-        private TrackStyleData ConvertConfigToData(TrackStyleConfig config, int version) {
+        private TrackStyleSettingsData ConvertConfigToData(TrackStyleConfig config, int version) {
             var globalSettings = SystemAPI.ManagedAPI.GetSingleton<GlobalSettings>();
-            var styles = new List<TrackStyleMeshData>();
+            var styles = new List<TrackStyleData>();
 
             foreach (var styleConfig in config.Styles) {
                 var duplicationMeshes = TrackStyleResourceLoader.LoadDuplicationMeshes(
@@ -91,7 +96,7 @@ namespace KexEdit.UI {
                     config
                 );
 
-                styles.Add(new TrackStyleMeshData {
+                styles.Add(new TrackStyleData {
                     DuplicationMeshes = duplicationMeshes,
                     ExtrusionMeshes = extrusionMeshes,
                     StartCapMeshes = startCapMeshes,
@@ -101,53 +106,12 @@ namespace KexEdit.UI {
                 });
             }
 
-            return new TrackStyleData {
+            return new TrackStyleSettingsData {
                 Styles = styles,
                 DefaultStyle = config.DefaultStyle,
                 AutoStyle = Preferences.AutoStyle,
                 Version = version
             };
-        }
-
-        private void Dispose(Entity entity) {
-            if (!SystemAPI.HasComponent<TrackStyleSettingsReference>(entity)) return;
-            var settings = SystemAPI.GetComponent<TrackStyleSettingsReference>(entity);
-            var styleReferences = SystemAPI.GetBuffer<TrackStyleReference>(settings);
-
-            foreach (var styleReference in styleReferences) {
-                var duplicationMeshReferences = SystemAPI.GetBuffer<DuplicationMeshReference>(styleReference);
-                var extrusionMeshReferences = SystemAPI.GetBuffer<ExtrusionMeshReference>(styleReference);
-                var startCapMeshReferences = SystemAPI.GetBuffer<StartCapMeshReference>(styleReference);
-                var endCapMeshReferences = SystemAPI.GetBuffer<EndCapMeshReference>(styleReference);
-
-                foreach (var meshSettings in duplicationMeshReferences) {
-                    Material material = SystemAPI.ManagedAPI.GetComponent<MaterialReference>(meshSettings);
-                    if (material != null) {
-                        UnityEngine.Object.DestroyImmediate(material);
-                    }
-                }
-
-                foreach (var meshSettings in extrusionMeshReferences) {
-                    Material material = SystemAPI.ManagedAPI.GetComponent<MaterialReference>(meshSettings);
-                    if (material != null) {
-                        UnityEngine.Object.DestroyImmediate(material);
-                    }
-                }
-
-                foreach (var meshSettings in startCapMeshReferences) {
-                    Material material = SystemAPI.ManagedAPI.GetComponent<MaterialReference>(meshSettings);
-                    if (material != null) {
-                        UnityEngine.Object.DestroyImmediate(material);
-                    }
-                }
-
-                foreach (var meshSettings in endCapMeshReferences) {
-                    Material material = SystemAPI.ManagedAPI.GetComponent<MaterialReference>(meshSettings);
-                    if (material != null) {
-                        UnityEngine.Object.DestroyImmediate(material);
-                    }
-                }
-            }
         }
     }
 }

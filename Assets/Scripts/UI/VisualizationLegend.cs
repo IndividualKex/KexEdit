@@ -2,6 +2,7 @@ using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
+using static KexEdit.Constants;
 using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI {
@@ -150,7 +151,7 @@ namespace KexEdit.UI {
             var painter = ctx.painter2D;
             var rect = _gradientBar.contentRect;
 
-            const int gradientSteps = 32;
+            const int gradientSteps = 64;
             float stepWidth = rect.width / gradientSteps;
 
             for (int i = 0; i < gradientSteps; i++) {
@@ -158,18 +159,18 @@ namespace KexEdit.UI {
                 Color color;
 
                 if (_data.GradientType == VisualizationGradientType.TwoColorPositive) {
-                    color = Color.Lerp(Color.white, Color.red, t);
+                    color = Color.Lerp(VISUALIZATION_ZERO_COLOR, VISUALIZATION_MAX_COLOR, t);
                 } else {
                     float minValue = _data.MinValue;
                     float maxValue = _data.MaxValue;
-                    float zeroPosition = minValue >= 0 ? 0f : Mathf.InverseLerp(minValue, maxValue, 0f);
+                    float value = Mathf.Lerp(minValue, maxValue, t);
                     
-                    if (t < zeroPosition) {
-                        float blueT = t / zeroPosition;
-                        color = Color.Lerp(Color.blue, Color.white, blueT);
+                    if (value < 0f) {
+                        float negativeT = Mathf.Clamp01(value / minValue);
+                        color = Color.Lerp(VISUALIZATION_ZERO_COLOR, VISUALIZATION_MIN_COLOR, negativeT);
                     } else {
-                        float redT = (t - zeroPosition) / (1f - zeroPosition);
-                        color = Color.Lerp(Color.white, Color.red, redT);
+                        float positiveT = Mathf.Clamp01(value / maxValue);
+                        color = Color.Lerp(VISUALIZATION_ZERO_COLOR, VISUALIZATION_MAX_COLOR, positiveT);
                     }
                 }
 

@@ -4,15 +4,15 @@ using UnityEngine;
 
 namespace KexEdit {
     [Serializable]
-    public class TrackStyleData {
-        public List<TrackStyleMeshData> Styles = new();
+    public class TrackStyleSettingsData {
+        public List<TrackStyleData> Styles = new();
         public int DefaultStyle;
         public int Version;
         public bool AutoStyle;
     }
 
     [Serializable]
-    public class TrackStyleMeshData {
+    public class TrackStyleData {
         public List<DuplicationMeshSettingsData> DuplicationMeshes = new();
         public List<ExtrusionMeshSettingsData> ExtrusionMeshes = new();
         public List<CapMeshSettingsData> StartCapMeshes = new();

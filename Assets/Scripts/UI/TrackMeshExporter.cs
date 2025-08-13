@@ -37,31 +37,22 @@ namespace KexEdit.UI {
 
         private static void ExportTrackMeshInternal(string filePath) {
             var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
-            var trackStyleQuery = entityManager.CreateEntityQuery(typeof(Segment), typeof(SectionReference));
+            var query = entityManager.CreateEntityQuery(typeof(TrackStyleBuffers));
 
-            if (trackStyleQuery.IsEmpty) {
+            if (query.IsEmpty) {
                 Debug.LogWarning("No track sections found to export");
                 return;
             }
 
-            var entities = trackStyleQuery.ToEntityArray(Allocator.Temp);
+            var entities = query.ToEntityArray(Allocator.Temp);
             var meshes = new NativeList<MeshData>(Allocator.TempJob);
 
             try {
-                for (int segmentIndex = 0; segmentIndex < entities.Length; segmentIndex++) {
-                    var entity = entities[segmentIndex];
-                    var segment = entityManager.GetComponentData<Segment>(entity);
-                    if (!segment.HasBuffers) continue;
-
-                    var sectionReference = entityManager.GetComponentData<SectionReference>(entity);
-
-                    if (!entityManager.HasComponent<RenderedStyleHash>(sectionReference.Value) ||
-                        segment.StyleHash != entityManager.GetComponentData<RenderedStyleHash>(sectionReference.Value)) {
-                        continue;
-                    }
-
+                for (int i = 0; i < entities.Length; i++) {
+                    var entity = entities[i];
                     var buffers = entityManager.GetComponentObject<TrackStyleBuffers>(entity);
-                    ExtractAndCombineSegmentMeshes(buffers.CurrentBuffers, segmentIndex, ref meshes);
+                    if (buffers.CurrentBuffers == null || buffers.CurrentBuffers.Count <= 1) continue;
+                    ExtractMeshes(buffers.CurrentBuffers, i, ref meshes);
                 }
 
                 entities.Dispose();
@@ -79,7 +70,7 @@ namespace KexEdit.UI {
             }
         }
 
-        private static void ExtractAndCombineSegmentMeshes(MeshBuffers meshBuffers, int segmentId, ref NativeList<MeshData> meshes) {
+        private static void ExtractMeshes(MeshBuffers meshBuffers, int segmentId, ref NativeList<MeshData> meshes) {
             var segmentMeshes = new NativeList<MeshData>(Allocator.Temp);
 
             try {
@@ -127,15 +118,16 @@ namespace KexEdit.UI {
             var vertices = new NativeArray<float3>(sourceMesh.vertices.Length, Allocator.TempJob);
             var normals = new NativeArray<float3>(sourceMesh.normals.Length, Allocator.TempJob);
             var uvs = new NativeArray<float2>(sourceMesh.uv.Length, Allocator.TempJob);
-            var triangles = new NativeArray<int>(sourceMesh.triangles.Length, Allocator.TempJob);
 
             CopyVertices(sourceMesh.vertices, vertices);
             CopyNormals(sourceMesh.normals, normals);
             CopyUVs(sourceMesh.uv, uvs);
-            CopyTriangles(sourceMesh.triangles, triangles);
 
             for (int matrixIndex = 0; matrixIndex < matrices.Length; matrixIndex++) {
                 var meshVertices = new NativeArray<VertexData>(vertices.Length, Allocator.TempJob);
+                var meshTriangles = new NativeArray<int>(sourceMesh.triangles.Length, Allocator.TempJob);
+
+                CopyTriangles(sourceMesh.triangles, meshTriangles);
 
                 var buildJob = new BuildJob {
                     Vertices = vertices,
@@ -151,9 +143,9 @@ namespace KexEdit.UI {
                     Type = isStartCap ? MeshType.StartCap : MeshType.EndCap,
                     SegmentId = segmentId,
                     Vertices = meshVertices,
-                    Triangles = triangles,
+                    Triangles = meshTriangles,
                     VertexCount = vertices.Length,
-                    TriangleCount = triangles.Length
+                    TriangleCount = meshTriangles.Length
                 };
                 meshes.Add(meshData);
             }
@@ -164,9 +156,9 @@ namespace KexEdit.UI {
         }
 
         private static void ExtractDuplicationBuffer(
-            DuplicationMeshBuffers duplicationBuffer, 
-            int index, 
-            int segmentId, 
+            DuplicationMeshBuffers duplicationBuffer,
+            int index,
+            int segmentId,
             ref NativeList<MeshData> meshes
         ) {
             if (duplicationBuffer.Mesh == null) return;
@@ -240,7 +232,10 @@ namespace KexEdit.UI {
 
                     vertexOffset += mesh.VertexCount;
                     triangleOffset += mesh.TriangleCount;
-
+                }
+                
+                for (int i = 0; i < individualMeshes.Length; i++) {
+                    var mesh = individualMeshes[i];
                     mesh.Vertices.Dispose();
                     mesh.Triangles.Dispose();
                 }
@@ -323,7 +318,6 @@ namespace KexEdit.UI {
         private static MeshData CombineSegmentMeshes(ref NativeList<MeshData> segmentMeshes, int segmentId) {
             if (segmentMeshes.Length == 1) {
                 var singleMesh = segmentMeshes[0];
-                segmentMeshes[0] = default;
                 return new MeshData {
                     Type = MeshType.Segment,
                     SegmentId = segmentId,
@@ -459,7 +453,6 @@ namespace KexEdit.UI {
         public int VertexCount;
         public int TriangleCount;
     }
-
 
     public static class ObjWriter {
         public static void WriteObjFile(string filePath, ref NativeList<MeshData> meshes) {

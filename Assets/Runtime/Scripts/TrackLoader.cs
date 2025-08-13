@@ -6,7 +6,7 @@ using System.Collections;
 namespace KexEdit {
     public class TrackLoader : MonoBehaviour {
         public Track Track;
-        public TrackStyleData TrackStyle;
+        public TrackStyleSettingsData TrackStyle;
 
         private IEnumerator Start() {
             var world = World.DefaultGameObjectInjectionWorld;
