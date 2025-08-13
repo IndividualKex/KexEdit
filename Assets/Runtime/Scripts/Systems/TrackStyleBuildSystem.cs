@@ -23,28 +23,22 @@ namespace KexEdit {
 
                 foreach (var (segment, segmentEntity) in SystemAPI.Query<Segment>().WithAll<TrackPoint>().WithEntityAccess()) {
                     if (segment.Style != styleEntity) continue;
-                    
+
                     var trackPoints = SystemAPI.GetBuffer<TrackPoint>(segmentEntity);
                     if (trackPoints.Length > 1) {
                         int startIndex = points.Length;
                         points.AddRange(trackPoints.AsNativeArray());
                         int endIndex = points.Length - 1;
                         segmentBoundaries.Add(new int2(startIndex, endIndex));
-                        
-                        float selectionValue = SystemAPI.HasComponent<SelectedBlend>(segmentEntity) 
-                            ? SystemAPI.GetComponent<SelectedBlend>(segmentEntity) 
+
+                        float selectionValue = SystemAPI.HasComponent<SelectedBlend>(segmentEntity)
+                            ? SystemAPI.GetComponent<SelectedBlend>(segmentEntity)
                             : 0f;
                         segmentSelections.Add(selectionValue);
                     }
                 }
 
-                if (points.Length == 0 || segmentBoundaries.Length == 0) {
-                    if (buffers.CurrentBuffers.Count > 1) {
-                        buffers.CurrentBuffers.Count = 1;
-                        buffers.NextBuffers.Count = 1;
-                    }
-                    continue;
-                }
+                if (points.Length == 0 || segmentBoundaries.Length == 0) continue;
 
                 if (buffers.ComputeFence == null) {
                     Build(globalSettings, gizmoSettings, points.AsArray(), segmentBoundaries.AsArray(), segmentSelections.AsArray(), buffers);
