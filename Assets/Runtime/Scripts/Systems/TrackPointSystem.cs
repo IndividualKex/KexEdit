@@ -9,17 +9,11 @@ namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
     [BurstCompile]
     public partial struct TrackPointSystem : ISystem {
-        private BufferLookup<Point> _pointLookup;
-        private BufferLookup<TrackPoint> _trackPointLookup;
-
         private EntityQuery _query;
         private EntityQuery _countQuery;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state) {
-            _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
-            _trackPointLookup = SystemAPI.GetBufferLookup<TrackPoint>(false);
-
             _query = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<SectionReference, Segment, TrackPoint, TrackHash>()
                 .Build(state.EntityManager);
@@ -34,9 +28,6 @@ namespace KexEdit {
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            _pointLookup.Update(ref state);
-            _trackPointLookup.Update(ref state);
-
             var preferences = SystemAPI.GetSingleton<Preferences>();
 
             int count = _countQuery.CalculateEntityCount();
@@ -66,7 +57,7 @@ namespace KexEdit {
                 Sections = sections,
                 StyleData = styleData,
                 Segments = segments,
-                PointLookup = _pointLookup,
+                PointLookup = SystemAPI.GetBufferLookup<Point>(true),
                 CountMap = countMap.AsParallelWriter()
             };
 
@@ -81,8 +72,8 @@ namespace KexEdit {
             var disposalHandle = JobHandle.CombineDependencies(disposeJobs);
 
             state.Dependency = new BuildJob {
-                PointLookup = _pointLookup,
-                TrackPointLookup = _trackPointLookup,
+                PointLookup = SystemAPI.GetBufferLookup<Point>(true),
+                TrackPointLookup = SystemAPI.GetBufferLookup<TrackPoint>(false),
                 CountMap = countMap,
                 VisualizationMode = preferences.VisualizationMode
             }.ScheduleParallel(_query, countHandle);
@@ -148,13 +139,14 @@ namespace KexEdit {
                     return (0, 0);
                 }
 
+                int lastIndex = points.Length - 1;
                 int startIndex = 0;
-                int endIndex = points.Length - 1;
+                int endIndex = lastIndex;
 
                 if (segment.StartTime > 0f) {
                     float targetStartTime = segment.StartTime;
                     int left = 0;
-                    int right = points.Length - 1;
+                    int right = lastIndex;
 
                     while (left <= right) {
                         int mid = left + (right - left) / 2;
@@ -168,12 +160,14 @@ namespace KexEdit {
                             right = mid - 1;
                         }
                     }
+
+                    startIndex = math.min(startIndex, lastIndex - 1);
                 }
 
                 if (segment.EndTime < float.MaxValue) {
                     float targetEndTime = segment.EndTime;
                     int left = startIndex;
-                    int right = points.Length - 1;
+                    int right = lastIndex;
 
                     while (left <= right) {
                         int mid = left + (right - left) / 2;
@@ -188,7 +182,10 @@ namespace KexEdit {
                         }
                     }
 
-                    endIndex = math.max(startIndex + 1, endIndex);
+                    endIndex = math.clamp(endIndex, startIndex + 1, lastIndex);
+                }
+                else {
+                    endIndex = math.min(lastIndex, math.max(startIndex + 1, endIndex));
                 }
 
                 return (startIndex, endIndex);
@@ -274,13 +271,14 @@ namespace KexEdit {
                     return (0, 0);
                 }
 
+                int lastIndex = points.Length - 1;
                 int startIndex = 0;
-                int endIndex = points.Length - 1;
+                int endIndex = lastIndex;
 
                 if (segment.StartTime > 0f) {
                     float targetStartTime = segment.StartTime;
                     int left = 0;
-                    int right = points.Length - 1;
+                    int right = lastIndex;
 
                     while (left <= right) {
                         int mid = left + (right - left) / 2;
@@ -294,12 +292,14 @@ namespace KexEdit {
                             right = mid - 1;
                         }
                     }
+
+                    startIndex = math.min(startIndex, lastIndex - 1);
                 }
 
                 if (segment.EndTime < float.MaxValue) {
                     float targetEndTime = segment.EndTime;
                     int left = startIndex;
-                    int right = points.Length - 1;
+                    int right = lastIndex;
 
                     while (left <= right) {
                         int mid = left + (right - left) / 2;
@@ -314,7 +314,10 @@ namespace KexEdit {
                         }
                     }
 
-                    endIndex = math.max(startIndex + 1, endIndex);
+                    endIndex = math.clamp(endIndex, startIndex + 1, lastIndex);
+                }
+                else {
+                    endIndex = math.min(lastIndex, math.max(startIndex + 1, endIndex));
                 }
 
                 return (startIndex, endIndex);
@@ -323,7 +326,7 @@ namespace KexEdit {
             private float GetVisualizationValue(PointData p0, PointData p1, float t) {
                 return VisualizationMode switch {
                     VisualizationMode.Velocity => math.lerp(p0.Velocity, p1.Velocity, t),
-                    VisualizationMode.NormalForce => math.lerp(p0.NormalForce, p1.NormalForce, t),
+                    VisualizationMode.NormalForce => math.lerp(p0.NormalForce, p1.NormalForce, t) - 1f,
                     VisualizationMode.LateralForce => math.lerp(p0.LateralForce, p1.LateralForce, t),
                     VisualizationMode.RollSpeed => math.lerp(p0.RollSpeed, p1.RollSpeed, t),
                     VisualizationMode.PitchSpeed => math.lerp(p0.PitchFromLast, p1.PitchFromLast, t),

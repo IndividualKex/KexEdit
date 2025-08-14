@@ -21,7 +21,9 @@ namespace KexEdit {
             bool receiveShadows = preferences.EnableShadows;
 
             foreach (var buffers in SystemAPI.Query<TrackStyleBuffers>()) {
-                if (buffers.CurrentBuffers == null || buffers.CurrentBuffers.Count <= 1) continue;
+                if (buffers.CurrentBuffers == null ||
+                    !buffers.CurrentBuffers.Active ||
+                    buffers.CurrentBuffers.Count <= 1) continue;
 
                 foreach (var buffer in buffers.CurrentBuffers.DuplicationBuffers) {
                     var rp = new RenderParams(buffer.Material) {

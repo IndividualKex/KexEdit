@@ -809,6 +809,14 @@ namespace KexEdit.UI.NodeGraph {
                     float axisValue = SystemAPI.GetComponent<AxisPort>(port.Entity);
                     port.SetValue(axisValue);
                     break;
+                case PortType.InWeight:
+                    float inWeightValue = SystemAPI.GetComponent<InWeightPort>(port.Entity);
+                    port.SetValue(inWeightValue);
+                    break;
+                case PortType.OutWeight:
+                    float outWeightValue = SystemAPI.GetComponent<OutWeightPort>(port.Entity);
+                    port.SetValue(outWeightValue);
+                    break;
                 case PortType.LeadIn:
                     float leadInValue = SystemAPI.GetComponent<LeadInPort>(port.Entity);
                     port.SetValue(leadInValue);
@@ -909,6 +917,16 @@ namespace KexEdit.UI.NodeGraph {
                     port.GetValue(out float axisValue);
                     ref var axis = ref SystemAPI.GetComponentRW<AxisPort>(port.Entity).ValueRW;
                     axis.Value = axisValue;
+                    break;
+                case PortType.InWeight:
+                    port.GetValue(out float inWeightValue);
+                    ref var inWeight = ref SystemAPI.GetComponentRW<InWeightPort>(port.Entity).ValueRW;
+                    inWeight.Value = inWeightValue;
+                    break;
+                case PortType.OutWeight:
+                    port.GetValue(out float outWeightValue);
+                    ref var outWeight = ref SystemAPI.GetComponentRW<OutWeightPort>(port.Entity).ValueRW;
+                    outWeight.Value = outWeightValue;
                     break;
                 case PortType.LeadIn:
                     port.GetValue(out float leadInValue);
@@ -1039,6 +1057,20 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.AddComponent<AnchorPort>(targetPort, PointData.Create());
                 ecb.AppendToBuffer<InputPortReference>(entity, targetPort);
                 ecb.SetName(targetPort, PortType.Anchor.GetDisplayName(true, 1));
+
+                var outWeightPort = ecb.CreateEntity();
+                ecb.AddComponent<Port>(outWeightPort, Port.Create(PortType.OutWeight, true));
+                ecb.AddComponent<Dirty>(outWeightPort, true);
+                ecb.AddComponent<OutWeightPort>(outWeightPort, 0.3f);
+                ecb.AppendToBuffer<InputPortReference>(entity, outWeightPort);
+                ecb.SetName(outWeightPort, PortType.OutWeight.GetDisplayName(true));
+
+                var inWeightPort = ecb.CreateEntity();
+                ecb.AddComponent<Port>(inWeightPort, Port.Create(PortType.InWeight, true));
+                ecb.AddComponent<Dirty>(inWeightPort, true);
+                ecb.AddComponent<InWeightPort>(inWeightPort, 0.3f);
+                ecb.AppendToBuffer<InputPortReference>(entity, inWeightPort);
+                ecb.SetName(inWeightPort, PortType.InWeight.GetDisplayName(true));
             }
 
             if (type == NodeType.CopyPathSection

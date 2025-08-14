@@ -17,11 +17,15 @@ namespace KexEdit.UI {
         private Label _velocityLabel;
         private Label _normalForceLabel;
         private Label _lateralForceLabel;
+        private Label _cameraXLabel;
+        private Label _cameraYLabel;
+        private Label _cameraZLabel;
 
         private bool _isVisible;
         private PointData _lastPoint;
+        private UnityEngine.Camera _camera;
 
-        private static readonly string[] s_StringPool = new string[9];
+        private static readonly string[] s_StringPool = new string[12];
         private static int s_PoolIndex;
 
         static StatsOverlaySystem() {
@@ -33,6 +37,7 @@ namespace KexEdit.UI {
         protected override void OnStartRunning() {
             var root = UIService.Instance.UIDocument.rootVisualElement;
             CreateStatsOverlay(root);
+            _camera = UnityEngine.Camera.main;
         }
 
         private void CreateStatsOverlay(VisualElement root) {
@@ -71,6 +76,9 @@ namespace KexEdit.UI {
             _velocityLabel = CreateStatLabel("Velocity:");
             _normalForceLabel = CreateStatLabel("Normal Force:");
             _lateralForceLabel = CreateStatLabel("Lateral Force:");
+            _cameraXLabel = CreateStatLabel("Cam X:");
+            _cameraYLabel = CreateStatLabel("Cam Y:");
+            _cameraZLabel = CreateStatLabel("Cam Z:");
 
             container.Add(_xLabel);
             container.Add(_yLabel);
@@ -81,6 +89,9 @@ namespace KexEdit.UI {
             container.Add(_velocityLabel);
             container.Add(_normalForceLabel);
             container.Add(_lateralForceLabel);
+            container.Add(_cameraXLabel);
+            container.Add(_cameraYLabel);
+            container.Add(_cameraZLabel);
 
             _statsOverlay.Add(container);
 
@@ -131,6 +142,8 @@ namespace KexEdit.UI {
                 _lastPoint = currentPoint;
                 UpdateLabels(currentPoint);
             }
+
+            UpdateCameraLabels();
         }
 
         private (Entity cartEntity, Cart cart) GetActiveCart() {
@@ -195,6 +208,9 @@ namespace KexEdit.UI {
             _velocityLabel.text = "";
             _normalForceLabel.text = "";
             _lateralForceLabel.text = "";
+            _cameraXLabel.text = "";
+            _cameraYLabel.text = "";
+            _cameraZLabel.text = "";
         }
 
         private unsafe void UpdateLabels(PointData point) {
@@ -224,6 +240,24 @@ namespace KexEdit.UI {
 
             _lateralForceLabel.text = FormatValue("Lateral Force: ", point.LateralForce, "F2", "G");
             _lateralForceLabel.MarkDirtyRepaint();
+        }
+
+        private void UpdateCameraLabels() {
+            if (_camera == null) {
+                _camera = UnityEngine.Camera.main;
+                if (_camera == null) return;
+            }
+
+            var cameraPosition = _camera.transform.position;
+
+            _cameraXLabel.text = FormatValue("Cam X: ", Units.DistanceToDisplay(cameraPosition.x), "F2", Units.GetDistanceUnitsString());
+            _cameraXLabel.MarkDirtyRepaint();
+
+            _cameraYLabel.text = FormatValue("Cam Y: ", Units.DistanceToDisplay(cameraPosition.y), "F2", Units.GetDistanceUnitsString());
+            _cameraYLabel.MarkDirtyRepaint();
+
+            _cameraZLabel.text = FormatValue("Cam Z: ", Units.DistanceToDisplay(cameraPosition.z), "F2", Units.GetDistanceUnitsString());
+            _cameraZLabel.MarkDirtyRepaint();
         }
 
         private unsafe string FormatValue(string prefix, float value, string format, string suffix = "") {

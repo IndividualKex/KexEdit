@@ -227,6 +227,39 @@ namespace KexEdit.Serialization {
             node.MeshFilePath = (node.FieldFlags & NodeFieldFlags.HasMeshFilePath) != 0 ? reader.Read<FixedString512Bytes>() : default;
 
             reader.ReadArray(out node.InputPorts, Allocator.Temp);
+
+            // Migration: ensure Bridge nodes have In/Out Weight input ports
+            if (version < SerializationVersion.BRIDGE_WEIGHT_PORTS && node.Node.Type == NodeType.Bridge) {
+                bool hasInWeight = false;
+                bool hasOutWeight = false;
+                for (int i = 0; i < node.InputPorts.Length; i++) {
+                    var t = node.InputPorts[i].Port.Type;
+                    if (t == PortType.InWeight) hasInWeight = true;
+                    else if (t == PortType.OutWeight) hasOutWeight = true;
+                }
+                if (!hasInWeight || !hasOutWeight) {
+                    int extra = (hasInWeight ? 0 : 1) + (hasOutWeight ? 0 : 1);
+                    var old = node.InputPorts;
+                    node.InputPorts = new NativeArray<SerializedPort>(old.Length + extra, Allocator.Temp);
+                    for (int i = 0; i < old.Length; i++) node.InputPorts[i] = old[i];
+
+                    uint idLocal = 1;
+                    int idx = old.Length;
+                    if (!hasOutWeight) {
+                        node.InputPorts[idx++] = new SerializedPort {
+                            Port = Port.Create(PortType.OutWeight, true, idLocal++),
+                            Value = new PointData { Roll = 0.3f }
+                        };
+                    }
+                    if (!hasInWeight) {
+                        node.InputPorts[idx++] = new SerializedPort {
+                            Port = Port.Create(PortType.InWeight, true, idLocal++),
+                            Value = new PointData { Roll = 0.3f }
+                        };
+                    }
+                    old.Dispose();
+                }
+            }
             reader.ReadArray(out node.OutputPorts, Allocator.Temp);
 
             uint id = 1;

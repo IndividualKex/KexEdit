@@ -75,14 +75,14 @@ namespace KexEdit.UI.Timeline {
             }
         }
 
-        public static Color GetColor(this PropertyType propertyType) {
+        public static Color GetCurveColor(this PropertyType propertyType) {
             return propertyType switch {
-                PropertyType.RollSpeed => s_RollSpeedColor,
-                PropertyType.NormalForce => s_NormalForceColor,
-                PropertyType.LateralForce => s_LateralForceColor,
-                PropertyType.PitchSpeed => s_PitchSpeedColor,
-                PropertyType.YawSpeed => s_YawSpeedColor,
-                _ => s_DefaultColor
+                PropertyType.RollSpeed => s_RollSpeedCurveColor,
+                PropertyType.NormalForce => s_NormalForceCurveColor,
+                PropertyType.LateralForce => s_LateralForceCurveColor,
+                PropertyType.PitchSpeed => s_PitchSpeedCurveColor,
+                PropertyType.YawSpeed => s_YawSpeedCurveColor,
+                _ => s_DefaultCurveColor
             };
         }
 
@@ -113,7 +113,8 @@ namespace KexEdit.UI.Timeline {
                 float y = bounds.ValueToPixel(keyframe.Value, rect.height);
                 if (!rect.Contains(new Vector2(x, y))) continue;
 
-                Color keyframeColor = keyframe.Selected ? s_BlueOutline : s_TextColor;
+                Color propertyColor = propertyData.Type.GetCurveColor();
+                Color keyframeColor = keyframe.Selected ? Color.Lerp(propertyColor, Color.white, 0.3f) : propertyColor;
                 painter.fillColor = keyframeColor;
                 painter.BeginPath();
                 painter.MoveTo(new Vector2(x - halfSize, y - halfSize));
@@ -135,7 +136,7 @@ namespace KexEdit.UI.Timeline {
             PropertyData propertyData,
             Rect rect
         ) {
-            Color color = propertyData.Type.GetColor();
+            Color color = propertyData.Type.GetCurveColor();
             painter.strokeColor = color;
             painter.lineWidth = CURVE_WIDTH;
 
@@ -195,7 +196,7 @@ namespace KexEdit.UI.Timeline {
         ) {
             if (propertyData.Visible) return;
 
-            Color color = propertyData.Type.GetColor();
+            Color color = propertyData.Type.GetCurveColor();
             color.a = 0.5f;
 
             painter.strokeColor = color;

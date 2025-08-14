@@ -8,7 +8,7 @@ using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI.NodeGraph {
     public class NodeGraphNode : VisualElement {
-        private VisualElement _topPortsContainer;
+        private VisualElement _portsContainer;
         private VisualElement _mainBody;
         private VisualElement _contentArea;
         private VisualElement _header;
@@ -74,8 +74,8 @@ namespace KexEdit.UI.NodeGraph {
             style.transitionDuration = new List<TimeValue> { new(100, TimeUnit.Millisecond) };
             style.transitionTimingFunction = new List<EasingFunction> { EasingMode.EaseOutCubic };
 
-            _topPortsContainer = new VisualElement {
-                name = "TopPortsContainer",
+            _portsContainer = new VisualElement {
+                name = "PortsContainer",
                 style = {
                     position = Position.Absolute,
                     top = -10f,
@@ -260,7 +260,7 @@ namespace KexEdit.UI.NodeGraph {
                     borderLeftColor = s_DividerColor
                 }
             };
-            _contentArea.Add(_topPortsContainer);
+            _contentArea.Add(_portsContainer);
             _mainBody.Add(_contentArea);
             _mainBody.Add(_foldout);
             Add(_mainBody);
@@ -410,7 +410,7 @@ namespace KexEdit.UI.NodeGraph {
                 if (portData.Port.Type == PortType.Anchor || portData.Port.Type == PortType.Path) {
                     var port = new NodeGraphPort(_view, portData, vertical: true);
                     _ports.Add(portData.Entity, port);
-                    _topPortsContainer.Add(port);
+                    _portsContainer.Add(port);
                 }
                 else {
                     var port = new NodeGraphPort(_view, portData);
@@ -440,7 +440,7 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void AdjustConnectablePortSpacing() {
-            PositionPortsAbsolute(_topPortsContainer);
+            PositionPortsAbsolute(_portsContainer);
             PositionPortsAbsolute(_bottomPortsContainer);
         }
 
@@ -495,7 +495,7 @@ namespace KexEdit.UI.NodeGraph {
             _priorityField?.Unbind();
 
             _inputsContainer.Clear();
-            _topPortsContainer.Clear();
+            _portsContainer.Clear();
             _bottomPortsContainer.Clear();
             _ports.Clear();
 

@@ -20,6 +20,12 @@ namespace KexEdit.UI {
         public static readonly Color s_MinorGridColor = new(0.8f, 0.8f, 0.8f, 0.02f);
         public static readonly Color s_MutedGridColor = new(0.8f, 0.8f, 0.8f, 0.01f);
 
+        public static readonly Color s_RollSpeedColor = new(1.0f, 0.1f, 0.1f);
+        public static readonly Color s_NormalForceColor = new(0.1f, 0.3f, 1.0f);
+        public static readonly Color s_LateralForceColor = new(0.1f, 1.0f, 0.1f);
+        public static readonly Color s_PitchSpeedColor = new(0.1f, 0.8f, 1.0f);
+        public static readonly Color s_YawSpeedColor = new(1.0f, 0.9f, 0.1f);
+
         public static readonly Color s_BlueOutline = new(0.2f, 0.5f, 0.9f);
         public static readonly Color s_BlueOutlineTransparent = new(0.2f, 0.5f, 0.9f, 0.5f);
         public static readonly Color s_OrangeOutline = new(0.9f, 0.6f, 0.2f);

@@ -6,6 +6,7 @@ using Unity.Jobs;
 using Unity.Burst;
 using UnityEngine.UIElements;
 using static KexEdit.Constants;
+using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
@@ -27,21 +28,6 @@ namespace KexEdit.UI {
         private NativeArray<PropertyType> _propertyTypes;
         private NativeArray<float3> _propertyColors;
 
-        private ComponentLookup<Duration> _durationLookup;
-        private ComponentLookup<Anchor> _anchorLookup;
-        private ComponentLookup<Node> _nodeLookup;
-        private BufferLookup<Point> _pointLookup;
-        private BufferLookup<RollSpeedKeyframe> _rollSpeedLookup;
-        private BufferLookup<NormalForceKeyframe> _normalForceLookup;
-        private BufferLookup<LateralForceKeyframe> _lateralForceLookup;
-        private BufferLookup<PitchSpeedKeyframe> _pitchSpeedLookup;
-        private BufferLookup<YawSpeedKeyframe> _yawSpeedLookup;
-        private BufferLookup<FixedVelocityKeyframe> _fixedVelocityLookup;
-        private BufferLookup<HeartKeyframe> _heartLookup;
-        private BufferLookup<FrictionKeyframe> _frictionLookup;
-        private BufferLookup<ResistanceKeyframe> _resistanceLookup;
-        private BufferLookup<TrackStyleKeyframe> _trackStyleLookup;
-
         protected override void OnCreate() {
             _bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
 
@@ -52,32 +38,17 @@ namespace KexEdit.UI {
                 _propertyTypes[i] = (PropertyType)propertyTypes.GetValue(i);
                 _propertyColors[i] = new float3(0.8f, 0.8f, 0.8f);
             }
-            _propertyColors[(int)PropertyType.RollSpeed] = new float3(1.0f, 0.1f, 0.1f);
-            _propertyColors[(int)PropertyType.NormalForce] = new float3(0.1f, 0.3f, 1.0f);
-            _propertyColors[(int)PropertyType.LateralForce] = new float3(0.1f, 1.0f, 0.1f);
-            _propertyColors[(int)PropertyType.PitchSpeed] = new float3(0.1f, 0.8f, 1.0f);
-            _propertyColors[(int)PropertyType.YawSpeed] = new float3(1.0f, 0.9f, 0.1f);
+            _propertyColors[(int)PropertyType.RollSpeed] = s_RollSpeedColor.ToFloat3();
+            _propertyColors[(int)PropertyType.NormalForce] = s_NormalForceColor.ToFloat3();
+            _propertyColors[(int)PropertyType.LateralForce] = s_LateralForceColor.ToFloat3();
+            _propertyColors[(int)PropertyType.PitchSpeed] = s_PitchSpeedColor.ToFloat3();
+            _propertyColors[(int)PropertyType.YawSpeed] = s_YawSpeedColor.ToFloat3();
 
             _keyframes = new NativeList<Keyframe>(Allocator.Persistent);
 
             _sphereMesh = Resources.GetBuiltinResource<Mesh>("Sphere.fbx");
             _gizmoMaterial = Resources.Load<Material>("KeyframeGizmo");
             _matProps = new MaterialPropertyBlock();
-
-            _durationLookup = SystemAPI.GetComponentLookup<Duration>(true);
-            _anchorLookup = SystemAPI.GetComponentLookup<Anchor>(true);
-            _nodeLookup = SystemAPI.GetComponentLookup<Node>(true);
-            _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
-            _rollSpeedLookup = SystemAPI.GetBufferLookup<RollSpeedKeyframe>(true);
-            _normalForceLookup = SystemAPI.GetBufferLookup<NormalForceKeyframe>(true);
-            _lateralForceLookup = SystemAPI.GetBufferLookup<LateralForceKeyframe>(true);
-            _pitchSpeedLookup = SystemAPI.GetBufferLookup<PitchSpeedKeyframe>(true);
-            _yawSpeedLookup = SystemAPI.GetBufferLookup<YawSpeedKeyframe>(true);
-            _fixedVelocityLookup = SystemAPI.GetBufferLookup<FixedVelocityKeyframe>(true);
-            _heartLookup = SystemAPI.GetBufferLookup<HeartKeyframe>(true);
-            _frictionLookup = SystemAPI.GetBufferLookup<FrictionKeyframe>(true);
-            _resistanceLookup = SystemAPI.GetBufferLookup<ResistanceKeyframe>(true);
-            _trackStyleLookup = SystemAPI.GetBufferLookup<TrackStyleKeyframe>(true);
 
             RequireForUpdate<KexEdit.Preferences>();
             RequireForUpdate<GameViewData>();
@@ -122,35 +93,20 @@ namespace KexEdit.UI {
                 return;
             }
 
-            _durationLookup.Update(this);
-            _anchorLookup.Update(this);
-            _nodeLookup.Update(this);
-            _pointLookup.Update(this);
-            _rollSpeedLookup.Update(this);
-            _normalForceLookup.Update(this);
-            _lateralForceLookup.Update(this);
-            _pitchSpeedLookup.Update(this);
-            _yawSpeedLookup.Update(this);
-            _fixedVelocityLookup.Update(this);
-            _heartLookup.Update(this);
-            _frictionLookup.Update(this);
-            _resistanceLookup.Update(this);
-            _trackStyleLookup.Update(this);
-
             var keyframes = new NativeList<KeyframeReference>(Allocator.TempJob);
 
             new GatherKeyframesJob {
                 PropertyTypes = _propertyTypes,
-                RollSpeedLookup = _rollSpeedLookup,
-                NormalForceLookup = _normalForceLookup,
-                LateralForceLookup = _lateralForceLookup,
-                PitchSpeedLookup = _pitchSpeedLookup,
-                YawSpeedLookup = _yawSpeedLookup,
-                FixedVelocityLookup = _fixedVelocityLookup,
-                HeartLookup = _heartLookup,
-                FrictionLookup = _frictionLookup,
-                ResistanceLookup = _resistanceLookup,
-                TrackStyleLookup = _trackStyleLookup,
+                RollSpeedLookup = SystemAPI.GetBufferLookup<RollSpeedKeyframe>(true),
+                NormalForceLookup = SystemAPI.GetBufferLookup<NormalForceKeyframe>(true),
+                LateralForceLookup = SystemAPI.GetBufferLookup<LateralForceKeyframe>(true),
+                PitchSpeedLookup = SystemAPI.GetBufferLookup<PitchSpeedKeyframe>(true),
+                YawSpeedLookup = SystemAPI.GetBufferLookup<YawSpeedKeyframe>(true),
+                FixedVelocityLookup = SystemAPI.GetBufferLookup<FixedVelocityKeyframe>(true),
+                HeartLookup = SystemAPI.GetBufferLookup<HeartKeyframe>(true),
+                FrictionLookup = SystemAPI.GetBufferLookup<FrictionKeyframe>(true),
+                ResistanceLookup = SystemAPI.GetBufferLookup<ResistanceKeyframe>(true),
+                TrackStyleLookup = SystemAPI.GetBufferLookup<TrackStyleKeyframe>(true),
                 Keyframes = keyframes
             }.Run();
 
@@ -175,10 +131,10 @@ namespace KexEdit.UI {
             new CalculatePositionsJob {
                 Keyframes = keyframeArray,
                 PropertyColors = _propertyColors,
-                DurationLookup = _durationLookup,
-                AnchorLookup = _anchorLookup,
-                NodeLookup = _nodeLookup,
-                PointLookup = _pointLookup,
+                DurationLookup = SystemAPI.GetComponentLookup<Duration>(true),
+                AnchorLookup = SystemAPI.GetComponentLookup<Anchor>(true),
+                NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
+                PointLookup = SystemAPI.GetBufferLookup<Point>(true),
                 Matrices = matrices,
                 VisualizationData = visualizationData
             }.Schedule(count, 16).Complete();

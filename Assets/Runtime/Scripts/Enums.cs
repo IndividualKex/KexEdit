@@ -56,6 +56,8 @@ namespace KexEdit {
         Axis,
         LeadIn,
         LeadOut,
+        InWeight,
+        OutWeight,
         Rotation,
         Scale,
         Start,

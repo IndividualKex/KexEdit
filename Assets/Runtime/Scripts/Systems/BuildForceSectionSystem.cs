@@ -8,22 +8,14 @@ namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [BurstCompile]
     public partial struct BuildForceSectionSystem : ISystem {
-        private ComponentLookup<AnchorPort> _anchorPortLookup;
-
-        public void OnCreate(ref SystemState state) {
-            _anchorPortLookup = SystemAPI.GetComponentLookup<AnchorPort>(true);
-        }
-
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            _anchorPortLookup.Update(ref state);
-
             var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
             var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
             state.Dependency = new Job {
                 Ecb = ecb.AsParallelWriter(),
-                AnchorPortLookup = _anchorPortLookup,
+                AnchorPortLookup = SystemAPI.GetComponentLookup<AnchorPort>(true),
             }.ScheduleParallel(state.Dependency);
         }
 

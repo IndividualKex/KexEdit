@@ -21,8 +21,12 @@ namespace KexEdit {
                 using var segmentBoundaries = new NativeList<int2>(0, Allocator.Temp);
                 using var segmentSelections = new NativeList<float>(0, Allocator.Temp);
 
-                foreach (var (segment, segmentEntity) in SystemAPI.Query<Segment>().WithAll<TrackPoint>().WithEntityAccess()) {
-                    if (segment.Style != styleEntity) continue;
+                foreach (var (segment, render, segmentEntity) in SystemAPI
+                    .Query<Segment, Render>()
+                    .WithAll<TrackPoint>()
+                    .WithEntityAccess()
+                ) {
+                    if (!render || segment.Style != styleEntity) continue;
 
                     var trackPoints = SystemAPI.GetBuffer<TrackPoint>(segmentEntity);
                     if (trackPoints.Length > 1) {
@@ -38,7 +42,10 @@ namespace KexEdit {
                     }
                 }
 
-                if (points.Length == 0 || segmentBoundaries.Length == 0) continue;
+                if (points.Length == 0 || segmentBoundaries.Length == 0) {
+                    buffers.CurrentBuffers.Active = false;
+                    continue;
+                }
 
                 if (buffers.ComputeFence == null) {
                     Build(globalSettings, gizmoSettings, points.AsArray(), segmentBoundaries.AsArray(), segmentSelections.AsArray(), buffers);
@@ -48,6 +55,8 @@ namespace KexEdit {
                     (buffers.CurrentBuffers, buffers.NextBuffers) = (buffers.NextBuffers, buffers.CurrentBuffers);
                     buffers.ComputeFence = null;
                 }
+
+                buffers.NextBuffers.Active = true;
             }
         }
 
@@ -59,8 +68,6 @@ namespace KexEdit {
             NativeArray<float> segmentSelections,
             TrackStyleBuffers buffers
         ) {
-            if (points.Length == 0) return;
-
             if (buffers.NextBuffers.PointsBuffer.count != points.Length ||
                 buffers.NextBuffers.SegmentCount != segmentBoundaries.Length) {
                 buffers.NextBuffers.Initialize(points.Length, segmentBoundaries);
@@ -216,6 +223,7 @@ namespace KexEdit {
             }
 
             buffers.ComputeFence = AsyncGPUReadback.Request(buffers.NextBuffers.PointsBuffer);
+            buffers.NextBuffers.Active = true;
         }
     }
 }

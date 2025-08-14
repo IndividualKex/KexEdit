@@ -8,22 +8,16 @@ namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [BurstCompile]
     public partial struct BuildBridgeSystem : ISystem {
-        private ComponentLookup<AnchorPort> _anchorPortLookup;
-
-        public void OnCreate(ref SystemState state) {
-            _anchorPortLookup = SystemAPI.GetComponentLookup<AnchorPort>(true);
-        }
-
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            _anchorPortLookup.Update(ref state);
-
             var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
             var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
             state.Dependency = new Job {
                 Ecb = ecb.AsParallelWriter(),
-                AnchorPortLookup = _anchorPortLookup,
+                AnchorPortLookup = SystemAPI.GetComponentLookup<AnchorPort>(true),
+                InWeightLookup = SystemAPI.GetComponentLookup<InWeightPort>(true),
+                OutWeightLookup = SystemAPI.GetComponentLookup<OutWeightPort>(true),
             }.ScheduleParallel(state.Dependency);
         }
 
@@ -33,6 +27,10 @@ namespace KexEdit {
 
             [ReadOnly]
             public ComponentLookup<AnchorPort> AnchorPortLookup;
+            [ReadOnly]
+            public ComponentLookup<InWeightPort> InWeightLookup;
+            [ReadOnly]
+            public ComponentLookup<OutWeightPort> OutWeightLookup;
 
             public void Execute([ChunkIndexInQuery] int chunkIndex, Entity entity, BridgeAspect section) {
                 if (!section.Dirty) return;
@@ -57,8 +55,17 @@ namespace KexEdit {
                     return;
                 }
 
+                float outWeight = 0.3f;
+                float inWeight = 0.3f;
+                if (section.InputPorts.Length > 2 && OutWeightLookup.TryGetComponent(section.InputPorts[2], out var outW)) {
+                    outWeight = math.clamp(outW.Value, 1e-3f, 1f);
+                }
+                if (section.InputPorts.Length > 3 && InWeightLookup.TryGetComponent(section.InputPorts[3], out var inW)) {
+                    inWeight = math.clamp(inW.Value, 1e-3f, 1f);
+                }
+
                 var bridgePath = new NativeList<PointData>(Allocator.Temp);
-                CreateBridgePath(ref bridgePath, source, target, length);
+                CreateBridgePath(ref bridgePath, source, target, length, outWeight, inWeight);
 
                 if (bridgePath.Length < 2) {
                     bridgePath.Dispose();
@@ -127,12 +134,19 @@ namespace KexEdit {
                 section.Dirty = false;
             }
 
-            private void CreateBridgePath(ref NativeList<PointData> path, PointData source, PointData target, float length) {
+            private void CreateBridgePath(
+                ref NativeList<PointData> path,
+                PointData source,
+                PointData target,
+                float length,
+                float outWeight,
+                float inWeight
+            ) {
                 int pathPoints = math.max(10, (int)(length * 2f));
 
                 float3 p0 = source.Position;
-                float3 p1 = source.Position + source.Direction * (length * 0.3f);
-                float3 p2 = target.Position - target.Direction * (length * 0.3f);
+                float3 p1 = source.Position + source.Direction * (length * outWeight);
+                float3 p2 = target.Position - target.Direction * (length * inWeight);
                 float3 p3 = target.Position;
 
                 for (int i = 0; i <= pathPoints; i++) {

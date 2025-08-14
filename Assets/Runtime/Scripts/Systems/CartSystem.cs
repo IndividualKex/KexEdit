@@ -9,30 +9,18 @@ namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [BurstCompile]
     public partial struct CartSystem : ISystem {
-        private ComponentLookup<Node> _nodeLookup;
-        private ComponentLookup<Coaster> _coasterLookup;
-        private BufferLookup<Point> _pointLookup;
-
         public void OnCreate(ref SystemState state) {
-            _nodeLookup = SystemAPI.GetComponentLookup<Node>(true);
-            _coasterLookup = SystemAPI.GetComponentLookup<Coaster>(true);
-            _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
-
             state.RequireForUpdate<PauseSingleton>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            _nodeLookup.Update(ref state);
-            _coasterLookup.Update(ref state);
-            _pointLookup.Update(ref state);
-
             bool paused = SystemAPI.GetSingleton<PauseSingleton>().IsPaused;
 
             state.Dependency = new Job {
-                NodeLookup = _nodeLookup,
-                CoasterLookup = _coasterLookup,
-                PointLookup = _pointLookup,
+                NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
+                CoasterLookup = SystemAPI.GetComponentLookup<Coaster>(true),
+                PointLookup = SystemAPI.GetBufferLookup<Point>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime,
                 Paused = paused,
             }.ScheduleParallel(state.Dependency);

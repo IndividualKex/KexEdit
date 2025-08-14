@@ -8,34 +8,17 @@ namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [BurstCompile]
     public partial struct BuildCopyPathSectionSystem : ISystem {
-        private ComponentLookup<AnchorPort> _anchorPortLookup;
-        private ComponentLookup<StartPort> _startPortLookup;
-        private ComponentLookup<EndPort> _endPortLookup;
-        private BufferLookup<PathPort> _pathPortLookup;
-
-        public void OnCreate(ref SystemState state) {
-            _anchorPortLookup = SystemAPI.GetComponentLookup<AnchorPort>(true);
-            _startPortLookup = SystemAPI.GetComponentLookup<StartPort>(true);
-            _endPortLookup = SystemAPI.GetComponentLookup<EndPort>(true);
-            _pathPortLookup = SystemAPI.GetBufferLookup<PathPort>(true);
-        }
-
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            _anchorPortLookup.Update(ref state);
-            _startPortLookup.Update(ref state);
-            _endPortLookup.Update(ref state);
-            _pathPortLookup.Update(ref state);
-
             var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
             var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
             state.Dependency = new Job {
                 Ecb = ecb.AsParallelWriter(),
-                AnchorPortLookup = _anchorPortLookup,
-                StartPortLookup = _startPortLookup,
-                EndPortLookup = _endPortLookup,
-                PathPortLookup = _pathPortLookup,
+                AnchorPortLookup = SystemAPI.GetComponentLookup<AnchorPort>(true),
+                StartPortLookup = SystemAPI.GetComponentLookup<StartPort>(true),
+                EndPortLookup = SystemAPI.GetComponentLookup<EndPort>(true),
+                PathPortLookup = SystemAPI.GetBufferLookup<PathPort>(true),
             }.ScheduleParallel(state.Dependency);
         }
 
