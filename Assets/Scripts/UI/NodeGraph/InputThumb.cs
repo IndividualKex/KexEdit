@@ -101,6 +101,8 @@ namespace KexEdit.UI.NodeGraph {
                 || _data.Port.Type == PortType.Axis
                 || _data.Port.Type == PortType.LeadIn
                 || _data.Port.Type == PortType.LeadOut
+                || _data.Port.Type == PortType.InWeight
+                || _data.Port.Type == PortType.OutWeight
                 || _data.Port.Type == PortType.Scale
                 || _data.Port.Type == PortType.Start
                 || _data.Port.Type == PortType.End) {

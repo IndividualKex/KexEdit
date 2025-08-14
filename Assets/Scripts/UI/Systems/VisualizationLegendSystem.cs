@@ -47,36 +47,43 @@ namespace KexEdit.UI {
                     _data.IsVisible = true;
                     _data.VisualizationName = "Velocity";
                     _data.GradientType = VisualizationGradientType.TwoColorPositive;
+                    _data.NeutralOffset = 0f;
                     break;
                 case VisualizationMode.NormalForce:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Normal Force";
                     _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
+                    _data.NeutralOffset = 1f;
                     break;
                 case VisualizationMode.LateralForce:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Lateral Force";
                     _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
+                    _data.NeutralOffset = 0f;
                     break;
                 case VisualizationMode.RollSpeed:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Roll Speed";
                     _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
+                    _data.NeutralOffset = 0f;
                     break;
                 case VisualizationMode.PitchSpeed:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Pitch Speed";
                     _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
+                    _data.NeutralOffset = 0f;
                     break;
                 case VisualizationMode.YawSpeed:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Yaw Speed";
                     _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
+                    _data.NeutralOffset = 0f;
                     break;
                 case VisualizationMode.Curvature:
                     _data.IsVisible = true;
                     _data.VisualizationName = "Curvature";
                     _data.GradientType = VisualizationGradientType.TwoColorPositive;
+                    _data.NeutralOffset = 0f;
                     break;
             }
         }

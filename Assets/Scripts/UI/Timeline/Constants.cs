@@ -2,12 +2,12 @@ using UnityEngine;
 
 namespace KexEdit.UI.Timeline {
     public static class Constants {
-        public static readonly Color s_RollSpeedColor = new(0.85f, 0.4f, 0.4f);        // Red
-        public static readonly Color s_NormalForceColor = new(0.4f, 0.6f, 0.95f);      // Blue
-        public static readonly Color s_LateralForceColor = new(0.4f, 0.85f, 0.4f);     // Green
-        public static readonly Color s_PitchSpeedColor = new(0.4f, 0.8f, 0.85f);       // Cyan
-        public static readonly Color s_YawSpeedColor = new(0.8f, 0.8f, 0.4f);          // Yellow
-        public static readonly Color s_DefaultColor = new(0.8f, 0.8f, 0.8f);           // White
+        public static readonly Color s_RollSpeedCurveColor = new(0.85f, 0.4f, 0.4f);        // Red
+        public static readonly Color s_NormalForceCurveColor = new(0.4f, 0.6f, 0.95f);      // Blue
+        public static readonly Color s_LateralForceCurveColor = new(0.4f, 0.85f, 0.4f);     // Green
+        public static readonly Color s_PitchSpeedCurveColor = new(0.4f, 0.8f, 0.85f);       // Cyan
+        public static readonly Color s_YawSpeedCurveColor = new(0.8f, 0.8f, 0.4f);          // Yellow
+        public static readonly Color s_DefaultCurveColor = new(0.8f, 0.8f, 0.8f);           // White
 
         public static readonly string s_RollSpeedName = "Roll Speed";
         public static readonly string s_NormalForceName = "Normal Force";

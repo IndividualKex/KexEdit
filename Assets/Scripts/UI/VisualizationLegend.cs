@@ -164,12 +164,17 @@ namespace KexEdit.UI {
                     float minValue = _data.MinValue;
                     float maxValue = _data.MaxValue;
                     float value = Mathf.Lerp(minValue, maxValue, t);
+                    float neutralPoint = _data.NeutralOffset;
                     
-                    if (value < 0f) {
-                        float negativeT = Mathf.Clamp01(value / minValue);
+                    if (value < neutralPoint) {
+                        float adjustedMin = minValue - neutralPoint;
+                        float adjustedValue = value - neutralPoint;
+                        float negativeT = Mathf.Clamp01(adjustedValue / adjustedMin);
                         color = Color.Lerp(VISUALIZATION_ZERO_COLOR, VISUALIZATION_MIN_COLOR, negativeT);
                     } else {
-                        float positiveT = Mathf.Clamp01(value / maxValue);
+                        float adjustedMax = maxValue - neutralPoint;
+                        float adjustedValue = value - neutralPoint;
+                        float positiveT = Mathf.Clamp01(adjustedValue / adjustedMax);
                         color = Color.Lerp(VISUALIZATION_ZERO_COLOR, VISUALIZATION_MAX_COLOR, positiveT);
                     }
                 }

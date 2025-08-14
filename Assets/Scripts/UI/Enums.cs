@@ -79,4 +79,9 @@ namespace KexEdit.UI {
         None = 0,
         Playhead = 1 << 0,
     }
+
+    public enum VisualizationGradientType {
+        TwoColorPositive,
+        ThreeColorCrossesZero
+    }
 }

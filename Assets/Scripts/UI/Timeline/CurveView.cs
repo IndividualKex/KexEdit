@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Mathematics;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -98,6 +99,10 @@ namespace KexEdit.UI.Timeline {
             Focus();
             _lastMouseDownPosition = evt.localMousePosition;
 
+            if (evt.button == 2 || (evt.button == 1 && evt.altKey)) {
+                return;
+            }
+
             bool hasKeyframe = TryGetKeyframeAtPosition(
                 _data.ValueBounds,
                 evt.localMousePosition,
@@ -130,6 +135,39 @@ namespace KexEdit.UI.Timeline {
                     _pan = 0f;
                     _draggingBezierHandle = true;
                     _moved = false;
+                }
+                else if (TryGetCurveClickPosition(_data.ValueBounds, evt.localMousePosition, out PropertyType curveType, out float curveTime, out float curveValue)) {
+                    Undo.Record();
+                    
+                    _data.Time = curveTime;
+                    var timeChangeEvent = this.GetPooled<TimeChangeEvent>();
+                    timeChangeEvent.Time = curveTime;
+                    timeChangeEvent.Snap = false;
+                    this.Send(timeChangeEvent);
+                    
+                    var setKeyframeEvent = this.GetPooled<SetKeyframeEvent>();
+                    setKeyframeEvent.Type = curveType;
+                    setKeyframeEvent.Value = curveValue;
+                    this.Send(setKeyframeEvent);
+                    
+                    var mousePos = evt.localMousePosition;
+                    schedule.Execute(() => {
+                        if (_data.Properties.TryGetValue(curveType, out var propertyData)) {
+                            foreach (var kf in propertyData.Keyframes) {
+                                if (math.abs(kf.Time - curveTime) < 1e-3f && math.abs(kf.Value - curveValue) < 1e-3f) {
+                                    _draggedKeyframe = new KeyframeData(curveType, kf);
+                                    _startBounds = _data.ValueBounds;
+                                    _dragBounds = _data.ValueBounds;
+                                    _startMousePosition = mousePos;
+                                    _pan = 0f;
+                                    _draggingKeyframe = true;
+                                    _moved = false;
+                                    StoreKeyframes();
+                                    break;
+                                }
+                            }
+                        }
+                    });
                 }
                 else {
                     var e = this.GetPooled<ViewClickEvent>();
@@ -461,6 +499,168 @@ namespace KexEdit.UI.Timeline {
             }
 
             return false;
+        }
+
+        private bool TryGetCurveClickPosition(
+            ValueBounds bounds,
+            Vector2 pos,
+            out PropertyType resultType,
+            out float resultTime,
+            out float resultValue
+        ) {
+            resultType = default;
+            resultTime = 0f;
+            resultValue = 0f;
+
+            const float tolerance = 8f;
+            float closestDistance = float.MaxValue;
+
+            foreach (var (type, propertyData) in _data.Properties) {
+                if (!propertyData.Visible || propertyData.Hidden || propertyData.Keyframes.Count == 0) continue;
+
+                float clickTime = _data.PixelToTime(pos.x);
+                
+                var firstKeyframe = propertyData.Keyframes[0];
+                if (clickTime < firstKeyframe.Time) {
+                    float valueY = bounds.ValueToPixel(firstKeyframe.Value, contentRect.height);
+                    float distance = math.abs(pos.y - valueY);
+                    
+                    if (distance < tolerance && distance < closestDistance) {
+                        closestDistance = distance;
+                        resultType = type;
+                        resultTime = clickTime;
+                        resultValue = firstKeyframe.Value;
+                    }
+                }
+                
+                var lastKeyframe = propertyData.Keyframes[^1];
+                if (clickTime > lastKeyframe.Time) {
+                    float valueY = bounds.ValueToPixel(lastKeyframe.Value, contentRect.height);
+                    float distance = math.abs(pos.y - valueY);
+                    
+                    if (distance < tolerance && distance < closestDistance) {
+                        closestDistance = distance;
+                        resultType = type;
+                        resultTime = clickTime;
+                        resultValue = lastKeyframe.Value;
+                    }
+                }
+                
+                if (propertyData.Keyframes.Count == 1) {
+                    float valueY = bounds.ValueToPixel(firstKeyframe.Value, contentRect.height);
+                    float distance = math.abs(pos.y - valueY);
+                    
+                    if (distance < tolerance && distance < closestDistance) {
+                        closestDistance = distance;
+                        resultType = type;
+                        resultTime = clickTime;
+                        resultValue = firstKeyframe.Value;
+                    }
+                    continue;
+                }
+
+                for (int i = 0; i < propertyData.Keyframes.Count - 1; i++) {
+                    var start = propertyData.Keyframes[i];
+                    var end = propertyData.Keyframes[i + 1];
+
+                    if (clickTime < start.Time - 0.1f || clickTime > end.Time + 0.1f) continue;
+
+                    var interpolationType = Extensions.GetMaxInterpolation(start.OutInterpolation, end.InInterpolation);
+                    if (start.OutInterpolation == InterpolationType.Constant || end.InInterpolation == InterpolationType.Constant) {
+                        interpolationType = InterpolationType.Constant;
+                    }
+
+                    if (interpolationType == InterpolationType.Bezier) {
+                        float dt = end.Time - start.Time;
+                        const int samples = 50;
+                        
+                        for (int j = 0; j <= samples; j++) {
+                            float t = (float)j / samples;
+                            
+                            float t0 = 0f;
+                            float t1 = start.OutWeight;
+                            float t2 = 1f - end.InWeight;
+                            float t3 = 1f;
+                            
+                            float oneMinusT = 1f - t;
+                            float timeSquared = t * t;
+                            float timeCubed = timeSquared * t;
+                            float oneMinusTSquared = oneMinusT * oneMinusT;
+                            float oneMinusTCubed = oneMinusTSquared * oneMinusT;
+                            
+                            float bezierTimeParam = oneMinusTCubed * t0
+                                + 3f * oneMinusTSquared * t * t1
+                                + 3f * oneMinusT * timeSquared * t2
+                                + timeCubed * t3;
+                            
+                            float sampleTime = start.Time + bezierTimeParam * dt;
+                            float timeX = _data.TimeToPixel(sampleTime);
+                            
+                            if (math.abs(timeX - pos.x) < tolerance * 2f) {
+                                float sampleValue = EvaluateBezierValueAtTime(start, end, t);
+                                float valueY = bounds.ValueToPixel(sampleValue, contentRect.height);
+                                float distance = math.abs(pos.y - valueY);
+                                
+                                if (distance < tolerance && distance < closestDistance) {
+                                    closestDistance = distance;
+                                    resultType = type;
+                                    resultTime = _data.PixelToTime(pos.x);
+                                    resultValue = sampleValue;
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        float t = (clickTime - start.Time) / (end.Time - start.Time);
+                        if (t >= 0f && t <= 1f) {
+                            float interpolatedValue = GetInterpolatedValue(start, end, t);
+                            float pixelY = bounds.ValueToPixel(interpolatedValue, contentRect.height);
+                            
+                            float distance = math.abs(pos.y - pixelY);
+                            if (distance < tolerance && distance < closestDistance) {
+                                closestDistance = distance;
+                                resultType = type;
+                                resultTime = clickTime;
+                                resultValue = interpolatedValue;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return closestDistance < tolerance;
+        }
+
+        private float GetInterpolatedValue(Keyframe start, Keyframe end, float t) {
+            var interpolationType = Extensions.GetMaxInterpolation(start.OutInterpolation, end.InInterpolation);
+            if (start.OutInterpolation == InterpolationType.Constant || end.InInterpolation == InterpolationType.Constant) {
+                return start.Value;
+            }
+
+            return interpolationType switch {
+                InterpolationType.Linear => math.lerp(start.Value, end.Value, t),
+                InterpolationType.Bezier => EvaluateBezierValueAtTime(start, end, t),
+                _ => start.Value,
+            };
+        }
+
+        private float EvaluateBezierValueAtTime(Keyframe startKeyframe, Keyframe endKeyframe, float t) {
+            float dt = endKeyframe.Time - startKeyframe.Time;
+            float p0 = startKeyframe.Value;
+            float p1 = p0 + (startKeyframe.OutTangent * dt * startKeyframe.OutWeight);
+            float p3 = endKeyframe.Value;
+            float p2 = p3 - (endKeyframe.InTangent * dt * endKeyframe.InWeight);
+
+            float oneMinusT = 1f - t;
+            float timeSquared = t * t;
+            float timeCubed = timeSquared * t;
+            float oneMinusTSquared = oneMinusT * oneMinusT;
+            float oneMinusTCubed = oneMinusTSquared * oneMinusT;
+
+            return oneMinusTCubed * p0
+                + 3f * oneMinusTSquared * t * p1
+                + 3f * oneMinusT * timeSquared * p2
+                + timeCubed * p3;
         }
 
         private void BoxSelect(Rect rect) {

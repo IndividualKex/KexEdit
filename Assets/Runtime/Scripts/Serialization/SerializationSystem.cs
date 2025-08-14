@@ -278,6 +278,14 @@ namespace KexEdit.Serialization {
                         float axisValue = SystemAPI.GetComponent<AxisPort>(portEntity).Value;
                         portData.Value.Roll = axisValue;
                         break;
+                    case PortType.InWeight:
+                        float inWeightValue = SystemAPI.GetComponent<InWeightPort>(portEntity).Value;
+                        portData.Value.Roll = inWeightValue;
+                        break;
+                    case PortType.OutWeight:
+                        float outWeightValue = SystemAPI.GetComponent<OutWeightPort>(portEntity).Value;
+                        portData.Value.Roll = outWeightValue;
+                        break;
                     case PortType.LeadIn:
                         float leadInValue = SystemAPI.GetComponent<LeadInPort>(portEntity).Value;
                         portData.Value.Roll = leadInValue;
@@ -582,6 +590,12 @@ namespace KexEdit.Serialization {
                         break;
                     case PortType.Axis:
                         ecb.AddComponent<AxisPort>(portEntity, port.Value.Roll);
+                        break;
+                    case PortType.InWeight:
+                        ecb.AddComponent<InWeightPort>(portEntity, port.Value.Roll);
+                        break;
+                    case PortType.OutWeight:
+                        ecb.AddComponent<OutWeightPort>(portEntity, port.Value.Roll);
                         break;
                     case PortType.LeadIn:
                         ecb.AddComponent<LeadInPort>(portEntity, port.Value.Roll);

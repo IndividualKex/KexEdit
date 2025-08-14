@@ -6,22 +6,14 @@ namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [BurstCompile]
     public partial struct BuildReversePathSystem : ISystem {
-        private BufferLookup<PathPort> _pathPortLookup;
-
-        public void OnCreate(ref SystemState state) {
-            _pathPortLookup = SystemAPI.GetBufferLookup<PathPort>(true);
-        }
-
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            _pathPortLookup.Update(ref state);
-
             var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
             var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
 
             state.Dependency = new Job {
                 Ecb = ecb.AsParallelWriter(),
-                PathPortLookup = _pathPortLookup,
+                PathPortLookup = SystemAPI.GetBufferLookup<PathPort>(true),
             }.ScheduleParallel(state.Dependency);
         }
 

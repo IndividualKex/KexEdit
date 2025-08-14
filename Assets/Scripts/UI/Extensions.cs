@@ -37,6 +37,8 @@ namespace KexEdit.UI {
             { PortType.Axis, "Axis" },
             { PortType.LeadIn, "Lead In" },
             { PortType.LeadOut, "Lead Out" },
+            { PortType.InWeight, "In Weight" },
+            { PortType.OutWeight, "Out Weight" },
             { PortType.Rotation, "Rotation" },
             { PortType.Scale, "Scale" },
             { PortType.Start, "Start" },
@@ -60,6 +62,8 @@ namespace KexEdit.UI {
             { PortType.Axis, "Axis" },
             { PortType.LeadIn, "Lead In" },
             { PortType.LeadOut, "Lead Out" },
+            { PortType.InWeight, "In Weight" },
+            { PortType.OutWeight, "Out Weight" },
             { PortType.Rotation, "Rotation" },
             { PortType.Scale, "Scale" },
             { PortType.Start, "Start" },
@@ -207,6 +211,8 @@ namespace KexEdit.UI {
                 PortType.Axis => UnitsType.Angle,
                 PortType.LeadIn => UnitsType.Angle,
                 PortType.LeadOut => UnitsType.Angle,
+                PortType.InWeight => UnitsType.None,
+                PortType.OutWeight => UnitsType.None,
                 PortType.Rotation => UnitsType.Angle,
                 PortType.Scale => UnitsType.None,
                 PortType.Start => throw new System.Exception("Start port type should not be used in GetUnits"),
@@ -227,6 +233,10 @@ namespace KexEdit.UI {
                 TargetValueType.LateralForce => UnitsType.Force,
                 _ => UnitsType.None
             };
+        }
+
+        public static float3 ToFloat3(this Color color) {
+            return new float3(color.r, color.g, color.b);
         }
 
         public static bool IsWithinElement(this VisualElement current, VisualElement element) {
@@ -503,7 +513,7 @@ namespace KexEdit.UI {
             root.Add(dialog);
             return dialog;
         }
-        
+
         public static VisualizationRangeDialog ShowVisualizationRangeDialog(this VisualElement element) {
             var root = element.panel.visualTree.Q<TemplateContainer>();
             KexTime.Pause();

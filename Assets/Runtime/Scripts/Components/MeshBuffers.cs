@@ -18,6 +18,7 @@ namespace KexEdit {
         public List<ExtrusionGizmoBuffers> ExtrusionGizmoBuffers = new();
         public int Count;
         public int SegmentCount;
+        public bool Active;
 
         public MeshBuffers(
             List<ExtrusionMeshSettingsData> extrusionMeshes,

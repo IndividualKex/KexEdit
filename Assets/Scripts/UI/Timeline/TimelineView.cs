@@ -4,7 +4,6 @@ using Unity.Properties;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.Timeline.Constants;
 using Unity.Mathematics;
-using KexEdit.UI;
 
 namespace KexEdit.UI.Timeline {
     public class TimelineView : VisualElement {

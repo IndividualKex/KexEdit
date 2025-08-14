@@ -19,14 +19,10 @@ namespace KexEdit.UI.Timeline {
         private TimelineData _data;
         private Timeline _timeline;
 
-        private BufferLookup<Point> _pointLookup;
-
         private EntityQuery _coasterQuery;
         private EntityQuery _nodeQuery;
 
         protected override void OnCreate() {
-            _pointLookup = SystemAPI.GetBufferLookup<Point>(true);
-
             _coasterQuery = GetEntityQuery(typeof(Coaster), typeof(EditorCoasterTag));
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAspect<NodeAspect>()
@@ -330,8 +326,8 @@ namespace KexEdit.UI.Timeline {
         private void UpdateValues() {
             if (!_data.DrawAnyReadOnly) return;
 
-            _pointLookup.Update(this);
-            var pointBuffer = _pointLookup[_data.Entity];
+            var pointBufferLookup = SystemAPI.GetBufferLookup<Point>(true);
+            var pointBuffer = pointBufferLookup[_data.Entity];
 
             new UpdateTimesJob {
                 Points = pointBuffer,

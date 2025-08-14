@@ -61,7 +61,7 @@ namespace KexEdit.UI.Timeline {
                 style = {
                     position = Position.Absolute,
                     left = 0, top = 0, right = 0, bottom = 0,
-                    backgroundColor = data.Type.GetColor(),
+                    backgroundColor = data.Type.GetCurveColor(),
                     borderTopLeftRadius = 5f,
                     borderTopRightRadius = 5f,
                     borderBottomLeftRadius = 5f,
@@ -213,7 +213,8 @@ namespace KexEdit.UI.Timeline {
                 dataSourcePath = new PropertyPath(nameof(PropertyData.Selected)),
                 bindingMode = BindingMode.ToTarget
             };
-            selectedBinding.sourceToUiConverters.AddConverter((ref bool value) => 
+            selectedBinding.sourceToUiConverters.AddConverter((ref bool value) =>
+
                 new StyleFloat(value ? 1f : 0f));
             selectedOverlay.SetBinding("style.opacity", selectedBinding);
 

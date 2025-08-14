@@ -134,6 +134,9 @@ namespace KexEdit {
                         ref var curveData = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
                         curveData.LeadOut = leadOut;
                     }
+                    else if (type == PortType.InWeight || type == PortType.OutWeight) {
+                        // Handle in job
+                    }
                     else if (type == PortType.Rotation) {
                         // Encode rotation into anchor
                         float3 rotation = SystemAPI.GetComponent<RotationPort>(inputPort);
