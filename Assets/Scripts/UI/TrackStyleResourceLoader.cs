@@ -6,10 +6,8 @@ using System.Globalization;
 
 namespace KexEdit.UI {
     public static class TrackStyleResourceLoader {
-        private static string TrackStylesPath => Path.Combine(Application.streamingAssetsPath, "TrackStyles");
-
         public static TrackStyleConfig LoadConfig(string configPath) {
-            string fullPath = Path.Combine(TrackStylesPath, configPath);
+            string fullPath = Path.Combine(TrackStyleConfigManager.TrackStylesPath, configPath);
 
             TrackStyleConfig config;
 
@@ -157,7 +155,7 @@ namespace KexEdit.UI {
         }
 
         private static Mesh LoadMesh(string path) {
-            string fullPath = Path.Combine(TrackStylesPath, path);
+            string fullPath = Path.Combine(TrackStyleConfigManager.TrackStylesPath, path);
             if (path.EndsWith(".obj")) {
                 try {
                     var mesh = ParseTriangulatedObj(fullPath);
@@ -171,7 +169,7 @@ namespace KexEdit.UI {
 
                 if (path != "FallbackRail.obj") {
                     Debug.LogWarning($"Mesh {path} failed to load, attempting fallback to FallbackRail.obj");
-                    var fallbackPath = Path.Combine(TrackStylesPath, "FallbackRail.obj");
+                    var fallbackPath = Path.Combine(TrackStyleConfigManager.TrackStylesPath, "FallbackRail.obj");
                     try {
                         var fallbackMesh = ParseTriangulatedObj(fallbackPath);
                         if (fallbackMesh != null) {
@@ -190,7 +188,7 @@ namespace KexEdit.UI {
         }
 
         private static Texture2D LoadTexture(string path) {
-            string fullPath = Path.Combine(TrackStylesPath, path);
+            string fullPath = Path.Combine(TrackStyleConfigManager.TrackStylesPath, path);
 
             if (!File.Exists(fullPath)) {
                 Debug.LogError($"Texture file does not exist: {fullPath}");
@@ -227,7 +225,7 @@ namespace KexEdit.UI {
                         Threshold = 0f,
                         DuplicationMeshes = new List<DuplicationMeshConfig> {
                             new() {
-                                MeshPath = "DefaultTie.obj",
+                                MeshPath = "ClassicTie.obj",
                                 Step = 2,
                                 Offset = 0,
                                 ColorIndex = 1
@@ -235,34 +233,34 @@ namespace KexEdit.UI {
                         },
                         ExtrusionMeshes = new List<ExtrusionMeshConfig> {
                             new() {
-                                MeshPath = "DefaultRail.obj",
+                                MeshPath = "ClassicRail.obj",
                                 ColorIndex = 1
                             },
                             new() {
-                                MeshPath = "DefaultRail_Topper.obj"
+                                MeshPath = "ClassicRail_Topper.obj"
                             }
                         },
                         StartCapMeshes = new List<CapMeshConfig> {
                             new() {
-                                MeshPath = "DefaultRail_StartCap.obj",
+                                MeshPath = "ClassicRail_StartCap.obj",
                                 ColorIndex = 1
                             },
                             new() {
-                                MeshPath = "DefaultRail_Topper_StartCap.obj"
+                                MeshPath = "ClassicRail_Topper_StartCap.obj"
                             }
                         },
                         EndCapMeshes = new List<CapMeshConfig> {
                             new() {
-                                MeshPath = "DefaultRail_EndCap.obj",
+                                MeshPath = "ClassicRail_EndCap.obj",
                                 ColorIndex = 1
                             },
                             new() {
-                                MeshPath = "DefaultRail_Topper_EndCap.obj"
+                                MeshPath = "ClassicRail_Topper_EndCap.obj"
                             }
                         }
                     }
                 },
-                SourceFileName = "Default.json"
+                SourceFileName = "Classic.json"
             };
             return config;
         }

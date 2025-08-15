@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using Unity.Properties;
+using Unity.Mathematics;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.Timeline.Constants;
-using Unity.Mathematics;
 
 namespace KexEdit.UI.Timeline {
     public class TimelineView : VisualElement {
@@ -191,7 +191,7 @@ namespace KexEdit.UI.Timeline {
                 const float panSpeed = 15f;
                 _data.Offset += Preferences.AdjustScroll(evt.delta.y) * panSpeed;
                 _data.ClampOffset();
-                
+
                 var e = this.GetPooled<TimelineOffsetChangeEvent>();
                 e.Offset = _data.Offset;
                 this.Send(e);
@@ -208,11 +208,11 @@ namespace KexEdit.UI.Timeline {
                     float mouseTime = _data.PixelToTime(evt.localMousePosition.x);
                     _data.Offset = mouseTime * RESOLUTION * (newZoom - oldZoom) + _data.Offset;
                     _data.ClampOffset();
-                    
+
                     var zoomEvent = this.GetPooled<TimelineZoomChangeEvent>();
                     zoomEvent.Zoom = _data.Zoom;
                     this.Send(zoomEvent);
-                    
+
                     var offsetEvent = this.GetPooled<TimelineOffsetChangeEvent>();
                     offsetEvent.Offset = _data.Offset;
                     this.Send(offsetEvent);
@@ -230,15 +230,15 @@ namespace KexEdit.UI.Timeline {
                 foreach (var propertyType in _data.OrderedProperties) {
                     var propertyData = _data.Properties[propertyType];
                     if (!propertyData.Visible) continue;
-                    
+
                     foreach (var keyframe in propertyData.Keyframes) {
                         if (!keyframe.Selected) continue;
                         var keyframeData = new KeyframeData(propertyType, keyframe);
-                        
+
                         float x = _data.TimeToPixel(keyframe.Time);
                         float y = (Constants.ROW_HEIGHT * propertyIndex) + (Constants.ROW_HEIGHT / 2f);
                         var keyframePosition = new Vector2(x, y);
-                        
+
                         var e = this.GetPooled<SetKeyframeValueEvent>();
                         e.Keyframe = keyframeData;
                         e.MousePosition = keyframePosition;

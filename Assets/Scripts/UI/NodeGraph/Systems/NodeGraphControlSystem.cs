@@ -8,6 +8,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.Constants;
+using static KexEdit.UI.Extensions;
 
 namespace KexEdit.UI.NodeGraph {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
@@ -324,13 +325,13 @@ namespace KexEdit.UI.NodeGraph {
                     });
                     submenu.AddSeparator();
                     submenu.AddItem("Mesh", () => {
-                        ImportManager.ShowImportDialog(_view, filePath => {
+                        ShowImportDialog(_view, filePath => {
                             Undo.Record();
                             var node = AddNode(evt.ContentPosition, NodeType.Mesh);
                             EntityManager.AddComponentData(node, new NodeMeshReference {
                                 Value = Entity.Null,
                                 FilePath = filePath,
-                                Loaded = false,
+                                Requested = false,
                             });
                         });
                     });
@@ -339,7 +340,7 @@ namespace KexEdit.UI.NodeGraph {
                             new("KexEdit Tracks", "kex"),
                             new("All Files", "*")
                         };
-                        ImportManager.ShowImportDialog(_view, kexExtensions, filePath => {
+                        ShowImportDialog(_view, kexExtensions, filePath => {
                             Undo.Record();
                             var node = AddNode(evt.ContentPosition, NodeType.Append);
                             EntityManager.AddComponentData(node, new AppendReference {
@@ -746,12 +747,12 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void LinkMesh(NodeData nodeData) {
-            ImportManager.ShowImportDialog(_view, filePath => {
+            ShowImportDialog(_view, filePath => {
                 Undo.Record();
                 ref var meshReference = ref SystemAPI.GetComponentRW<NodeMeshReference>(nodeData.Entity).ValueRW;
                 meshReference.Value = Entity.Null;
                 meshReference.FilePath = new FixedString512Bytes(filePath);
-                meshReference.Loaded = false;
+                meshReference.Requested = false;
             });
         }
 
@@ -761,7 +762,7 @@ namespace KexEdit.UI.NodeGraph {
                 new("KexEdit Tracks", "kex"),
                 new("All Files", "*")
             };
-            ImportManager.ShowImportDialog(_view, kexExtensions, filePath => {
+            ShowImportDialog(_view, kexExtensions, filePath => {
                 Undo.Record();
                 appendReference.FilePath = filePath;
                 appendReference.Value = Entity.Null;
@@ -1202,6 +1203,11 @@ namespace KexEdit.UI.NodeGraph {
                 || type == NodeType.Bridge
                 || type == NodeType.ReversePath) {
                 ecb.AddBuffer<Point>(entity);
+                ecb.AddBuffer<ReadNormalForce>(entity);
+                ecb.AddBuffer<ReadLateralForce>(entity);
+                ecb.AddBuffer<ReadPitchSpeed>(entity);
+                ecb.AddBuffer<ReadYawSpeed>(entity);
+                ecb.AddBuffer<ReadRollSpeed>(entity);
             }
 
             if (type == NodeType.ForceSection
@@ -1217,7 +1223,7 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.AddBuffer<FrictionKeyframe>(entity);
                 ecb.AddBuffer<ResistanceKeyframe>(entity);
                 ecb.AddBuffer<TrackStyleKeyframe>(entity);
-                ecb.AddComponent<StyleHash>(entity);
+                ecb.AddComponent<TrackStyleHash>(entity);
             }
 
             if (type == NodeType.GeometricSection) {

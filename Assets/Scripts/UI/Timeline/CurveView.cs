@@ -68,6 +68,7 @@ namespace KexEdit.UI.Timeline {
             MarkDirtyRepaint();
         }
 
+
         private void OnDrawContent(MeshGenerationContext ctx) {
             if (!_data.Active) return;
 
@@ -79,17 +80,18 @@ namespace KexEdit.UI.Timeline {
             TimelineDrawUtils.DrawValueLegend(ctx, _data, bounds, contentRect);
             TimelineDrawUtils.DrawPlayhead(painter, _data, contentRect);
 
+            // Draw writeable property curves
             foreach (var (type, propertyData) in _data.Properties) {
-                if (propertyData.DrawReadOnly) {
-                    painter.DrawCurvesReadOnly(_data, bounds, propertyData, contentRect);
-                    continue;
-                }
-
                 if (!propertyData.Visible || propertyData.Hidden) continue;
 
                 painter.DrawCurves(_data, bounds, propertyData, contentRect);
                 painter.DrawKeyframes(_data, bounds, propertyData, contentRect);
                 painter.DrawBezierHandles(_data, bounds, propertyData, contentRect);
+            }
+
+            foreach (var (type, propertyData) in _data.ReadOnlyProperties) {
+                if (!propertyData.Visible) continue;
+                painter.DrawReadOnlyCurves(_data, bounds, propertyData, contentRect);
             }
         }
 

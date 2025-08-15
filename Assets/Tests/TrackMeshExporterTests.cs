@@ -119,7 +119,7 @@ public class TrackMeshExporterTests {
             // Validate OBJ can be parsed by ImportManager
             Mesh importedMesh = null;
             Assert.DoesNotThrow(() => {
-                importedMesh = ObjLoader.LoadMesh(testFilePath);
+                importedMesh = ObjImporter.LoadMesh(testFilePath);
             });
 
             Assert.IsNotNull(importedMesh, "ImportManager should successfully parse the exported OBJ");
@@ -173,7 +173,7 @@ public class TrackMeshExporterTests {
             // Validate OBJ can be parsed
             Mesh importedMesh = null;
             Assert.DoesNotThrow(() => {
-                importedMesh = ObjLoader.LoadMesh(testFilePath);
+                importedMesh = ObjImporter.LoadMesh(testFilePath);
             });
 
             Assert.IsNotNull(importedMesh, "Multi-mesh OBJ should be parseable");
@@ -238,7 +238,7 @@ public class TrackMeshExporterTests {
 
             // Export phase - measure string building vs file writing
             var testFilePath = Path.Combine(Application.temporaryCachePath, "test_performance.obj");
-            
+
             // Measure string building time (in-memory operations)
             sw.Restart();
             var buffer = new System.Text.StringBuilder(1024 * 1024);
@@ -247,7 +247,7 @@ public class TrackMeshExporterTests {
             buffer.AppendLine("");
 
             int vertexOffset = 1, normalOffset = 1, uvOffset = 1;
-            
+
             unsafe {
                 for (int meshIndex = 0; meshIndex < meshes.Length; meshIndex++) {
                     var mesh = meshes[meshIndex];
@@ -342,7 +342,7 @@ public class TrackMeshExporterTests {
             var totalExportTime = stringBuildTime + fileWriteTime;
 
             // Quick validation
-            var importedMesh = ObjLoader.LoadMesh(testFilePath);
+            var importedMesh = ObjImporter.LoadMesh(testFilePath);
 
             // Performance reporting
             UnityEngine.Debug.Log($"Performance Test Results:");
@@ -356,7 +356,7 @@ public class TrackMeshExporterTests {
             Assert.Less(totalExportTime, 5000, $"Export should complete in under 5 seconds (took {totalExportTime}ms)");
             Assert.Less(stringBuildTime, 4000, $"String building should be under 4 seconds (took {stringBuildTime}ms)");
             Assert.Less(fileWriteTime, 1000, $"File writing should be under 1 second (took {fileWriteTime}ms)");
-            
+
             // Verify correctness
             Assert.IsNotNull(importedMesh, "Large dataset should produce valid OBJ");
 

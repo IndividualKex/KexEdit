@@ -74,12 +74,27 @@ namespace KexEdit.UI {
 
             if (_data.TotalLength <= 0f) return;
 
-            if (!GetActiveCart(out var cartEntity, out var cart) || cart.Section == Entity.Null) {
+            if (!GetActiveTrain(out var trainEntity, out var follower) || follower.Section == Entity.Null) {
                 _data.Progress = 0f;
                 return;
             }
 
-            float currentDistance = CalculateDistanceToSection(root, cart.Section) + cart.Position;
+            if (_data.IsPlaying && !KexTime.IsPaused) {
+                if (SystemAPI.HasBuffer<Point>(follower.Section)) {
+                    var points = SystemAPI.GetBuffer<Point>(follower.Section);
+                    if (follower.Index >= points.Length - 1) {
+                        bool hasNext = SystemAPI.HasComponent<Node>(follower.Section) &&
+                                      SystemAPI.GetComponent<Node>(follower.Section).Next != Entity.Null;
+
+                        if (!hasNext) {
+                            SystemAPI.SetComponent(trainEntity, new TrackFollower { Section = root, Index = 1f });
+                            follower = SystemAPI.GetComponent<TrackFollower>(trainEntity);
+                        }
+                    }
+                }
+            }
+
+            float currentDistance = CalculateDistanceToSection(root, follower.Section) + follower.Index;
             _data.Progress = _data.TotalLength > 0f ? currentDistance / _data.TotalLength : 0f;
         }
 
@@ -189,37 +204,47 @@ namespace KexEdit.UI {
             return distance;
         }
 
-        private bool GetActiveCart(out Entity cartEntity, out Cart cart) {
-            foreach (var (cartComponent, entity) in SystemAPI.Query<Cart>().WithEntityAccess()) {
-                if (cartComponent.Enabled && !cartComponent.Kinematic) {
-                    cartEntity = entity;
-                    cart = cartComponent;
+        private bool GetActiveTrain(out Entity trainEntity, out TrackFollower follower) {
+            foreach (var (train, trackFollower, coaster, entity) in SystemAPI
+                .Query<Train, TrackFollower, CoasterReference>()
+                .WithEntityAccess()
+            ) {
+                if (!SystemAPI.HasComponent<EditorCoasterTag>(coaster)) continue;
+
+                if (train.Enabled && !train.Kinematic) {
+                    trainEntity = entity;
+                    follower = trackFollower;
                     return true;
                 }
             }
-            cartEntity = Entity.Null;
-            cart = default;
+            trainEntity = Entity.Null;
+            follower = default;
             return false;
         }
 
         private void SetProgress(float progress) {
             _data.Progress = progress;
 
-            var coaster = _coasterQuery.GetSingleton<Coaster>();
-            Entity root = coaster.RootNode;
+            var editorCoaster = _coasterQuery.GetSingleton<Coaster>();
+            Entity root = editorCoaster.RootNode;
 
             if (root == Entity.Null || _data.TotalLength <= 0f) return;
 
             var targetDistance = _data.Progress * _data.TotalLength;
-            foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
-                if (cart.ValueRO.Enabled && !cart.ValueRO.Kinematic) {
-                    SetCartPosition(ref cart.ValueRW, root, targetDistance);
+            foreach (var (train, trackFollowerRW, coaster, entity) in SystemAPI
+                .Query<Train, RefRW<TrackFollower>, CoasterReference>()
+                .WithEntityAccess()
+            ) {
+                if (!SystemAPI.HasComponent<EditorCoasterTag>(coaster)) continue;
+
+                if (train.Enabled && !train.Kinematic) {
+                    SetTrainPosition(ref trackFollowerRW.ValueRW, root, targetDistance);
                     break;
                 }
             }
         }
 
-        private void SetCartPosition(ref Cart cart, Entity start, float targetDistance) {
+        private void SetTrainPosition(ref TrackFollower follower, Entity start, float targetDistance) {
             float currentDistance = 0f;
             Entity current = start;
             var processedEntities = new NativeHashSet<Entity>(16, Allocator.Temp);
@@ -232,8 +257,8 @@ namespace KexEdit.UI {
                     float sectionLength = points.Length;
 
                     if (currentDistance + sectionLength >= targetDistance) {
-                        cart.Section = current;
-                        cart.Position = Mathf.Clamp(targetDistance - currentDistance, 0f, points.Length - 1f);
+                        follower.Section = current;
+                        follower.Index = Mathf.Clamp(targetDistance - currentDistance, 0f, points.Length - 1f);
                         processedEntities.Dispose();
                         return;
                     }
@@ -252,9 +277,9 @@ namespace KexEdit.UI {
 
             processedEntities.Dispose();
 
-            if (cart.Section != Entity.Null && SystemAPI.HasBuffer<Point>(cart.Section)) {
-                var points = SystemAPI.GetBuffer<Point>(cart.Section);
-                cart.Position = points.Length - 1f;
+            if (follower.Section != Entity.Null && SystemAPI.HasBuffer<Point>(follower.Section)) {
+                var points = SystemAPI.GetBuffer<Point>(follower.Section);
+                follower.Index = points.Length - 1f;
             }
         }
     }

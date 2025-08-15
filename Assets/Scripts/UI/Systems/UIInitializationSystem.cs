@@ -60,11 +60,20 @@ namespace KexEdit.UI {
                 TargetOrthographic = false
             });
             ecb.AddComponent(stateEntity, new NodeGraphData());
-            ecb.AddComponent(stateEntity, new TimelineData());
+            ecb.AddComponent(stateEntity, new TimelineData {
+                Times = new(Allocator.Persistent)
+            });
             ecb.AddComponent<GameViewData>(stateEntity);
             ecb.AddComponent(stateEntity, new EditorTrackStyleSettingsSingleton {
                 Settings = Entity.Null,
                 Dirty = true
+            });
+            ecb.AddComponent(stateEntity, new EditorTrainStyleSingleton {
+                Style = Entity.Null,
+                Dirty = true
+            });
+            ecb.AddComponent(stateEntity, new ReadPivot {
+                Offset = 0f
             });
             ecb.SetName(stateEntity, "UI State");
 
