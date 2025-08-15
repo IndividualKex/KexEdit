@@ -3,18 +3,18 @@
 Real-time 3D preview with two camera modes: Orbit for overview navigation and Fly for free movement.
 
 ![Game View Overview](../images/game-view.png)
-_Game View interface showing track, carts, and playback controls_
+_Game View interface showing track, trains, and playback controls_
 
 ## Interface Elements
 
 The Game View displays:
 
 1. **Track** - Your roller coaster layout with real-time rendering
-2. **Main Cart** - Solid cart showing current simulation time
-3. **Playhead Cart** - Transparent cart indicating timeline playhead position (see [Timeline Reference](timeline.md))
+2. **Main Train** - Solid train showing current simulation time
+3. **Playhead Train** - Transparent train indicating timeline playhead position (see [Timeline Reference](timeline.md))
 4. **Playback Controls** - Play/pause, scrub bar, and time display
 5. **Grid** - Ground alignment grid (toggle with `F2`)
-6. **Stats Overlay** - Detailed simulation stats (toggle with `F3`)
+6. **Stats Overlay** - Detailed simulation stats showing forces, velocity, and other data at the current pivot position (toggle with `F3`)
 
 ## Camera Modes
 
@@ -72,7 +72,7 @@ Timeline controls appear at the bottom of the Game View.
 | ----- | ---------------- | ---------------------------- |
 | `R`   | Toggle Ride View | First-person camera on track |
 
-_Ride camera follows the cart along the track for rider's perspective._
+_Ride camera follows the train along the track for rider's perspective._
 
 ## Display Options
 
@@ -82,9 +82,18 @@ _Ride camera follows the cart along the track for rider's perspective._
 | ----------- | ---------------------- | ----------------------------- |
 | `F1`        | Gizmos                 | Toggle track gizmos           |
 | `F2`        | Grid                   | Toggle alignment grid         |
-| `F3`        | Stats                  | Toggle simulation stats       |
+| `F3`        | Stats                  | Toggle simulation stats overlay |
 | `F4`        | Node Grid Snapping     | Toggle node grid snapping     |
-| `Ctrl + F1` | Velocity Visualization | Toggle velocity visualization |
+
+**Stats Overlay**: When enabled (F3), displays real-time simulation data including:
+- Velocity, acceleration, and G-forces
+- Track position and orientation
+- All values are calculated at the current **Pivot** position on the train
+- Adjust the Pivot via **Track → Pivot...** to view forces from different positions (e.g., front car, middle car, etc.)
+
+### Visualization Modes
+
+Color-coded track overlays for analyzing track dynamics (access via **Track → Visualization Mode**):
 
 ---
 

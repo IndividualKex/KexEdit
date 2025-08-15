@@ -138,6 +138,12 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void OnFieldScroll(WheelEvent evt) {
+            float currentTime = Time.realtimeSinceStartup;
+            float timeSinceZoom = currentTime - NodeGraphView.LastZoomTime;
+            if (timeSinceZoom < 0.5f) {
+                return;
+            }
+
             float scrollAmount = evt.shiftKey ? 0.01f : 0.1f;
             float delta = evt.delta.y > 0 ? -scrollAmount : scrollAmount;
             float newValue = _field.value + delta;
@@ -150,7 +156,6 @@ namespace KexEdit.UI.NodeGraph {
             float roundedValue = math.round(clampedDisplayValue * 1e3f) / 1e3f;
 
             if (math.abs(roundedValue - _field.value) > 1e-6f) {
-                float currentTime = Time.realtimeSinceStartup;
                 if (currentTime - _lastScrollTime > 0.5f) {
                     Undo.Record();
                 }
@@ -191,5 +196,6 @@ namespace KexEdit.UI.NodeGraph {
                 _ => throw new System.NotImplementedException(),
             };
         }
+
     }
 }

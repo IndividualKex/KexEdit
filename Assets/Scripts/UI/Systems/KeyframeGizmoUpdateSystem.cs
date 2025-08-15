@@ -43,6 +43,11 @@ namespace KexEdit.UI {
             _propertyColors[(int)PropertyType.LateralForce] = s_LateralForceColor.ToFloat3();
             _propertyColors[(int)PropertyType.PitchSpeed] = s_PitchSpeedColor.ToFloat3();
             _propertyColors[(int)PropertyType.YawSpeed] = s_YawSpeedColor.ToFloat3();
+            _propertyColors[(int)PropertyType.ReadNormalForce] = s_NormalForceColor.ToFloat3();
+            _propertyColors[(int)PropertyType.ReadLateralForce] = s_LateralForceColor.ToFloat3();
+            _propertyColors[(int)PropertyType.ReadPitchSpeed] = s_PitchSpeedColor.ToFloat3();
+            _propertyColors[(int)PropertyType.ReadYawSpeed] = s_YawSpeedColor.ToFloat3();
+            _propertyColors[(int)PropertyType.ReadRollSpeed] = s_RollSpeedColor.ToFloat3();
 
             _keyframes = new NativeList<Keyframe>(Allocator.Persistent);
 
@@ -336,6 +341,13 @@ namespace KexEdit.UI {
                                     Keyframe = new KeyframeData(propertyType, trackStyleBuffer[i].Value)
                                 });
                             }
+                            break;
+                        // Read-only properties don't have keyframes, skip them
+                        case PropertyType.ReadNormalForce:
+                        case PropertyType.ReadLateralForce:
+                        case PropertyType.ReadPitchSpeed:
+                        case PropertyType.ReadYawSpeed:
+                        case PropertyType.ReadRollSpeed:
                             break;
                         default:
                             throw new System.NotImplementedException($"GatherKeyframesJob not implemented for PropertyType: {propertyType}");

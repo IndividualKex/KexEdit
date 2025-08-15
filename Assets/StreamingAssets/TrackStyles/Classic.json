@@ -1,0 +1,56 @@
+{
+    "Name": "Classic",
+    "Colors": [
+        {
+            "r": 0.5,
+            "g": 0.5,
+            "b": 0.5,
+            "a": 1.0
+        },
+        {
+            "r": 0.6,
+            "g": 0.435,
+            "b": 0.27,
+            "a": 1.0
+        }
+    ],
+    "Styles": [
+        {
+            "Spacing": 0.4,
+            "DuplicationMeshes": [
+                {
+                    "MeshPath": "ClassicTie.obj",
+                    "Step": 2,
+                    "ColorIndex": 1
+                }
+            ],
+            "ExtrusionMeshes": [
+                {
+                    "MeshPath": "ClassicRail.obj",
+                    "ColorIndex": 1
+                },
+                {
+                    "MeshPath": "ClassicRail_Topper.obj"
+                }
+            ],
+            "StartCapMeshes": [
+                {
+                    "MeshPath": "ClassicRail_StartCap.obj",
+                    "ColorIndex": 1
+                },
+                {
+                    "MeshPath": "ClassicRail_Topper_StartCap.obj"
+                }
+            ],
+            "EndCapMeshes": [
+                {
+                    "MeshPath": "ClassicRail_EndCap.obj",
+                    "ColorIndex": 1
+                },
+                {
+                    "MeshPath": "ClassicRail_Topper_EndCap.obj"
+                }
+            ]
+        }
+    ]
+}

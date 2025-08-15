@@ -6,15 +6,15 @@ Customize your track's visual style with custom extrusion meshes (rails) and dup
 
 ### Quick Selection
 
-1. **View** → **Track Style**
+1. **Track** → **Track Style**
 2. Select from available configurations:
-    - **Default** - Basic stylized wooden coaster
-    - **Intamin Blitz** - Modern steel coaster with multiple stress-responsive styles
+    - **Modern** - Modern steel coaster with multiple stress-responsive styles
+    - **Classic** - Basic stylized wooden coaster
 3. Track updates immediately in the 3D view
 
 ### Automatic Style Selection
 
-Some presets like **Intamin Blitz** contain multiple styles that automatically activate based on track stress (calculated from curvature and velocity factors). Higher stress sections get reinforced visual styles.
+Some presets like **Modern** contain multiple styles that automatically activate based on track stress (calculated from curvature and velocity factors). Higher stress sections get reinforced visual styles.
 
 ### Manual Override
 
@@ -29,7 +29,7 @@ Override automatic selection for aesthetic control:
 
 ### Accessing Files
 
-1. **View** → **Track Style** → **Open Folder**
+1. **Track** → **Track Style** → **Open Styles Folder**
 2. Click **README.md** for technical instructions
 3. Study existing `.json` files to understand the format
 
@@ -37,7 +37,7 @@ Override automatic selection for aesthetic control:
 
 1. Create a `.json` configuration file
 2. Add `.obj` mesh files to the folder
-3. Select your configuration from the View menu
+3. Select your configuration from the Track menu
 
 ### Mesh Types
 
@@ -56,7 +56,7 @@ For complete configuration format and technical details, see **README.md** in th
 
 ---
 
-**Next**: [Custom Cart Styles](custom-cart-styles.md)
+**Next**: [Custom Train Styles](custom-train-styles.md)
 
 ---
 

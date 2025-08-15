@@ -1,97 +1,141 @@
-using System;
+using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static KexEdit.Constants;
+using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class StatsOverlaySystem : SystemBase {
         private VisualElement _statsOverlay;
-        private Label _xLabel;
-        private Label _yLabel;
-        private Label _zLabel;
-        private Label _rollLabel;
-        private Label _pitchLabel;
-        private Label _yawLabel;
-        private Label _velocityLabel;
-        private Label _normalForceLabel;
-        private Label _lateralForceLabel;
-        private Label _cameraXLabel;
-        private Label _cameraYLabel;
-        private Label _cameraZLabel;
+        private Dictionary<string, Label> _labels;
+        private Dictionary<string, Label> _valueLabels;
+        private Dictionary<string, string> _cachedStrings;
 
         private bool _isVisible;
         private PointData _lastPoint;
+        private PointData _interpolatedPoint;
+        private float3 _lastCameraPosition;
         private UnityEngine.Camera _camera;
+        private static bool s_stringPoolInitialized;
 
-        private static readonly string[] s_StringPool = new string[12];
-        private static int s_PoolIndex;
-
-        static StatsOverlaySystem() {
-            for (int i = 0; i < s_StringPool.Length; i++) {
-                s_StringPool[i] = new string('\0', 64);
-            }
-        }
+        private TrainStyleConfig _cachedTrainConfig;
+        private string _cachedTrainStyle;
+        private int _cachedCarCount;
+        private float[] _cachedCarOffsets;
+        private const int MaxCars = 20;
+        private const string CenterString = "Center";
+        private float _lastPivotOffset = float.NaN;
 
         protected override void OnStartRunning() {
+            if (!s_stringPoolInitialized) {
+                StatsStringPool.Initialize();
+                s_stringPoolInitialized = true;
+            }
+
             var root = UIService.Instance.UIDocument.rootVisualElement;
             CreateStatsOverlay(root);
             _camera = UnityEngine.Camera.main;
+
+            _cachedStrings = new Dictionary<string, string>();
+            _cachedCarOffsets = new float[MaxCars];
         }
 
         private void CreateStatsOverlay(VisualElement root) {
+            _labels = new Dictionary<string, Label>();
+            _valueLabels = new Dictionary<string, Label>();
+
             _statsOverlay = new VisualElement {
                 name = "stats-overlay",
                 style = {
                     position = Position.Absolute,
                     top = 10f,
                     right = 10f,
-                    minWidth = 256f,
-                    backgroundColor = new Color(0, 0, 0, 0.5f),
-                    borderTopLeftRadius = 4f,
-                    borderTopRightRadius = 4f,
-                    borderBottomLeftRadius = 4f,
-                    borderBottomRightRadius = 4f,
-                    paddingTop = 8f,
-                    paddingBottom = 8f,
-                    paddingLeft = 12f,
-                    paddingRight = 12f,
-                    display = DisplayStyle.None
+                    width = 260f,
+                    backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.85f),
+                    borderTopLeftRadius = 8f,
+                    borderTopRightRadius = 8f,
+                    borderBottomLeftRadius = 8f,
+                    borderBottomRightRadius = 8f,
+                    paddingTop = 12f,
+                    paddingBottom = 12f,
+                    paddingLeft = 14f,
+                    paddingRight = 14f,
+                    display = DisplayStyle.None,
                 }
             };
 
             var container = new VisualElement {
                 style = {
-                    flexDirection = FlexDirection.Column
+                    flexDirection = FlexDirection.Column,
                 }
             };
 
-            _xLabel = CreateStatLabel("X:");
-            _yLabel = CreateStatLabel("Y:");
-            _zLabel = CreateStatLabel("Z:");
-            _rollLabel = CreateStatLabel("Roll:");
-            _pitchLabel = CreateStatLabel("Pitch:");
-            _yawLabel = CreateStatLabel("Yaw:");
-            _velocityLabel = CreateStatLabel("Velocity:");
-            _normalForceLabel = CreateStatLabel("Normal Force:");
-            _lateralForceLabel = CreateStatLabel("Lateral Force:");
-            _cameraXLabel = CreateStatLabel("Cam X:");
-            _cameraYLabel = CreateStatLabel("Cam Y:");
-            _cameraZLabel = CreateStatLabel("Cam Z:");
+            var transformSection = CreateSection("Transform");
+            CreateTwoColumnRow(transformSection,
+                ("Position X", "pos_x", s_StatsRowColor1),
+                (Units.GetDistanceUnitsSuffix(), null, null));
+            CreateTwoColumnRow(transformSection,
+                ("Position Y", "pos_y", s_StatsRowColor2),
+                (Units.GetDistanceUnitsSuffix(), null, null));
+            CreateTwoColumnRow(transformSection,
+                ("Position Z", "pos_z", s_StatsRowColor1),
+                (Units.GetDistanceUnitsSuffix(), null, null));
 
-            container.Add(_xLabel);
-            container.Add(_yLabel);
-            container.Add(_zLabel);
-            container.Add(_rollLabel);
-            container.Add(_pitchLabel);
-            container.Add(_yawLabel);
-            container.Add(_velocityLabel);
-            container.Add(_normalForceLabel);
-            container.Add(_lateralForceLabel);
-            container.Add(_cameraXLabel);
-            container.Add(_cameraYLabel);
-            container.Add(_cameraZLabel);
+            CreateTwoColumnRow(transformSection,
+                ("Roll", "roll", s_StatsRowColor2),
+                (Units.GetAngleUnitsSuffix(), null, null));
+            CreateTwoColumnRow(transformSection,
+                ("Pitch", "pitch", s_StatsRowColor1),
+                (Units.GetAngleUnitsSuffix(), null, null));
+            CreateTwoColumnRow(transformSection,
+                ("Yaw", "yaw", s_StatsRowColor2),
+                (Units.GetAngleUnitsSuffix(), null, null));
+
+            CreateTwoColumnRow(transformSection,
+                ("Velocity", "velocity", s_StatsRowColor1),
+                (Units.GetSpeedUnitsSuffix(), null, null));
+            container.Add(transformSection);
+
+            var forcesSection = CreateSection("Properties");
+            CreateTwoColumnRow(forcesSection,
+                ("Pivot", "pivot", s_StatsRowColor2),
+                ("", null, null));
+            CreateTwoColumnRow(forcesSection,
+                ("Roll Speed", "roll_speed", s_StatsRollSpeedColor),
+                (Units.GetAnglePerTimeSuffix(), null, null));
+
+            CreateTwoColumnRow(forcesSection,
+                ("Pitch Speed", "pitch_speed", s_StatsPitchSpeedColor),
+                (Units.GetAnglePerTimeSuffix(), null, null));
+
+            CreateTwoColumnRow(forcesSection,
+                ("Yaw Speed", "yaw_speed", s_StatsYawSpeedColor),
+                (Units.GetAnglePerTimeSuffix(), null, null));
+
+            CreateTwoColumnRow(forcesSection,
+                ("Normal Force", "normal_force", s_StatsNormalForceColor),
+                ("(G)", null, null));
+
+            CreateTwoColumnRow(forcesSection,
+                ("Lateral Force", "lateral_force", s_StatsLateralForceColor),
+                ("(G)", null, null));
+
+            container.Add(forcesSection);
+
+            var cameraSection = CreateSection("Camera");
+            CreateTwoColumnRow(cameraSection,
+                ("Position X", "cam_x", s_StatsRowColor1),
+                (Units.GetDistanceUnitsSuffix(), null, null));
+            CreateTwoColumnRow(cameraSection,
+                ("Position Y", "cam_y", s_StatsRowColor2),
+                (Units.GetDistanceUnitsSuffix(), null, null));
+            CreateTwoColumnRow(cameraSection,
+                ("Position Z", "cam_z", s_StatsRowColor1),
+                (Units.GetDistanceUnitsSuffix(), null, null));
+            container.Add(cameraSection);
 
             _statsOverlay.Add(container);
 
@@ -99,14 +143,179 @@ namespace KexEdit.UI {
             gameView?.Add(_statsOverlay);
         }
 
-        private Label CreateStatLabel(string labelText) {
-            var label = new Label(labelText) {
+        private VisualElement CreateSection(string title) {
+            var section = new VisualElement {
+                name = title,
                 style = {
-                    color = new Color(0.8f, 0.8f, 0.8f),
-                    fontSize = 12,
+                    marginBottom = 10f,
                 }
             };
-            return label;
+
+            var header = new Label(title) {
+                style = {
+                    fontSize = 12,
+                    color = s_MutedTextColor,
+                    marginBottom = 6f,
+                    unityFontStyleAndWeight = FontStyle.Bold,
+                }
+            };
+            section.Add(header);
+
+            var content = new VisualElement {
+                name = title + "_content",
+                style = {
+                    backgroundColor = new Color(0.05f, 0.05f, 0.05f, 0.4f),
+                    borderTopLeftRadius = 4f,
+                    borderTopRightRadius = 4f,
+                    borderBottomLeftRadius = 4f,
+                    borderBottomRightRadius = 4f,
+                    paddingTop = 6f,
+                    paddingBottom = 6f,
+                    paddingLeft = 8f,
+                    paddingRight = 8f,
+                }
+            };
+            section.Add(content);
+
+            return section;
+        }
+
+        private void CreateThreeColumnRow(VisualElement parent,
+            (string label, string key, Color? color) col1,
+            (string label, string key, Color? color) col2,
+            (string label, string key, Color? color) col3) {
+
+            var row = new VisualElement {
+                style = {
+                    flexDirection = FlexDirection.Row,
+                    justifyContent = Justify.SpaceBetween,
+                    marginBottom = 3f,
+                }
+            };
+
+            var content = parent.Q<VisualElement>(parent.name + "_content");
+
+            CreateCompactLabelValue(row, col1.label, col1.key, col1.color ?? s_TextColor, 75f);
+            CreateCompactLabelValue(row, col2.label, col2.key, col2.color ?? s_TextColor, 75f);
+            CreateCompactLabelValue(row, col3.label, col3.key, col3.color ?? s_TextColor, 75f);
+
+            content.Add(row);
+        }
+
+        private void CreateSingleRow(VisualElement parent, string label, string key, Color color) {
+            var row = new VisualElement {
+                style = {
+                    flexDirection = FlexDirection.Row,
+                    marginBottom = 3f,
+                }
+            };
+
+            var content = parent.Q<VisualElement>(parent.name + "_content");
+
+            var labelEl = new Label(label) {
+                style = {
+                    fontSize = 12,
+                    color = s_MutedTextColor,
+                    marginRight = 8f,
+                }
+            };
+            row.Add(labelEl);
+
+            var value = new Label("--") {
+                style = {
+                    fontSize = 12,
+                    color = color,
+                    unityFont = Font.CreateDynamicFontFromOSFont("Consolas", 12),
+                    unityTextAlign = TextAnchor.MiddleRight,
+                    minWidth = 60f,
+                }
+            };
+            _valueLabels[key] = value;
+            row.Add(value);
+
+            content.Add(row);
+        }
+
+        private void CreateTwoColumnRow(VisualElement parent,
+            (string label, string key, Color? color) col1,
+            (string suffix, string key, Color? color) col2) {
+
+            var row = new VisualElement {
+                style = {
+                    flexDirection = FlexDirection.Row,
+                    marginBottom = 3f,
+                }
+            };
+
+            var content = parent.Q<VisualElement>(parent.name + "_content");
+
+            var labelEl = new Label(col1.label) {
+                style = {
+                    fontSize = 12,
+                    color = col1.color ?? s_MutedTextColor,
+                    width = 85f,
+                }
+            };
+            row.Add(labelEl);
+
+            if (col1.key != null) {
+                var value = new Label("--") {
+                    style = {
+                        fontSize = 12,
+                        color = col1.color ?? s_TextColor,
+                        unityFont = Font.CreateDynamicFontFromOSFont("Consolas", 12),
+                        width = 75f,
+                        unityTextAlign = TextAnchor.MiddleRight,
+                    }
+                };
+                _valueLabels[col1.key] = value;
+                row.Add(value);
+            }
+
+            if (!string.IsNullOrEmpty(col2.suffix)) {
+                var suffix = new Label(col2.suffix) {
+                    style = {
+                        fontSize = 12,
+                        color = s_MutedTextColor,
+                        marginLeft = 4f,
+                    }
+                };
+                row.Add(suffix);
+            }
+
+            content.Add(row);
+        }
+
+        private void CreateCompactLabelValue(VisualElement parent, string label, string key, Color color, float width) {
+            var container = new VisualElement {
+                style = {
+                    flexDirection = FlexDirection.Row,
+                    width = width,
+                }
+            };
+
+            var labelEl = new Label(label + ":") {
+                style = {
+                    fontSize = 12,
+                    color = s_MutedTextColor,
+                    marginRight = 4f,
+                }
+            };
+            container.Add(labelEl);
+
+            var value = new Label("--") {
+                style = {
+                    fontSize = 12,
+                    color = color,
+                    unityFont = Font.CreateDynamicFontFromOSFont("Consolas", 12),
+                    unityTextAlign = TextAnchor.MiddleRight,
+                    flexGrow = 1,
+                }
+            };
+            _valueLabels[key] = value;
+            container.Add(value);
+
+            parent.Add(container);
         }
 
         protected override void OnUpdate() {
@@ -119,127 +328,69 @@ namespace KexEdit.UI {
 
             if (!_isVisible) return;
 
-            var (cartEntity, cart) = GetActiveCart();
-            bool hasValidCart = cartEntity != Entity.Null &&
-                               cart.Section != Entity.Null &&
-                               SystemAPI.Exists(cart.Section) &&
-                               SystemAPI.HasBuffer<Point>(cart.Section);
+            UpdatePivotLabel();
 
-            if (!hasValidCart) {
+            var (trainEntity, follower) = GetActiveTrain();
+            bool hasValidTrain = trainEntity != Entity.Null &&
+                               follower.Section != Entity.Null &&
+                               SystemAPI.Exists(follower.Section) &&
+                               SystemAPI.HasBuffer<Point>(follower.Section);
+
+            if (!hasValidTrain) {
                 ShowNoStatsMessage();
                 return;
             }
 
-            var pointBuffer = SystemAPI.GetBuffer<Point>(cart.Section);
+            var pointBuffer = SystemAPI.GetBuffer<Point>(follower.Section);
             if (pointBuffer.Length == 0) {
                 ShowNoStatsMessage();
                 return;
             }
 
-            PointData currentPoint = GetInterpolatedPoint(pointBuffer, cart.Position);
+            bool hasReadOnlyForces = SystemAPI.HasBuffer<ReadNormalForce>(follower.Section) &&
+                                   SystemAPI.HasBuffer<ReadLateralForce>(follower.Section);
 
-            if (!PointsEqual(currentPoint, _lastPoint)) {
-                _lastPoint = currentPoint;
-                UpdateLabels(currentPoint);
+            if (hasReadOnlyForces) {
+                GetInterpolatedPointWithReadOnlyForces(ref _interpolatedPoint, pointBuffer, follower.Section, follower.Index);
+            } else {
+                GetInterpolatedPoint(ref _interpolatedPoint, pointBuffer, follower.Index);
+            }
+
+            bool pointChanged = !PointsEqual(_interpolatedPoint, _lastPoint);
+            if (pointChanged) {
+                _lastPoint = _interpolatedPoint;
+                UpdateLabels(_interpolatedPoint);
             }
 
             UpdateCameraLabels();
         }
 
-        private (Entity cartEntity, Cart cart) GetActiveCart() {
-            foreach (var (cartComponent, entity) in SystemAPI.Query<Cart>().WithEntityAccess()) {
-                if (cartComponent.Enabled && !cartComponent.Kinematic) {
-                    return (entity, cartComponent);
-                }
+        private void UpdateLabels(PointData point) {
+            UpdateLabelIfChanged("pos_x", StatsFormatter.FormatPositionX(point.Position.x));
+            UpdateLabelIfChanged("pos_y", StatsFormatter.FormatPositionY(point.Position.y));
+            UpdateLabelIfChanged("pos_z", StatsFormatter.FormatPositionZ(point.Position.z));
+
+            UpdateLabelIfChanged("roll", StatsFormatter.FormatRoll(point.Roll));
+            UpdateLabelIfChanged("pitch", StatsFormatter.FormatPitch(point.GetPitch()));
+            UpdateLabelIfChanged("yaw", StatsFormatter.FormatYaw(point.GetYaw()));
+
+            UpdateLabelIfChanged("velocity", StatsFormatter.FormatVelocity(point.Velocity));
+
+            float pitchSpeed = math.radians(point.PitchFromLast * HZ);
+            float yawSpeed = math.radians(point.YawFromLast * HZ);
+
+            UpdateLabelIfChanged("roll_speed", StatsFormatter.FormatRollSpeed(point.RollSpeed));
+            UpdateLabelIfChanged("pitch_speed", StatsFormatter.FormatPitchSpeed(pitchSpeed));
+            UpdateLabelIfChanged("yaw_speed", StatsFormatter.FormatYawSpeed(yawSpeed));
+            UpdateLabelIfChanged("normal_force", StatsFormatter.FormatNormalForce(point.NormalForce));
+            UpdateLabelIfChanged("lateral_force", StatsFormatter.FormatLateralForce(point.LateralForce));
+        }
+
+        private void UpdateLabelIfChanged(string key, string newValue) {
+            if (!_cachedStrings.TryGetValue(key, out var cachedValue) || cachedValue != newValue) {
+                _cachedStrings[key] = newValue;
+                _valueLabels[key].text = newValue;
             }
-            return (Entity.Null, default);
-        }
-
-        private PointData GetInterpolatedPoint(DynamicBuffer<Point> points, float position) {
-            position = math.clamp(position, 0f, points.Length - 1f);
-            int frontIndex = (int)math.floor(position);
-            float t = position - frontIndex;
-
-            if (frontIndex >= points.Length - 1) {
-                return points[^1].Value;
-            }
-
-            if (t < 0.001f) {
-                return points[frontIndex].Value;
-            }
-
-            PointData frontPoint = points[frontIndex].Value;
-            PointData backPoint = points[frontIndex + 1].Value;
-
-            return new PointData {
-                Position = math.lerp(frontPoint.Position, backPoint.Position, t),
-                Direction = math.normalize(math.lerp(frontPoint.Direction, backPoint.Direction, t)),
-                Lateral = math.normalize(math.lerp(frontPoint.Lateral, backPoint.Lateral, t)),
-                Normal = math.normalize(math.lerp(frontPoint.Normal, backPoint.Normal, t)),
-                Roll = math.lerp(frontPoint.Roll, backPoint.Roll, t),
-                Velocity = math.lerp(frontPoint.Velocity, backPoint.Velocity, t),
-                NormalForce = math.lerp(frontPoint.NormalForce, backPoint.NormalForce, t),
-                LateralForce = math.lerp(frontPoint.LateralForce, backPoint.LateralForce, t),
-                Energy = math.lerp(frontPoint.Energy, backPoint.Energy, t),
-                Heart = math.lerp(frontPoint.Heart, backPoint.Heart, t),
-                Friction = math.lerp(frontPoint.Friction, backPoint.Friction, t),
-                Resistance = math.lerp(frontPoint.Resistance, backPoint.Resistance, t),
-                Facing = frontPoint.Facing
-            };
-        }
-
-        private bool PointsEqual(PointData a, PointData b) {
-            return math.abs(a.Position.x - b.Position.x) < 0.01f &&
-                   math.abs(a.Position.y - b.Position.y) < 0.01f &&
-                   math.abs(a.Position.z - b.Position.z) < 0.01f &&
-                   math.abs(a.Roll - b.Roll) < 0.1f &&
-                   math.abs(a.Velocity - b.Velocity) < 0.01f &&
-                   math.abs(a.NormalForce - b.NormalForce) < 0.001f &&
-                   math.abs(a.LateralForce - b.LateralForce) < 0.001f;
-        }
-
-        private void ShowNoStatsMessage() {
-            _xLabel.text = "No stats available";
-            _yLabel.text = "";
-            _zLabel.text = "";
-            _rollLabel.text = "";
-            _pitchLabel.text = "";
-            _yawLabel.text = "";
-            _velocityLabel.text = "";
-            _normalForceLabel.text = "";
-            _lateralForceLabel.text = "";
-            _cameraXLabel.text = "";
-            _cameraYLabel.text = "";
-            _cameraZLabel.text = "";
-        }
-
-        private unsafe void UpdateLabels(PointData point) {
-            _xLabel.text = FormatValue("X: ", Units.DistanceToDisplay(point.Position.x), "F2", Units.GetDistanceUnitsString());
-            _xLabel.MarkDirtyRepaint();
-
-            _yLabel.text = FormatValue("Y: ", Units.DistanceToDisplay(point.Position.y), "F2", Units.GetDistanceUnitsString());
-            _yLabel.MarkDirtyRepaint();
-
-            _zLabel.text = FormatValue("Z: ", Units.DistanceToDisplay(point.Position.z), "F2", Units.GetDistanceUnitsString());
-            _zLabel.MarkDirtyRepaint();
-
-            _rollLabel.text = FormatValue("Roll: ", Units.AngleToDisplay(point.Roll), "F1", Units.GetAngleUnitsString());
-            _rollLabel.MarkDirtyRepaint();
-
-            _pitchLabel.text = FormatValue("Pitch: ", Units.AngleToDisplay(point.GetPitch()), "F1", Units.GetAngleUnitsString());
-            _pitchLabel.MarkDirtyRepaint();
-
-            _yawLabel.text = FormatValue("Yaw: ", Units.AngleToDisplay(point.GetYaw()), "F1", Units.GetAngleUnitsString());
-            _yawLabel.MarkDirtyRepaint();
-
-            _velocityLabel.text = FormatValue("Velocity: ", Units.SpeedToDisplay(point.Velocity), "F2", Units.GetSpeedUnitsString());
-            _velocityLabel.MarkDirtyRepaint();
-
-            _normalForceLabel.text = FormatValue("Normal Force: ", point.NormalForce, "F2", "G");
-            _normalForceLabel.MarkDirtyRepaint();
-
-            _lateralForceLabel.text = FormatValue("Lateral Force: ", point.LateralForce, "F2", "G");
-            _lateralForceLabel.MarkDirtyRepaint();
         }
 
         private void UpdateCameraLabels() {
@@ -250,43 +401,227 @@ namespace KexEdit.UI {
 
             var cameraPosition = _camera.transform.position;
 
-            _cameraXLabel.text = FormatValue("Cam X: ", Units.DistanceToDisplay(cameraPosition.x), "F2", Units.GetDistanceUnitsString());
-            _cameraXLabel.MarkDirtyRepaint();
-
-            _cameraYLabel.text = FormatValue("Cam Y: ", Units.DistanceToDisplay(cameraPosition.y), "F2", Units.GetDistanceUnitsString());
-            _cameraYLabel.MarkDirtyRepaint();
-
-            _cameraZLabel.text = FormatValue("Cam Z: ", Units.DistanceToDisplay(cameraPosition.z), "F2", Units.GetDistanceUnitsString());
-            _cameraZLabel.MarkDirtyRepaint();
+            if (math.distance(cameraPosition, _lastCameraPosition) > 0.01f) {
+                _lastCameraPosition = cameraPosition;
+                UpdateLabelIfChanged("cam_x", StatsFormatter.FormatCameraX(cameraPosition.x));
+                UpdateLabelIfChanged("cam_y", StatsFormatter.FormatCameraY(cameraPosition.y));
+                UpdateLabelIfChanged("cam_z", StatsFormatter.FormatCameraZ(cameraPosition.z));
+            }
         }
 
-        private unsafe string FormatValue(string prefix, float value, string format, string suffix = "") {
-            string pooledString = s_StringPool[s_PoolIndex];
-            s_PoolIndex = (s_PoolIndex + 1) % s_StringPool.Length;
+        private void UpdatePivotLabel() {
+            if (!SystemAPI.TryGetSingleton<ReadPivot>(out var readPivot)) return;
 
-            Span<char> buffer = stackalloc char[64];
-            int pos = 0;
+            float offset = readPivot.Offset;
 
-            prefix.AsSpan().CopyTo(buffer[pos..]);
-            pos += prefix.Length;
+            string currentStyle = Preferences.CurrentTrainStyle;
+            bool styleChanged = _cachedTrainStyle != currentStyle;
+            bool offsetChanged = float.IsNaN(_lastPivotOffset) || math.abs(offset - _lastPivotOffset) > 0.001f;
 
-            if (!value.TryFormat(buffer[pos..], out int charsWritten, format)) return $"{prefix}0.00 {suffix}";
-            pos += charsWritten;
+            if (!styleChanged && !offsetChanged) return;
 
-            if (suffix.Length > 0) {
-                buffer[pos++] = ' ';
-                suffix.AsSpan().CopyTo(buffer[pos..]);
-                pos += suffix.Length;
-            }
+            _lastPivotOffset = offset;
+            UpdateTrainConfigCache();
 
-            fixed (char* pooledPtr = pooledString) {
-                for (int i = 0; i < pos; i++) {
-                    pooledPtr[i] = buffer[i];
+            string pivotText = GetPivotText(offset);
+            UpdateLabelIfChanged("pivot", pivotText);
+        }
+
+        private void UpdateTrainConfigCache() {
+            string currentStyle = Preferences.CurrentTrainStyle;
+
+            if (_cachedTrainStyle != currentStyle || _cachedTrainConfig == null) {
+                _cachedTrainStyle = currentStyle;
+                _cachedTrainConfig = TrainStyleResourceLoader.LoadConfig(currentStyle);
+
+                if (_cachedTrainConfig != null) {
+                    int carCount = TrainCarCountPreferences.GetCarCount(currentStyle, _cachedTrainConfig.CarCount);
+                    _cachedTrainConfig.CarCount = carCount;
+                    _cachedCarCount = carCount;
+
+                    for (int i = 0; i < math.min(carCount, MaxCars); i++) {
+                        _cachedCarOffsets[i] = TrainCarPositionCalculator.GetCarOffsetFromIndex(i, carCount, _cachedTrainConfig.CarSpacing);
+                    }
                 }
-                pooledPtr[pos] = '\0';
+            } else {
+                int currentCarCount = TrainCarCountPreferences.GetCarCount(currentStyle, _cachedTrainConfig.CarCount);
+                if (currentCarCount != _cachedCarCount) {
+                    _cachedCarCount = currentCarCount;
+                    _cachedTrainConfig.CarCount = currentCarCount;
+
+                    for (int i = 0; i < math.min(currentCarCount, MaxCars); i++) {
+                        _cachedCarOffsets[i] = TrainCarPositionCalculator.GetCarOffsetFromIndex(i, currentCarCount, _cachedTrainConfig.CarSpacing);
+                    }
+                }
+            }
+        }
+
+        private string GetPivotText(float offset) {
+            if (_cachedTrainConfig == null) return CenterString;
+
+            int carCount = _cachedCarCount;
+
+            if (carCount == 1 && math.abs(offset) < 0.001f) {
+                return StatsStringPool.GetCarString(1);
             }
 
-            return pooledString;
+            if (carCount > 1 && math.abs(offset) < 0.001f) {
+                return CenterString;
+            }
+
+            for (int i = 0; i < math.min(carCount, MaxCars); i++) {
+                if (math.abs(offset - _cachedCarOffsets[i]) < 0.001f) {
+                    return StatsStringPool.GetCarString(i + 1);
+                }
+            }
+
+            return FormatOffset(offset);
+        }
+
+        private string FormatOffset(float offset) {
+            float displayOffset = Units.DistanceToDisplay(offset);
+            return StatsStringPool.GetDecimalTwo(displayOffset);
+        }
+
+        private void ShowNoStatsMessage() {
+            string nullValue = StatsStringPool.GetNull();
+            foreach (var kvp in _valueLabels) {
+                UpdateLabelIfChanged(kvp.Key, nullValue);
+            }
+            _lastPivotOffset = float.NaN;
+        }
+
+        private (Entity trainEntity, TrackFollower follower) GetActiveTrain() {
+            foreach (var (train, trackFollower, entity) in SystemAPI.Query<Train, TrackFollower>().WithEntityAccess()) {
+                if (train.Enabled && !train.Kinematic) {
+                    return (entity, trackFollower);
+                }
+            }
+            return (Entity.Null, default);
+        }
+
+        private void GetInterpolatedPoint(ref PointData result, DynamicBuffer<Point> points, float position) {
+            position = math.clamp(position, 0f, points.Length - 1f);
+            int frontIndex = (int)math.floor(position);
+            float t = position - frontIndex;
+
+            if (frontIndex >= points.Length - 1) {
+                result = points[^1].Value;
+                return;
+            }
+
+            if (t < 0.001f) {
+                result = points[frontIndex].Value;
+                return;
+            }
+
+            PointData frontPoint = points[frontIndex].Value;
+            PointData backPoint = points[frontIndex + 1].Value;
+
+            result.Position = math.lerp(frontPoint.Position, backPoint.Position, t);
+            result.Direction = math.normalize(math.lerp(frontPoint.Direction, backPoint.Direction, t));
+            result.Lateral = math.normalize(math.lerp(frontPoint.Lateral, backPoint.Lateral, t));
+            result.Normal = math.normalize(math.lerp(frontPoint.Normal, backPoint.Normal, t));
+            result.Roll = math.lerp(frontPoint.Roll, backPoint.Roll, t);
+            result.Velocity = math.lerp(frontPoint.Velocity, backPoint.Velocity, t);
+            result.NormalForce = math.lerp(frontPoint.NormalForce, backPoint.NormalForce, t);
+            result.LateralForce = math.lerp(frontPoint.LateralForce, backPoint.LateralForce, t);
+            result.RollSpeed = math.lerp(frontPoint.RollSpeed, backPoint.RollSpeed, t);
+            result.PitchFromLast = math.lerp(frontPoint.PitchFromLast, backPoint.PitchFromLast, t);
+            result.YawFromLast = math.lerp(frontPoint.YawFromLast, backPoint.YawFromLast, t);
+            result.Energy = math.lerp(frontPoint.Energy, backPoint.Energy, t);
+            result.Heart = math.lerp(frontPoint.Heart, backPoint.Heart, t);
+            result.Friction = math.lerp(frontPoint.Friction, backPoint.Friction, t);
+            result.Resistance = math.lerp(frontPoint.Resistance, backPoint.Resistance, t);
+            result.Facing = frontPoint.Facing;
+        }
+
+        private void GetInterpolatedPointWithReadOnlyForces(ref PointData result, DynamicBuffer<Point> points, Entity section, float position) {
+            position = math.clamp(position, 0f, points.Length - 1f);
+            int frontIndex = (int)math.floor(position);
+            float t = position - frontIndex;
+
+            if (frontIndex >= points.Length - 1) {
+                result = points[^1].Value;
+                if (SystemAPI.HasBuffer<ReadNormalForce>(section)) {
+                    var normalForces = SystemAPI.GetBuffer<ReadNormalForce>(section);
+                    if (normalForces.Length > 0 && frontIndex < normalForces.Length) {
+                        result.NormalForce = normalForces[math.min(frontIndex, normalForces.Length - 1)].Value;
+                    }
+                }
+                if (SystemAPI.HasBuffer<ReadLateralForce>(section)) {
+                    var lateralForces = SystemAPI.GetBuffer<ReadLateralForce>(section);
+                    if (lateralForces.Length > 0 && frontIndex < lateralForces.Length) {
+                        result.LateralForce = lateralForces[math.min(frontIndex, lateralForces.Length - 1)].Value;
+                    }
+                }
+                return;
+            }
+
+            if (t < 0.001f) {
+                result = points[frontIndex].Value;
+                if (SystemAPI.HasBuffer<ReadNormalForce>(section)) {
+                    var normalForces = SystemAPI.GetBuffer<ReadNormalForce>(section);
+                    if (normalForces.Length > frontIndex) {
+                        result.NormalForce = normalForces[frontIndex].Value;
+                    }
+                }
+                if (SystemAPI.HasBuffer<ReadLateralForce>(section)) {
+                    var lateralForces = SystemAPI.GetBuffer<ReadLateralForce>(section);
+                    if (lateralForces.Length > frontIndex) {
+                        result.LateralForce = lateralForces[frontIndex].Value;
+                    }
+                }
+                return;
+            }
+
+            PointData frontPoint = points[frontIndex].Value;
+            PointData backPoint = points[frontIndex + 1].Value;
+
+            if (SystemAPI.HasBuffer<ReadNormalForce>(section)) {
+                var normalForces = SystemAPI.GetBuffer<ReadNormalForce>(section);
+                if (normalForces.Length > frontIndex + 1) {
+                    frontPoint.NormalForce = normalForces[frontIndex].Value;
+                    backPoint.NormalForce = normalForces[frontIndex + 1].Value;
+                }
+            }
+            if (SystemAPI.HasBuffer<ReadLateralForce>(section)) {
+                var lateralForces = SystemAPI.GetBuffer<ReadLateralForce>(section);
+                if (lateralForces.Length > frontIndex + 1) {
+                    frontPoint.LateralForce = lateralForces[frontIndex].Value;
+                    backPoint.LateralForce = lateralForces[frontIndex + 1].Value;
+                }
+            }
+
+            result.Position = math.lerp(frontPoint.Position, backPoint.Position, t);
+            result.Direction = math.normalize(math.lerp(frontPoint.Direction, backPoint.Direction, t));
+            result.Lateral = math.normalize(math.lerp(frontPoint.Lateral, backPoint.Lateral, t));
+            result.Normal = math.normalize(math.lerp(frontPoint.Normal, backPoint.Normal, t));
+            result.Roll = math.lerp(frontPoint.Roll, backPoint.Roll, t);
+            result.Velocity = math.lerp(frontPoint.Velocity, backPoint.Velocity, t);
+            result.NormalForce = math.lerp(frontPoint.NormalForce, backPoint.NormalForce, t);
+            result.LateralForce = math.lerp(frontPoint.LateralForce, backPoint.LateralForce, t);
+            result.RollSpeed = math.lerp(frontPoint.RollSpeed, backPoint.RollSpeed, t);
+            result.PitchFromLast = math.lerp(frontPoint.PitchFromLast, backPoint.PitchFromLast, t);
+            result.YawFromLast = math.lerp(frontPoint.YawFromLast, backPoint.YawFromLast, t);
+            result.Energy = math.lerp(frontPoint.Energy, backPoint.Energy, t);
+            result.Heart = math.lerp(frontPoint.Heart, backPoint.Heart, t);
+            result.Friction = math.lerp(frontPoint.Friction, backPoint.Friction, t);
+            result.Resistance = math.lerp(frontPoint.Resistance, backPoint.Resistance, t);
+            result.Facing = frontPoint.Facing;
+        }
+
+        private bool PointsEqual(PointData a, PointData b) {
+            return math.abs(a.Position.x - b.Position.x) < 0.01f &&
+                   math.abs(a.Position.y - b.Position.y) < 0.01f &&
+                   math.abs(a.Position.z - b.Position.z) < 0.01f &&
+                   math.abs(a.Roll - b.Roll) < 0.1f &&
+                   math.abs(a.Velocity - b.Velocity) < 0.01f &&
+                   math.abs(a.NormalForce - b.NormalForce) < 0.001f &&
+                   math.abs(a.LateralForce - b.LateralForce) < 0.001f &&
+                   math.abs(a.RollSpeed - b.RollSpeed) < 0.01f &&
+                   math.abs(a.PitchFromLast - b.PitchFromLast) < 0.01f &&
+                   math.abs(a.YawFromLast - b.YawFromLast) < 0.01f;
         }
     }
 }

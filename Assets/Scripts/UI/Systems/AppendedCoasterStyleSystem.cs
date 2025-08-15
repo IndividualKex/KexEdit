@@ -16,8 +16,9 @@ namespace KexEdit.UI {
             Entity editorCoaster = _editorCoasterQuery.GetSingletonEntity();
             if (!SystemAPI.HasComponent<TrackStyleSettingsReference>(editorCoaster)) return;
 
-            Entity editorStyleReference = SystemAPI.GetComponent<TrackStyleSettingsReference>(editorCoaster).Value;
-            if (editorStyleReference == Entity.Null) return;
+            Entity editorTrackStyleReference = SystemAPI.GetComponent<TrackStyleSettingsReference>(editorCoaster);
+            Entity editorTrainStyleReference = SystemAPI.GetComponent<TrainStyleReference>(editorCoaster);
+            if (editorTrackStyleReference == Entity.Null || editorTrainStyleReference == Entity.Null) return;
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
@@ -26,21 +27,36 @@ namespace KexEdit.UI {
                 .WithAll<AppendedCoasterTag>()
                 .WithEntityAccess()) {
 
-                bool needsStyleUpdate = false;
+                bool needsTrackStyleUpdate = false;
+                bool needsTrainStyleUpdate = false;
 
                 if (SystemAPI.HasComponent<TrackStyleSettingsReference>(entity)) {
-                    Entity currentStyleReference = SystemAPI.GetComponent<TrackStyleSettingsReference>(entity).Value;
-                    if (currentStyleReference != editorStyleReference) {
+                    Entity currentTrackStyleReference = SystemAPI.GetComponent<TrackStyleSettingsReference>(entity).Value;
+                    if (currentTrackStyleReference != editorTrackStyleReference) {
                         ecb.RemoveComponent<TrackStyleSettingsReference>(entity);
-                        needsStyleUpdate = true;
+                        needsTrackStyleUpdate = true;
                     }
                 }
                 else {
-                    needsStyleUpdate = true;
+                    needsTrackStyleUpdate = true;
                 }
 
-                if (needsStyleUpdate) {
-                    ecb.AddComponent(entity, new TrackStyleSettingsReference { Value = editorStyleReference });
+                if (SystemAPI.HasComponent<TrainStyleReference>(entity)) {
+                    Entity currentTrainStyleReference = SystemAPI.GetComponent<TrainStyleReference>(entity).Value;
+                    if (currentTrainStyleReference != editorTrainStyleReference) {
+                        ecb.RemoveComponent<TrainStyleReference>(entity);
+                        needsTrainStyleUpdate = true;
+                    }
+                }
+                else {
+                    needsTrainStyleUpdate = true;
+                }
+
+                if (needsTrackStyleUpdate) {
+                    ecb.AddComponent(entity, new TrackStyleSettingsReference { Value = editorTrackStyleReference });
+                }
+                if (needsTrainStyleUpdate) {
+                    ecb.AddComponent(entity, new TrainStyleReference { Value = editorTrainStyleReference });
                 }
             }
 

@@ -7,7 +7,7 @@ namespace KexEdit.UI {
         protected override void OnUpdate() {
             using var entitiesToLoad = new NativeList<Entity>(Allocator.Temp);
             foreach (var (meshReference, render, entity) in SystemAPI.Query<NodeMeshReference, Render>().WithEntityAccess()) {
-                if (meshReference.Loaded ||
+                if (meshReference.Requested ||
                     meshReference.FilePath.IsEmpty ||
                     meshReference.Value != Entity.Null) continue;
                 entitiesToLoad.Add(entity);
@@ -15,10 +15,10 @@ namespace KexEdit.UI {
 
             foreach (var entity in entitiesToLoad) {
                 ref var meshReference = ref SystemAPI.GetComponentRW<NodeMeshReference>(entity).ValueRW;
-                meshReference.Loaded = true;
+                meshReference.Requested = true;
                 string filePath = meshReference.FilePath.ToString();
                 if (filePath.EndsWith(".glb") || filePath.EndsWith(".gltf")) {
-                    ImportManager.ImportGltfFile(filePath, EntityManager, 0, result => {
+                    EntityImporter.ImportGltfFile(filePath, 0, result => {
                         if (!SystemAPI.HasComponent<NodeMeshReference>(entity)) return;
                         ref var meshReference = ref SystemAPI.GetComponentRW<NodeMeshReference>(entity).ValueRW;
                         meshReference.Value = result;
@@ -26,11 +26,12 @@ namespace KexEdit.UI {
                     });
                 }
                 else if (filePath.EndsWith(".obj")) {
-                    var result = ImportManager.ImportObjFile(filePath, EntityManager, 0);
-                    if (result != Entity.Null) {
+                    EntityImporter.ImportObjFile(filePath, 0, result => {
+                        if (!SystemAPI.HasComponent<NodeMeshReference>(entity)) return;
+                        ref var meshReference = ref SystemAPI.GetComponentRW<NodeMeshReference>(entity).ValueRW;
                         meshReference.Value = result;
                         EntityManager.AddComponentData(result, new NodeMesh { Node = entity });
-                    }
+                    });
                 }
                 else {
                     UnityEngine.Debug.LogError($"Unsupported file type: {filePath}");

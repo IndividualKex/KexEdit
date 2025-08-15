@@ -1,0 +1,18 @@
+{
+    "Name": "Classic",
+    "CarCount": 5,
+    "CarSpacing": 2.5,
+    "DefaultCar": {
+        "MeshPath": "StylizedCart.glb",
+        "WheelAssemblies": [
+            {
+                "MeshPath": "StylizedCart_FrontWheelAssembly.glb",
+                "Offset": 0.0
+            },
+            {
+                "MeshPath": "StylizedCart_BackWheelAssembly.glb",
+                "Offset": -1.5
+            }
+        ]
+    }
+}

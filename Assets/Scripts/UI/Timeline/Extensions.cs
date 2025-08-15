@@ -82,6 +82,11 @@ namespace KexEdit.UI.Timeline {
                 PropertyType.LateralForce => s_LateralForceCurveColor,
                 PropertyType.PitchSpeed => s_PitchSpeedCurveColor,
                 PropertyType.YawSpeed => s_YawSpeedCurveColor,
+                PropertyType.ReadNormalForce => s_NormalForceCurveColor,
+                PropertyType.ReadLateralForce => s_LateralForceCurveColor,
+                PropertyType.ReadPitchSpeed => s_PitchSpeedCurveColor,
+                PropertyType.ReadYawSpeed => s_YawSpeedCurveColor,
+                PropertyType.ReadRollSpeed => s_RollSpeedCurveColor,
                 _ => s_DefaultCurveColor
             };
         }
@@ -98,6 +103,11 @@ namespace KexEdit.UI.Timeline {
                 PropertyType.Friction => s_FrictionName,
                 PropertyType.Resistance => s_ResistanceName,
                 PropertyType.TrackStyle => s_TrackStyleName,
+                PropertyType.ReadNormalForce => s_NormalForceName,
+                PropertyType.ReadLateralForce => s_LateralForceName,
+                PropertyType.ReadPitchSpeed => s_PitchSpeedName,
+                PropertyType.ReadYawSpeed => s_YawSpeedName,
+                PropertyType.ReadRollSpeed => s_RollSpeedName,
                 _ => throw new System.ArgumentOutOfRangeException(nameof(propertyType), propertyType, "Unknown PropertyType")
             };
         }
@@ -187,54 +197,6 @@ namespace KexEdit.UI.Timeline {
             }
         }
 
-        public static void DrawCurvesReadOnly(
-            this Painter2D painter,
-            TimelineData data,
-            ValueBounds bounds,
-            PropertyData propertyData,
-            Rect rect
-        ) {
-            if (propertyData.Visible) return;
-
-            Color color = propertyData.Type.GetCurveColor();
-            color.a = 0.5f;
-
-            painter.strokeColor = color;
-            painter.lineWidth = CURVE_WIDTH;
-
-            float minX = data.TimeToPixel(0f);
-            float maxX = data.TimeToPixel(data.Duration);
-
-            const int step = 1;
-
-            painter.BeginPath();
-
-            for (int i = 1; i < propertyData.Values.Length - 1; i += step) {
-                int nextIndex = math.min(i + step, propertyData.Values.Length - 1);
-
-                float time = data.Times[i];
-                float nextTime = data.Times[nextIndex];
-
-                float startX = data.TimeToPixel(time);
-                float endX = data.TimeToPixel(nextTime);
-
-                if (startX < minX || endX > maxX) continue;
-
-                float value = propertyData.Values[i];
-                float nextValue = propertyData.Values[nextIndex];
-
-                float startY = bounds.ValueToPixel(value, rect.height);
-                float endY = bounds.ValueToPixel(nextValue, rect.height);
-
-                Vector2 currentStart = new(startX, startY);
-                Vector2 currentEnd = new(endX, endY);
-
-                painter.MoveTo(currentStart);
-                painter.LineTo(currentEnd);
-            }
-
-            painter.Stroke();
-        }
 
         public static void DrawBezierHandles(this Painter2D painter, TimelineData data, ValueBounds bounds, PropertyData propertyData, Rect rect) {
             for (int i = 0; i < propertyData.Keyframes.Count; i++) {
@@ -601,6 +563,87 @@ namespace KexEdit.UI.Timeline {
 
         public static IEnumerable<EasingType> EnumerateEasingTypes() {
             return s_EasingStringCache.Keys;
+        }
+        public static void DrawReadOnlyCurves(
+            this Painter2D painter,
+            TimelineData data,
+            ValueBounds bounds,
+            ReadOnlyPropertyData propertyData,
+            Rect rect
+        ) {
+            if (propertyData.Values.Length == 0) return;
+
+            Color color = propertyData.Type.GetCurveColor();
+            color.a = 0.7f;
+            painter.strokeColor = color;
+            painter.lineWidth = CURVE_WIDTH;
+
+            float minX = data.TimeToPixel(0f);
+            float maxX = data.TimeToPixel(data.Duration);
+
+            const float dashLength = 4f;
+            const float gapLength = 3f;
+            const float minPixelDistance = 8f;
+
+            painter.BeginPath();
+
+            float lastDrawnX = float.MinValue;
+            int lastDrawnIndex = -1;
+
+            for (int i = 0; i < propertyData.Values.Length - 1; i++) {
+                float time = propertyData.Times[i];
+                float x1 = data.TimeToPixel(time);
+
+                if (lastDrawnIndex >= 0 && math.abs(x1 - lastDrawnX) < minPixelDistance) {
+                    continue;
+                }
+
+                int nextIndex = i + 1;
+                float x2 = data.TimeToPixel(propertyData.Times[nextIndex]);
+
+                while (nextIndex < propertyData.Values.Length - 1 &&
+                       math.abs(x2 - x1) < minPixelDistance) {
+                    nextIndex++;
+                    x2 = data.TimeToPixel(propertyData.Times[nextIndex]);
+                }
+
+                if (x2 < minX || x1 > maxX) continue;
+
+                float y1 = bounds.ValueToPixel(propertyData.Values[i], rect.height);
+                float y2 = bounds.ValueToPixel(propertyData.Values[nextIndex], rect.height);
+
+                Vector2 start = new(x1, y1);
+                Vector2 end = new(x2, y2);
+                float distance = Vector2.Distance(start, end);
+
+                if (distance > 0) {
+                    Vector2 direction = (end - start).normalized;
+
+                    float currentDistance = 0f;
+                    bool drawing = true;
+
+                    while (currentDistance < distance) {
+                        float segmentLength = drawing ? dashLength : gapLength;
+                        float endDistance = Mathf.Min(currentDistance + segmentLength, distance);
+
+                        if (drawing) {
+                            Vector2 segStart = start + direction * currentDistance;
+                            Vector2 segEnd = start + direction * endDistance;
+                            painter.MoveTo(segStart);
+                            painter.LineTo(segEnd);
+                        }
+
+                        currentDistance = endDistance;
+                        drawing = !drawing;
+                    }
+                }
+
+                lastDrawnX = x1;
+                lastDrawnIndex = i;
+                i = nextIndex - 1;
+            }
+
+            painter.Stroke();
         }
     }
 }
