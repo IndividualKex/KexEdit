@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using KexEdit.UI.Timeline;
-using Unity.Collections;
 using KexEdit.Serialization;
 
 namespace KexEdit.UI {
@@ -162,7 +161,7 @@ namespace KexEdit.UI {
                     submenu.AddItem("Invert Scroll", () => Preferences.InvertScroll = !Preferences.InvertScroll,
                         isChecked: Preferences.InvertScroll);
                     submenu.AddItem("Sensitivity...", ShowSensitivityDialog);
-                    
+
                     submenu.AddSeparator();
                     submenu.AddItem("Emulate Numpad", () => Preferences.EnableTopRowViewHotkeys = !Preferences.EnableTopRowViewHotkeys,
                         isChecked: Preferences.EnableTopRowViewHotkeys);
@@ -265,18 +264,18 @@ namespace KexEdit.UI {
                         trackSubmenu.AddSeparator();
                         trackSubmenu.AddItem("Open Folder", TrackStyleConfigManager.OpenTrackStylesFolder);
                     });
-                    submenu.AddSubmenu("Cart Style", cartSubmenu => {
-                        var availableConfigs = CartStyleConfigManager.GetAvailableConfigsWithNames();
-                        string currentConfigName = Preferences.CurrentCartStyle;
+                    submenu.AddSubmenu("Train Style", trainSubmenu => {
+                        var availableConfigs = TrainStyleConfigManager.GetAvailableConfigsWithNames();
+                        string currentConfigName = Preferences.CurrentTrainSTyle;
                         if (availableConfigs.Count > 0) {
                             foreach (var configInfo in availableConfigs) {
                                 bool isCurrentConfig = configInfo.fileName == currentConfigName;
-                                cartSubmenu.AddItem(configInfo.displayName, () => CartStyleConfigManager.LoadConfig(configInfo.fileName),
+                                trainSubmenu.AddItem(configInfo.displayName, () => TrainStyleConfigManager.LoadConfig(configInfo.fileName),
                                 isChecked: isCurrentConfig);
                             }
-                            cartSubmenu.AddSeparator();
+                            trainSubmenu.AddSeparator();
                         }
-                        cartSubmenu.AddItem("Open Folder", CartStyleConfigManager.OpenCartStylesFolder);
+                        trainSubmenu.AddItem("Open Folder", TrainStyleConfigManager.OpenTrainStylesFolder);
                     });
                     submenu.AddSubmenu("Background", envSubmenu => {
                         var currentSkyType = Preferences.SkyType;

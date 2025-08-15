@@ -2,32 +2,32 @@ using UnityEngine;
 using System.IO;
 
 namespace KexEdit.UI {
-    public static class CartStyleResourceLoader {
-        private static string CartStylePath => Path.Combine(Application.streamingAssetsPath, "CartStyles");
+    public static class TrainStyleResourceLoader {
+        private static string TrainStylePath => Path.Combine(Application.streamingAssetsPath, "TrainStyles");
 
-        public static CartStyleConfig LoadConfig(string configPath) {
+        public static TrainStyleConfig LoadConfig(string configPath) {
             if (string.IsNullOrEmpty(configPath)) {
-                Debug.LogWarning("Cart style config path is null or empty.");
+                Debug.LogWarning("Train style config path is null or empty.");
                 return null;
             }
 
-            string fullPath = Path.Combine(CartStylePath, configPath);
+            string fullPath = Path.Combine(TrainStylePath, configPath);
 
             if (!File.Exists(fullPath)) {
-                Debug.LogWarning($"Cart style config not found at {fullPath}.");
+                Debug.LogWarning($"Train style config not found at {fullPath}.");
                 return null;
             }
 
             try {
                 string configText = File.ReadAllText(fullPath);
                 if (string.IsNullOrEmpty(configText)) {
-                    Debug.LogWarning($"Cart style config at {fullPath} is empty.");
+                    Debug.LogWarning($"Train style config at {fullPath} is empty.");
                     return null;
                 }
 
-                var config = JsonUtility.FromJson<CartStyleConfig>(configText);
+                var config = JsonUtility.FromJson<TrainStyleConfig>(configText);
                 if (config == null) {
-                    Debug.LogWarning($"Failed to parse cart style config at {fullPath}.");
+                    Debug.LogWarning($"Failed to parse train style config at {fullPath}.");
                     return null;
                 }
 
@@ -35,7 +35,7 @@ namespace KexEdit.UI {
                 return config;
             }
             catch (System.Exception e) {
-                Debug.LogError($"Failed to load cart style config from {fullPath}: {e.Message}");
+                Debug.LogError($"Failed to load train style config from {fullPath}: {e.Message}");
                 return null;
             }
         }

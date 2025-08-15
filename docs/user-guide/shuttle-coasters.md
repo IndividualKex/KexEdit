@@ -13,7 +13,7 @@ Use path manipulation nodes to simulate realistic rollback behavior.
 
 1. **Build Layout** - Create your desired track using Geometric Sections
 2. **Set Distance Duration** - Use distance-based duration, extend until velocity reaches 0
-3. **Result** - Cart naturally slows and stops at the end
+3. **Result** - Train naturally slows and stops at the end
 
 ### Add Rollback Path
 
@@ -24,18 +24,18 @@ Use path manipulation nodes to simulate realistic rollback behavior.
 
 ### Result
 
-The cart follows the forward path, stops, then follows the reversed path backward with accurate physics.
+The train follows the forward path, stops, then follows the reversed path backward with accurate physics.
 
 ## Bonus: Vertical Spike
 
-Add a vertical spike that the cart doesn't follow but affects the track shape.
+Add a vertical spike that the train doesn't follow but affects the track shape.
 
 ### Create Spike Section
 
 1. **Add Geometric Section** - Connect to end of main track
 2. **Set Fixed Velocity** - Necessary for non-zero velocity
 3. **Extend Duration** - Controls spike length
-4. **Lower Priority** - Set to -1 so cart ignores this branch
+4. **Lower Priority** - Set to -1 so train ignores this branch
 
 ### Complete Shuttle
 

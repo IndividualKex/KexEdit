@@ -4,7 +4,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
-using KexEdit.UI;
 using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI.NodeGraph {
@@ -152,8 +151,8 @@ namespace KexEdit.UI.NodeGraph {
             InitializeNodes();
             InitializeEdges();
 
-            _content.transform.position = _data.Pan;
-            _content.transform.scale = new Vector3(_data.Zoom, _data.Zoom, 1f);
+            _content.style.translate = new Translate(_data.Pan.x, _data.Pan.y);
+            _content.style.scale = new Scale(new Vector3(_data.Zoom, _data.Zoom, 1f));
 
             foreach (var edge in _edges.Values) {
                 edge.Draw();
@@ -354,7 +353,7 @@ namespace KexEdit.UI.NodeGraph {
                 Vector2 delta = evt.localMousePosition - _startMousePosition;
                 delta = Preferences.AdjustPointerDelta(delta);
                 _data.Pan += delta;
-                _content.transform.position = _data.Pan;
+                _content.style.translate = new Translate(_data.Pan.x, _data.Pan.y);
                 _startMousePosition = evt.localMousePosition;
 
                 var e = this.GetPooled<NodeGraphPanChangeEvent>();
@@ -390,9 +389,9 @@ namespace KexEdit.UI.NodeGraph {
             float multiplier = zoomDelta > 0 ? 1.1f : 1f / 1.1f;
             _data.Zoom = Mathf.Clamp(_data.Zoom * Mathf.Pow(multiplier, Mathf.Abs(zoomDelta)), MIN_ZOOM, MAX_ZOOM);
 
-            _content.transform.scale = new Vector3(_data.Zoom, _data.Zoom, 1f);
+            _content.style.scale = new Scale(new Vector3(_data.Zoom, _data.Zoom, 1f));
             _data.Pan = mousePos - contentSpaceMousePos * _data.Zoom;
-            _content.transform.position = _data.Pan;
+            _content.style.translate = new Translate(_data.Pan.x, _data.Pan.y);
 
             var zoomEvent = this.GetPooled<NodeGraphZoomChangeEvent>();
             zoomEvent.Zoom = _data.Zoom;

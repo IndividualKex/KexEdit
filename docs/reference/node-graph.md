@@ -64,14 +64,14 @@ Transform or process track data without generating geometry.
 | Node Type        | Purpose                           | Inputs                      | Outputs |
 | ---------------- | --------------------------------- | --------------------------- | ------- |
 | **Anchor**       | All data for a single track point | Position, Roll, Pitch, etc. | Anchor  |
-| **Reverse**      | Reverse cart direction            | Anchor                      | Anchor  |
+| **Reverse**      | Reverse train direction            | Anchor                      | Anchor  |
 | **Reverse Path** | Reverse a generated track path    | Path                        | Path    |
 
 All track section nodes have an expandable panel with the following options:
 
 -   **Duration Type**: The argument used to define duration - either `Time` or `Distance` (if applicable)
 -   **Render**: Whether to render the track section in the game view
--   **Priority**: The priority of the track section. One node can be connected to multiple other nodes, but the cart will follow the highest priority path.
+-   **Priority**: The priority of the track section. One node can be connected to multiple other nodes, but the train will follow the highest priority path.
 
 ### Force Section
 

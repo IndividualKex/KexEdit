@@ -14,7 +14,7 @@
 -   **[Complete Circuits](user-guide/complete-circuits.md)** - Bridge nodes for closed loops
 -   **[Shuttle Coasters](user-guide/shuttle-coasters.md)** - Copy Path, Reverse, and Reverse Path nodes
 -   **[Custom Track Styles](user-guide/custom-track-styles.md)** - Custom track visual styles
--   **[Custom Cart Styles](user-guide/custom-cart-styles.md)** - Custom cart visual styles
+-   **[Custom Train Styles](user-guide/custom-train-styles.md)** - Custom train visual styles
 
 ## Reference
 

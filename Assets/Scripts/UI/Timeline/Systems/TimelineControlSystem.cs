@@ -141,9 +141,9 @@ namespace KexEdit.UI.Timeline {
             if (!Preferences.SyncPlayback || !_data.Active ||
                 SystemAPI.GetSingleton<PauseSingleton>().IsPaused) return;
 
-            foreach (var cart in SystemAPI.Query<Cart>()) {
-                if (cart.Enabled && !cart.Kinematic && cart.Section == _data.Entity) {
-                    float timelineTime = CartPositionToTime(cart.Position);
+            foreach (var train in SystemAPI.Query<Train>()) {
+                if (train.Enabled && !train.Kinematic && train.Section == _data.Entity) {
+                    float timelineTime = TrainPositionToTime(train.Position);
                     if (math.abs(_data.Time - timelineTime) > 1e-2f) {
                         _data.Time = math.clamp(timelineTime, 0f, _data.Duration);
                     }
@@ -155,13 +155,13 @@ namespace KexEdit.UI.Timeline {
         private void UpdatePlayhead() {
             if (!SystemAPI.HasSingleton<PlayheadGizmoReference>()) return;
             Entity playheadEntity = SystemAPI.GetSingleton<PlayheadGizmoReference>();
-            ref Cart playhead = ref SystemAPI.GetComponentRW<Cart>(playheadEntity).ValueRW;
+            ref Train playhead = ref SystemAPI.GetComponentRW<Train>(playheadEntity).ValueRW;
             playhead.Section = _data.Entity;
 
             bool isSynced = false;
             if (Preferences.SyncPlayback && _data.Active) {
-                foreach (var cart in SystemAPI.Query<Cart>()) {
-                    if (cart.Enabled && !cart.Kinematic && cart.Section == _data.Entity) {
+                foreach (var train in SystemAPI.Query<Train>()) {
+                    if (train.Enabled && !train.Kinematic && train.Section == _data.Entity) {
                         isSynced = true;
                         break;
                     }
@@ -827,46 +827,46 @@ namespace KexEdit.UI.Timeline {
             SetTime(evt.Time, evt.Snap);
 
             if (Preferences.SyncPlayback && _data.Active) {
-                foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
-                    if (cart.ValueRO.Enabled && !cart.ValueRO.Kinematic) {
-                        cart.ValueRW.Section = _data.Entity;
-                        cart.ValueRW.Position = TimeToCartPosition(_data.Time);
+                foreach (var (train, entity) in SystemAPI.Query<RefRW<Train>>().WithEntityAccess()) {
+                    if (train.ValueRO.Enabled && !train.ValueRO.Kinematic) {
+                        train.ValueRW.Section = _data.Entity;
+                        train.ValueRW.Position = TimeToTrainPosition(_data.Time);
                         break;
                     }
                 }
             }
         }
 
-        private float TimeToCartPosition(float time) {
+        private float TimeToTrainPosition(float time) {
             if (GetDurationType() == DurationType.Time) {
                 return time * HZ;
             }
 
             float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
-            return DistanceToCartPosition(anchorLength + time);
+            return DistanceToTrainPosition(anchorLength + time);
         }
 
-        private float CartPositionToTime(float cartPosition) {
-            if (cartPosition < 0f) {
+        private float TrainPositionToTime(float trainPosition) {
+            if (trainPosition < 0f) {
                 return 0f;
             }
 
             if (GetDurationType() == DurationType.Time) {
-                return cartPosition / HZ;
+                return trainPosition / HZ;
             }
 
             var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
             if (pointBuffer.Length < 2) return 0f;
 
-            int index = math.clamp((int)math.floor(cartPosition), 0, pointBuffer.Length - 2);
-            float t = cartPosition - index;
+            int index = math.clamp((int)math.floor(trainPosition), 0, pointBuffer.Length - 2);
+            float t = trainPosition - index;
 
             float distance = math.lerp(pointBuffer[index].Value.TotalLength, pointBuffer[index + 1].Value.TotalLength, t);
             float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
             return distance - anchorLength;
         }
 
-        private float DistanceToCartPosition(float targetDistance) {
+        private float DistanceToTrainPosition(float targetDistance) {
             if (targetDistance < 0f) {
                 return 0f;
             }
@@ -1513,7 +1513,7 @@ namespace KexEdit.UI.Timeline {
         private PointData GetPlayheadPoint() {
             if (!SystemAPI.HasSingleton<PlayheadGizmoReference>()) return PointData.Create();
             Entity playheadEntity = SystemAPI.GetSingleton<PlayheadGizmoReference>();
-            Cart playhead = SystemAPI.GetComponent<Cart>(playheadEntity);
+            Train playhead = SystemAPI.GetComponent<Train>(playheadEntity);
             float playheadPosition = playhead.Position;
             int index = (int)math.floor(playheadPosition);
             int nextIndex = index + 1;
@@ -1545,7 +1545,7 @@ namespace KexEdit.UI.Timeline {
                 }
                 else {
                     float targetDistance = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength + time;
-                    position = DistanceToCartPosition(targetDistance);
+                    position = DistanceToTrainPosition(targetDistance);
                 }
             }
             else {
@@ -1603,10 +1603,10 @@ namespace KexEdit.UI.Timeline {
                 SetTime(targetTime.Value, false);
 
                 if (Preferences.SyncPlayback && _data.Active) {
-                    foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
-                        if (cart.ValueRO.Enabled && !cart.ValueRO.Kinematic) {
-                            cart.ValueRW.Section = _data.Entity;
-                            cart.ValueRW.Position = TimeToCartPosition(_data.Time);
+                    foreach (var (train, entity) in SystemAPI.Query<RefRW<Train>>().WithEntityAccess()) {
+                        if (train.ValueRO.Enabled && !train.ValueRO.Kinematic) {
+                            train.ValueRW.Section = _data.Entity;
+                            train.ValueRW.Position = TimeToTrainPosition(_data.Time);
                             break;
                         }
                     }

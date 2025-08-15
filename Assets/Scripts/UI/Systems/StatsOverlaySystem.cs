@@ -119,24 +119,24 @@ namespace KexEdit.UI {
 
             if (!_isVisible) return;
 
-            var (cartEntity, cart) = GetActiveCart();
-            bool hasValidCart = cartEntity != Entity.Null &&
-                               cart.Section != Entity.Null &&
-                               SystemAPI.Exists(cart.Section) &&
-                               SystemAPI.HasBuffer<Point>(cart.Section);
+            var (trainEntity, train) = GetActiveTrain();
+            bool hasValidTrain = trainEntity != Entity.Null &&
+                               train.Section != Entity.Null &&
+                               SystemAPI.Exists(train.Section) &&
+                               SystemAPI.HasBuffer<Point>(train.Section);
 
-            if (!hasValidCart) {
+            if (!hasValidTrain) {
                 ShowNoStatsMessage();
                 return;
             }
 
-            var pointBuffer = SystemAPI.GetBuffer<Point>(cart.Section);
+            var pointBuffer = SystemAPI.GetBuffer<Point>(train.Section);
             if (pointBuffer.Length == 0) {
                 ShowNoStatsMessage();
                 return;
             }
 
-            PointData currentPoint = GetInterpolatedPoint(pointBuffer, cart.Position);
+            PointData currentPoint = GetInterpolatedPoint(pointBuffer, train.Position);
 
             if (!PointsEqual(currentPoint, _lastPoint)) {
                 _lastPoint = currentPoint;
@@ -146,10 +146,10 @@ namespace KexEdit.UI {
             UpdateCameraLabels();
         }
 
-        private (Entity cartEntity, Cart cart) GetActiveCart() {
-            foreach (var (cartComponent, entity) in SystemAPI.Query<Cart>().WithEntityAccess()) {
-                if (cartComponent.Enabled && !cartComponent.Kinematic) {
-                    return (entity, cartComponent);
+        private (Entity trainEntity, Train train) GetActiveTrain() {
+            foreach (var (trainComponent, entity) in SystemAPI.Query<Train>().WithEntityAccess()) {
+                if (trainComponent.Enabled && !trainComponent.Kinematic) {
+                    return (entity, trainComponent);
                 }
             }
             return (Entity.Null, default);

@@ -17,16 +17,16 @@ namespace KexEdit.UI {
                 ecb.AddComponent(playheadGizmoEntity, LocalTransform.Identity);
                 ecb.AddComponent<PlayheadGizmoReference>(entity, playheadGizmoEntity);
                 ecb.AddComponent<CoasterReference>(playheadGizmoEntity, entity);
-                ecb.AddComponent(playheadGizmoEntity, new Cart {
+                ecb.AddComponent(playheadGizmoEntity, new Train {
                     Position = 1f,
                     Enabled = true,
                     Kinematic = true
                 });
-                ecb.AddComponent(playheadGizmoEntity, new CartStyleReference {
+                ecb.AddComponent(playheadGizmoEntity, new TrainStyleReference {
                     StyleIndex = 0,
                     Version = 0
                 });
-                ecb.AddComponent(playheadGizmoEntity, new CartMeshReference());
+                ecb.AddComponent(playheadGizmoEntity, new TrainCarMeshReference());
                 ecb.AddComponent(playheadGizmoEntity, new RenderTag {
                     Type = RenderTagType.Playhead
                 });

@@ -3,15 +3,15 @@
 Real-time 3D preview with two camera modes: Orbit for overview navigation and Fly for free movement.
 
 ![Game View Overview](../images/game-view.png)
-_Game View interface showing track, carts, and playback controls_
+_Game View interface showing track, trains, and playback controls_
 
 ## Interface Elements
 
 The Game View displays:
 
 1. **Track** - Your roller coaster layout with real-time rendering
-2. **Main Cart** - Solid cart showing current simulation time
-3. **Playhead Cart** - Transparent cart indicating timeline playhead position (see [Timeline Reference](timeline.md))
+2. **Main Train** - Solid train showing current simulation time
+3. **Playhead Train** - Transparent train indicating timeline playhead position (see [Timeline Reference](timeline.md))
 4. **Playback Controls** - Play/pause, scrub bar, and time display
 5. **Grid** - Ground alignment grid (toggle with `F2`)
 6. **Stats Overlay** - Detailed simulation stats (toggle with `F3`)
@@ -72,7 +72,7 @@ Timeline controls appear at the bottom of the Game View.
 | ----- | ---------------- | ---------------------------- |
 | `R`   | Toggle Ride View | First-person camera on track |
 
-_Ride camera follows the cart along the track for rider's perspective._
+_Ride camera follows the train along the track for rider's perspective._
 
 ## Display Options
 

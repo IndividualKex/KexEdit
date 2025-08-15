@@ -74,12 +74,12 @@ namespace KexEdit.UI {
 
             if (_data.TotalLength <= 0f) return;
 
-            if (!GetActiveCart(out var cartEntity, out var cart) || cart.Section == Entity.Null) {
+            if (!GetActiveTrain(out var trainEntity, out var train) || train.Section == Entity.Null) {
                 _data.Progress = 0f;
                 return;
             }
 
-            float currentDistance = CalculateDistanceToSection(root, cart.Section) + cart.Position;
+            float currentDistance = CalculateDistanceToSection(root, train.Section) + train.Position;
             _data.Progress = _data.TotalLength > 0f ? currentDistance / _data.TotalLength : 0f;
         }
 
@@ -189,16 +189,16 @@ namespace KexEdit.UI {
             return distance;
         }
 
-        private bool GetActiveCart(out Entity cartEntity, out Cart cart) {
-            foreach (var (cartComponent, entity) in SystemAPI.Query<Cart>().WithEntityAccess()) {
-                if (cartComponent.Enabled && !cartComponent.Kinematic) {
-                    cartEntity = entity;
-                    cart = cartComponent;
+        private bool GetActiveTrain(out Entity trainEntity, out Train train) {
+            foreach (var (trainComponent, entity) in SystemAPI.Query<Train>().WithEntityAccess()) {
+                if (trainComponent.Enabled && !trainComponent.Kinematic) {
+                    trainEntity = entity;
+                    train = trainComponent;
                     return true;
                 }
             }
-            cartEntity = Entity.Null;
-            cart = default;
+            trainEntity = Entity.Null;
+            train = default;
             return false;
         }
 
@@ -211,15 +211,15 @@ namespace KexEdit.UI {
             if (root == Entity.Null || _data.TotalLength <= 0f) return;
 
             var targetDistance = _data.Progress * _data.TotalLength;
-            foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
-                if (cart.ValueRO.Enabled && !cart.ValueRO.Kinematic) {
-                    SetCartPosition(ref cart.ValueRW, root, targetDistance);
+            foreach (var (train, entity) in SystemAPI.Query<RefRW<Train>>().WithEntityAccess()) {
+                if (train.ValueRO.Enabled && !train.ValueRO.Kinematic) {
+                    SetTrainPosition(ref train.ValueRW, root, targetDistance);
                     break;
                 }
             }
         }
 
-        private void SetCartPosition(ref Cart cart, Entity start, float targetDistance) {
+        private void SetTrainPosition(ref Train train, Entity start, float targetDistance) {
             float currentDistance = 0f;
             Entity current = start;
             var processedEntities = new NativeHashSet<Entity>(16, Allocator.Temp);
@@ -232,8 +232,8 @@ namespace KexEdit.UI {
                     float sectionLength = points.Length;
 
                     if (currentDistance + sectionLength >= targetDistance) {
-                        cart.Section = current;
-                        cart.Position = Mathf.Clamp(targetDistance - currentDistance, 0f, points.Length - 1f);
+                        train.Section = current;
+                        train.Position = Mathf.Clamp(targetDistance - currentDistance, 0f, points.Length - 1f);
                         processedEntities.Dispose();
                         return;
                     }
@@ -252,9 +252,9 @@ namespace KexEdit.UI {
 
             processedEntities.Dispose();
 
-            if (cart.Section != Entity.Null && SystemAPI.HasBuffer<Point>(cart.Section)) {
-                var points = SystemAPI.GetBuffer<Point>(cart.Section);
-                cart.Position = points.Length - 1f;
+            if (train.Section != Entity.Null && SystemAPI.HasBuffer<Point>(train.Section)) {
+                var points = SystemAPI.GetBuffer<Point>(train.Section);
+                train.Position = points.Length - 1f;
             }
         }
     }
