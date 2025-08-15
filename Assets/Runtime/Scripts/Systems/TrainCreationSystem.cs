@@ -23,6 +23,7 @@ namespace KexEdit {
                     Kinematic = false,
                     CarCount = 1
                 });
+                ecb.AddBuffer<TrainCarReference>(trainEntity);
                 ecb.SetName(trainEntity, "Train");
 
                 var carEntity = ecb.CreateEntity();
@@ -45,6 +46,7 @@ namespace KexEdit {
                 });
                 ecb.AddComponent<CoasterReference>(carEntity, entity);
                 ecb.AddComponent(carEntity, new TrainCarMeshReference());
+                ecb.AppendToBuffer<TrainCarReference>(trainEntity, carEntity);
                 ecb.SetName(carEntity, "TrainCar_0");
             }
             ecb.Playback(EntityManager);

@@ -24,11 +24,20 @@ namespace KexEdit.UI {
             if (!SystemAPI.HasComponent<TrainReference>(editorCoaster)) return;
 
             Entity editorTrain = SystemAPI.GetComponent<TrainReference>(editorCoaster).Value;
-            if (editorTrain == Entity.Null) return;
-            if (!SystemAPI.HasComponent<TrainStyleReference>(editorTrain)) return;
+            if (editorTrain == Entity.Null || !SystemAPI.HasBuffer<TrainCarReference>(editorTrain)) return;
+
+            Entity editorTrainCar = Entity.Null;
+            var editorTrainCarBuffer = SystemAPI.GetBuffer<TrainCarReference>(editorTrain);
+            for (int i = 0; i < editorTrainCarBuffer.Length; i++) {
+                if (editorTrainCarBuffer[i] == Entity.Null ||
+                    !SystemAPI.HasComponent<TrainStyleReference>(editorTrainCarBuffer[i])) continue;
+                editorTrainCar = editorTrainCarBuffer[i];
+                break;
+            }
+            if (editorTrainCar == Entity.Null) return;
 
             var styleSettings = SystemAPI.ManagedAPI.GetSingleton<TrainStyleSettings>();
-            var editorTrainStyleRef = SystemAPI.GetComponent<TrainStyleReference>(editorTrain);
+            var editorTrainStyleRef = SystemAPI.GetComponent<TrainStyleReference>(editorTrainCar);
 
             if (editorTrainStyleRef.StyleIndex >= styleSettings.Styles.Count) return;
 
@@ -50,10 +59,19 @@ namespace KexEdit.UI {
                 if (!SystemAPI.HasComponent<TrainReference>(entity)) continue;
 
                 Entity train = SystemAPI.GetComponent<TrainReference>(entity).Value;
-                if (train == Entity.Null) continue;
-                if (!SystemAPI.HasComponent<TrainCarMeshReference>(train)) continue;
+                if (train == Entity.Null || !SystemAPI.HasBuffer<TrainCarReference>(train)) continue;
 
-                var trainCarMesh = SystemAPI.GetComponent<TrainCarMeshReference>(train);
+                Entity trainCar = Entity.Null;
+                var trainCarBuffer = SystemAPI.GetBuffer<TrainCarReference>(train);
+                for (int i = 0; i < trainCarBuffer.Length; i++) {
+                    if (trainCarBuffer[i] == Entity.Null ||
+                        !SystemAPI.HasComponent<TrainCarMeshReference>(trainCarBuffer[i])) continue;
+                    trainCar = trainCarBuffer[i];
+                    break;
+                }
+                if (trainCar == Entity.Null || !SystemAPI.HasComponent<TrainCarMeshReference>(trainCar)) continue;
+
+                var trainCarMesh = SystemAPI.GetComponent<TrainCarMeshReference>(trainCar);
 
                 bool needsStyleReference = false;
                 bool needsTrainMesh = trainCarMesh.Value == Entity.Null;

@@ -79,6 +79,26 @@ namespace KexEdit.UI {
                 return;
             }
 
+            if (_data.IsPlaying && !KexTime.IsPaused) {
+                if (SystemAPI.HasBuffer<Point>(train.Section)) {
+                    var points = SystemAPI.GetBuffer<Point>(train.Section);
+                    if (train.Position >= points.Length - 1) {
+                        bool hasNext = SystemAPI.HasComponent<Node>(train.Section) && 
+                                      SystemAPI.GetComponent<Node>(train.Section).Next != Entity.Null;
+                        
+                        if (!hasNext) {
+                            SystemAPI.SetComponent(trainEntity, new Train {
+                                Enabled = train.Enabled,
+                                Kinematic = train.Kinematic,
+                                Section = root,
+                                Position = 1f
+                            });
+                            train = SystemAPI.GetComponent<Train>(trainEntity);
+                        }
+                    }
+                }
+            }
+
             float currentDistance = CalculateDistanceToSection(root, train.Section) + train.Position;
             _data.Progress = _data.TotalLength > 0f ? currentDistance / _data.TotalLength : 0f;
         }

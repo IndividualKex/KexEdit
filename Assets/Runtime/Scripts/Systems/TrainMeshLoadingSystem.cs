@@ -22,26 +22,36 @@ namespace KexEdit {
                 var entity = events[i];
                 var evt = SystemAPI.GetComponent<LoadTrainMeshEvent>(entity);
 
-                if (evt.Target == Entity.Null) {
+                if (evt.Target == Entity.Null ||
+                    !SystemAPI.HasBuffer<TrainCarReference>(evt.Target)) {
                     UnityEngine.Debug.LogError("LoadTrainMeshEvent missing Target entity");
                     ecb.DestroyEntity(entity);
                     continue;
                 }
 
-                if (!SystemAPI.HasComponent<TrainCarMeshReference>(evt.Target)) {
+                Entity carEntity = Entity.Null;
+                var trainCarBuffer = SystemAPI.GetBuffer<TrainCarReference>(evt.Target);
+                for (int j = 0; j < trainCarBuffer.Length; j++) {
+                    if (trainCarBuffer[j] == Entity.Null ||
+                        !SystemAPI.HasComponent<TrainCarMeshReference>(trainCarBuffer[j])) continue;
+                    carEntity = trainCarBuffer[j];
+                    break;
+                }
+                if (carEntity == Entity.Null ||
+                    !SystemAPI.HasComponent<TrainCarMeshReference>(carEntity)) {
                     UnityEngine.Debug.LogError("Target entity missing TrainMeshReference component");
                     ecb.DestroyEntity(entity);
                     continue;
                 }
 
-                ref var trainCarMeshReference = ref SystemAPI.GetComponentRW<TrainCarMeshReference>(evt.Target).ValueRW;
+                ref var trainCarMeshReference = ref SystemAPI.GetComponentRW<TrainCarMeshReference>(carEntity).ValueRW;
                 if (trainCarMeshReference.Value != Entity.Null) {
                     ecb.DestroyEntity(trainCarMeshReference.Value);
                 }
 
                 Entity trainMesh = EntityManager.Instantiate(evt.Train);
                 trainCarMeshReference.Value = trainMesh;
-                ecb.AddComponent(trainMesh, new TrainCarMesh { TrainCar = evt.Target });
+                ecb.AddComponent(trainMesh, new TrainCarMesh { TrainCar = carEntity });
 
                 ecb.DestroyEntity(entity);
             }

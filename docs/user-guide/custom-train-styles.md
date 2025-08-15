@@ -1,6 +1,6 @@
 # Custom Train Styles
 
-Customize your ride vehicles with custom 3D cart models in various formats.
+Customize your ride vehicles with custom 3D train models in various formats.
 
 ## Using Existing Presets
 
@@ -44,7 +44,7 @@ Customize your ride vehicles with custom 3D cart models in various formats.
 }
 ```
 
-For complete configuration format and technical details, see **README.md** in the CartStyles folder.
+For complete configuration format and technical details, see **README.md** in the TrainStyles folder.
 
 ---
 

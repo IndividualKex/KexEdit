@@ -95,6 +95,8 @@ namespace KexEdit.UI {
             float currentDistance = 0f;
             var current = start;
             using var processedEntities = new NativeHashSet<Entity>(16, Allocator.Temp);
+            Entity lastSection = Entity.Null;
+            int lastSectionPointsLength = 0;
 
             while (current != Entity.Null && !processedEntities.Contains(current)) {
                 processedEntities.Add(current);
@@ -102,6 +104,9 @@ namespace KexEdit.UI {
                 if (SystemAPI.HasBuffer<Point>(current)) {
                     var points = SystemAPI.GetBuffer<Point>(current);
                     float sectionLength = points.Length;
+
+                    lastSection = current;
+                    lastSectionPointsLength = points.Length;
 
                     if (currentDistance + sectionLength >= targetDistance) {
                         train.Section = current;
@@ -121,9 +126,9 @@ namespace KexEdit.UI {
                 }
             }
 
-            if (train.Section != Entity.Null && SystemAPI.HasBuffer<Point>(train.Section)) {
-                var points = SystemAPI.GetBuffer<Point>(train.Section);
-                train.Position = points.Length - 1f;
+            if (lastSection != Entity.Null) {
+                train.Section = lastSection;
+                train.Position = math.max(0f, lastSectionPointsLength - 1f);
             }
         }
     }

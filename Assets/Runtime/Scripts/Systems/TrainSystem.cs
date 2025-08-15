@@ -87,8 +87,7 @@ namespace KexEdit {
                             points = PointLookup[train.Section];
                         }
                         else {
-                            Reset(coaster, ref train);
-                            return;
+                            train.Position = points.Length - 1;
                         }
                     }
                 }
