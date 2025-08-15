@@ -15,7 +15,7 @@ namespace KexEdit {
                 .WithEntityAccess()
             ) {
                 if (!SystemAPI.HasComponent<TrackStyle>(segment.Style) ||
-                    !SystemAPI.HasComponent<StyleHash>(section) ||
+                    !SystemAPI.HasComponent<TrackStyleHash>(section) ||
                     !SystemAPI.HasComponent<TrackStyleSettingsReference>(coaster)) {
                     ecb.DestroyEntity(entity);
                     continue;
@@ -33,7 +33,7 @@ namespace KexEdit {
                     continue;
                 }
 
-                if (segment.StyleHash != SystemAPI.GetComponent<StyleHash>(section)) {
+                if (segment.StyleHash != SystemAPI.GetComponent<TrackStyleHash>(section)) {
                     ecb.DestroyEntity(entity);
                 }
             }

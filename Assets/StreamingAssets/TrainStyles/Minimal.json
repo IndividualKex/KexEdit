@@ -1,0 +1,17 @@
+{
+    "Name": "Minimal",
+    "CarCount": 1,
+    "DefaultCar": {
+        "MeshPath": "Minimal_TrainCar.glb",
+        "WheelAssemblies": [
+            {
+                "MeshPath": "Minimal_WheelAssembly.glb",
+                "Offset": 0.0
+            },
+            {
+                "MeshPath": "Minimal_WheelAssembly.glb",
+                "Offset": -1.5
+            }
+        ]
+    }
+}

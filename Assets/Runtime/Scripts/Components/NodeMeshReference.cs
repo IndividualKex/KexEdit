@@ -5,6 +5,6 @@ namespace KexEdit {
     public struct NodeMeshReference : IComponentData {
         public Entity Value;
         public FixedString512Bytes FilePath;
-        public bool Loaded;
+        public bool Requested;
     }
 }

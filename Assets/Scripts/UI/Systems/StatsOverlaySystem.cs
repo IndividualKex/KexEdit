@@ -119,24 +119,24 @@ namespace KexEdit.UI {
 
             if (!_isVisible) return;
 
-            var (cartEntity, cart) = GetActiveCart();
-            bool hasValidCart = cartEntity != Entity.Null &&
-                               cart.Section != Entity.Null &&
-                               SystemAPI.Exists(cart.Section) &&
-                               SystemAPI.HasBuffer<Point>(cart.Section);
+            var (trainEntity, follower) = GetActiveTrain();
+            bool hasValidTrain = trainEntity != Entity.Null &&
+                               follower.Section != Entity.Null &&
+                               SystemAPI.Exists(follower.Section) &&
+                               SystemAPI.HasBuffer<Point>(follower.Section);
 
-            if (!hasValidCart) {
+            if (!hasValidTrain) {
                 ShowNoStatsMessage();
                 return;
             }
 
-            var pointBuffer = SystemAPI.GetBuffer<Point>(cart.Section);
+            var pointBuffer = SystemAPI.GetBuffer<Point>(follower.Section);
             if (pointBuffer.Length == 0) {
                 ShowNoStatsMessage();
                 return;
             }
 
-            PointData currentPoint = GetInterpolatedPoint(pointBuffer, cart.Position);
+            PointData currentPoint = GetInterpolatedPoint(pointBuffer, follower.Index);
 
             if (!PointsEqual(currentPoint, _lastPoint)) {
                 _lastPoint = currentPoint;
@@ -146,10 +146,10 @@ namespace KexEdit.UI {
             UpdateCameraLabels();
         }
 
-        private (Entity cartEntity, Cart cart) GetActiveCart() {
-            foreach (var (cartComponent, entity) in SystemAPI.Query<Cart>().WithEntityAccess()) {
-                if (cartComponent.Enabled && !cartComponent.Kinematic) {
-                    return (entity, cartComponent);
+        private (Entity trainEntity, TrackFollower follower) GetActiveTrain() {
+            foreach (var (train, trackFollower, entity) in SystemAPI.Query<Train, TrackFollower>().WithEntityAccess()) {
+                if (train.Enabled && !train.Kinematic) {
+                    return (entity, trackFollower);
                 }
             }
             return (Entity.Null, default);

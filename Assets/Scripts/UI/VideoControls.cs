@@ -154,8 +154,8 @@ namespace KexEdit.UI {
             _fullscreenButton.style.transitionDuration = new List<TimeValue> { new(100, TimeUnit.Millisecond) };
             _fullscreenButton.style.transitionTimingFunction = new List<EasingFunction> { EasingMode.EaseOutCubic };
 
-            _fullscreenButton.RegisterCallback<MouseEnterEvent>(_ => _fullscreenButton.transform.scale = new Vector2(1.1f, 1.1f));
-            _fullscreenButton.RegisterCallback<MouseLeaveEvent>(_ => _fullscreenButton.transform.scale = new Vector2(1f, 1f));
+            _fullscreenButton.RegisterCallback<MouseEnterEvent>(_ => _fullscreenButton.style.scale = new Scale(new Vector3(1.1f, 1.1f, 1f)));
+            _fullscreenButton.RegisterCallback<MouseLeaveEvent>(_ => _fullscreenButton.style.scale = new Scale(new Vector3(1f, 1f, 1f)));
             _fullscreenButton.RegisterCallback<MouseDownEvent>(evt => {
                 if (evt.button == 0) {
                     ToggleFullscreen?.Invoke();

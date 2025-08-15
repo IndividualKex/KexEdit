@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using KexEdit.UI.Timeline;
-using Unity.Collections;
 using KexEdit.Serialization;
 
 namespace KexEdit.UI {
@@ -162,7 +161,7 @@ namespace KexEdit.UI {
                     submenu.AddItem("Invert Scroll", () => Preferences.InvertScroll = !Preferences.InvertScroll,
                         isChecked: Preferences.InvertScroll);
                     submenu.AddItem("Sensitivity...", ShowSensitivityDialog);
-                    
+
                     submenu.AddSeparator();
                     submenu.AddItem("Emulate Numpad", () => Preferences.EnableTopRowViewHotkeys = !Preferences.EnableTopRowViewHotkeys,
                         isChecked: Preferences.EnableTopRowViewHotkeys);
@@ -195,7 +194,7 @@ namespace KexEdit.UI {
         }
 
         private void AddViewMenu(MenuBar menuBar) {
-            menuBar.AddMenu("View", menu => {
+            menuBar.AddMenu("View", (System.Action<ContextMenu>)(menu => {
                 menu.AddItem("Full Screen", () => VideoControlSystem.Instance?.ToggleFullscreen(), "F11",
                     isChecked: VideoControlSystem.IsFullscreen);
                 menu.AddItem("Zoom In", () => UIScaleSystem.Instance?.ZoomIn(), "Ctrl++".ToPlatformShortcut());
@@ -248,15 +247,15 @@ namespace KexEdit.UI {
                     submenu.AddSeparator();
                     submenu.AddItem("Edit", ShowVisualizationRangeDialog);
                 });
-                menu.AddSubmenu("Appearance", submenu => {
+                menu.AddSubmenu("Appearance", (System.Action<ContextMenu>)(submenu => {
                     submenu.AddSubmenu("Track Style", trackSubmenu => {
                         var availableConfigs = TrackStyleConfigManager.GetAvailableConfigsWithNames();
                         string currentConfigName = Preferences.CurrentTrackStyle;
                         if (availableConfigs.Length > 0) {
                             foreach (var configInfo in availableConfigs) {
                                 bool isCurrentConfig = configInfo.FileName == currentConfigName;
-                                trackSubmenu.AddItem(configInfo.DisplayName, () => LoadTrackStyleConfig(configInfo.FileName),
-                                isChecked: isCurrentConfig);
+                                trackSubmenu.AddItem(configInfo.DisplayName, () =>
+                                    LoadTrackStyleConfig(configInfo.FileName), isChecked: isCurrentConfig);
                             }
                             trackSubmenu.AddSeparator();
                         }
@@ -265,19 +264,21 @@ namespace KexEdit.UI {
                         trackSubmenu.AddSeparator();
                         trackSubmenu.AddItem("Open Folder", TrackStyleConfigManager.OpenTrackStylesFolder);
                     });
-                    submenu.AddSubmenu("Cart Style", cartSubmenu => {
-                        var availableConfigs = CartStyleConfigManager.GetAvailableConfigsWithNames();
-                        string currentConfigName = Preferences.CurrentCartStyle;
+                    submenu.AddSubmenu("Train Style", (System.Action<ContextMenu>)(trainSubmenu => {
+                        var availableConfigs = TrainStyleConfigManager.GetAvailableConfigsWithNames();
+                        string currentConfigName = Preferences.CurrentTrainStyle;
                         if (availableConfigs.Count > 0) {
                             foreach (var configInfo in availableConfigs) {
-                                bool isCurrentConfig = configInfo.fileName == currentConfigName;
-                                cartSubmenu.AddItem(configInfo.displayName, () => CartStyleConfigManager.LoadConfig(configInfo.fileName),
-                                isChecked: isCurrentConfig);
+                                bool isCurrentConfig = configInfo.FileName == currentConfigName;
+                                trainSubmenu.AddItem(configInfo.DisplayName, () =>
+                                    LoadTrainStyleConfig(configInfo.FileName), isChecked: isCurrentConfig);
                             }
-                            cartSubmenu.AddSeparator();
+                            trainSubmenu.AddSeparator();
                         }
-                        cartSubmenu.AddItem("Open Folder", CartStyleConfigManager.OpenCartStylesFolder);
-                    });
+                        trainSubmenu.AddItem("Edit Count", ShowTrainCarCountDialog);
+                        trainSubmenu.AddSeparator();
+                        trainSubmenu.AddItem("Open Folder", TrainStyleConfigManager.OpenTrainStylesFolder);
+                    }));
                     submenu.AddSubmenu("Background", envSubmenu => {
                         var currentSkyType = Preferences.SkyType;
                         envSubmenu.AddItem("Solid", () => Preferences.SkyType = SkyType.Solid,
@@ -285,10 +286,9 @@ namespace KexEdit.UI {
                         envSubmenu.AddItem("Sky", () => Preferences.SkyType = SkyType.Procedural,
                             isChecked: currentSkyType == SkyType.Procedural);
                     });
-                });
-            });
+                }));
+            }));
         }
-
 
         private void AddHelpMenu(MenuBar menuBar) {
             menuBar.AddMenu("Help", menu => {
@@ -330,6 +330,10 @@ namespace KexEdit.UI {
             _root.ShowSensitivityDialog();
         }
 
+        private void ShowTrainCarCountDialog() {
+            _root.ShowTrainCarCountDialog();
+        }
+
         private void ToggleNodeGridSnapping() {
             Preferences.NodeGridSnapping = !Preferences.NodeGridSnapping;
         }
@@ -367,6 +371,12 @@ namespace KexEdit.UI {
         private void LoadTrackStyleConfig(string filename) {
             Preferences.CurrentTrackStyle = filename;
             ref var singleton = ref SystemAPI.GetSingletonRW<EditorTrackStyleSettingsSingleton>().ValueRW;
+            singleton.Dirty = true;
+        }
+
+        private void LoadTrainStyleConfig(string filename) {
+            Preferences.CurrentTrainStyle = filename;
+            ref var singleton = ref SystemAPI.GetSingletonRW<EditorTrainStyleSingleton>().ValueRW;
             singleton.Dirty = true;
         }
 

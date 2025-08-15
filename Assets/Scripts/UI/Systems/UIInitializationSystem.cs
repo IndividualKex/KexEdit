@@ -66,6 +66,10 @@ namespace KexEdit.UI {
                 Settings = Entity.Null,
                 Dirty = true
             });
+            ecb.AddComponent(stateEntity, new EditorTrainStyleSingleton {
+                Style = Entity.Null,
+                Dirty = true
+            });
             ecb.SetName(stateEntity, "UI State");
 
             ecb.Playback(EntityManager);

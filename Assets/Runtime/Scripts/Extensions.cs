@@ -426,14 +426,14 @@ namespace KexEdit {
         public static float Evaluate(this DynamicBuffer<TrackStyleKeyframe> keyframes, float t) {
             float defaultValue = PropertyType.TrackStyle.Default(t);
             if (keyframes.Length == 0) return defaultValue;
-            
+
             if (t <= keyframes[0].Value.Time) return keyframes[0].Value.Value;
             if (t >= keyframes[^1].Value.Time) return keyframes[^1].Value.Value;
 
             for (int i = 0; i < keyframes.Length - 1; i++) {
                 var current = keyframes[i].Value;
                 var next = keyframes[i + 1].Value;
-                
+
                 if (t >= current.Time && t < next.Time) {
                     return current.Value;
                 }

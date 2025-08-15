@@ -37,11 +37,13 @@ namespace KexEdit {
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
+            int trainLayer = 0;
             foreach (var (evt, entity) in SystemAPI.Query<InitializeEvent>().WithEntityAccess()) {
                 ecb.DestroyEntity(entity);
                 if (_initialized) {
                     throw new System.Exception("Runtime already initialized");
                 }
+                trainLayer = evt.TrainLayer;
                 _initialized = true;
             }
 
@@ -72,7 +74,9 @@ namespace KexEdit {
                 ExtrusionMaterial = extrusionMaterial,
                 GizmoMaterial = gizmoMaterial,
             });
-            ecb.AddComponent(settingsEntity, Preferences.Default);
+            var preferences = Preferences.Default;
+            preferences.TrainLayer = trainLayer;
+            ecb.AddComponent(settingsEntity, preferences);
 
             var defaultGizmoMaterial = new UnityEngine.Material(gizmoMaterial);
             defaultGizmoMaterial.SetColor("_Color", new(0.7f, 0.7f, 0.7f));

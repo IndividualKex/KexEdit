@@ -23,7 +23,7 @@ namespace KexEdit {
             int count = _segmentQuery.CalculateEntityCount();
             using var existing = new NativeParallelHashSet<Entity>(count, Allocator.Temp);
             foreach (var (section, segment) in SystemAPI.Query<SectionReference, Segment>()) {
-                var sectionStyleHash = SystemAPI.GetComponent<StyleHash>(section);
+                var sectionStyleHash = SystemAPI.GetComponent<TrackStyleHash>(section);
                 if (segment.StyleHash == sectionStyleHash.Value) {
                     existing.Add(section);
                 }
@@ -47,7 +47,7 @@ namespace KexEdit {
                 var settings = SystemAPI.GetComponent<TrackStyleSettings>(styleEntity);
                 var styleReferences = SystemAPI.GetBuffer<TrackStyleReference>(styleEntity);
 
-                uint styleHash = SystemAPI.GetComponent<StyleHash>(entity);
+                uint styleHash = SystemAPI.GetComponent<TrackStyleHash>(entity);
                 var overrides = SystemAPI.GetComponent<PropertyOverrides>(entity);
 
                 using var breakpoints = overrides.TrackStyle

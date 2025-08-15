@@ -670,7 +670,7 @@ namespace KexEdit.Serialization {
                 foreach (var keyframe in node.TrackStyleKeyframes) {
                     ecb.AppendToBuffer(entity, keyframe);
                 }
-                ecb.AddComponent<StyleHash>(entity);
+                ecb.AddComponent<TrackStyleHash>(entity);
             }
 
             if (type == NodeType.Mesh) {
@@ -737,7 +737,7 @@ namespace KexEdit.Serialization {
                 ecb.AddComponent(entity, new NodeMeshReference {
                     Value = Entity.Null,
                     FilePath = node.MeshFilePath,
-                    Loaded = false
+                    Requested = false
                 });
             }
             else if (type == NodeType.Append) {

@@ -19,10 +19,10 @@ namespace KexEdit.UI {
         protected override void OnUpdate() {
             if (_rideCamera == null) return;
 
-            foreach (var (cart, transform) in SystemAPI.Query<Cart, LocalTransform>()) {
-                if (!cart.Enabled || cart.Kinematic) continue;
+            foreach (var (train, coaster, transform) in SystemAPI.Query<Train, CoasterReference, LocalTransform>()) {
+                if (!train.Enabled || train.Kinematic || !SystemAPI.HasComponent<EditorCoasterTag>(coaster)) continue;
 
-                quaternion cartRotation = math.mul(
+                quaternion trainRotation = math.mul(
                     transform.Rotation,
                     quaternion.RotateY(math.PI)
                 );
@@ -33,7 +33,7 @@ namespace KexEdit.UI {
                     math.radians(Preferences.RideCameraRotationZ)
                 );
 
-                quaternion finalRotation = math.mul(cartRotation, userRotation);
+                quaternion finalRotation = math.mul(trainRotation, userRotation);
 
                 float3 positionOffset = new(
                     Preferences.RideCameraPositionX,
@@ -41,7 +41,7 @@ namespace KexEdit.UI {
                     Preferences.RideCameraPositionZ
                 );
 
-                float3 worldOffset = math.mul(cartRotation, positionOffset);
+                float3 worldOffset = math.mul(trainRotation, positionOffset);
 
                 _rideCamera.transform.SetPositionAndRotation(transform.Position + worldOffset, finalRotation);
                 break;

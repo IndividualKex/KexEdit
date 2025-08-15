@@ -14,7 +14,7 @@ When a node with controllable properties is selected, the Timeline displays:
 3. **Toggle Curve View Button** - Switch between dope sheet and curve editor
 4. **Read-Only Curves Button** - Toggle display of read-only property curves
 5. **Ruler** - Time (s) or distance (m), depending on the node's duration type (`Time` or `Distance`)
-6. **Playhead** - Current position indicator, also shown as a transparent cart in the [Game View](game-view.md)
+6. **Playhead** - Current position indicator, also shown as a transparent train in the [Game View](game-view.md)
 7. **Dope Sheet/Curve View** - Keyframe editing area
 
 ## Timeline Controls
@@ -138,7 +138,7 @@ Double-clicking a keyframe opens a detailed editor with advanced options:
 
 ### Override Properties (All nodes)
 
-These optional properties have no effect unless added. For example, adding the `Fixed Velocity` property overrides the cart's velocity, even with no keyframes. Otherwise, velocity is physically simulated.
+These optional properties have no effect unless added. For example, adding the `Fixed Velocity` property overrides the train's velocity, even with no keyframes. Otherwise, velocity is physically simulated.
 
 | Property           | Description      | Units |
 | ------------------ | ---------------- | ----- |

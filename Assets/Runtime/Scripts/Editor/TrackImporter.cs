@@ -13,7 +13,7 @@ namespace KexEdit.Editor {
 
             string fileName = Path.GetFileNameWithoutExtension(ctx.assetPath);
             var gameObject = new GameObject(fileName);
-            var loader = gameObject.AddComponent<TrackLoader>();
+            var loader = gameObject.AddComponent<CoasterLoader>();
 
             loader.Track = track;
 

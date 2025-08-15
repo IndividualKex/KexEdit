@@ -138,12 +138,11 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void SyncWithPlayback() {
-            if (!Preferences.SyncPlayback || !_data.Active ||
-                SystemAPI.GetSingleton<PauseSingleton>().IsPaused) return;
+            if (!Preferences.SyncPlayback || !_data.Active) return;
 
-            foreach (var cart in SystemAPI.Query<Cart>()) {
-                if (cart.Enabled && !cart.Kinematic && cart.Section == _data.Entity) {
-                    float timelineTime = CartPositionToTime(cart.Position);
+            foreach (var (train, follower) in SystemAPI.Query<Train, TrackFollower>()) {
+                if (train.Enabled && !train.Kinematic && follower.Section == _data.Entity) {
+                    float timelineTime = TrainPositionToTime(follower.Index);
                     if (math.abs(_data.Time - timelineTime) > 1e-2f) {
                         _data.Time = math.clamp(timelineTime, 0f, _data.Duration);
                     }
@@ -155,13 +154,14 @@ namespace KexEdit.UI.Timeline {
         private void UpdatePlayhead() {
             if (!SystemAPI.HasSingleton<PlayheadGizmoReference>()) return;
             Entity playheadEntity = SystemAPI.GetSingleton<PlayheadGizmoReference>();
-            ref Cart playhead = ref SystemAPI.GetComponentRW<Cart>(playheadEntity).ValueRW;
-            playhead.Section = _data.Entity;
+            ref Train playhead = ref SystemAPI.GetComponentRW<Train>(playheadEntity).ValueRW;
+            ref TrackFollower playheadFollower = ref SystemAPI.GetComponentRW<TrackFollower>(playheadEntity).ValueRW;
+            playheadFollower.Section = _data.Entity;
 
             bool isSynced = false;
             if (Preferences.SyncPlayback && _data.Active) {
-                foreach (var cart in SystemAPI.Query<Cart>()) {
-                    if (cart.Enabled && !cart.Kinematic && cart.Section == _data.Entity) {
+                foreach (var (train, follower) in SystemAPI.Query<Train, TrackFollower>()) {
+                    if (train.Enabled && !train.Kinematic && follower.Section == _data.Entity) {
                         isSynced = true;
                         break;
                     }
@@ -172,7 +172,7 @@ namespace KexEdit.UI.Timeline {
             if (!playhead.Enabled) return;
 
             if (_data.Time < 0f) {
-                playhead.Position = 0f;
+                playheadFollower.Index = 0f;
                 return;
             }
 
@@ -182,7 +182,7 @@ namespace KexEdit.UI.Timeline {
             if (SystemAPI.HasComponent<Duration>(_data.Entity)) {
                 var duration = SystemAPI.GetComponent<Duration>(_data.Entity);
                 if (duration.Type == DurationType.Time) {
-                    playhead.Position = _data.Time * HZ;
+                    playheadFollower.Index = _data.Time * HZ;
                     return;
                 }
                 else {
@@ -194,17 +194,17 @@ namespace KexEdit.UI.Timeline {
                         if (targetDistance >= currentDistance && targetDistance < nextDistance) {
                             float t = (nextDistance - currentDistance) > 0 ?
                                 (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;
-                            playhead.Position = i + t;
+                            playheadFollower.Index = i + t;
                             return;
                         }
                     }
-                    playhead.Position = pointBuffer.Length - 1;
+                    playheadFollower.Index = pointBuffer.Length - 1;
                     return;
                 }
             }
 
             float index = math.round(_data.Time * HZ);
-            playhead.Position = math.clamp(index, 0, pointBuffer.Length - 1);
+            playheadFollower.Index = math.clamp(index, 0, pointBuffer.Length - 1);
         }
 
         private void UpdateTimelineData() {
@@ -699,6 +699,7 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void UpdateSelectionState() {
+            if (!SystemAPI.HasComponent<SelectedProperties>(_data.Entity)) return;
             ref var selectedProperties = ref SystemAPI.GetComponentRW<SelectedProperties>(_data.Entity).ValueRW;
             foreach (var (type, propertyData) in _data.Properties) {
                 if (!propertyData.Visible) continue;
@@ -827,46 +828,46 @@ namespace KexEdit.UI.Timeline {
             SetTime(evt.Time, evt.Snap);
 
             if (Preferences.SyncPlayback && _data.Active) {
-                foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
-                    if (cart.ValueRO.Enabled && !cart.ValueRO.Kinematic) {
-                        cart.ValueRW.Section = _data.Entity;
-                        cart.ValueRW.Position = TimeToCartPosition(_data.Time);
+                foreach (var (train, trackFollowerRW) in SystemAPI.Query<Train, RefRW<TrackFollower>>()) {
+                    if (train.Enabled && !train.Kinematic) {
+                        trackFollowerRW.ValueRW.Section = _data.Entity;
+                        trackFollowerRW.ValueRW.Index = TimeToTrainPosition(_data.Time);
                         break;
                     }
                 }
             }
         }
 
-        private float TimeToCartPosition(float time) {
+        private float TimeToTrainPosition(float time) {
             if (GetDurationType() == DurationType.Time) {
                 return time * HZ;
             }
 
             float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
-            return DistanceToCartPosition(anchorLength + time);
+            return DistanceToTrainPosition(anchorLength + time);
         }
 
-        private float CartPositionToTime(float cartPosition) {
-            if (cartPosition < 0f) {
+        private float TrainPositionToTime(float trainPosition) {
+            if (trainPosition < 0f) {
                 return 0f;
             }
 
             if (GetDurationType() == DurationType.Time) {
-                return cartPosition / HZ;
+                return trainPosition / HZ;
             }
 
             var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
             if (pointBuffer.Length < 2) return 0f;
 
-            int index = math.clamp((int)math.floor(cartPosition), 0, pointBuffer.Length - 2);
-            float t = cartPosition - index;
+            int index = math.clamp((int)math.floor(trainPosition), 0, pointBuffer.Length - 2);
+            float t = trainPosition - index;
 
             float distance = math.lerp(pointBuffer[index].Value.TotalLength, pointBuffer[index + 1].Value.TotalLength, t);
             float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
             return distance - anchorLength;
         }
 
-        private float DistanceToCartPosition(float targetDistance) {
+        private float DistanceToTrainPosition(float targetDistance) {
             if (targetDistance < 0f) {
                 return 0f;
             }
@@ -1513,8 +1514,8 @@ namespace KexEdit.UI.Timeline {
         private PointData GetPlayheadPoint() {
             if (!SystemAPI.HasSingleton<PlayheadGizmoReference>()) return PointData.Create();
             Entity playheadEntity = SystemAPI.GetSingleton<PlayheadGizmoReference>();
-            Cart playhead = SystemAPI.GetComponent<Cart>(playheadEntity);
-            float playheadPosition = playhead.Position;
+            TrackFollower playhead = SystemAPI.GetComponent<TrackFollower>(playheadEntity);
+            float playheadPosition = playhead.Index;
             int index = (int)math.floor(playheadPosition);
             int nextIndex = index + 1;
 
@@ -1545,7 +1546,7 @@ namespace KexEdit.UI.Timeline {
                 }
                 else {
                     float targetDistance = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength + time;
-                    position = DistanceToCartPosition(targetDistance);
+                    position = DistanceToTrainPosition(targetDistance);
                 }
             }
             else {
@@ -1603,10 +1604,10 @@ namespace KexEdit.UI.Timeline {
                 SetTime(targetTime.Value, false);
 
                 if (Preferences.SyncPlayback && _data.Active) {
-                    foreach (var (cart, entity) in SystemAPI.Query<RefRW<Cart>>().WithEntityAccess()) {
-                        if (cart.ValueRO.Enabled && !cart.ValueRO.Kinematic) {
-                            cart.ValueRW.Section = _data.Entity;
-                            cart.ValueRW.Position = TimeToCartPosition(_data.Time);
+                    foreach (var (train, trackFollowerRW) in SystemAPI.Query<Train, RefRW<TrackFollower>>()) {
+                        if (train.Enabled && !train.Kinematic) {
+                            trackFollowerRW.ValueRW.Section = _data.Entity;
+                            trackFollowerRW.ValueRW.Index = TimeToTrainPosition(_data.Time);
                             break;
                         }
                     }

@@ -56,7 +56,7 @@ For complete configuration format and technical details, see **README.md** in th
 
 ---
 
-**Next**: [Custom Cart Styles](custom-cart-styles.md)
+**Next**: [Custom Train Styles](custom-train-styles.md)
 
 ---
 

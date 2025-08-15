@@ -6,10 +6,8 @@ using System.Globalization;
 
 namespace KexEdit.UI {
     public static class TrackStyleResourceLoader {
-        private static string TrackStylesPath => Path.Combine(Application.streamingAssetsPath, "TrackStyles");
-
         public static TrackStyleConfig LoadConfig(string configPath) {
-            string fullPath = Path.Combine(TrackStylesPath, configPath);
+            string fullPath = Path.Combine(TrackStyleConfigManager.TrackStylesPath, configPath);
 
             TrackStyleConfig config;
 
@@ -157,7 +155,7 @@ namespace KexEdit.UI {
         }
 
         private static Mesh LoadMesh(string path) {
-            string fullPath = Path.Combine(TrackStylesPath, path);
+            string fullPath = Path.Combine(TrackStyleConfigManager.TrackStylesPath, path);
             if (path.EndsWith(".obj")) {
                 try {
                     var mesh = ParseTriangulatedObj(fullPath);
@@ -171,7 +169,7 @@ namespace KexEdit.UI {
 
                 if (path != "FallbackRail.obj") {
                     Debug.LogWarning($"Mesh {path} failed to load, attempting fallback to FallbackRail.obj");
-                    var fallbackPath = Path.Combine(TrackStylesPath, "FallbackRail.obj");
+                    var fallbackPath = Path.Combine(TrackStyleConfigManager.TrackStylesPath, "FallbackRail.obj");
                     try {
                         var fallbackMesh = ParseTriangulatedObj(fallbackPath);
                         if (fallbackMesh != null) {
@@ -190,7 +188,7 @@ namespace KexEdit.UI {
         }
 
         private static Texture2D LoadTexture(string path) {
-            string fullPath = Path.Combine(TrackStylesPath, path);
+            string fullPath = Path.Combine(TrackStyleConfigManager.TrackStylesPath, path);
 
             if (!File.Exists(fullPath)) {
                 Debug.LogError($"Texture file does not exist: {fullPath}");

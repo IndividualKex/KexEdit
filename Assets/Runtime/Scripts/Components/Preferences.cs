@@ -11,6 +11,7 @@ namespace KexEdit {
         public float2 YawSpeedRange;
         public float2 CurvatureRange;
         public VisualizationMode VisualizationMode;
+        public int TrainLayer;
         public bool DrawGizmos;
         public bool EnableShadows;
         public bool EnableColliders;
@@ -24,6 +25,7 @@ namespace KexEdit {
             YawSpeedRange = new float2(-1f, 1f),
             CurvatureRange = new float2(0f, 1f),
             VisualizationMode = VisualizationMode.None,
+            TrainLayer = 0,
             DrawGizmos = false,
             EnableShadows = false,
             EnableColliders = true,

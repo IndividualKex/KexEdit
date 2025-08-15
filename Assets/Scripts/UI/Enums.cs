@@ -74,12 +74,6 @@ namespace KexEdit.UI {
         Procedural
     }
 
-    [Flags]
-    public enum RenderTagType : byte {
-        None = 0,
-        Playhead = 1 << 0,
-    }
-
     public enum VisualizationGradientType {
         TwoColorPositive,
         ThreeColorCrossesZero

@@ -10,7 +10,7 @@ namespace KexEdit {
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             foreach (var (hashRW, trackStyleBuffer, entity) in SystemAPI
-                .Query<RefRW<StyleHash>, DynamicBuffer<TrackStyleKeyframe>>()
+                .Query<RefRW<TrackStyleHash>, DynamicBuffer<TrackStyleKeyframe>>()
                 .WithEntityAccess()
             ) {
                 ref var hash = ref hashRW.ValueRW;

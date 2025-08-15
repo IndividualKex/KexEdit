@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SFB;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -490,6 +491,14 @@ namespace KexEdit.UI {
             return dialog;
         }
 
+        public static TrainCarCountDialog ShowTrainCarCountDialog(this VisualElement element) {
+            var root = element.panel.visualTree.Q<TemplateContainer>();
+            KexTime.Pause();
+            var dialog = new TrainCarCountDialog(KexTime.Unpause);
+            root.Add(dialog);
+            return dialog;
+        }
+
         public static OptimizerDialog ShowOptimizerDialog(this VisualElement element, OptimizerData optimizerData) {
             var root = element.panel.visualTree.Q<TemplateContainer>();
             KexTime.Pause();
@@ -665,6 +674,34 @@ namespace KexEdit.UI {
             catch {
                 return false;
             }
+        }
+
+        public static void ShowImportDialog(VisualElement root, Action<string> onSuccess = null) {
+            var extensions = new ExtensionFilter[] {
+                new("glTF", "glb", "gltf"),
+                new("OBJ", "obj"),
+                new("All Files", "*")
+            };
+
+            string path = FileManager.ShowOpenFileDialog(extensions);
+
+            if (string.IsNullOrEmpty(path)) {
+                Debug.Log("Import canceled or no file selected.");
+                return;
+            }
+
+            onSuccess?.Invoke(path);
+        }
+
+        public static void ShowImportDialog(VisualElement root, ExtensionFilter[] extensions, Action<string> onSuccess = null) {
+            string path = FileManager.ShowOpenFileDialog(extensions);
+
+            if (string.IsNullOrEmpty(path)) {
+                Debug.Log("Import canceled or no file selected.");
+                return;
+            }
+
+            onSuccess?.Invoke(path);
         }
     }
 }
