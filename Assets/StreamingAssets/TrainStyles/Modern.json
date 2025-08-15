@@ -1,0 +1,48 @@
+{
+    "Name": "Modern",
+    "CarCount": 5,
+    "CarSpacing": 4.2,
+    "DefaultCar": {
+        "MeshPath": "LSM_MidCar.glb",
+        "WheelAssemblies": [
+            {
+                "MeshPath": "LSM_WheelAssembly.glb",
+                "Offset": 0.0
+            },
+            {
+                "MeshPath": "LSM_WheelAssembly.glb",
+                "Offset": -2.8
+            }
+        ]
+    },
+    "CarOverrides": [
+        {
+            "Index": 0,
+            "MeshPath": "LSM_FrontCar.glb",
+            "WheelAssemblies": [
+                {
+                    "MeshPath": "LSM_WheelAssembly.glb",
+                    "Offset": 0.0
+                },
+                {
+                    "MeshPath": "LSM_WheelAssembly.glb",
+                    "Offset": -2.8
+                }
+            ]
+        },
+        {
+            "Index": -1,
+            "MeshPath": "LSM_BackCar.glb",
+            "WheelAssemblies": [
+                {
+                    "MeshPath": "LSM_WheelAssembly.glb",
+                    "Offset": 0.0
+                },
+                {
+                    "MeshPath": "LSM_WheelAssembly.glb",
+                    "Offset": -2.8
+                }
+            ]
+        }
+    ]
+}

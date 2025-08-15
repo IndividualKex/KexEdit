@@ -46,10 +46,6 @@ namespace KexEdit.UI {
             if (SystemAPI.HasComponent<TrackStyleSettings>(singletonRW.ValueRO.Settings)) {
                 var settings = SystemAPI.GetComponent<TrackStyleSettings>(singletonRW.ValueRO.Settings);
                 version = settings.Version + 1;
-                if (SystemAPI.ManagedAPI.HasComponent<TrackStyleBuffers>(singletonRW.ValueRO.Settings)) {
-                    var buffers = SystemAPI.ManagedAPI.GetComponent<TrackStyleBuffers>(singletonRW.ValueRO.Settings);
-                    buffers.Dispose();
-                }
                 ecb.DestroyEntity(singletonRW.ValueRO.Settings);
                 singletonRW.ValueRW.Settings = Entity.Null;
             }

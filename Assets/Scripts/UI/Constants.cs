@@ -13,6 +13,8 @@ namespace KexEdit.UI {
         public static readonly Color s_BorderColor = new(0.1f, 0.1f, 0.1f);
         public static readonly Color s_MutedTextColor = new(0.6f, 0.6f, 0.6f);
         public static readonly Color s_TextColor = new(0.7f, 0.7f, 0.7f);
+        public static readonly Color s_StatsRowColor1 = new(0.75f, 0.75f, 0.75f);
+        public static readonly Color s_StatsRowColor2 = new(0.65f, 0.65f, 0.65f);
         public static readonly Color s_ActiveTextColor = new(0.8f, 0.8f, 0.8f);
         public static readonly Color s_ActiveTextColorTransparent = new(0.8f, 0.8f, 0.8f, 0.7f);
         public static readonly Color s_DarkenColor = new(0f, 0f, 0f, 0.3f);
@@ -25,6 +27,12 @@ namespace KexEdit.UI {
         public static readonly Color s_LateralForceColor = new(0.1f, 1.0f, 0.1f);
         public static readonly Color s_PitchSpeedColor = new(0.1f, 0.8f, 1.0f);
         public static readonly Color s_YawSpeedColor = new(1.0f, 0.9f, 0.1f);
+
+        public static readonly Color s_StatsRollSpeedColor = new(0.75f, 0.65f, 0.65f);
+        public static readonly Color s_StatsNormalForceColor = new(0.65f, 0.7f, 0.75f);
+        public static readonly Color s_StatsLateralForceColor = new(0.65f, 0.75f, 0.65f);
+        public static readonly Color s_StatsPitchSpeedColor = new(0.65f, 0.75f, 0.75f);
+        public static readonly Color s_StatsYawSpeedColor = new(0.75f, 0.75f, 0.65f);
 
         public static readonly Color s_BlueOutline = new(0.2f, 0.5f, 0.9f);
         public static readonly Color s_BlueOutlineTransparent = new(0.2f, 0.5f, 0.9f, 0.5f);

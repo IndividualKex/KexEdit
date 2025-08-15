@@ -14,7 +14,7 @@ When a node with controllable properties is selected, the Timeline displays:
 3. **Toggle Curve View Button** - Switch between dope sheet and curve editor
 4. **Read-Only Curves Button** - Toggle display of read-only property curves
 5. **Ruler** - Time (s) or distance (m), depending on the node's duration type (`Time` or `Distance`)
-6. **Playhead** - Current position indicator, also shown as a transparent cart in the [Game View](game-view.md)
+6. **Playhead** - Current position indicator, also shown as a transparent train in the [Game View](game-view.md)
 7. **Dope Sheet/Curve View** - Keyframe editing area
 
 ## Timeline Controls
@@ -42,8 +42,13 @@ When a node with controllable properties is selected, the Timeline displays:
 | Input                      | Action            | Notes                                                      |
 | -------------------------- | ----------------- | ---------------------------------------------------------- |
 | `Toggle Curve View Button` | Switch View Mode  | Toggle between dope sheet and curve editor                 |
-| `Read-Only Curves Button`  | Toggle Read-Only  | Show/hide read-only property curves (e.g., forces, speeds) |
+| `Read-Only Curves Button`  | Toggle Read-Only  | Show/hide read-only property curves (e.g., forces, speeds) calculated at the current pivot position |
 | `Eye Icon (Curve View)`    | Toggle Visibility | Show/hide individual property curves in curve view         |
+
+**Pivot Note**: The Pivot setting (adjustable via **Track → Pivot...**) determines which position on the train is used for:
+- Read-only curve calculations when displayed in the Timeline
+- Values shown in the curve view dropdown
+- Data displayed in the stats panel (F3)
 
 ## Keyframe Editing
 
@@ -123,6 +128,7 @@ Double-clicking a keyframe opens a detailed editor with advanced options:
 -   **Individual visibility**: Toggle curves on/off with eye icons
 -   **Read-only curves**: View computed properties (forces, speeds) using the read-only curves button
 -   **Value-focused editing**: Fine-tune animation curves and easing
+-   **Pivot-dependent values**: Read-only curve values are calculated at the current **Pivot** position on the train (adjustable via **Track → Pivot...**)
 
 ## Property Types
 
@@ -138,7 +144,7 @@ Double-clicking a keyframe opens a detailed editor with advanced options:
 
 ### Override Properties (All nodes)
 
-These optional properties have no effect unless added. For example, adding the `Fixed Velocity` property overrides the cart's velocity, even with no keyframes. Otherwise, velocity is physically simulated.
+These optional properties have no effect unless added. For example, adding the `Fixed Velocity` property overrides the train's velocity, even with no keyframes. Otherwise, velocity is physically simulated.
 
 | Property           | Description      | Units |
 | ------------------ | ---------------- | ----- |

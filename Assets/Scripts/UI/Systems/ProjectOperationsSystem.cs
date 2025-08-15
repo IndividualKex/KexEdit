@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using KexEdit.UI.Timeline;
-using Unity.Collections;
 using KexEdit.Serialization;
 
 namespace KexEdit.UI {
@@ -46,6 +45,9 @@ namespace KexEdit.UI {
                 AddFileMenu(menuBar);
                 AddEditMenu(menuBar);
                 AddViewMenu(menuBar);
+                AddTrackMenu(menuBar);
+                AddDisplayMenu(menuBar);
+                AddSettingsMenu(menuBar);
                 AddHelpMenu(menuBar);
 
                 _titleLabel = new Label("Untitled") {
@@ -84,11 +86,7 @@ namespace KexEdit.UI {
         private void AddFileMenu(MenuBar menuBar) {
             menuBar.AddMenu("File", menu => {
                 menu.AddItem("New", NewProject, "Ctrl+N".ToPlatformShortcut());
-                menu.AddItem("Open", OpenProject, "Ctrl+O".ToPlatformShortcut());
-                menu.AddItem("Save", SaveProject, "Ctrl+S".ToPlatformShortcut());
-                menu.AddSeparator();
-                menu.AddItem("Save As...", SaveProjectAs);
-                menu.AddSeparator();
+                menu.AddItem("Open...", OpenProject, "Ctrl+O".ToPlatformShortcut());
                 menu.AddSubmenu("Open Recent", submenu => {
                     bool hasRecovery = !string.IsNullOrEmpty(ProjectOperations.GetLatestRecoveryFile());
                     submenu.AddItem("Recover Last Session", RecoverLastSession, enabled: hasRecovery);
@@ -104,68 +102,12 @@ namespace KexEdit.UI {
                     }
                 });
                 menu.AddSeparator();
-                menu.AddSubmenu("Export", submenu => {
-                    submenu.AddItem("NoLimits 2", ShowExportDialog);
-                    submenu.AddItem("Track Mesh", TrackMeshExporter.ExportTrackMesh);
-                });
+                menu.AddItem("Save", SaveProject, "Ctrl+S".ToPlatformShortcut());
+                menu.AddItem("Save As...", SaveProjectAs);
                 menu.AddSeparator();
-                menu.AddSubmenu("Preferences", submenu => {
-                    submenu.AddSubmenu("Units", unitsSubmenu => {
-                        unitsSubmenu.AddItem("Metric", () => {
-                            Preferences.DistanceUnits = DistanceUnitsType.Meters;
-                            if (Preferences.SpeedUnits != SpeedUnitsType.MetersPerSecond &&
-                                Preferences.SpeedUnits != SpeedUnitsType.KilometersPerHour) {
-                                Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond;
-                            }
-                        });
-                        unitsSubmenu.AddItem("Imperial", () => {
-                            Preferences.DistanceUnits = DistanceUnitsType.Feet;
-                            Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour;
-                        });
-                        unitsSubmenu.AddSeparator();
-                        unitsSubmenu.AddSubmenu("Distance", distSubmenu => {
-                            distSubmenu.AddItem("Meters", () => Preferences.DistanceUnits = DistanceUnitsType.Meters,
-                                isChecked: Preferences.DistanceUnits == DistanceUnitsType.Meters);
-                            distSubmenu.AddItem("Feet", () => Preferences.DistanceUnits = DistanceUnitsType.Feet,
-                                isChecked: Preferences.DistanceUnits == DistanceUnitsType.Feet);
-                        });
-                        unitsSubmenu.AddSubmenu("Velocity", velSubmenu => {
-                            velSubmenu.AddItem("Meters Per Second", () => Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond,
-                                isChecked: Preferences.SpeedUnits == SpeedUnitsType.MetersPerSecond);
-                            velSubmenu.AddItem("Kilometers Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.KilometersPerHour,
-                                isChecked: Preferences.SpeedUnits == SpeedUnitsType.KilometersPerHour);
-                            velSubmenu.AddItem("Miles Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour,
-                                isChecked: Preferences.SpeedUnits == SpeedUnitsType.MilesPerHour);
-                        });
-                        unitsSubmenu.AddSubmenu("Angle", angleSubmenu => {
-                            angleSubmenu.AddItem("Degrees", () => Preferences.AngleUnits = AngleUnitsType.Degrees,
-                                isChecked: Preferences.AngleUnits == AngleUnitsType.Degrees);
-                            angleSubmenu.AddItem("Radians", () => Preferences.AngleUnits = AngleUnitsType.Radians,
-                                isChecked: Preferences.AngleUnits == AngleUnitsType.Radians);
-                        });
-                        unitsSubmenu.AddSubmenu("Angle Change", angleChangeSubmenu => {
-                            angleChangeSubmenu.AddItem("Degrees", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Degrees,
-                                isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Degrees);
-                            angleChangeSubmenu.AddItem("Radians", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians,
-                                isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Radians);
-                        });
-                        unitsSubmenu.AddSeparator();
-                        unitsSubmenu.AddItem("Reset to Default", () => {
-                            Preferences.DistanceUnits = DistanceUnitsType.Meters;
-                            Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond;
-                            Preferences.AngleUnits = AngleUnitsType.Degrees;
-                            Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians;
-                        });
-                    });
-
-                    submenu.AddSeparator();
-                    submenu.AddItem("Invert Scroll", () => Preferences.InvertScroll = !Preferences.InvertScroll,
-                        isChecked: Preferences.InvertScroll);
-                    submenu.AddItem("Sensitivity...", ShowSensitivityDialog);
-                    
-                    submenu.AddSeparator();
-                    submenu.AddItem("Emulate Numpad", () => Preferences.EnableTopRowViewHotkeys = !Preferences.EnableTopRowViewHotkeys,
-                        isChecked: Preferences.EnableTopRowViewHotkeys);
+                menu.AddSubmenu("Export", submenu => {
+                    submenu.AddItem("NoLimits 2...", ShowExportDialog);
+                    submenu.AddItem("Track Mesh", TrackMeshExporter.ExportTrackMesh);
                 });
                 menu.AddSeparator();
                 menu.AddItem("Quit", QuitWithConfirmation);
@@ -189,18 +131,13 @@ namespace KexEdit.UI {
                 menu.AddSeparator();
                 menu.AddItem("Select All", EditOperations.HandleSelectAll, "Ctrl+A".ToPlatformShortcut(), enabled: canSelectAll);
                 menu.AddItem("Deselect All", EditOperations.HandleDeselectAll, "Alt+A".ToPlatformShortcut(), enabled: canDeselectAll);
-                menu.AddSeparator();
-                menu.AddItem("Sync Playback", ToggleSyncPlayback, "T", isChecked: Preferences.SyncPlayback);
             });
         }
 
         private void AddViewMenu(MenuBar menuBar) {
             menuBar.AddMenu("View", menu => {
-                menu.AddItem("Full Screen", () => VideoControlSystem.Instance?.ToggleFullscreen(), "F11",
+                menu.AddItem("Fullscreen", () => VideoControlSystem.Instance?.ToggleFullscreen(), "F11",
                     isChecked: VideoControlSystem.IsFullscreen);
-                menu.AddItem("Zoom In", () => UIScaleSystem.Instance?.ZoomIn(), "Ctrl++".ToPlatformShortcut());
-                menu.AddItem("Zoom Out", () => UIScaleSystem.Instance?.ZoomOut(), "Ctrl+-".ToPlatformShortcut());
-                menu.AddItem("Reset Zoom", () => UIScaleSystem.Instance?.ResetZoom());
                 menu.AddSeparator();
                 menu.AddSubmenu("Camera", submenu => {
                     submenu.AddItem("Front View", () => OrbitCameraSystem.SetFrontView(), "Numpad 1");
@@ -212,25 +149,27 @@ namespace KexEdit.UI {
                     submenu.AddSeparator();
                     submenu.AddItem("Toggle Orthographic", () => OrbitCameraSystem.ToggleOrthographic(), "Numpad 5");
                     submenu.AddSeparator();
-                    submenu.AddSubmenu("Ride Camera", rideSubmenu => {
-                        rideSubmenu.AddItem("Toggle", () => OrbitCameraSystem.ToggleRideCamera(), "R",
-                            isChecked: OrbitCameraSystem.IsRideCameraActive);
-                        rideSubmenu.AddItem("Edit", ShowRideCameraDialog);
-                    });
-                });
-                menu.AddSubmenu("Display", submenu => {
-                    submenu.AddItem("Gizmos", ToggleShowGizmos, "F1",
-                        isChecked: Preferences.ShowGizmos);
-                    submenu.AddItem("Grid", () => GridSystem.Instance?.ToggleGrid(), "F2",
-                        isChecked: GridSystem.Instance?.ShowGrid == true);
-                    submenu.AddItem("Stats", ToggleShowStats, "F3",
-                        isChecked: Preferences.ShowStats);
-                    submenu.AddItem("Node Grid", ToggleNodeGridSnapping, "F4",
-                        isChecked: Preferences.NodeGridSnapping);
+                    submenu.AddItem("Ride Camera", () => OrbitCameraSystem.ToggleRideCamera(), "R",
+                        isChecked: OrbitCameraSystem.IsRideCameraActive);
                 });
                 menu.AddSeparator();
-                menu.AddSubmenu("Visualization", submenu => {
+                menu.AddItem("Zoom In", () => UIScaleSystem.Instance?.ZoomIn(), "Ctrl++".ToPlatformShortcut());
+                menu.AddItem("Zoom Out", () => UIScaleSystem.Instance?.ZoomOut(), "Ctrl+-".ToPlatformShortcut());
+                menu.AddItem("Reset Zoom", () => UIScaleSystem.Instance?.ResetZoom(), "Ctrl+0".ToPlatformShortcut());
+            });
+        }
+
+        private void AddTrackMenu(MenuBar menuBar) {
+            menuBar.AddMenu("Track", menu => {
+                menu.AddItem("Add Keyframe", AddKeyframe, "I");
+                menu.AddItem("Sync Playback", ToggleSyncPlayback, "T", isChecked: Preferences.SyncPlayback);
+                menu.AddSeparator();
+                menu.AddItem("Pivot...", ShowPivotEditorDialog);
+                menu.AddSeparator();
+                menu.AddSubmenu("Visualization Mode", submenu => {
                     var currentMode = Preferences.VisualizationMode;
+                    submenu.AddItem("None", () => Preferences.VisualizationMode = VisualizationMode.None,
+                        isChecked: currentMode == VisualizationMode.None);
                     submenu.AddItem("Velocity", () => ToggleVisualizationMode(VisualizationMode.Velocity), "Ctrl+1".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.Velocity);
                     submenu.AddItem("Curvature", () => ToggleVisualizationMode(VisualizationMode.Curvature), "Ctrl+2".ToPlatformShortcut(),
@@ -246,55 +185,130 @@ namespace KexEdit.UI {
                     submenu.AddItem("Yaw Speed", () => ToggleVisualizationMode(VisualizationMode.YawSpeed), "Ctrl+7".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.YawSpeed);
                     submenu.AddSeparator();
-                    submenu.AddItem("Edit", ShowVisualizationRangeDialog);
+                    submenu.AddItem("Edit Ranges...", ShowVisualizationRangeDialog);
                 });
-                menu.AddSubmenu("Appearance", submenu => {
-                    submenu.AddSubmenu("Track Style", trackSubmenu => {
-                        var availableConfigs = TrackStyleConfigManager.GetAvailableConfigsWithNames();
-                        string currentConfigName = Preferences.CurrentTrackStyle;
-                        if (availableConfigs.Length > 0) {
-                            foreach (var configInfo in availableConfigs) {
-                                bool isCurrentConfig = configInfo.FileName == currentConfigName;
-                                trackSubmenu.AddItem(configInfo.DisplayName, () => LoadTrackStyleConfig(configInfo.FileName),
-                                isChecked: isCurrentConfig);
-                            }
-                            trackSubmenu.AddSeparator();
+                menu.AddSeparator();
+                menu.AddSubmenu("Track Style", submenu => {
+                    var availableConfigs = TrackStyleConfigManager.GetAvailableConfigsWithNames();
+                    string currentConfigName = Preferences.CurrentTrackStyle;
+                    if (availableConfigs.Length > 0) {
+                        foreach (var configInfo in availableConfigs) {
+                            bool isCurrentConfig = configInfo.FileName == currentConfigName;
+                            submenu.AddItem(configInfo.DisplayName, () =>
+                                LoadTrackStyleConfig(configInfo.FileName), isChecked: isCurrentConfig);
                         }
-                        trackSubmenu.AddItem("Edit Colors", ShowColorPicker);
-                        trackSubmenu.AddItem("Auto Style", ToggleAutoStyle, isChecked: Preferences.AutoStyle);
-                        trackSubmenu.AddSeparator();
-                        trackSubmenu.AddItem("Open Folder", TrackStyleConfigManager.OpenTrackStylesFolder);
-                    });
-                    submenu.AddSubmenu("Cart Style", cartSubmenu => {
-                        var availableConfigs = CartStyleConfigManager.GetAvailableConfigsWithNames();
-                        string currentConfigName = Preferences.CurrentCartStyle;
-                        if (availableConfigs.Count > 0) {
-                            foreach (var configInfo in availableConfigs) {
-                                bool isCurrentConfig = configInfo.fileName == currentConfigName;
-                                cartSubmenu.AddItem(configInfo.displayName, () => CartStyleConfigManager.LoadConfig(configInfo.fileName),
-                                isChecked: isCurrentConfig);
-                            }
-                            cartSubmenu.AddSeparator();
+                        submenu.AddSeparator();
+                    }
+                    submenu.AddItem("Edit Colors...", ShowColorPicker);
+                    submenu.AddItem("Auto Style", ToggleAutoStyle, isChecked: Preferences.AutoStyle);
+                    submenu.AddSeparator();
+                    submenu.AddItem("Open Styles Folder", TrackStyleConfigManager.OpenTrackStylesFolder);
+                });
+                menu.AddSubmenu("Train Style", (System.Action<ContextMenu>)(submenu => {
+                    var availableConfigs = TrainStyleConfigManager.GetAvailableConfigsWithNames();
+                    string currentConfigName = Preferences.CurrentTrainStyle;
+                    if (availableConfigs.Count > 0) {
+                        foreach (var configInfo in availableConfigs) {
+                            bool isCurrentConfig = configInfo.FileName == currentConfigName;
+                            submenu.AddItem(configInfo.DisplayName, () =>
+                                LoadTrainStyleConfig(configInfo.FileName), isChecked: isCurrentConfig);
                         }
-                        cartSubmenu.AddItem("Open Folder", CartStyleConfigManager.OpenCartStylesFolder);
-                    });
-                    submenu.AddSubmenu("Background", envSubmenu => {
-                        var currentSkyType = Preferences.SkyType;
-                        envSubmenu.AddItem("Solid", () => Preferences.SkyType = SkyType.Solid,
-                            isChecked: currentSkyType == SkyType.Solid);
-                        envSubmenu.AddItem("Sky", () => Preferences.SkyType = SkyType.Procedural,
-                            isChecked: currentSkyType == SkyType.Procedural);
-                    });
+                        submenu.AddSeparator();
+                    }
+                    submenu.AddItem("Edit Count...", ShowTrainCarCountDialog);
+                    submenu.AddSeparator();
+                    submenu.AddItem("Open Trains Folder", TrainStyleConfigManager.OpenTrainStylesFolder);
+                }));
+            });
+        }
+
+        private void AddDisplayMenu(MenuBar menuBar) {
+            menuBar.AddMenu("Display", menu => {
+                menu.AddItem("Gizmos", ToggleShowGizmos, "F1", isChecked: Preferences.ShowGizmos);
+                menu.AddItem("Grid", () => GridSystem.Instance?.ToggleGrid(), "F2",
+                    isChecked: GridSystem.Instance?.ShowGrid == true);
+                menu.AddItem("Stats", ToggleShowStats, "F3", isChecked: Preferences.ShowStats);
+                menu.AddItem("Node Grid", ToggleNodeGridSnapping, "F4",
+                    isChecked: Preferences.NodeGridSnapping);
+                menu.AddSeparator();
+                menu.AddSubmenu("Background", submenu => {
+                    var currentSkyType = Preferences.SkyType;
+                    submenu.AddItem("Solid", () => Preferences.SkyType = SkyType.Solid,
+                        isChecked: currentSkyType == SkyType.Solid);
+                    submenu.AddItem("Sky", () => Preferences.SkyType = SkyType.Procedural,
+                        isChecked: currentSkyType == SkyType.Procedural);
                 });
             });
         }
 
+        private void AddSettingsMenu(MenuBar menuBar) {
+            menuBar.AddMenu("Settings", menu => {
+                menu.AddSubmenu("Units", submenu => {
+                    submenu.AddItem("Metric", () => {
+                        Preferences.DistanceUnits = DistanceUnitsType.Meters;
+                        if (Preferences.SpeedUnits != SpeedUnitsType.MetersPerSecond &&
+                            Preferences.SpeedUnits != SpeedUnitsType.KilometersPerHour) {
+                            Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond;
+                        }
+                    });
+                    submenu.AddItem("Imperial", () => {
+                        Preferences.DistanceUnits = DistanceUnitsType.Feet;
+                        Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour;
+                    });
+                    submenu.AddSeparator();
+                    submenu.AddSubmenu("Distance", distSubmenu => {
+                        distSubmenu.AddItem("Meters", () => Preferences.DistanceUnits = DistanceUnitsType.Meters,
+                            isChecked: Preferences.DistanceUnits == DistanceUnitsType.Meters);
+                        distSubmenu.AddItem("Feet", () => Preferences.DistanceUnits = DistanceUnitsType.Feet,
+                            isChecked: Preferences.DistanceUnits == DistanceUnitsType.Feet);
+                    });
+                    submenu.AddSubmenu("Velocity", velSubmenu => {
+                        velSubmenu.AddItem("Meters Per Second", () => Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond,
+                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.MetersPerSecond);
+                        velSubmenu.AddItem("Kilometers Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.KilometersPerHour,
+                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.KilometersPerHour);
+                        velSubmenu.AddItem("Miles Per Hour", () => Preferences.SpeedUnits = SpeedUnitsType.MilesPerHour,
+                            isChecked: Preferences.SpeedUnits == SpeedUnitsType.MilesPerHour);
+                    });
+                    submenu.AddSubmenu("Angle", angleSubmenu => {
+                        angleSubmenu.AddItem("Degrees", () => Preferences.AngleUnits = AngleUnitsType.Degrees,
+                            isChecked: Preferences.AngleUnits == AngleUnitsType.Degrees);
+                        angleSubmenu.AddItem("Radians", () => Preferences.AngleUnits = AngleUnitsType.Radians,
+                            isChecked: Preferences.AngleUnits == AngleUnitsType.Radians);
+                    });
+                    submenu.AddSubmenu("Angle Change", angleChangeSubmenu => {
+                        angleChangeSubmenu.AddItem("Degrees", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Degrees,
+                            isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Degrees);
+                        angleChangeSubmenu.AddItem("Radians", () => Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians,
+                            isChecked: Preferences.AngleChangeUnits == AngleChangeUnitsType.Radians);
+                    });
+                });
+                menu.AddSeparator();
+                menu.AddSubmenu("Controls", submenu => {
+                    submenu.AddItem("Invert Scroll", () => Preferences.InvertScroll = !Preferences.InvertScroll,
+                        isChecked: Preferences.InvertScroll);
+                    submenu.AddItem("Sensitivity...", ShowSensitivityDialog);
+                    submenu.AddItem("Emulate Numpad", () => Preferences.EnableTopRowViewHotkeys = !Preferences.EnableTopRowViewHotkeys,
+                        isChecked: Preferences.EnableTopRowViewHotkeys);
+                });
+                menu.AddSeparator();
+                menu.AddItem("Ride Camera...", ShowRideCameraDialog);
+                menu.AddItem("Reset to Default", () => {
+                    Preferences.DistanceUnits = DistanceUnitsType.Meters;
+                    Preferences.SpeedUnits = SpeedUnitsType.MetersPerSecond;
+                    Preferences.AngleUnits = AngleUnitsType.Degrees;
+                    Preferences.AngleChangeUnits = AngleChangeUnitsType.Radians;
+                    Preferences.InvertScroll = false;
+                    Preferences.EnableTopRowViewHotkeys = false;
+                });
+            });
+        }
 
         private void AddHelpMenu(MenuBar menuBar) {
             menuBar.AddMenu("Help", menu => {
-                menu.AddItem("About", ShowAbout);
+                menu.AddItem("About...", ShowAbout);
                 menu.AddSeparator();
-                menu.AddItem("Controls", ShowControls, "Ctrl+H".ToPlatformShortcut());
+                menu.AddItem("Controls...", ShowControls, "Ctrl+H".ToPlatformShortcut());
             });
         }
 
@@ -328,6 +342,14 @@ namespace KexEdit.UI {
 
         private void ShowSensitivityDialog() {
             _root.ShowSensitivityDialog();
+        }
+
+        private void ShowTrainCarCountDialog() {
+            _root.ShowTrainCarCountDialog();
+        }
+
+        private void ShowPivotEditorDialog() {
+            _root.ShowPivotEditorDialog();
         }
 
         private void ToggleNodeGridSnapping() {
@@ -367,6 +389,12 @@ namespace KexEdit.UI {
         private void LoadTrackStyleConfig(string filename) {
             Preferences.CurrentTrackStyle = filename;
             ref var singleton = ref SystemAPI.GetSingletonRW<EditorTrackStyleSettingsSingleton>().ValueRW;
+            singleton.Dirty = true;
+        }
+
+        private void LoadTrainStyleConfig(string filename) {
+            Preferences.CurrentTrainStyle = filename;
+            ref var singleton = ref SystemAPI.GetSingletonRW<EditorTrainStyleSingleton>().ValueRW;
             singleton.Dirty = true;
         }
 

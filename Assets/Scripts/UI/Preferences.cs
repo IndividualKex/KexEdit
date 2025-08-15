@@ -22,7 +22,7 @@ namespace KexEdit.UI {
         private const string PREF_KEYFRAME_EDITOR = "KeyframeEditor";
         private const string PREF_SHOW_GIZMOS = "ShowGizmos";
         private const string PREF_SKY_TYPE = "SkyType";
-        private const string PREF_CURRENT_CART_STYLE = "CurrentCartStyle";
+        private const string PREF_CURRENT_TRAIN_STYLE = "CurrentTrainStyle";
         private const string PREF_CURRENT_TRACK_STYLE = "CurrentTrackStyle";
         private const string PREF_AUTO_STYLE = "AutoStyle";
         private const string PREF_VIS_VELOCITY_MIN = "VisVelocityMin";
@@ -51,7 +51,7 @@ namespace KexEdit.UI {
         private static AngleChangeUnitsType s_AngleChangeUnits;
         private static SpeedUnitsType s_SpeedUnits;
 
-        private static string s_CurrentCartStyle;
+        private static string s_CurrentTrainStyle;
         private static string s_CurrentTrackStyle;
         private static float s_RideCameraPositionX;
         private static float s_RideCameraPositionY;
@@ -114,11 +114,11 @@ namespace KexEdit.UI {
             }
         }
 
-        public static string CurrentCartStyle {
-            get => s_CurrentCartStyle;
+        public static string CurrentTrainStyle {
+            get => s_CurrentTrainStyle;
             set {
-                s_CurrentCartStyle = value;
-                PlayerPrefs.SetString(PREF_CURRENT_CART_STYLE, value);
+                s_CurrentTrainStyle = value;
+                PlayerPrefs.SetString(PREF_CURRENT_TRAIN_STYLE, value);
                 PlayerPrefs.Save();
             }
         }
@@ -329,8 +329,17 @@ namespace KexEdit.UI {
             s_AngleChangeUnits = (AngleChangeUnitsType)PlayerPrefs.GetInt(PREF_ANGLE_CHANGE_UNITS, (int)AngleChangeUnitsType.Radians);
             s_SpeedUnits = (SpeedUnitsType)PlayerPrefs.GetInt(PREF_SPEED_UNITS, (int)SpeedUnitsType.MetersPerSecond);
 
-            s_CurrentCartStyle = PlayerPrefs.GetString(PREF_CURRENT_CART_STYLE, "Default.json");
-            s_CurrentTrackStyle = PlayerPrefs.GetString(PREF_CURRENT_TRACK_STYLE, "Default.json");
+            s_CurrentTrainStyle = PlayerPrefs.GetString(PREF_CURRENT_TRAIN_STYLE, "Modern.json");
+            s_CurrentTrackStyle = PlayerPrefs.GetString(PREF_CURRENT_TRACK_STYLE, "Modern.json");
+
+            if (s_CurrentTrainStyle == "Default.json") {
+                s_CurrentTrainStyle = "Modern.json";
+                PlayerPrefs.SetString(PREF_CURRENT_TRAIN_STYLE, s_CurrentTrainStyle);
+            }
+            if (s_CurrentTrackStyle == "Default.json") {
+                s_CurrentTrackStyle = "Modern.json";
+                PlayerPrefs.SetString(PREF_CURRENT_TRACK_STYLE, s_CurrentTrackStyle);
+            }
             s_RideCameraPositionX = PlayerPrefs.GetFloat(PREF_RIDE_CAMERA_POSITION_X, DEFAULT_RIDE_CAMERA_POSITION_X);
             s_RideCameraPositionY = PlayerPrefs.GetFloat(PREF_RIDE_CAMERA_POSITION_Y, DEFAULT_RIDE_CAMERA_POSITION_Y);
             s_RideCameraPositionZ = PlayerPrefs.GetFloat(PREF_RIDE_CAMERA_POSITION_Z, DEFAULT_RIDE_CAMERA_POSITION_Z);
@@ -341,7 +350,7 @@ namespace KexEdit.UI {
             s_SkyType = (SkyType)PlayerPrefs.GetInt(PREF_SKY_TYPE, (int)SkyType.Solid);
             s_NodeGridSnapping = PlayerPrefs.GetInt(PREF_NODE_GRID_SNAPPING, 0) == 1;
             s_ShowStats = PlayerPrefs.GetInt(PREF_SHOW_STATS, 0) == 1;
-            s_SyncPlayback = PlayerPrefs.GetInt(PREF_SYNC_PLAYBACK, 0) == 1;
+            s_SyncPlayback = PlayerPrefs.GetInt(PREF_SYNC_PLAYBACK, 1) == 1;
             s_KeyframeEditor = PlayerPrefs.GetInt(PREF_KEYFRAME_EDITOR, 0) == 1;
             s_ShowGizmos = PlayerPrefs.GetInt(PREF_SHOW_GIZMOS, 0) == 1;
             s_AutoStyle = PlayerPrefs.GetInt(PREF_AUTO_STYLE, 0) == 1;

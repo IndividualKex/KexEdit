@@ -4,18 +4,8 @@ using System.Linq;
 using UnityEngine;
 
 namespace KexEdit.UI {
-    public readonly struct TrackStyleConfigInfo {
-        public readonly string FileName;
-        public readonly string DisplayName;
-
-        public TrackStyleConfigInfo(string fileName, string displayName) {
-            FileName = fileName;
-            DisplayName = displayName;
-        }
-    }
-
     public static class TrackStyleConfigManager {
-        private static string TrackStylesPath => Path.Combine(Application.streamingAssetsPath, "TrackStyles");
+        public static string TrackStylesPath => Path.Combine(Application.streamingAssetsPath, "TrackStyles");
 
         public static string[] GetAvailableConfigs() {
             return GetAvailableConfigsWithNames().Select(info => info.FileName).ToArray();
@@ -63,7 +53,6 @@ namespace KexEdit.UI {
                 return null;
             }
         }
-
 
         public static void OpenTrackStylesFolder() {
             try {
@@ -125,6 +114,16 @@ namespace KexEdit.UI {
             }
             catch {
                 return false;
+            }
+        }
+
+        public struct TrackStyleConfigInfo {
+            public string FileName;
+            public string DisplayName;
+
+            public TrackStyleConfigInfo(string fileName, string displayName) {
+                FileName = fileName;
+                DisplayName = displayName;
             }
         }
     }

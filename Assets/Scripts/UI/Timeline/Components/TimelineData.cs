@@ -5,9 +5,10 @@ using Unity.Entities;
 
 namespace KexEdit.UI.Timeline {
     public class TimelineData : IComponentData, IDisposable {
-        public NativeList<float> Times = new(Allocator.Persistent);
+        public NativeList<float> Times;
         public List<PropertyType> OrderedProperties = new();
         public Dictionary<PropertyType, PropertyData> Properties = new();
+        public Dictionary<PropertyType, ReadOnlyPropertyData> ReadOnlyProperties = new();
         public ValueBounds ValueBounds = ValueBounds.Default;
         public string DisplayName;
         public float Time = 0f;
@@ -34,15 +35,17 @@ namespace KexEdit.UI.Timeline {
         public bool AddPropertyButtonVisible = false;
         public bool Active = false;
         public bool HasEditableDuration = false;
-        public bool DrawAnyReadOnly = false;
         public bool EnableKeyframeEditor = false;
         public bool HasEditingKeyframe = false;
 
         public void Dispose() {
             Entity = Entity.Null;
             Active = false;
-            Times.Dispose();
+            if (Times.IsCreated) Times.Dispose();
             foreach (var propertyData in Properties.Values) {
+                propertyData.Dispose();
+            }
+            foreach (var propertyData in ReadOnlyProperties.Values) {
                 propertyData.Dispose();
             }
         }

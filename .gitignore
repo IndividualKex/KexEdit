@@ -87,5 +87,4 @@ crashlytics-build.properties
 /[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers.meta
 
 # IDE
-CLAUDE.md
-.claude/
+.claude/settings.local.json

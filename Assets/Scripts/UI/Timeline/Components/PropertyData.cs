@@ -5,7 +5,7 @@ using Unity.Collections;
 namespace KexEdit.UI.Timeline {
     public class PropertyData : IDisposable {
         public List<Keyframe> Keyframes = new();
-        public NativeList<float> Values = new(Allocator.Persistent);
+        public NativeList<float> Values;
         public PropertyType Type;
         public float Value = 0f;
         public TimelineViewMode ViewMode = TimelineViewMode.DopeSheet;
@@ -15,17 +15,8 @@ namespace KexEdit.UI.Timeline {
         public bool Selected = false;
         public bool IsAlt = false;
         public bool HasActiveKeyframe = false;
-        public bool DrawReadOnly = false;
         public bool Hidden = false;
 
-        public bool IsReadable => Type switch {
-            PropertyType.NormalForce => true,
-            PropertyType.LateralForce => true,
-            PropertyType.RollSpeed => true,
-            PropertyType.PitchSpeed => true,
-            PropertyType.YawSpeed => true,
-            _ => false
-        };
 
         public bool IsRemovable => Type switch {
             PropertyType.FixedVelocity => true,
@@ -37,7 +28,7 @@ namespace KexEdit.UI.Timeline {
         };
 
         public void Dispose() {
-            Values.Dispose();
+            if (Values.IsCreated) Values.Dispose();
         }
     }
 }

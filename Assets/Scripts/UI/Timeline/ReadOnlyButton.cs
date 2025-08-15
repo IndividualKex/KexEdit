@@ -37,32 +37,32 @@ namespace KexEdit.UI.Timeline {
             RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
             RegisterCallback<MouseDownEvent>(OnMouseDown);
 
-            var backgroundBinding = new DataBinding {
-                dataSourcePath = new PropertyPath(nameof(_data.DrawAnyReadOnly)),
-                bindingMode = BindingMode.ToTarget,
-            };
-            backgroundBinding.sourceToUiConverters.AddConverter((ref bool drawAnyReadOnly) =>
-                (StyleColor)(drawAnyReadOnly ? s_ActiveColor : s_BackgroundColor));
+            UpdateButtonState();
+        }
 
-            var colorBinding = new DataBinding {
-                dataSourcePath = new PropertyPath(nameof(_data.DrawAnyReadOnly)),
-                bindingMode = BindingMode.ToTarget,
-            };
-            colorBinding.sourceToUiConverters.AddConverter((ref bool drawAnyReadOnly) =>
-                (StyleColor)(drawAnyReadOnly ? s_ActiveTextColor : s_TextColor));
+        private bool HasAnyReadOnlyVisible() {
+            foreach (var (type, propertyData) in _data.ReadOnlyProperties) {
+                if (propertyData.Visible) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
-            SetBinding("style.backgroundColor", backgroundBinding);
-            SetBinding("style.color", colorBinding);
+        public void UpdateButtonState() {
+            bool hasAnyReadOnly = HasAnyReadOnlyVisible();
+            style.backgroundColor = hasAnyReadOnly ? s_ActiveColor : s_BackgroundColor;
+            style.color = hasAnyReadOnly ? s_ActiveTextColor : s_TextColor;
         }
 
         private void OnMouseEnter(MouseEnterEvent evt) {
-            if (!_data.DrawAnyReadOnly) {
+            if (!HasAnyReadOnlyVisible()) {
                 style.backgroundColor = s_HoverColor;
             }
         }
 
         private void OnMouseLeave(MouseLeaveEvent evt) {
-            if (!_data.DrawAnyReadOnly) {
+            if (!HasAnyReadOnlyVisible()) {
                 style.backgroundColor = s_BackgroundColor;
             }
         }
