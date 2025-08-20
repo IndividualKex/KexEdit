@@ -93,13 +93,13 @@ namespace KexEdit {
         None = 0,
         Render = 1 << 0,      // 0x01
         Selected = 1 << 1,    // 0x02
+        Steering = 1 << 2,    // 0x04
         // Reserve bits for future serialization flags
-        Reserved1 = 1 << 2,   // 0x04
-        Reserved2 = 1 << 3,   // 0x08
-        Reserved3 = 1 << 4,   // 0x10
-        Reserved4 = 1 << 5,   // 0x20
-        Reserved5 = 1 << 6,   // 0x40
-        Reserved6 = 1 << 7,   // 0x80
+        Reserved1 = 1 << 3,   // 0x08
+        Reserved2 = 1 << 4,   // 0x10
+        Reserved3 = 1 << 5,   // 0x20
+        Reserved4 = 1 << 6,   // 0x40
+        Reserved5 = 1 << 7,   // 0x80
     }
 
     [Flags]

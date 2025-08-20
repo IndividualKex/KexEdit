@@ -9,6 +9,7 @@ namespace KexEdit {
         private readonly RefRW<Duration> DurationRW;
         private readonly RefRW<Dirty> DirtyRW;
         private readonly RefRW<PropertyOverrides> PropertyOverridesRW;
+        private readonly RefRW<Steering> SteeringRW;
 
         public readonly DynamicBuffer<Point> Points;
 
@@ -59,6 +60,11 @@ namespace KexEdit {
         public bool ResistanceOverride {
             get => PropertyOverridesRW.ValueRO.Resistance;
             set => PropertyOverridesRW.ValueRW.Resistance = value;
+        }
+
+        public bool Steering {
+            get => SteeringRW.ValueRO.Value;
+            set => SteeringRW.ValueRW.Value = value;
         }
     }
 }

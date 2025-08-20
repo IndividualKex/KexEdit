@@ -17,11 +17,12 @@ namespace KexEdit.UI.NodeGraph {
         public DurationType DurationType;
         public int Priority;
         public bool Render;
+        public bool Steering;
 
         public bool Hovered => InteractionState.HasFlag(InteractionState.Hovered);
         public bool Selected => InteractionState.HasFlag(InteractionState.Selected);
 
-        public static NodeData Create(NodeAspect node, DurationType durationType, bool render) {
+        public static NodeData Create(NodeAspect node, DurationType durationType, bool render, bool steering = true) {
             InteractionState interactionState = InteractionState.None;
             if (node.Selected) interactionState |= InteractionState.Selected;
 
@@ -34,16 +35,18 @@ namespace KexEdit.UI.NodeGraph {
                 DurationType = durationType,
                 Priority = node.Priority,
                 Render = render,
+                Steering = steering,
             };
         }
 
-        public void Update(NodeAspect node, DurationType durationType, bool render) {
+        public void Update(NodeAspect node, DurationType durationType, bool render, bool steering = true) {
             Position = node.Position;
             if (node.Selected) InteractionState |= InteractionState.Selected;
             else InteractionState &= ~InteractionState.Selected;
             DurationType = durationType;
             Priority = node.Priority;
             Render = render;
+            Steering = steering;
         }
     }
 }

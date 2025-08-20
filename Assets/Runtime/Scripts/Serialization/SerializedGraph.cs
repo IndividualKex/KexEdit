@@ -35,15 +35,15 @@ namespace KexEdit.Serialization {
         HasCurveData = 1 << 4,
         HasDuration = 1 << 5,
         HasMeshFilePath = 1 << 6,
-        Reserved1 = 1 << 7,
-        Reserved2 = 1 << 8,
-        Reserved3 = 1 << 9,
-        Reserved4 = 1 << 10,
-        Reserved5 = 1 << 11,
-        Reserved6 = 1 << 12,
-        Reserved7 = 1 << 13,
-        Reserved8 = 1 << 14,
-        Reserved9 = 1 << 15,
+        HasSteering = 1 << 7,
+        Reserved1 = 1 << 8,
+        Reserved2 = 1 << 9,
+        Reserved3 = 1 << 10,
+        Reserved4 = 1 << 11,
+        Reserved5 = 1 << 12,
+        Reserved6 = 1 << 13,
+        Reserved7 = 1 << 14,
+        Reserved8 = 1 << 15,
     }
 
     public struct SerializedUIState {
@@ -160,6 +160,11 @@ namespace KexEdit.Serialization {
         public bool Selected {
             get => (BooleanFlags & NodeFlags.Selected) != 0;
             set => BooleanFlags = value ? BooleanFlags | NodeFlags.Selected : BooleanFlags & ~NodeFlags.Selected;
+        }
+
+        public bool Steering {
+            get => (BooleanFlags & NodeFlags.Steering) != 0;
+            set => BooleanFlags = value ? BooleanFlags | NodeFlags.Steering : BooleanFlags & ~NodeFlags.Steering;
         }
 
         public void Dispose() {
