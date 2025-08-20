@@ -160,31 +160,64 @@ namespace KexEdit {
                 float deltaPitch,
                 float deltaYaw
             ) {
-                // Apply pitch
-                float3 pitchAxis = math.normalize(math.cross(new float3(0f, curr.Normal.y, 0f), curr.Direction));
-                quaternion pitchQuat = quaternion.AxisAngle(pitchAxis, deltaPitch);
-                curr.Direction = math.normalize(math.mul(pitchQuat, prev.Direction));
-                curr.Lateral = math.normalize(math.mul(pitchQuat, prev.Lateral));
+                if (section.Steering) {
+                    // Apply pitch
+                    quaternion pitchQuat = quaternion.AxisAngle(math.right(), deltaPitch);
+                    curr.Direction = math.normalize(math.mul(pitchQuat, prev.Direction));
+                    curr.Lateral = math.normalize(math.mul(pitchQuat, prev.Lateral));
 
-                // Apply yaw
-                quaternion yawQuat = quaternion.AxisAngle(math.up(), deltaYaw);
-                curr.Direction = math.normalize(math.mul(yawQuat, curr.Direction));
-                curr.Lateral = math.normalize(math.mul(yawQuat, curr.Lateral));
+                    // Apply yaw
+                    quaternion yawQuat = quaternion.AxisAngle(math.up(), deltaYaw);
+                    curr.Direction = math.normalize(math.mul(yawQuat, curr.Direction));
+                    curr.Lateral = math.normalize(math.mul(yawQuat, curr.Lateral));
 
-                // Update Normal
-                curr.Normal = math.normalize(math.cross(curr.Direction, curr.Lateral));
+                    // Update Normal
+                    curr.Normal = math.normalize(math.cross(curr.Direction, curr.Lateral));
 
-                // Update position
-                curr.Position += curr.Direction * (curr.Velocity / (2f * HZ))
-                    + prev.Direction * (curr.Velocity / (2f * HZ))
-                    + (prev.GetHeartPosition(prev.Heart) - curr.GetHeartPosition(curr.Heart));
+                    // Update position
+                    curr.Position += curr.Direction * (curr.Velocity / (2f * HZ))
+                        + prev.Direction * (curr.Velocity / (2f * HZ))
+                        + (prev.GetHeartPosition(prev.Heart) - curr.GetHeartPosition(curr.Heart));
 
-                quaternion rollQuat = quaternion.AxisAngle(curr.Direction, -deltaRoll);
-                curr.Lateral = math.normalize(math.mul(rollQuat, curr.Lateral));
-                curr.Normal = math.normalize(math.cross(curr.Direction, curr.Lateral));
+                    quaternion rollQuat = quaternion.AxisAngle(curr.Direction, -deltaRoll);
+                    curr.Lateral = math.normalize(math.mul(rollQuat, curr.Lateral));
+                    curr.Normal = math.normalize(math.cross(curr.Direction, curr.Lateral));
 
-                curr.Roll = math.degrees(math.atan2(curr.Lateral.y, -curr.Normal.y));
-                curr.Roll = (curr.Roll + 540) % 360 - 180;
+                    float3 worldRight = math.right();
+                    float3 projectedLateral = curr.Lateral - math.dot(curr.Lateral, curr.Direction) * curr.Direction;
+                    projectedLateral = math.normalize(projectedLateral);
+                    float rollCos = math.dot(projectedLateral, worldRight);
+                    float rollSin = math.dot(projectedLateral, math.cross(curr.Direction, worldRight));
+                    curr.Roll = math.degrees(math.atan2(rollSin, rollCos));
+                    curr.Roll = (curr.Roll + 540) % 360 - 180;
+                }
+                else {
+                    // Apply pitch
+                    float3 pitchAxis = math.normalize(math.cross(new float3(0f, curr.Normal.y, 0f), curr.Direction));
+                    quaternion pitchQuat = quaternion.AxisAngle(pitchAxis, deltaPitch);
+                    curr.Direction = math.normalize(math.mul(pitchQuat, prev.Direction));
+                    curr.Lateral = math.normalize(math.mul(pitchQuat, prev.Lateral));
+
+                    // Apply yaw
+                    quaternion yawQuat = quaternion.AxisAngle(math.up(), deltaYaw);
+                    curr.Direction = math.normalize(math.mul(yawQuat, curr.Direction));
+                    curr.Lateral = math.normalize(math.mul(yawQuat, curr.Lateral));
+
+                    // Update Normal
+                    curr.Normal = math.normalize(math.cross(curr.Direction, curr.Lateral));
+
+                    // Update position
+                    curr.Position += curr.Direction * (curr.Velocity / (2f * HZ))
+                        + prev.Direction * (curr.Velocity / (2f * HZ))
+                        + (prev.GetHeartPosition(prev.Heart) - curr.GetHeartPosition(curr.Heart));
+
+                    quaternion rollQuat = quaternion.AxisAngle(curr.Direction, -deltaRoll);
+                    curr.Lateral = math.normalize(math.mul(rollQuat, curr.Lateral));
+                    curr.Normal = math.normalize(math.cross(curr.Direction, curr.Lateral));
+
+                    curr.Roll = math.degrees(math.atan2(curr.Lateral.y, -curr.Normal.y));
+                    curr.Roll = (curr.Roll + 540) % 360 - 180;
+                }
 
                 // Compute point metrics
                 curr.DistanceFromLast = math.distance(curr.GetHeartPosition(curr.Heart), prev.GetHeartPosition(prev.Heart));

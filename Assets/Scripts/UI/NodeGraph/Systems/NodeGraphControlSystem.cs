@@ -69,6 +69,7 @@ namespace KexEdit.UI.NodeGraph {
             _view.RegisterCallback<ClearSelectionEvent>(_ => ClearSelection());
             _view.RegisterCallback<DurationTypeChangeEvent>(OnDurationTypeChange);
             _view.RegisterCallback<RenderToggleChangeEvent>(OnRenderToggleChange);
+            _view.RegisterCallback<SteeringToggleChangeEvent>(OnSteeringToggleChange);
             _view.RegisterCallback<PriorityChangeEvent>(OnPriorityChange);
             _view.RegisterCallback<NodeGraphPanChangeEvent>(OnNodeGraphPanChange);
             _view.RegisterCallback<NodeGraphZoomChangeEvent>(OnNodeGraphZoomChange);
@@ -123,7 +124,12 @@ namespace KexEdit.UI.NodeGraph {
                     render = SystemAPI.GetComponent<Render>(entity);
                 }
 
-                var nodeData = NodeData.Create(node, durationType, render);
+                bool steering = true;
+                if (SystemAPI.HasComponent<Steering>(entity)) {
+                    steering = SystemAPI.GetComponent<Steering>(entity);
+                }
+
+                var nodeData = NodeData.Create(node, durationType, render, steering);
 
                 var inputPortReferences = SystemAPI.GetBuffer<InputPortReference>(entity);
                 foreach (var inputPortReference in inputPortReferences) {
@@ -219,7 +225,12 @@ namespace KexEdit.UI.NodeGraph {
                     render = SystemAPI.GetComponent<Render>(entity);
                 }
 
-                nodeData.Update(node, durationType, render);
+                bool steering = true;
+                if (SystemAPI.HasComponent<Steering>(entity)) {
+                    steering = SystemAPI.GetComponent<Steering>(entity);
+                }
+
+                nodeData.Update(node, durationType, render, steering);
 
                 foreach (var portData in nodeData.Inputs.Values) {
                     UpdateInputPortValue(portData);
@@ -582,6 +593,14 @@ namespace KexEdit.UI.NodeGraph {
         private void OnRenderToggleChange(RenderToggleChangeEvent evt) {
             ref var render = ref SystemAPI.GetComponentRW<Render>(evt.Node).ValueRW;
             render.Value = evt.Render;
+        }
+
+        private void OnSteeringToggleChange(SteeringToggleChangeEvent evt) {
+            ref var steering = ref SystemAPI.GetComponentRW<Steering>(evt.Node).ValueRW;
+            steering.Value = evt.Steering;
+
+            ref var dirty = ref SystemAPI.GetComponentRW<Dirty>(evt.Node).ValueRW;
+            dirty = true;
         }
 
         private void OnPriorityChange(PriorityChangeEvent evt) {
@@ -1199,6 +1218,10 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.AddBuffer<ResistanceKeyframe>(entity);
                 ecb.AddBuffer<TrackStyleKeyframe>(entity);
                 ecb.AddComponent<StyleHash>(entity);
+            }
+
+            if (type == NodeType.GeometricSection) {
+                ecb.AddComponent<Steering>(entity, true);
             }
 
             if (type == NodeType.Mesh) {

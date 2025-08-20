@@ -19,6 +19,7 @@ namespace KexEdit.UI.NodeGraph {
         private VisualElement _footer;
         private DurationTypeField _durationTypeField;
         private RenderToggle _renderToggle;
+        private SteeringToggle _steeringToggle;
         private PriorityField _priorityField;
         private VisualElement _foldout;
         private VisualElement _itemsContainer;
@@ -334,6 +335,11 @@ namespace KexEdit.UI.NodeGraph {
                     _itemsContainer.Add(_renderToggle);
                 }
 
+                if (_type == NodeType.GeometricSection) {
+                    _steeringToggle = new SteeringToggle();
+                    _itemsContainer.Add(_steeringToggle);
+                }
+
                 if (_type != NodeType.Mesh && _type != NodeType.Append) {
                     _priorityField = new PriorityField();
                     _itemsContainer.Add(_priorityField);
@@ -403,6 +409,7 @@ namespace KexEdit.UI.NodeGraph {
 
             _durationTypeField?.Bind(_data);
             _renderToggle?.Bind(_data);
+            _steeringToggle?.Bind(_data);
             _priorityField?.Bind(_data);
 
             bool hasNonVerticalInputs = false;
@@ -492,6 +499,7 @@ namespace KexEdit.UI.NodeGraph {
 
             _durationTypeField?.Unbind();
             _renderToggle?.Unbind();
+            _steeringToggle?.Unbind();
             _priorityField?.Unbind();
 
             _inputsContainer.Clear();

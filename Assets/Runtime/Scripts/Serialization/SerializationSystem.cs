@@ -336,6 +336,12 @@ namespace KexEdit.Serialization {
                 NodeType.Bridge or NodeType.Mesh => SystemAPI.GetComponent<Render>(entity),
                 _ => false,
             };
+            bool steering = node.Type switch {
+                NodeType.GeometricSection => SystemAPI.HasComponent<Steering>(entity)
+                    ? SystemAPI.GetComponent<Steering>(entity)
+                    : true,
+                _ => true,
+            };
             PropertyOverrides overrides = node.Type switch {
                 NodeType.ForceSection or NodeType.GeometricSection or
                 NodeType.CurvedSection or NodeType.CopyPathSection or
@@ -499,6 +505,7 @@ namespace KexEdit.Serialization {
             NodeFieldFlags fieldFlags = NodeFieldFlags.None;
             if (render) fieldFlags |= NodeFieldFlags.HasRender;
             if (node.Selected) fieldFlags |= NodeFieldFlags.HasSelected;
+            if (steering && node.Type == NodeType.GeometricSection) fieldFlags |= NodeFieldFlags.HasSteering;
             if (!overrides.Equals(PropertyOverrides.Default)) fieldFlags |= NodeFieldFlags.HasPropertyOverrides;
             if (!selectedProperties.Equals(default(SelectedProperties))) fieldFlags |= NodeFieldFlags.HasSelectedProperties;
             if (!curveData.Equals(default(CurveData))) fieldFlags |= NodeFieldFlags.HasCurveData;
@@ -513,6 +520,7 @@ namespace KexEdit.Serialization {
                 Duration = duration,
                 Render = render,
                 Selected = node.Selected,
+                Steering = steering,
                 PropertyOverrides = overrides,
                 SelectedProperties = selectedProperties,
                 MeshFilePath = meshFilePath,
@@ -699,6 +707,9 @@ namespace KexEdit.Serialization {
                     foreach (var keyframe in node.YawSpeedKeyframes) {
                         ecb.AppendToBuffer(entity, keyframe);
                     }
+
+                    bool steering = (node.FieldFlags & NodeFieldFlags.HasSteering) != 0 ? node.Steering : true;
+                    ecb.AddComponent<Steering>(entity, steering);
                 }
             }
 

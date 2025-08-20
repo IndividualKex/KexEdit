@@ -109,6 +109,11 @@ namespace KexEdit.UI.NodeGraph {
         public bool Render;
     }
 
+    public class SteeringToggleChangeEvent : NodeGraphEvent<SteeringToggleChangeEvent> {
+        public Entity Node;
+        public bool Steering;
+    }
+
     public class PriorityChangeEvent : NodeGraphEvent<PriorityChangeEvent> {
         public Entity Node;
         public int Priority;
