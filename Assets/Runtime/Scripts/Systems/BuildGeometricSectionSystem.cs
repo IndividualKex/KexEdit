@@ -56,6 +56,7 @@ namespace KexEdit {
 
             private void BuildGeometricTimeSection(GeometricSectionAspect section) {
                 int pointCount = (int)(HZ * section.Duration);
+                float accumulatedRoll = 0f;
                 for (int i = 1; i < pointCount; i++) {
                     PointData prev = section.Points[i - 1];
 
@@ -85,17 +86,16 @@ namespace KexEdit {
 
                     PointData curr = prev;
 
-                    float rollSpeed = section.RollSpeedKeyframes.Evaluate(t);
                     float pitchChangeRate = section.PitchSpeedKeyframes.Evaluate(t);
                     float yawChangeRate = section.YawSpeedKeyframes.Evaluate(t);
 
-                    curr.RollSpeed = rollSpeed;
+                    curr.RollSpeed = section.RollSpeedKeyframes.Evaluate(t);
 
-                    float deltaRoll = rollSpeed / HZ;
+                    float deltaRoll = curr.RollSpeed / HZ;
                     float deltaPitch = pitchChangeRate / HZ;
                     float deltaYaw = yawChangeRate / HZ;
 
-                    UpdateGeometricPoint(section, ref curr, prev, deltaRoll, deltaPitch, deltaYaw);
+                    UpdateGeometricPoint(section, ref curr, prev, deltaRoll, deltaPitch, deltaYaw, ref accumulatedRoll);
                     section.Points.Add(curr);
                 }
             }
@@ -103,6 +103,7 @@ namespace KexEdit {
             private void BuildGeometricDistanceSection(GeometricSectionAspect section) {
                 float anchorTotalLength = section.Anchor.TotalLength;
                 float endLength = anchorTotalLength + section.Duration;
+                float accumulatedRoll = 0f;
                 int iters = 0;
                 while (section.Points[^1].Value.TotalLength < endLength) {
                     if (iters++ > 1e6) {
@@ -136,18 +137,17 @@ namespace KexEdit {
                     prev.Friction = section.FrictionKeyframes.Evaluate(d, section.Anchor);
                     prev.Resistance = section.ResistanceKeyframes.Evaluate(d, section.Anchor);
 
-                    float rollSpeed = section.RollSpeedKeyframes.Evaluate(d);
                     float pitchChangeRate = section.PitchSpeedKeyframes.Evaluate(d);
                     float yawChangeRate = section.YawSpeedKeyframes.Evaluate(d);
 
                     PointData curr = prev;
-                    curr.RollSpeed = rollSpeed;
+                    curr.RollSpeed = section.RollSpeedKeyframes.Evaluate(d);
 
-                    float deltaRoll = rollSpeed * (prev.Velocity / HZ);
+                    float deltaRoll = curr.RollSpeed * (prev.Velocity / HZ);
                     float deltaPitch = pitchChangeRate * (prev.Velocity / HZ);
                     float deltaYaw = yawChangeRate * (prev.Velocity / HZ);
 
-                    UpdateGeometricPoint(section, ref curr, prev, deltaRoll, deltaPitch, deltaYaw);
+                    UpdateGeometricPoint(section, ref curr, prev, deltaRoll, deltaPitch, deltaYaw, ref accumulatedRoll);
                     section.Points.Add(curr);
                 }
             }
@@ -158,42 +158,59 @@ namespace KexEdit {
                 in PointData prev,
                 float deltaRoll,
                 float deltaPitch,
-                float deltaYaw
+                float deltaYaw,
+                ref float accumulatedRoll
             ) {
                 if (section.Steering) {
-                    // Apply pitch
-                    quaternion pitchQuat = quaternion.AxisAngle(math.right(), deltaPitch);
+                    // In steering mode, track unrolled orientation
+                    float3 lateralUnrolled = prev.Lateral;
+                    float3 normalUnrolled = prev.Normal;
+                    
+                    // Unroll the previous orientation
+                    if (math.abs(accumulatedRoll) > EPSILON) {
+                        quaternion unrollQuat = quaternion.AxisAngle(prev.Direction, accumulatedRoll);
+                        lateralUnrolled = math.normalize(math.mul(unrollQuat, prev.Lateral));
+                        normalUnrolled = math.normalize(math.cross(prev.Direction, lateralUnrolled));
+                    }
+                    
+                    // Apply pitch using unrolled normal
+                    float3 up = normalUnrolled.y >= 0f ? math.up() : -math.up();
+                    float3 pitchAxis = math.normalize(math.cross(up, curr.Direction));
+                    quaternion pitchQuat = quaternion.AxisAngle(pitchAxis, deltaPitch);
                     curr.Direction = math.normalize(math.mul(pitchQuat, prev.Direction));
-                    curr.Lateral = math.normalize(math.mul(pitchQuat, prev.Lateral));
+                    lateralUnrolled = math.normalize(math.mul(pitchQuat, lateralUnrolled));
 
                     // Apply yaw
                     quaternion yawQuat = quaternion.AxisAngle(math.up(), deltaYaw);
                     curr.Direction = math.normalize(math.mul(yawQuat, curr.Direction));
-                    curr.Lateral = math.normalize(math.mul(yawQuat, curr.Lateral));
+                    lateralUnrolled = math.normalize(math.mul(yawQuat, lateralUnrolled));
 
-                    // Update Normal
-                    curr.Normal = math.normalize(math.cross(curr.Direction, curr.Lateral));
+                    // Update Normal (unrolled)
+                    normalUnrolled = math.normalize(math.cross(curr.Direction, lateralUnrolled));
 
-                    // Update position
+                    // Update position - in steering mode, ignore heart offset changes
                     curr.Position += curr.Direction * (curr.Velocity / (2f * HZ))
-                        + prev.Direction * (curr.Velocity / (2f * HZ))
-                        + (prev.GetHeartPosition(prev.Heart) - curr.GetHeartPosition(curr.Heart));
+                        + prev.Direction * (curr.Velocity / (2f * HZ));
 
-                    quaternion rollQuat = quaternion.AxisAngle(curr.Direction, -deltaRoll);
-                    curr.Lateral = math.normalize(math.mul(rollQuat, curr.Lateral));
-                    curr.Normal = math.normalize(math.cross(curr.Direction, curr.Lateral));
+                    // Accumulate roll and apply it to get the final orientation
+                    accumulatedRoll += deltaRoll;
+                    
+                    if (math.abs(accumulatedRoll) > EPSILON) {
+                        quaternion rollQuat = quaternion.AxisAngle(curr.Direction, -accumulatedRoll);
+                        curr.Lateral = math.normalize(math.mul(rollQuat, lateralUnrolled));
+                        curr.Normal = math.normalize(math.cross(curr.Direction, curr.Lateral));
+                    } else {
+                        curr.Lateral = lateralUnrolled;
+                        curr.Normal = normalUnrolled;
+                    }
 
-                    float3 worldRight = math.right();
-                    float3 projectedLateral = curr.Lateral - math.dot(curr.Lateral, curr.Direction) * curr.Direction;
-                    projectedLateral = math.normalize(projectedLateral);
-                    float rollCos = math.dot(projectedLateral, worldRight);
-                    float rollSin = math.dot(projectedLateral, math.cross(curr.Direction, worldRight));
-                    curr.Roll = math.degrees(math.atan2(rollSin, rollCos));
+                    curr.Roll = math.degrees(math.atan2(curr.Lateral.y, -curr.Normal.y));
                     curr.Roll = (curr.Roll + 540) % 360 - 180;
                 }
                 else {
                     // Apply pitch
-                    float3 pitchAxis = math.normalize(math.cross(new float3(0f, curr.Normal.y, 0f), curr.Direction));
+                    float3 up = curr.Normal.y >= 0f ? math.up() : -math.up();
+                    float3 pitchAxis = math.normalize(math.cross(up, curr.Direction));
                     quaternion pitchQuat = quaternion.AxisAngle(pitchAxis, deltaPitch);
                     curr.Direction = math.normalize(math.mul(pitchQuat, prev.Direction));
                     curr.Lateral = math.normalize(math.mul(pitchQuat, prev.Lateral));
