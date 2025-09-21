@@ -39,9 +39,9 @@ namespace KexEdit.Serialization {
 
             var node = graph.Nodes[index];
 
-            // Optional fields based on flags
-            if ((node.FieldFlags & NodeFieldFlags.HasRender) != 0) size += sizeof(bool);
-            if ((node.FieldFlags & NodeFieldFlags.HasSelected) != 0) size += sizeof(bool);
+            if ((node.FieldFlags & (NodeFieldFlags.HasRender | NodeFieldFlags.HasSelected | NodeFieldFlags.HasSteering)) != 0) {
+                size += sizeof(byte);
+            }
             if ((node.FieldFlags & NodeFieldFlags.HasPropertyOverrides) != 0) size += Marshal.SizeOf<PropertyOverrides>();
             if ((node.FieldFlags & NodeFieldFlags.HasSelectedProperties) != 0) size += Marshal.SizeOf<SelectedProperties>();
             if ((node.FieldFlags & NodeFieldFlags.HasCurveData) != 0) size += Marshal.SizeOf<CurveData>();
