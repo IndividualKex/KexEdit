@@ -82,19 +82,11 @@ namespace KexEdit.UI {
             if (_trainStyleConfig != null) {
                 int carCount = TrainCarCountPreferences.GetCarCount(currentTrainStyle, _trainStyleConfig.CarCount);
                 _trainStyleConfig.CarCount = carCount;
-
-                if (_trainStyleConfig.TrainCars == null || _trainStyleConfig.TrainCars.Count == 0) {
-                    _trainStyleConfig.TrainCars = new List<TrainCarConfig>();
-                    for (int i = 0; i < carCount; i++) {
-                        _trainStyleConfig.TrainCars.Add(new TrainCarConfig { Offset = i * _trainStyleConfig.CarSpacing });
-                    }
-                }
             }
             else {
                 _trainStyleConfig = new TrainStyleConfig {
                     CarCount = 1,
-                    CarSpacing = 3.0f,
-                    TrainCars = new List<TrainCarConfig> { new() { Offset = 0f } }
+                    CarSpacing = 3.0f
                 };
             }
         }

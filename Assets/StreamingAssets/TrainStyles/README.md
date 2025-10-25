@@ -14,15 +14,20 @@ Create custom train visual styles by adding configuration files and 3D assets.
 ```json
 {
     "Name": "MyTrain",
-    "Styles": [
-        {
-            "MeshPath": "StylizedCart.glb"
-        }
-    ]
+    "CarCount": 1,
+    "DefaultCar": {
+        "MeshPath": "StylizedCart.glb",
+        "WheelAssemblies": [
+            {
+                "MeshPath": "DefaultWheels.glb",
+                "Offset": 0.0
+            }
+        ]
+    }
 }
 ```
 
-### Advanced Configuration with Car Overrides
+### Configuration with Car Overrides
 ```json
 {
     "Name": "RollerCoaster",
@@ -54,13 +59,13 @@ Create custom train visual styles by adding configuration files and 3D assets.
 
 **Name**: Display name in the UI
 
-**CarCount**: Number of cars in the train (when using DefaultCar template)
+**CarCount**: Number of cars in the train
 
-**CarSpacing**: Distance between car centers
+**CarSpacing**: Distance between car centers (default: 3.0)
 
 **DefaultCar**: Template configuration applied to all cars
 
-**CarOverrides**: Array of overrides for specific car positions
+**CarOverrides**: Optional array of overrides for specific car positions
 
 **MeshPath**: Path to mesh file
 
@@ -69,8 +74,6 @@ Create custom train visual styles by adding configuration files and 3D assets.
 **Index**: Car position (0-based from front, negative from back: -1 = last car, -2 = second to last)
 
 **Offset**: Position offset for wheel assemblies
-
-**Styles**: Array of train meshes (legacy format)
 
 ## Supported Formats
 
