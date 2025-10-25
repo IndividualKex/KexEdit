@@ -31,33 +31,18 @@ namespace KexEdit.UI {
         private static TrainStyleConfig CreateDefaultConfig() {
             return new TrainStyleConfig {
                 Name = "Classic",
-                TrainCars = new List<TrainCarConfig> {
-                    new() {
-                        MeshPath = "StylizedCart.glb",
-                        Offset = 0f,
-                        WheelAssemblies = new List<WheelAssemblyConfig> {
-                            new() {
-                                MeshPath = "StylizedCart_FrontWheelAssembly.glb",
-                                Offset = 0f
-                            },
-                            new() {
-                                MeshPath = "StylizedCart_BackWheelAssembly.glb",
-                                Offset = -1.5f
-                            }
-                        }
-                    },
-                    new() {
-                        MeshPath = "StylizedCart.glb",
-                        Offset = -3f,
-                        WheelAssemblies = new List<WheelAssemblyConfig> {
-                            new() {
-                                MeshPath = "StylizedCart_FrontWheelAssembly.glb",
-                                Offset = 0f
-                            },
-                            new() {
-                                MeshPath = "StylizedCart_BackWheelAssembly.glb",
-                                Offset = -1.5f
-                            }
+                CarCount = 5,
+                CarSpacing = 2.5f,
+                DefaultCar = new TrainCarTemplate {
+                    MeshPath = "StylizedCart.glb",
+                    WheelAssemblies = new List<WheelAssemblyConfig> {
+                        new() {
+                            MeshPath = "StylizedCart_FrontWheelAssembly.glb",
+                            Offset = 0f
+                        },
+                        new() {
+                            MeshPath = "StylizedCart_BackWheelAssembly.glb",
+                            Offset = -1.5f
                         }
                     }
                 }

@@ -70,50 +70,26 @@ namespace KexEdit.UI {
         private TrainStyleData ConvertConfigToData(TrainStyleConfig config, int version) {
             var data = new TrainStyleData {
                 TrainCars = new List<TrainCarData>(),
-                Version = version,
-                CarCount = config.CarCount,
-                CarSpacing = config.CarSpacing,
-                DefaultCar = ConvertCarTemplate(config.DefaultCar),
-                CarOverrides = ConvertCarOverrides(config.CarOverrides)
+                Version = version
             };
 
-            if (config.TrainCars != null && config.TrainCars.Count > 0) {
-                foreach (var trainCar in config.TrainCars) {
-                    string trainCarPath = TrainStyleConfigManager.RelativePath(trainCar.MeshPath);
-                    var trainCarData = new TrainCarData {
-                        MeshPath = trainCarPath,
-                        Offset = trainCar.Offset
-                    };
-                    data.TrainCars.Add(trainCarData);
-
-                    foreach (var wheelAssembly in trainCar.WheelAssemblies) {
-                        string wheelAssemblyPath = TrainStyleConfigManager.RelativePath(wheelAssembly.MeshPath);
-                        trainCarData.WheelAssemblies.Add(new WheelAssemblyData {
-                            MeshPath = wheelAssemblyPath,
-                            Offset = wheelAssembly.Offset
-                        });
-                    }
-                }
-            }
-            else {
-                GenerateCarsFromTemplate(data);
-            }
+            GenerateCarsFromTemplate(data, config);
 
             return data;
         }
 
-        private void GenerateCarsFromTemplate(TrainStyleData data) {
-            int carCount = TrainCarCountPreferences.GetCarCount(Preferences.CurrentTrainStyle, data.CarCount);
-            
-            if (carCount <= 0 || data.DefaultCar == null) return;
+        private void GenerateCarsFromTemplate(TrainStyleData data, TrainStyleConfig config) {
+            int carCount = TrainCarCountPreferences.GetCarCount(Preferences.CurrentTrainStyle, config.CarCount);
 
-            float totalSpacing = (carCount - 1) * data.CarSpacing;
+            if (carCount <= 0 || config.DefaultCar == null) return;
+
+            float totalSpacing = (carCount - 1) * config.CarSpacing;
             float startOffset = totalSpacing * 0.5f;
 
             for (int i = 0; i < carCount; i++) {
-                float offset = startOffset - (i * data.CarSpacing);
+                float offset = startOffset - (i * config.CarSpacing);
 
-                var template = data.DefaultCar;
+                var template = config.DefaultCar;
                 var carData = new TrainCarData {
                     MeshPath = TrainStyleConfigManager.RelativePath(template.MeshPath),
                     Offset = offset
@@ -129,20 +105,20 @@ namespace KexEdit.UI {
                     }
                 }
 
-                ApplyCarOverride(data, carCount, i, carData);
+                ApplyCarOverride(config, carCount, i, carData);
                 data.TrainCars.Add(carData);
             }
         }
 
-        private void ApplyCarOverride(TrainStyleData data, int carCount, int carIndex, TrainCarData carData) {
-            if (data.CarOverrides == null) return;
+        private void ApplyCarOverride(TrainStyleConfig config, int carCount, int carIndex, TrainCarData carData) {
+            if (config.CarOverrides == null) return;
 
-            foreach (var carOverride in data.CarOverrides) {
+            foreach (var carOverride in config.CarOverrides) {
                 int targetIndex = carOverride.Index;
                 if (targetIndex < 0) {
                     targetIndex = carCount + targetIndex;
                 }
-                
+
                 if (targetIndex < 0 || targetIndex >= carCount || targetIndex != carIndex) continue;
 
                 if (!string.IsNullOrEmpty(carOverride.MeshPath)) {
@@ -163,40 +139,5 @@ namespace KexEdit.UI {
             }
         }
 
-        private TrainCarTemplateData ConvertCarTemplate(TrainCarTemplate template) {
-            if (template == null) return null;
-            
-            return new TrainCarTemplateData {
-                MeshPath = template.MeshPath,
-                WheelAssemblies = ConvertWheelAssemblyTemplates(template.WheelAssemblies)
-            };
-        }
-
-        private List<TrainCarOverrideData> ConvertCarOverrides(List<TrainCarOverride> overrides) {
-            if (overrides == null) return null;
-            
-            var result = new List<TrainCarOverrideData>();
-            foreach (var carOverride in overrides) {
-                result.Add(new TrainCarOverrideData {
-                    Index = carOverride.Index,
-                    MeshPath = carOverride.MeshPath,
-                    WheelAssemblies = ConvertWheelAssemblyTemplates(carOverride.WheelAssemblies)
-                });
-            }
-            return result;
-        }
-
-        private List<WheelAssemblyTemplateData> ConvertWheelAssemblyTemplates(List<WheelAssemblyConfig> configs) {
-            if (configs == null) return null;
-            
-            var result = new List<WheelAssemblyTemplateData>();
-            foreach (var config in configs) {
-                result.Add(new WheelAssemblyTemplateData {
-                    MeshPath = config.MeshPath,
-                    Offset = config.Offset
-                });
-            }
-            return result;
-        }
     }
 }
