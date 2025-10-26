@@ -32,8 +32,8 @@ namespace KexEdit {
             public ComponentLookup<Train> TrainLookup;
 
             public void Execute(Entity entity, in TrainCar trainCar, DynamicBuffer<WheelAssemblyReference> wheelAssemblies) {
-                ref var transform = ref TransformLookup.GetRefRW(entity).ValueRW;
-                transform = LocalTransform.FromPosition(new float3(0f, -999f, 0f));
+                ref var transformRef = ref TransformLookup.GetRefRW(entity).ValueRW;
+                transformRef = LocalTransform.FromPosition(new float3(0f, -999f, 0f));
 
                 if (!TrainLookup.TryGetComponent(trainCar.Train, out var train) || !train.Enabled) return;
 
@@ -41,7 +41,7 @@ namespace KexEdit {
 
                 if (wheelAssemblies.Length == 1) {
                     if (!TransformLookup.TryGetComponent(wheelAssemblies[0], out var wheelAssemblyTransform)) return;
-                    transform = LocalTransform.FromPositionRotation(
+                    transformRef = LocalTransform.FromPositionRotation(
                         wheelAssemblyTransform.Position,
                         wheelAssemblyTransform.Rotation
                     );
@@ -80,7 +80,7 @@ namespace KexEdit {
                 up = math.cross(forward, right);
                 quaternion rotation = quaternion.LookRotation(forward, up);
                 float3 pivotPos = train.Facing >= 0 ? frontPos : backPos;
-                transform = LocalTransform.FromPositionRotation(
+                transformRef = LocalTransform.FromPositionRotation(
                     pivotPos,
                     rotation
                 );

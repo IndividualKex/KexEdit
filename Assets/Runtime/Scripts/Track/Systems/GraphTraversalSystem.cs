@@ -24,15 +24,15 @@ namespace KexEdit {
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             var nodes = _nodeQuery.ToEntityArray(Allocator.Temp);
-            foreach (var (coasterRW, entity) in SystemAPI.Query<RefRW<Coaster>>().WithEntityAccess()) {
-                ref var coaster = ref coasterRW.ValueRW;
+            foreach (var (coaster, entity) in SystemAPI.Query<RefRW<Coaster>>().WithEntityAccess()) {
+                ref var coasterRef = ref coaster.ValueRW;
                 var coasterNodes = new NativeList<Entity>(nodes.Length, Allocator.Temp);
                 foreach (var nodeEntity in nodes) {
                     var node = SystemAPI.GetAspect<NodeAspect>(nodeEntity);
                     if (node.Coaster != entity) continue;
                     coasterNodes.Add(nodeEntity);
                 }
-                coaster.RootNode = FindGraphRoot(ref state, entity, coasterNodes);
+                coasterRef.RootNode = FindGraphRoot(ref state, entity, coasterNodes);
                 coasterNodes.Dispose();
             }
             nodes.Dispose();
@@ -130,9 +130,9 @@ namespace KexEdit {
                 }
 
                 foreach (var nodeEntity in nodes) {
-                    ref var node = ref SystemAPI.GetComponentRW<Node>(nodeEntity).ValueRW;
-                    node.Next = processedGraph.TryGetValue(nodeEntity, out var nextNode) ? nextNode : Entity.Null;
-                    node.Previous = reverseGraph.TryGetValue(nodeEntity, out var prevNode) ? prevNode : Entity.Null;
+                    ref var nodeRef = ref SystemAPI.GetComponentRW<Node>(nodeEntity).ValueRW;
+                    nodeRef.Next = processedGraph.TryGetValue(nodeEntity, out var nextNode) ? nextNode : Entity.Null;
+                    nodeRef.Previous = reverseGraph.TryGetValue(nodeEntity, out var prevNode) ? prevNode : Entity.Null;
                 }
 
                 if (!pointLookup.TryGetBuffer(bestRoot, out var rootPoints) || rootPoints.Length < 2) {
@@ -143,9 +143,9 @@ namespace KexEdit {
             }
             else {
                 foreach (var nodeEntity in nodes) {
-                    ref var node = ref SystemAPI.GetComponentRW<Node>(nodeEntity).ValueRW;
-                    node.Next = Entity.Null;
-                    node.Previous = Entity.Null;
+                    ref var nodeRef = ref SystemAPI.GetComponentRW<Node>(nodeEntity).ValueRW;
+                    nodeRef.Next = Entity.Null;
+                    nodeRef.Previous = Entity.Null;
                 }
             }
 

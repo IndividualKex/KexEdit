@@ -36,13 +36,13 @@ namespace KexEdit {
                 if (node.Type != NodeType.Anchor || !node.Dirty) continue;
 
                 var outputPort = SystemAPI.GetBuffer<OutputPortReference>(nodeEntity)[0];
-                ref Dirty dirty = ref SystemAPI.GetComponentRW<Dirty>(outputPort).ValueRW;
+                ref var dirtyRef = ref SystemAPI.GetComponentRW<Dirty>(outputPort).ValueRW;
 
-                ref AnchorPort port = ref SystemAPI.GetComponentRW<AnchorPort>(outputPort).ValueRW;
-                port.Value = SystemAPI.GetComponent<Anchor>(nodeEntity);
+                ref var portRef = ref SystemAPI.GetComponentRW<AnchorPort>(outputPort).ValueRW;
+                portRef.Value = SystemAPI.GetComponent<Anchor>(nodeEntity);
 
                 node.Dirty = false;
-                dirty = true;
+                dirtyRef = true;
             }
             nodes.Dispose();
         }
@@ -54,14 +54,14 @@ namespace KexEdit {
 
                 for (int i = 0; i < node.InputPorts.Length; i++) {
                     var inputPort = node.InputPorts[i];
-                    ref Dirty inputPortDirty = ref SystemAPI.GetComponentRW<Dirty>(inputPort).ValueRW;
-                    if (!inputPortDirty) continue;
+                    ref var inputPortDirtyRef = ref SystemAPI.GetComponentRW<Dirty>(inputPort).ValueRW;
+                    if (!inputPortDirtyRef) continue;
                     PortType type = SystemAPI.GetComponent<Port>(inputPort).Type;
-                    ref Anchor anchor = ref SystemAPI.GetComponentRW<Anchor>(nodeEntity).ValueRW;
+                    ref var anchorRef = ref SystemAPI.GetComponentRW<Anchor>(nodeEntity).ValueRW;
 
                     if (type == PortType.Anchor) {
                         if (i == 0) {
-                            anchor.Value = SystemAPI.GetComponent<AnchorPort>(inputPort);
+                            anchorRef.Value = SystemAPI.GetComponent<AnchorPort>(inputPort);
                         }
                     }
                     else if (type == PortType.Path) {
@@ -69,70 +69,70 @@ namespace KexEdit {
                     }
                     else if (type == PortType.Duration) {
                         float duration = SystemAPI.GetComponent<DurationPort>(inputPort);
-                        ref var durationComponent = ref SystemAPI.GetComponentRW<Duration>(nodeEntity).ValueRW;
-                        durationComponent.Value = duration;
+                        ref var durationComponentRef = ref SystemAPI.GetComponentRW<Duration>(nodeEntity).ValueRW;
+                        durationComponentRef.Value = duration;
                     }
                     else if (type == PortType.Position) {
                         float3 position = SystemAPI.GetComponent<PositionPort>(inputPort);
                         if (node.Type == NodeType.Mesh) {
-                            anchor.Value.Position = position;
+                            anchorRef.Value.Position = position;
                         }
                         else {
-                            anchor.Value.SetPosition(position);
+                            anchorRef.Value.SetPosition(position);
                         }
                     }
                     else if (type == PortType.Roll) {
                         float roll = SystemAPI.GetComponent<RollPort>(inputPort);
-                        anchor.Value.SetRoll(roll);
+                        anchorRef.Value.SetRoll(roll);
                     }
                     else if (type == PortType.Pitch) {
                         float pitch = SystemAPI.GetComponent<PitchPort>(inputPort);
-                        anchor.Value.SetPitch(pitch);
+                        anchorRef.Value.SetPitch(pitch);
                     }
                     else if (type == PortType.Yaw) {
                         float yaw = SystemAPI.GetComponent<YawPort>(inputPort);
-                        anchor.Value.SetYaw(yaw);
+                        anchorRef.Value.SetYaw(yaw);
                     }
                     else if (type == PortType.Velocity) {
                         float velocity = SystemAPI.GetComponent<VelocityPort>(inputPort);
-                        anchor.Value.SetVelocity(velocity);
+                        anchorRef.Value.SetVelocity(velocity);
                     }
                     else if (type == PortType.Heart) {
                         float heart = SystemAPI.GetComponent<HeartPort>(inputPort);
-                        anchor.Value.SetHeart(heart);
+                        anchorRef.Value.SetHeart(heart);
                     }
                     else if (type == PortType.Friction) {
                         float friction = SystemAPI.GetComponent<FrictionPort>(inputPort);
-                        anchor.Value.SetFriction(friction);
+                        anchorRef.Value.SetFriction(friction);
                     }
                     else if (type == PortType.Resistance) {
                         float resistance = SystemAPI.GetComponent<ResistancePort>(inputPort);
-                        anchor.Value.SetResistance(resistance);
+                        anchorRef.Value.SetResistance(resistance);
                     }
                     else if (type == PortType.Radius) {
                         float radius = SystemAPI.GetComponent<RadiusPort>(inputPort);
-                        ref var curveData = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
-                        curveData.Radius = radius;
+                        ref var curveDataRef = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
+                        curveDataRef.Radius = radius;
                     }
                     else if (type == PortType.Arc) {
                         float arc = SystemAPI.GetComponent<ArcPort>(inputPort);
-                        ref var curveData = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
-                        curveData.Arc = arc;
+                        ref var curveDataRef = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
+                        curveDataRef.Arc = arc;
                     }
                     else if (type == PortType.Axis) {
                         float axis = SystemAPI.GetComponent<AxisPort>(inputPort);
-                        ref var curveData = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
-                        curveData.Axis = axis;
+                        ref var curveDataRef = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
+                        curveDataRef.Axis = axis;
                     }
                     else if (type == PortType.LeadIn) {
                         float leadIn = SystemAPI.GetComponent<LeadInPort>(inputPort);
-                        ref var curveData = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
-                        curveData.LeadIn = leadIn;
+                        ref var curveDataRef = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
+                        curveDataRef.LeadIn = leadIn;
                     }
                     else if (type == PortType.LeadOut) {
                         float leadOut = SystemAPI.GetComponent<LeadOutPort>(inputPort);
-                        ref var curveData = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
-                        curveData.LeadOut = leadOut;
+                        ref var curveDataRef = ref SystemAPI.GetComponentRW<CurveData>(nodeEntity).ValueRW;
+                        curveDataRef.LeadOut = leadOut;
                     }
                     else if (type == PortType.InWeight || type == PortType.OutWeight) {
                         // Handle in job
@@ -140,14 +140,14 @@ namespace KexEdit {
                     else if (type == PortType.Rotation) {
                         // Encode rotation into anchor
                         float3 rotation = SystemAPI.GetComponent<RotationPort>(inputPort);
-                        anchor.Value.Roll = rotation.x;
-                        anchor.Value.Velocity = rotation.y;
-                        anchor.Value.Energy = rotation.z;
+                        anchorRef.Value.Roll = rotation.x;
+                        anchorRef.Value.Velocity = rotation.y;
+                        anchorRef.Value.Energy = rotation.z;
                     }
                     else if (type == PortType.Scale) {
                         // Encode scale into anchor
                         float scale = SystemAPI.GetComponent<ScalePort>(inputPort);
-                        anchor.Value.NormalForce = scale;
+                        anchorRef.Value.NormalForce = scale;
                     }
                     else if (type == PortType.Start || type == PortType.End) {
                         // Start and End ports are read directly by BuildCopyPathSectionSystem
@@ -156,7 +156,7 @@ namespace KexEdit {
                         throw new System.NotImplementedException($"Unknown input port type: {type}");
                     }
 
-                    inputPortDirty = false;
+                    inputPortDirtyRef = false;
                     node.Dirty = true;
                 }
             }
@@ -177,8 +177,8 @@ namespace KexEdit {
             foreach (var nodeEntity in nodes) {
                 var node = SystemAPI.GetAspect<NodeAspect>(nodeEntity);
                 foreach (var sourcePort in node.OutputPorts) {
-                    ref Dirty sourcePortDirty = ref SystemAPI.GetComponentRW<Dirty>(sourcePort).ValueRW;
-                    if (!sourcePortDirty || !map.ContainsKey(sourcePort)) continue;
+                    ref var sourcePortDirtyRef = ref SystemAPI.GetComponentRW<Dirty>(sourcePort).ValueRW;
+                    if (!sourcePortDirtyRef || !map.ContainsKey(sourcePort)) continue;
 
                     foreach (var targetPort in map.GetValuesForKey(sourcePort)) {
                         if (propagated.Contains(targetPort)) continue;
@@ -186,7 +186,7 @@ namespace KexEdit {
                         propagated.Add(targetPort);
                     }
 
-                    sourcePortDirty = false;
+                    sourcePortDirtyRef = false;
                 }
             }
 
@@ -196,12 +196,12 @@ namespace KexEdit {
         }
 
         private void PropagateConnection(ref SystemState state, NodeAspect node, Entity sourcePort, Entity targetPort) {
-            ref Dirty targetPortDirty = ref SystemAPI.GetComponentRW<Dirty>(targetPort).ValueRW;
+            ref var targetPortDirtyRef = ref SystemAPI.GetComponentRW<Dirty>(targetPort).ValueRW;
 
             if (SystemAPI.HasComponent<AnchorPort>(sourcePort) && SystemAPI.HasComponent<AnchorPort>(targetPort)) {
                 AnchorPort sourcePointPort = SystemAPI.GetComponent<AnchorPort>(sourcePort);
-                ref AnchorPort targetPointPort = ref SystemAPI.GetComponentRW<AnchorPort>(targetPort).ValueRW;
-                targetPointPort.Value = sourcePointPort.Value;
+                ref var targetPointPortRef = ref SystemAPI.GetComponentRW<AnchorPort>(targetPort).ValueRW;
+                targetPointPortRef.Value = sourcePointPort.Value;
             }
             else if (SystemAPI.HasBuffer<PathPort>(sourcePort) && SystemAPI.HasBuffer<PathPort>(targetPort)) {
                 var sourceBuffer = SystemAPI.GetBuffer<Point>(node.Self);
@@ -215,7 +215,7 @@ namespace KexEdit {
                 UnityEngine.Debug.LogWarning("Unknown propagation");
             }
 
-            targetPortDirty = true;
+            targetPortDirtyRef = true;
         }
     }
 }

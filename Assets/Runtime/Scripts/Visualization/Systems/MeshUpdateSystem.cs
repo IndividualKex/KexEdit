@@ -12,7 +12,7 @@ namespace KexEdit {
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (mesh, anchor, render, dirtyRW) in SystemAPI.Query<NodeMeshReference, Anchor, Render, RefRW<Dirty>>()) {
+            foreach (var (mesh, anchor, render, dirty) in SystemAPI.Query<NodeMeshReference, Anchor, Render, RefRW<Dirty>>()) {
                 if (mesh.Value == Entity.Null) continue;
 
                 if (render.Value && SystemAPI.HasComponent<DisableRendering>(mesh.Value)) {
@@ -24,9 +24,9 @@ namespace KexEdit {
 
                 if (!render.Value) continue;
 
-                ref bool dirty = ref dirtyRW.ValueRW.Value;
-                if (!dirty) continue;
-                dirty = false;
+                ref var dirtyRef = ref dirty.ValueRW.Value;
+                if (!dirtyRef) continue;
+                dirtyRef = false;
 
                 float3 position = anchor.Value.Position;
                 quaternion rotation = quaternion.Euler(
@@ -36,8 +36,8 @@ namespace KexEdit {
                 );
                 float scale = anchor.Value.NormalForce;
 
-                ref var transform = ref SystemAPI.GetComponentRW<LocalTransform>(mesh.Value).ValueRW;
-                transform = LocalTransform.FromPositionRotationScale(position, rotation, scale);
+                ref var transformRef = ref SystemAPI.GetComponentRW<LocalTransform>(mesh.Value).ValueRW;
+                transformRef = LocalTransform.FromPositionRotationScale(position, rotation, scale);
             }
             ecb.Playback(state.EntityManager);
         }

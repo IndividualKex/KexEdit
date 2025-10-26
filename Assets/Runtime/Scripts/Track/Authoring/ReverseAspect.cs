@@ -4,21 +4,21 @@ namespace KexEdit {
     public readonly partial struct ReverseAspect : IAspect {
         public readonly Entity Self;
 
-        private readonly RefRO<Anchor> AnchorRO;
-        private readonly RefRO<ReverseTag> ReverseTagRO;
+        private readonly RefRO<Anchor> anchor;
+        private readonly RefRO<ReverseTag> reverseTag;
 
-        private readonly RefRW<Dirty> DirtyRW;
+        private readonly RefRW<Dirty> dirty;
 
         public readonly DynamicBuffer<InputPortReference> InputPorts;
         public readonly DynamicBuffer<OutputPortReference> OutputPorts;
 
-        public PointData Anchor => AnchorRO.ValueRO;
+        public PointData Anchor => anchor.ValueRO;
 
         public bool Dirty {
-            get => DirtyRW.ValueRO.Value;
-            set => DirtyRW.ValueRW.Value = value;
+            get => dirty.ValueRO.Value;
+            set => dirty.ValueRW.Value = value;
         }
 
-        public ReverseTag ReverseTag => ReverseTagRO.ValueRO;
+        public ReverseTag ReverseTag => reverseTag.ValueRO;
     }
 }

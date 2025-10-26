@@ -5,23 +5,23 @@ namespace KexEdit {
     public readonly partial struct NodeAspect : IAspect {
         public readonly Entity Self;
 
-        private readonly RefRO<Node> NodeRO;
-        private readonly RefRO<CoasterReference> CoasterReferenceRO;
-        private readonly RefRW<Dirty> DirtyRW;
+        private readonly RefRO<Node> node;
+        private readonly RefRO<CoasterReference> coasterReference;
+        private readonly RefRW<Dirty> dirty;
 
         public readonly DynamicBuffer<InputPortReference> InputPorts;
         public readonly DynamicBuffer<OutputPortReference> OutputPorts;
 
-        public float2 Position => NodeRO.ValueRO.Position;
-        public NodeType Type => NodeRO.ValueRO.Type;
-        public int Priority => NodeRO.ValueRO.Priority;
-        public bool Selected => NodeRO.ValueRO.Selected;
+        public float2 Position => node.ValueRO.Position;
+        public NodeType Type => node.ValueRO.Type;
+        public int Priority => node.ValueRO.Priority;
+        public bool Selected => node.ValueRO.Selected;
 
-        public Entity Coaster => CoasterReferenceRO.ValueRO.Value;
+        public Entity Coaster => coasterReference.ValueRO.Value;
 
         public bool Dirty {
-            get => DirtyRW.ValueRO.Value;
-            set => DirtyRW.ValueRW.Value = value;
+            get => dirty.ValueRO.Value;
+            set => dirty.ValueRW.Value = value;
         }
     }
 }

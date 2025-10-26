@@ -4,20 +4,20 @@ namespace KexEdit {
     public readonly partial struct ConnectionAspect : IAspect {
         public readonly Entity Self;
 
-        private readonly RefRO<Connection> ConnectionRO;
-        private readonly RefRO<CoasterReference> CoasterReferenceRO;
-        private readonly RefRW<Dirty> DirtyRW;
+        private readonly RefRO<Connection> connection;
+        private readonly RefRO<CoasterReference> coasterReference;
+        private readonly RefRW<Dirty> dirty;
 
-        public uint Id => ConnectionRO.ValueRO.Id;
-        public Entity Source => ConnectionRO.ValueRO.Source;
-        public Entity Target => ConnectionRO.ValueRO.Target;
-        public bool Selected => ConnectionRO.ValueRO.Selected;
+        public uint Id => connection.ValueRO.Id;
+        public Entity Source => connection.ValueRO.Source;
+        public Entity Target => connection.ValueRO.Target;
+        public bool Selected => connection.ValueRO.Selected;
 
-        public Entity Coaster => CoasterReferenceRO.ValueRO.Value;
+        public Entity Coaster => coasterReference.ValueRO.Value;
 
         public bool Dirty {
-            get => DirtyRW.ValueRO.Value;
-            set => DirtyRW.ValueRW.Value = value;
+            get => dirty.ValueRO.Value;
+            set => dirty.ValueRW.Value = value;
         }
     }
 }
