@@ -11,15 +11,16 @@ namespace KexEdit {
             float deltaTime = SystemAPI.Time.DeltaTime;
             float t = math.saturate(deltaTime * 30f);
 
-            foreach (var (segment, section, renderRW, blendRW) in SystemAPI
+            foreach (var (segment, section, render, blend) in SystemAPI
                 .Query<Segment, SectionReference, RefRW<Render>, RefRW<SelectedBlend>>()
             ) {
                 if (!SystemAPI.HasComponent<Node>(section)) continue;
 
                 var node = SystemAPI.GetComponent<Node>(section);
                 var sectionRender = SystemAPI.GetComponent<Render>(section);
-                renderRW.ValueRW = sectionRender;
-                blendRW.ValueRW.Value = math.lerp(blendRW.ValueRW.Value, node.Selected ? 1f : 0f, t);
+                render.ValueRW = sectionRender;
+                ref var blendRef = ref blend.ValueRW.Value;
+                blendRef = math.lerp(blendRef, node.Selected ? 1f : 0f, t);
             }
         }
     }

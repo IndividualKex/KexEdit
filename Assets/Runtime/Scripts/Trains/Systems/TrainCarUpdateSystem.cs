@@ -26,8 +26,8 @@ namespace KexEdit {
                     return;
                 }
 
-                ref var follower = ref TrackFollowerLookup.GetRefRW(entity).ValueRW;
-                follower = trainFollower;
+                ref var followerRef = ref TrackFollowerLookup.GetRefRW(entity).ValueRW;
+                followerRef = trainFollower;
             }
         }
     }

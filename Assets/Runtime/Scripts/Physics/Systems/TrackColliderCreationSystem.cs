@@ -30,12 +30,12 @@ namespace KexEdit {
 
             Entity updateEntity = Entity.Null;
             Entity sectionEntity = Entity.Null;
-            foreach (var (trackHash, colliderHashRW, render, section, entity) in SystemAPI
+            foreach (var (trackHash, colliderHash, render, section, entity) in SystemAPI
                 .Query<TrackHash, RefRW<TrackColliderHash>, Render, SectionReference>()
                 .WithEntityAccess()
             ) {
-                if (!render || colliderHashRW.ValueRO == trackHash.Value) continue;
-                colliderHashRW.ValueRW = trackHash.Value;
+                if (!render || colliderHash.ValueRO == trackHash.Value) continue;
+                colliderHash.ValueRW = trackHash.Value;
                 updateEntity = entity;
                 sectionEntity = section;
                 break;

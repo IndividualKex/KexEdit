@@ -4,11 +4,11 @@ namespace KexEdit {
     public readonly partial struct CurvedSectionAspect : IAspect {
         public readonly Entity Self;
 
-        private readonly RefRO<Anchor> AnchorRO;
+        private readonly RefRO<Anchor> anchor;
 
-        private readonly RefRW<Dirty> DirtyRW;
-        private readonly RefRW<PropertyOverrides> PropertyOverridesRW;
-        private readonly RefRW<CurveData> CurveDataRW;
+        private readonly RefRW<Dirty> dirty;
+        private readonly RefRW<PropertyOverrides> propertyOverrides;
+        private readonly RefRW<CurveData> curveData;
 
         public readonly DynamicBuffer<Point> Points;
 
@@ -22,56 +22,56 @@ namespace KexEdit {
         public readonly DynamicBuffer<FrictionKeyframe> FrictionKeyframes;
         public readonly DynamicBuffer<ResistanceKeyframe> ResistanceKeyframes;
 
-        public PointData Anchor => AnchorRO.ValueRO;
+        public PointData Anchor => anchor.ValueRO;
 
         public bool Dirty {
-            get => DirtyRW.ValueRO.Value;
-            set => DirtyRW.ValueRW.Value = value;
+            get => dirty.ValueRO.Value;
+            set => dirty.ValueRW.Value = value;
         }
 
         public bool FixedVelocity {
-            get => PropertyOverridesRW.ValueRO.FixedVelocity;
-            set => PropertyOverridesRW.ValueRW.FixedVelocity = value;
+            get => propertyOverrides.ValueRO.FixedVelocity;
+            set => propertyOverrides.ValueRW.FixedVelocity = value;
         }
 
         public bool HeartOverride {
-            get => PropertyOverridesRW.ValueRO.Heart;
-            set => PropertyOverridesRW.ValueRW.Heart = value;
+            get => propertyOverrides.ValueRO.Heart;
+            set => propertyOverrides.ValueRW.Heart = value;
         }
 
         public bool FrictionOverride {
-            get => PropertyOverridesRW.ValueRO.Friction;
-            set => PropertyOverridesRW.ValueRW.Friction = value;
+            get => propertyOverrides.ValueRO.Friction;
+            set => propertyOverrides.ValueRW.Friction = value;
         }
 
         public bool ResistanceOverride {
-            get => PropertyOverridesRW.ValueRO.Resistance;
-            set => PropertyOverridesRW.ValueRW.Resistance = value;
+            get => propertyOverrides.ValueRO.Resistance;
+            set => propertyOverrides.ValueRW.Resistance = value;
         }
 
         public float Radius {
-            get => CurveDataRW.ValueRO.Radius;
-            set => CurveDataRW.ValueRW.Radius = value;
+            get => curveData.ValueRO.Radius;
+            set => curveData.ValueRW.Radius = value;
         }
 
         public float Arc {
-            get => CurveDataRW.ValueRO.Arc;
-            set => CurveDataRW.ValueRW.Arc = value;
+            get => curveData.ValueRO.Arc;
+            set => curveData.ValueRW.Arc = value;
         }
 
         public float Axis {
-            get => CurveDataRW.ValueRO.Axis;
-            set => CurveDataRW.ValueRW.Axis = value;
+            get => curveData.ValueRO.Axis;
+            set => curveData.ValueRW.Axis = value;
         }
 
         public float LeadIn {
-            get => CurveDataRW.ValueRO.LeadIn;
-            set => CurveDataRW.ValueRW.LeadIn = value;
+            get => curveData.ValueRO.LeadIn;
+            set => curveData.ValueRW.LeadIn = value;
         }
 
         public float LeadOut {
-            get => CurveDataRW.ValueRO.LeadOut;
-            set => CurveDataRW.ValueRW.LeadOut = value;
+            get => curveData.ValueRO.LeadOut;
+            set => curveData.ValueRW.LeadOut = value;
         }
     }
 }

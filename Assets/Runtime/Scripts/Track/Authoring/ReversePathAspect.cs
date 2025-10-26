@@ -4,9 +4,9 @@ namespace KexEdit {
     public readonly partial struct ReversePathAspect : IAspect {
         public readonly Entity Self;
 
-        private readonly RefRO<ReversePathTag> ReversePathTagRO;
+        private readonly RefRO<ReversePathTag> reversePathTag;
 
-        private readonly RefRW<Dirty> DirtyRW;
+        private readonly RefRW<Dirty> dirty;
 
         public readonly DynamicBuffer<Point> Points;
 
@@ -14,10 +14,10 @@ namespace KexEdit {
         public readonly DynamicBuffer<OutputPortReference> OutputPorts;
 
         public bool Dirty {
-            get => DirtyRW.ValueRO.Value;
-            set => DirtyRW.ValueRW.Value = value;
+            get => dirty.ValueRO.Value;
+            set => dirty.ValueRW.Value = value;
         }
 
-        public ReversePathTag ReversePathTag => ReversePathTagRO.ValueRO;
+        public ReversePathTag ReversePathTag => reversePathTag.ValueRO;
     }
 }

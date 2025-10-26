@@ -9,18 +9,18 @@ namespace KexEdit {
     public partial struct StyleHashSystem : ISystem {
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            foreach (var (hashRW, trackStyleBuffer, entity) in SystemAPI
+            foreach (var (hash, trackStyleBuffer, entity) in SystemAPI
                 .Query<RefRW<TrackStyleHash>, DynamicBuffer<TrackStyleKeyframe>>()
                 .WithEntityAccess()
             ) {
-                ref var hash = ref hashRW.ValueRW;
+                ref var hashRef = ref hash.ValueRW;
 
                 var overrides = SystemAPI.GetComponent<PropertyOverrides>(entity);
                 if (overrides.TrackStyle) {
-                    hash = CalculateStyleHash(trackStyleBuffer);
+                    hashRef = CalculateStyleHash(trackStyleBuffer);
                 }
                 else {
-                    hash = CalculatePointHash(SystemAPI.GetBuffer<Point>(entity));
+                    hashRef = CalculatePointHash(SystemAPI.GetBuffer<Point>(entity));
                 }
             }
         }
