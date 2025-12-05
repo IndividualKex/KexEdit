@@ -30,7 +30,6 @@
   <Project Path="Unity.ResourceManager.csproj" />
   <Project Path="KexEdit.csproj" />
   <Project Path="Unity.VisualScripting.Core.csproj" />
-  <Project Path="Unity.CollabProxy.Editor.csproj" />
   <Project Path="Unity.VisualScripting.State.Editor.csproj" />
   <Project Path="Unity.Physics.Hybrid.csproj" />
   <Project Path="Unity.Burst.CodeGen.csproj" />
@@ -44,6 +43,7 @@
   <Project Path="Unity.InternalAPIEngineBridge.013.csproj" />
   <Project Path="glTFast.Export.csproj" />
   <Project Path="Unity.Serialization.csproj" />
+  <Project Path="Unity.Numerics.Linear.Dense.csproj" />
   <Project Path="Tests.csproj" />
   <Project Path="Unity.Burst.Editor.csproj" />
   <Project Path="Unity.VisualScripting.State.csproj" />
@@ -53,9 +53,9 @@
   <Project Path="Unity.Entities.Editor.Properties.csproj" />
   <Project Path="Unity.InternalAPIEditorBridge.013.csproj" />
   <Project Path="StandaloneFileBrowser.csproj" />
-  <Project Path="Unity.VectorGraphics.csproj" />
   <Project Path="glTFast.Documentation.Examples.csproj" />
   <Project Path="Unity.Physics.Editor.csproj" />
+  <Project Path="Unity.Numerics.Linear.Solvers.Lowlevel.csproj" />
   <Project Path="Unity.InputSystem.ForUI.csproj" />
   <Project Path="Unity.Collections.CodeGen.csproj" />
   <Project Path="Unity.Addressables.csproj" />
@@ -67,12 +67,16 @@
   <Project Path="Unity.Transforms.csproj" />
   <Project Path="Unity.Settings.Editor.csproj" />
   <Project Path="Unity.Entities.Build.csproj" />
+  <Project Path="Unity.CollabProxy.Editor.csproj" />
   <Project Path="Unity.InputSystem.TestFramework.csproj" />
+  <Project Path="Unity.Numerics.Memory.csproj" />
   <Project Path="Unity.VisualScripting.Shared.Editor.csproj" />
   <Project Path="Unity.Profiling.Core.csproj" />
-  <Project Path="Unity.InternalAPIEngineBridge.003.csproj" />
+  <Project Path="Unity.Numerics.Random.csproj" />
   <Project Path="Unity.Core.Editor.csproj" />
+  <Project Path="Unity.VectorGraphics.csproj" />
   <Project Path="Unity.Mathematics.Extensions.csproj" />
+  <Project Path="Unity.Numerics.Linear.Sparse.csproj" />
   <Project Path="Unity.Entities.Graphics.Editor.csproj" />
   <Project Path="Unity.Transforms.Hybrid.csproj" />
   <Project Path="KexEdit.Editor.csproj" />
@@ -86,4 +90,5 @@
   <Project Path="Unity.ScriptableBuildPipeline.csproj" />
   <Project Path="Unity.PlasticSCM.Editor.Entities.csproj" />
   <Project Path="Unity.Collections.Editor.csproj" />
+  <Project Path="Unity.Numerics.Linear.csproj" />
 </Solution>
