@@ -12,7 +12,7 @@ namespace KexEdit {
         [BurstCompile]
         public void OnCreate(ref SystemState state) {
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAspect<NodeAspect>()
+                .WithAll<Node, CoasterReference, InputPortReference>()
                 .Build(state.EntityManager);
             _connectionQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Connection>()
@@ -28,8 +28,8 @@ namespace KexEdit {
                 ref var coasterRef = ref coaster.ValueRW;
                 var coasterNodes = new NativeList<Entity>(nodes.Length, Allocator.Temp);
                 foreach (var nodeEntity in nodes) {
-                    var node = SystemAPI.GetAspect<NodeAspect>(nodeEntity);
-                    if (node.Coaster != entity) continue;
+                    var nodeCoaster = SystemAPI.GetComponent<CoasterReference>(nodeEntity).Value;
+                    if (nodeCoaster != entity) continue;
                     coasterNodes.Add(nodeEntity);
                 }
                 coasterRef.RootNode = FindGraphRoot(ref state, entity, coasterNodes);
@@ -47,9 +47,10 @@ namespace KexEdit {
             using var incomingConnections = new NativeHashSet<Entity>(nodes.Length, Allocator.Temp);
 
             foreach (var nodeEntity in nodes) {
-                var node = SystemAPI.GetAspect<NodeAspect>(nodeEntity);
+                var node = SystemAPI.GetComponent<Node>(nodeEntity);
                 if (node.Type == NodeType.Mesh || node.Type == NodeType.Append) continue;
-                foreach (var inputPort in node.InputPorts) {
+                var inputPorts = SystemAPI.GetBuffer<InputPortReference>(nodeEntity);
+                foreach (var inputPort in inputPorts) {
                     nodeMap.Add(inputPort, nodeEntity);
                 }
                 nodePriorityMap.Add(nodeEntity, node.Priority);
@@ -77,12 +78,12 @@ namespace KexEdit {
 
             Entity bestRoot = Entity.Null;
             int highestPriority = int.MinValue;
-            
+
             var potentialRoots = new NativeList<Entity>(nodes.Length, Allocator.Temp);
-            
+
             foreach (var nodeEntity in nodes) {
                 if (incomingConnections.Contains(nodeEntity)) continue;
-                
+
                 if (nodePriorityMap.TryGetValue(nodeEntity, out var priority)) {
                     if (priority > highestPriority) {
                         highestPriority = priority;
@@ -94,27 +95,27 @@ namespace KexEdit {
                     }
                 }
             }
-            
+
             if (potentialRoots.Length == 1) {
                 bestRoot = potentialRoots[0];
             }
             else if (potentialRoots.Length > 1) {
                 int longestPathLength = 0;
-                
+
                 foreach (var rootCandidate in potentialRoots) {
                     var tempGraph = new NativeHashMap<Entity, Entity>(nodes.Length, Allocator.Temp);
                     TraverseGraph(ref state, rootCandidate, ref tempGraph, nodeMap, connectionMap);
                     int pathLength = tempGraph.Count;
-                    
+
                     if (pathLength > longestPathLength) {
                         longestPathLength = pathLength;
                         bestRoot = rootCandidate;
                     }
-                    
+
                     tempGraph.Dispose();
                 }
             }
-            
+
             potentialRoots.Dispose();
 
             if (bestRoot != Entity.Null) {

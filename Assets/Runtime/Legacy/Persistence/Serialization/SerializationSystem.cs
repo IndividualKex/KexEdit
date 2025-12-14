@@ -31,7 +31,7 @@ namespace KexEdit.Serialization {
 
         protected override void OnCreate() {
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAspect<NodeAspect>()
+                .WithAll<Node, CoasterReference>()
                 .Build(EntityManager);
             _connectionQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Connection, CoasterReference>()
@@ -104,8 +104,8 @@ namespace KexEdit.Serialization {
             using var targetNodes = new NativeList<Entity>(Allocator.Temp);
 
             foreach (var entity in nodeEntities) {
-                var node = SystemAPI.GetAspect<NodeAspect>(entity);
-                if (node.Coaster == target) {
+                var coaster = SystemAPI.GetComponent<CoasterReference>(entity).Value;
+                if (coaster == target) {
                     targetNodes.Add(entity);
                 }
             }

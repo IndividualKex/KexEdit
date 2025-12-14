@@ -13,7 +13,7 @@ namespace KexEdit {
         [BurstCompile]
         public void OnCreate(ref SystemState state) {
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAspect<NodeAspect>()
+                .WithAll<Node, InputPortReference, OutputPortReference>()
                 .Build(state.EntityManager);
             _connectionQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Connection>()
@@ -32,7 +32,7 @@ namespace KexEdit {
         private void PropagateAnchors(ref SystemState state) {
             var nodes = _nodeQuery.ToEntityArray(Allocator.Temp);
             foreach (var nodeEntity in nodes) {
-                var node = SystemAPI.GetAspect<NodeAspect>(nodeEntity);
+                var node = SystemAPI.GetComponent<Node>(nodeEntity);
                 if (node.Type != NodeType.Anchor || !SystemAPI.IsComponentEnabled<Dirty>(nodeEntity)) continue;
 
                 var outputPort = SystemAPI.GetBuffer<OutputPortReference>(nodeEntity)[0];
@@ -49,10 +49,11 @@ namespace KexEdit {
         private void PropagateInputPorts(ref SystemState state) {
             var nodes = _nodeQuery.ToEntityArray(Allocator.Temp);
             foreach (var nodeEntity in nodes) {
-                var node = SystemAPI.GetAspect<NodeAspect>(nodeEntity);
+                var node = SystemAPI.GetComponent<Node>(nodeEntity);
+                var inputPorts = SystemAPI.GetBuffer<InputPortReference>(nodeEntity);
 
-                for (int i = 0; i < node.InputPorts.Length; i++) {
-                    var inputPort = node.InputPorts[i];
+                for (int i = 0; i < inputPorts.Length; i++) {
+                    var inputPort = inputPorts[i];
                     if (!SystemAPI.IsComponentEnabled<Dirty>(inputPort)) continue;
                     PortType type = SystemAPI.GetComponent<Port>(inputPort).Type;
                     ref var anchorRef = ref SystemAPI.GetComponentRW<Anchor>(nodeEntity).ValueRW;
@@ -173,13 +174,13 @@ namespace KexEdit {
             var propagated = new NativeHashSet<Entity>(connections.Length, Allocator.Temp);
             var nodes = _nodeQuery.ToEntityArray(Allocator.Temp);
             foreach (var nodeEntity in nodes) {
-                var node = SystemAPI.GetAspect<NodeAspect>(nodeEntity);
-                foreach (var sourcePort in node.OutputPorts) {
+                var outputPorts = SystemAPI.GetBuffer<OutputPortReference>(nodeEntity);
+                foreach (var sourcePort in outputPorts) {
                     if (!SystemAPI.IsComponentEnabled<Dirty>(sourcePort) || !map.ContainsKey(sourcePort)) continue;
 
                     foreach (var targetPort in map.GetValuesForKey(sourcePort)) {
                         if (propagated.Contains(targetPort)) continue;
-                        PropagateConnection(ref state, node, sourcePort, targetPort);
+                        PropagateConnection(ref state, nodeEntity, sourcePort, targetPort);
                         propagated.Add(targetPort);
                     }
 
@@ -192,14 +193,14 @@ namespace KexEdit {
             nodes.Dispose();
         }
 
-        private void PropagateConnection(ref SystemState state, NodeAspect node, Entity sourcePort, Entity targetPort) {
+        private void PropagateConnection(ref SystemState state, Entity nodeEntity, Entity sourcePort, Entity targetPort) {
             if (SystemAPI.HasComponent<AnchorPort>(sourcePort) && SystemAPI.HasComponent<AnchorPort>(targetPort)) {
                 AnchorPort sourcePointPort = SystemAPI.GetComponent<AnchorPort>(sourcePort);
                 ref var targetPointPortRef = ref SystemAPI.GetComponentRW<AnchorPort>(targetPort).ValueRW;
                 targetPointPortRef.Value = sourcePointPort.Value;
             }
             else if (SystemAPI.HasBuffer<PathPort>(sourcePort) && SystemAPI.HasBuffer<PathPort>(targetPort)) {
-                var sourceBuffer = SystemAPI.GetBuffer<Point>(node.Self);
+                var sourceBuffer = SystemAPI.GetBuffer<Point>(nodeEntity);
                 var portBuffer = SystemAPI.GetBuffer<PathPort>(targetPort);
                 portBuffer.Clear();
                 foreach (var point in sourceBuffer) {

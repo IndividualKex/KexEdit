@@ -29,7 +29,7 @@ namespace KexEdit.UI.NodeGraph {
                 .WithAll<Coaster, EditorCoasterTag>()
                 .Build(EntityManager);
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAspect<NodeAspect>()
+                .WithAll<Node, CoasterReference>()
                 .Build(EntityManager);
             _connectionQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Connection, CoasterReference>()
@@ -108,8 +108,8 @@ namespace KexEdit.UI.NodeGraph {
             using var entities = _nodeQuery.ToEntityArray(Allocator.Temp);
             using var set = new NativeHashSet<Entity>(entities.Length, Allocator.Temp);
             foreach (var entity in entities) {
-                var node = SystemAPI.GetAspect<NodeAspect>(entity);
-                if (node.Coaster != _data.Coaster) continue;
+                var coaster = SystemAPI.GetComponent<CoasterReference>(entity).Value;
+                if (coaster != _data.Coaster) continue;
 
                 set.Add(entity);
 
@@ -130,7 +130,8 @@ namespace KexEdit.UI.NodeGraph {
                     steering = SystemAPI.GetComponent<Steering>(entity);
                 }
 
-                var nodeData = NodeData.Create(node, durationType, render, steering);
+                var node = SystemAPI.GetComponent<Node>(entity);
+                var nodeData = NodeData.Create(entity, node, durationType, render, steering);
 
                 var inputPortReferences = SystemAPI.GetBuffer<InputPortReference>(entity);
                 foreach (var inputPortReference in inputPortReferences) {
@@ -215,7 +216,7 @@ namespace KexEdit.UI.NodeGraph {
             _data.HasSelectedNodes = false;
             foreach (var nodeData in _data.Nodes.Values) {
                 Entity entity = nodeData.Entity;
-                var node = SystemAPI.GetAspect<NodeAspect>(entity);
+                var node = SystemAPI.GetComponent<Node>(entity);
 
                 DurationType durationType = DurationType.Time;
                 if (SystemAPI.HasComponent<Duration>(entity)) {

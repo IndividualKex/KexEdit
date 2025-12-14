@@ -9,16 +9,15 @@ namespace KexEdit {
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (node, entity) in SystemAPI
-                .Query<NodeAspect>()
-                .WithAll<Node>()
+            foreach (var (node, coaster, inputPorts, outputPorts, entity) in SystemAPI
+                .Query<Node, CoasterReference, DynamicBuffer<InputPortReference>, DynamicBuffer<OutputPortReference>>()
                 .WithEntityAccess()
             ) {
-                if (SystemAPI.HasComponent<Coaster>(node.Coaster)) continue;
-                foreach (var port in node.InputPorts) {
+                if (SystemAPI.HasComponent<Coaster>(coaster)) continue;
+                foreach (var port in inputPorts) {
                     ecb.DestroyEntity(port);
                 }
-                foreach (var port in node.OutputPorts) {
+                foreach (var port in outputPorts) {
                     ecb.DestroyEntity(port);
                 }
                 ecb.DestroyEntity(entity);

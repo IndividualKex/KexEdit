@@ -25,7 +25,7 @@ namespace KexEdit.UI.Timeline {
         protected override void OnCreate() {
             _coasterQuery = GetEntityQuery(typeof(Coaster), typeof(EditorCoasterTag));
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAspect<NodeAspect>()
+                .WithAll<Node, CoasterReference>()
                 .WithAll<Point>()
                 .Build(EntityManager);
 
@@ -163,8 +163,9 @@ namespace KexEdit.UI.Timeline {
 
             using var entities = _nodeQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities) {
-                var node = SystemAPI.GetAspect<NodeAspect>(entity);
-                if (!node.Selected || node.Coaster != coasterEntity) continue;
+                var node = SystemAPI.GetComponent<Node>(entity);
+                var coaster = SystemAPI.GetComponent<CoasterReference>(entity).Value;
+                if (!node.Selected || coaster != coasterEntity) continue;
                 if (_data.Entity != Entity.Null) {
                     _data.Entity = Entity.Null;
                     return;
