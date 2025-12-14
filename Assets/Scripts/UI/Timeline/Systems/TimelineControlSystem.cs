@@ -672,8 +672,7 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void MarkTrackDirty() {
-            ref var dirty = ref SystemAPI.GetComponentRW<Dirty>(_data.Entity).ValueRW;
-            dirty = true;
+            SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
         }
 
         private float EvaluateAt(PropertyType type, float time) {
@@ -714,8 +713,7 @@ namespace KexEdit.UI.Timeline {
                     throw new System.NotImplementedException($"Property override not implemented for {type}");
             }
 
-            ref var dirty = ref SystemAPI.GetComponentRW<Dirty>(_data.Entity).ValueRW;
-            dirty = true;
+            SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
         }
 
         private void SelectProperty(PropertyType type) {
@@ -1043,8 +1041,7 @@ namespace KexEdit.UI.Timeline {
                     ref var durationPort = ref SystemAPI.GetComponentRW<DurationPort>(portRef.Value).ValueRW;
                     durationPort.Value = duration;
 
-                    ref var dirty = ref SystemAPI.GetComponentRW<Dirty>(portRef.Value).ValueRW;
-                    dirty = true;
+                    SystemAPI.SetComponentEnabled<Dirty>(portRef.Value, true);
 
                     MarkTrackDirty();
                     return;
@@ -1631,10 +1628,10 @@ namespace KexEdit.UI.Timeline {
                     break;
                 }
 
-                SystemAPI.SetComponent<Dirty>(_data.Entity, true);
+                SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
                 while (
                     SystemAPI.HasComponent<Dirty>(_data.Entity) &&
-                    SystemAPI.GetComponent<Dirty>(_data.Entity).Value) {
+                    SystemAPI.IsComponentEnabled<Dirty>(_data.Entity)) {
                     yield return null;
                 }
             }

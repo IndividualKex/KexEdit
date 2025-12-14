@@ -6,6 +6,10 @@ Advanced Unity-based roller coaster editor using Force Vector Design (FVD) with 
 
 **Required**: Read [layers/structure.md](layers/structure.md) before proceeding with any task
 
+## Testing
+
+**Headless (CLI)**: `./run-tests.sh`
+
 ## Context Management System
 
 - **Tier 0 — global**: `CLAUDE.md` (root). Global standards and system overview

@@ -1,0 +1,149 @@
+using KexEdit;
+using Unity.Entities;
+
+namespace Tests {
+    public static class BridgeSectionEntityBuilder {
+        public static Entity Create(EntityManager em, GoldSection section) {
+            var entity = em.CreateEntity(
+                typeof(Anchor),
+                typeof(BridgeTag),
+                typeof(Dirty),
+                typeof(PropertyOverrides)
+            );
+
+            em.AddBuffer<Point>(entity);
+            em.AddBuffer<InputPortReference>(entity);
+            em.AddBuffer<OutputPortReference>(entity);
+            em.AddBuffer<FixedVelocityKeyframe>(entity);
+            em.AddBuffer<HeartKeyframe>(entity);
+            em.AddBuffer<FrictionKeyframe>(entity);
+            em.AddBuffer<ResistanceKeyframe>(entity);
+
+            em.SetComponentData(entity, new Anchor { Value = ForceSectionEntityBuilder.ToPointData(section.inputs.anchor) });
+            em.SetComponentEnabled<Dirty>(entity, true);
+            em.SetComponentData(entity, ToPropertyOverrides(section.inputs.propertyOverrides));
+
+            PopulateKeyframes(em, entity, section.inputs.keyframes);
+
+            var anchorPort = CreateMockAnchorPort(em);
+            var targetAnchorPort = CreateTargetAnchorPort(em, section);
+            var outWeightPort = CreateOutWeightPort(em, section.inputs.outWeight);
+            var inWeightPort = CreateInWeightPort(em, section.inputs.inWeight);
+            var outputPort = CreateMockOutputPort(em);
+
+            var inputPorts = em.GetBuffer<InputPortReference>(entity);
+            inputPorts.Add(anchorPort);
+            inputPorts.Add(targetAnchorPort);
+            inputPorts.Add(outWeightPort);
+            inputPorts.Add(inWeightPort);
+
+            var outputPorts = em.GetBuffer<OutputPortReference>(entity);
+            outputPorts.Add(outputPort);
+
+            return entity;
+        }
+
+        private static Entity CreateMockAnchorPort(EntityManager em) {
+            var port = em.CreateEntity(typeof(AnchorPort), typeof(Dirty));
+            em.SetComponentData(port, new AnchorPort { Value = PointData.Create() });
+            em.SetComponentEnabled<Dirty>(port, false);
+            return port;
+        }
+
+        private static Entity CreateTargetAnchorPort(EntityManager em, GoldSection section) {
+            var port = em.CreateEntity(typeof(AnchorPort), typeof(Dirty));
+            var targetPointData = section.inputs.targetAnchor != null
+                ? ForceSectionEntityBuilder.ToPointData(section.inputs.targetAnchor)
+                : PointData.Create();
+            em.SetComponentData(port, new AnchorPort { Value = targetPointData });
+            em.SetComponentEnabled<Dirty>(port, false);
+            return port;
+        }
+
+        private static Entity CreateOutWeightPort(EntityManager em, float outWeight) {
+            var port = em.CreateEntity(typeof(OutWeightPort), typeof(Dirty));
+            em.SetComponentData(port, new OutWeightPort { Value = outWeight > 0f ? outWeight : 0.3f });
+            em.SetComponentEnabled<Dirty>(port, false);
+            return port;
+        }
+
+        private static Entity CreateInWeightPort(EntityManager em, float inWeight) {
+            var port = em.CreateEntity(typeof(InWeightPort), typeof(Dirty));
+            em.SetComponentData(port, new InWeightPort { Value = inWeight > 0f ? inWeight : 0.3f });
+            em.SetComponentEnabled<Dirty>(port, false);
+            return port;
+        }
+
+        private static Entity CreateMockOutputPort(EntityManager em) {
+            var port = em.CreateEntity(typeof(AnchorPort), typeof(Dirty));
+            em.SetComponentData(port, new AnchorPort { Value = PointData.Create() });
+            em.SetComponentEnabled<Dirty>(port, false);
+            return port;
+        }
+
+        private static void PopulateKeyframes(EntityManager em, Entity entity, GoldKeyframes kf) {
+            if (kf == null) return;
+
+            if (kf.fixedVelocity != null) {
+                var buffer = em.GetBuffer<FixedVelocityKeyframe>(entity);
+                foreach (var k in kf.fixedVelocity) buffer.Add(ToKeyframe(k));
+            }
+            if (kf.heart != null) {
+                var buffer = em.GetBuffer<HeartKeyframe>(entity);
+                foreach (var k in kf.heart) buffer.Add(ToKeyframe(k));
+            }
+            if (kf.friction != null) {
+                var buffer = em.GetBuffer<FrictionKeyframe>(entity);
+                foreach (var k in kf.friction) buffer.Add(ToKeyframe(k));
+            }
+            if (kf.resistance != null) {
+                var buffer = em.GetBuffer<ResistanceKeyframe>(entity);
+                foreach (var k in kf.resistance) buffer.Add(ToKeyframe(k));
+            }
+        }
+
+        private static Keyframe ToKeyframe(GoldKeyframe k) {
+            return new Keyframe {
+                Id = k.id,
+                Time = k.time,
+                Value = k.value,
+                InInterpolation = ParseInterpolationType(k.inInterpolation),
+                OutInterpolation = ParseInterpolationType(k.outInterpolation),
+                HandleType = ParseHandleType(k.handleType),
+                InTangent = k.inTangent,
+                OutTangent = k.outTangent,
+                InWeight = k.inWeight,
+                OutWeight = k.outWeight,
+                Flags = KeyframeFlags.None,
+                Selected = false
+            };
+        }
+
+        private static PropertyOverrides ToPropertyOverrides(GoldPropertyOverrides p) {
+            if (p == null) return PropertyOverrides.Default;
+            var result = new PropertyOverrides();
+            result.FixedVelocity = p.fixedVelocity;
+            result.Heart = p.heart;
+            result.Friction = p.friction;
+            result.Resistance = p.resistance;
+            return result;
+        }
+
+        private static InterpolationType ParseInterpolationType(string type) {
+            return type switch {
+                "Constant" => InterpolationType.Constant,
+                "Linear" => InterpolationType.Linear,
+                "Bezier" => InterpolationType.Bezier,
+                _ => InterpolationType.Bezier
+            };
+        }
+
+        private static HandleType ParseHandleType(string type) {
+            return type switch {
+                "Free" => HandleType.Free,
+                "Aligned" => HandleType.Aligned,
+                _ => HandleType.Aligned
+            };
+        }
+    }
+}

@@ -4,31 +4,37 @@ Advanced Unity-based roller coaster editor using Force Vector Design (FVD) with 
 
 ## Stack
 
-- Runtime: Unity 6000.2.0f1
-- Language: C# (.NET Standard 2.1)
+- Runtime: Unity 6000.3.1f1
+- Language: C# (.NET Standard 2.1), Rust (native core)
 - Framework: Unity DOTS (ECS, Burst, Jobs System)
-- Build: Unity Build System
+- Build: Unity Build System, Cargo (Rust)
 - Rendering: Universal Render Pipeline (URP)
 - UI: UI Toolkit (Unity's modern UI system)
-- Testing: Unity Test Framework
+- Testing: Unity Test Framework, Cargo test
 
 ## Commands
 
 - Dev: Open project in Unity Editor
 - Build: File → Build Settings → Build (Windows/Mac/Linux)
-- Test: Window → General → Test Runner
+- Test (Unity): Window → General → Test Runner
+- Test (Headless): `./run-tests.sh [TestName]` (Burst) or `./run-tests.sh --rust-backend [TestName]` (Rust FFI) - cross-platform (Windows/macOS)
+- Test (Rust): `cd rust-backend && cargo test`
+- Build (Rust): `./build-rust.sh` - cross-platform (auto-detects .dll/.dylib/.so)
 - Play: Unity Editor Play Mode (Ctrl/Cmd+P)
-
-**Do not try to run code from the command line. Wait for the Unity Editor.**
 
 ## Layout
 
 ```
 KexEdit/
 ├── CLAUDE.md  # Global context (Tier 0)
+├── run-tests.sh  # Headless test runner
 ├── Assets/  # Unity assets root
-│   ├── Runtime/  # Core runtime package
-│   │   ├── Scripts/  # Main codebase (organized by feature)
+│   ├── Runtime/  # Application layer (hexagonal architecture)
+│   │   ├── Core/  # Domain layer - pure physics/math (KexEdit.Core)
+│   │   ├── Nodes/  # Node types (KexEdit.Nodes.*)
+│   │   ├── Native/  # Rust FFI bindings (KexEdit.Native.RustCore)
+│   │   ├── Plugins/  # Native DLLs (kexedit_core.dll)
+│   │   ├── Legacy/  # Monolithic runtime being hollowed out (KexEdit)
 │   │   │   ├── Core/  # Foundation & utilities
 │   │   │   ├── Track/  # Track construction & graph
 │   │   │   ├── Trains/  # Vehicle systems
@@ -49,8 +55,15 @@ KexEdit/
 │   ├── Scenes/  # Unity scenes
 │   ├── Prefabs/  # Prefab assets
 │   └── Materials/  # Materials and textures
+├── rust-backend/  # Git submodule → kexedit-backend (standalone Rust workspace)
+│   ├── Cargo.toml  # Workspace manifest
+│   ├── kexedit-core/  # Pure domain layer (Rust)
+│   ├── kexedit-nodes/ # Node schema layer (Rust)
+│   └── kexedit-ffi/   # FFI adapter (Rust → C)
+├── build-rust.sh  # Rust build script (builds submodule)
 ├── layers/
 │   ├── structure.md  # Project-level context (Tier 1)
+│   ├── migration-plan.md  # Runtime migration tracking
 │   └── context-template.md  # Template for context files
 ├── ProjectSettings/  # Unity project settings
 ├── Packages/  # Unity package manifest
@@ -76,10 +89,10 @@ KexEdit/
 ## Entry points
 
 - Main entry: `Assets/Scenes/Main.unity` (Main editor scene)
-- Runtime entry: `Assets/Runtime/Scripts/Core/KexEditManager.cs` (Main runtime manager)
+- Runtime entry: `Assets/Runtime/Legacy/Core/KexEditManager.cs` (Main runtime manager)
 - UI entry: `Assets/Scripts/UI/UIManager.cs` (UI initialization)
-- Track system: `Assets/Runtime/Scripts/Track/Track.cs` (Track data structure)
-- File loading: `Assets/Runtime/Scripts/Persistence/CoasterLoader.cs` (Track file loader)
+- Track system: `Assets/Runtime/Legacy/Track/Track.cs` (Track data structure)
+- File loading: `Assets/Runtime/Legacy/Persistence/CoasterLoader.cs` (Track file loader)
 
 ## Naming Conventions
 
@@ -98,15 +111,18 @@ KexEdit/
 
 ## Where to add code
 
-- Core utilities → `Assets/Runtime/Scripts/Core/`
-- Track building → `Assets/Runtime/Scripts/Track/`
-- Train logic → `Assets/Runtime/Scripts/Trains/`
-- Physics/simulation → `Assets/Runtime/Scripts/Physics/`
-- Rendering/visuals → `Assets/Runtime/Scripts/Visualization/`
-- Save/load → `Assets/Runtime/Scripts/Persistence/`
-- Global state → `Assets/Runtime/Scripts/State/`
+- Portable physics/math (C#) → `Assets/Runtime/Core/`
+- Portable physics/math (Rust) → `rust-backend/kexedit-core/`
+- Rust FFI layer → `rust-backend/kexedit-ffi/`
+- Rust FFI bindings (C#) → `Assets/Runtime/Native/RustCore/`
+- Node types → `Assets/Runtime/Nodes/`
+- Legacy ECS systems → `Assets/Runtime/Legacy/Track/`
+- Train logic → `Assets/Runtime/Legacy/Trains/`
+- Physics/simulation → `Assets/Runtime/Legacy/Physics/`
+- Rendering/visuals → `Assets/Runtime/Legacy/Visualization/`
+- Save/load → `Assets/Runtime/Legacy/Persistence/`
+- Global state → `Assets/Runtime/Legacy/State/`
 - UI features → `Assets/Scripts/UI/`
 - Node graph → `Assets/Scripts/UI/NodeGraph/`
 - Timeline → `Assets/Scripts/UI/Timeline/`
 - Tests → `Assets/Tests/`
-- New feature → Create folder in appropriate feature area with `context.md`

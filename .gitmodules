@@ -1,0 +1,3 @@
+[submodule "rust-backend"]
+	path = rust-backend
+	url = https://github.com/IndividualKex/kexedit-backend.git

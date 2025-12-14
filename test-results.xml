@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="4" result="Passed" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.7196757">
+  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3094" result="Passed" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.719676" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1265" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="229" result="Passed" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.693975" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="10072" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1269" name="Tests" fullname="Tests" runstate="Runnable" testcasecount="208" result="Passed" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.692277" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestFixture" id="1043" name="BuildForceSectionSystemTests" fullname="Tests.BuildForceSectionSystemTests" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.689618" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties>
+            <property name="Category" value="Golden" />
+          </properties>
+          <test-case id="1047" name="AllTypes_ForceSection_MatchesGoldData" fullname="Tests.BuildForceSectionSystemTests.AllTypes_ForceSection_MatchesGoldData" methodname="AllTypes_ForceSection_MatchesGoldData" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" seed="306100131" result="Passed" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.362247" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[[PointComparer] Max drift 4.76837158E-06 at index 218
+]]></output>
+          </test-case>
+          <test-case id="1044" name="Shuttle_ForceSection_MatchesGoldData" fullname="Tests.BuildForceSectionSystemTests.Shuttle_ForceSection_MatchesGoldData" methodname="Shuttle_ForceSection_MatchesGoldData" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" seed="1994334471" result="Passed" start-time="2025-12-14 20:07:01Z" end-time="2025-12-14 20:07:01Z" duration="0.045613" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[[PointComparer] Max drift 0.000366210938 at index 540
+]]></output>
+          </test-case>
+          <test-case id="1045" name="Veloci_ForceSection1_MatchesGoldData" fullname="Tests.BuildForceSectionSystemTests.Veloci_ForceSection1_MatchesGoldData" methodname="Veloci_ForceSection1_MatchesGoldData" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" seed="1101970608" result="Passed" start-time="2025-12-14 20:07:01Z" end-time="2025-12-14 20:07:01Z" duration="0.170296" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[[PointComparer] Max drift 0.00287628174 at index 3094
+]]></output>
+          </test-case>
+          <test-case id="1046" name="Veloci_ForceSection2_MatchesGoldData" fullname="Tests.BuildForceSectionSystemTests.Veloci_ForceSection2_MatchesGoldData" methodname="Veloci_ForceSection2_MatchesGoldData" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" seed="878474431" result="Passed" start-time="2025-12-14 20:07:01Z" end-time="2025-12-14 20:07:01Z" duration="0.099152" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[[PointComparer] Max drift 0.0093536377 at index 2873
+Saving results to: C:/Users/dylan/AppData/LocalLow/IndividualKex/KexEdit\TestResults.xml
+]]></output>
+          </test-case>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

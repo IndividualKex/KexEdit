@@ -1,40 +1,40 @@
 # Tests Context
 
-Unit and integration tests for KexEdit functionality
+Unit and integration tests for KexEdit functionality.
 
 ## Purpose
 
-- Contains test suites for track computation, UI, and systems
-- Ensures correctness of physics calculations and track generation
-- Validates UI interactions and file operations
+- Golden fixture tests validating physics against exported ground truth
+- Unit tests for Core primitives and node types
+- Performance benchmarks comparing Burst vs Rust implementations
 
 ## Layout
 
 ```
 Tests/
-├── context.md  # This file, folder context (Tier 2)
-├── Editor/  # Editor-only tests
-│   └── [Various]Tests.cs  # UI and editor tests
-├── Runtime/  # Runtime tests
-│   └── [Various]Tests.cs  # ECS and computation tests
-├── PlayMode/  # Play mode tests
-│   └── [Various]Tests.cs  # Integration tests
-└── Tests.asmdef  # Test assembly definition
+├── context.md
+├── Tests.asmdef
+├── Core*Tests.cs               # Unit tests for Core layer
+├── *NodeTests.cs               # Golden tests for node types
+├── Build*SystemTests.cs        # Golden tests for ECS layer
+├── *TestBuilder.cs             # Build test data from gold fixtures
+├── *EntityBuilder.cs           # Build ECS entities from gold fixtures
+├── SimPointComparer.cs         # KexEdit.Core.Point comparison
+├── PointComparer.cs            # ECS Point comparison
+├── PerformanceTests/           # Burst vs Rust benchmarks
+├── GoldData/                   # Gold data loading
+├── TrackData/                  # Gold test fixtures (JSON)
+└── Assets/                     # Test asset files (.kex)
 ```
 
-## Scope
+## Running Tests
 
-- In-scope: All unit tests, integration tests, test utilities
-- Out-of-scope: Production code, build scripts, documentation
-
-## Entrypoints
-
-- Unity Test Runner (Window → General → Test Runner)
-- Tests run in Edit Mode or Play Mode depending on type
-- CI/CD pipelines can invoke tests via command line
+**Headless (CLI)**: `./run-tests.sh` (Burst backend, default)
+**Rust backend**: `./run-tests.sh --rust-backend`
+**Unity Editor**: Window → General → Test Runner
 
 ## Dependencies
 
-- Unity Test Framework - Test infrastructure
-- NUnit - Assertion framework
-- Runtime and UI assemblies - Code under test
+- KexEdit.Core, KexEdit.Nodes.*, KexEdit (ECS)
+- KexEdit.Native.RustCore
+- Unity.Entities.Tests, Unity.PerformanceTesting, NUnit
