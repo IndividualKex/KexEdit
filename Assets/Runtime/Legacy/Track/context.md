@@ -17,12 +17,6 @@ Track construction, node graph, and section building
 - `Segment` - Track segment data
 - Section tags - `BridgeTag`, `ReverseTag`, etc.
 
-## Authoring
-
-- `NodeAspect` - Node configuration and behavior
-- `ConnectionAspect` - Connection management
-- Section aspects - Build logic for each track type
-
 ## Key Systems
 
 - `GraphSystem` - Manages node graph structure

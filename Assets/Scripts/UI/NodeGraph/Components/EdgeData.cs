@@ -10,19 +10,19 @@ namespace KexEdit.UI.NodeGraph {
         public bool Hovered => InteractionState.HasFlag(InteractionState.Hovered);
         public bool Selected => InteractionState.HasFlag(InteractionState.Selected);
 
-        public static EdgeData Create(ConnectionAspect connection) {
+        public static EdgeData Create(Entity connectionEntity, in Connection connection) {
             InteractionState interactionState = InteractionState.None;
             if (connection.Selected) interactionState |= InteractionState.Selected;
 
             return new EdgeData {
-                Entity = connection.Self,
+                Entity = connectionEntity,
                 Source = connection.Source,
                 Target = connection.Target,
-                InteractionState = interactionState,
+                InteractionState = interactionState
             };
         }
 
-        public void Update(ConnectionAspect connection) {
+        public void Update(in Connection connection) {
             if (connection.Selected) InteractionState |= InteractionState.Selected;
             else InteractionState &= ~InteractionState.Selected;
         }

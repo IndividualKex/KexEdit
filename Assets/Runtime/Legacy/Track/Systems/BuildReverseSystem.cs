@@ -6,9 +6,7 @@ using Unity.Mathematics;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [BurstCompile]
     public partial struct BuildReverseSystem : ISystem {
-        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
             var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
@@ -20,6 +18,7 @@ namespace KexEdit {
         }
 
         [BurstCompile]
+        [WithAll(typeof(ReverseTag))]
         private partial struct Job : IJobEntity {
             public EntityCommandBuffer.ParallelWriter Ecb;
 
@@ -27,24 +26,25 @@ namespace KexEdit {
             public ComponentLookup<AnchorPort> AnchorPortLookup;
 
             public void Execute(
-                [ChunkIndexInQuery] int chunkIndex, 
-                Entity entity, 
+                [ChunkIndexInQuery] int chunkIndex,
+                Entity entity,
                 EnabledRefRW<Dirty> dirty,
-                ReverseAspect section
+                in Anchor anchor,
+                in DynamicBuffer<InputPortReference> inputPorts,
+                in DynamicBuffer<OutputPortReference> outputPorts
             ) {
-                if (section.OutputPorts.Length > 0 && AnchorPortLookup.TryGetComponent(section.OutputPorts[0], out var anchorPort)) {
-                    PointData anchor = section.Anchor;
-                    Core.Point anchorState = ToPoint(in anchor);
+                if (outputPorts.Length > 0 && AnchorPortLookup.TryGetComponent(outputPorts[0], out var anchorPort)) {
+                    Core.Point anchorState = ToPoint(in anchor.Value);
                     ReverseNode.Build(in anchorState, out Core.Point result);
-                    anchorPort.Value = ToPointData(in result, in anchor);
+                    anchorPort.Value = ToPointData(in result, in anchor.Value);
                     anchorPort.Value.Facing *= -1;
-                    Ecb.SetComponent(chunkIndex, section.OutputPorts[0], anchorPort);
+                    Ecb.SetComponent(chunkIndex, outputPorts[0], anchorPort);
                 }
                 else {
                     UnityEngine.Debug.LogWarning("BuildReverseSystem: No anchor port found");
                 }
 
-                foreach (var port in section.OutputPorts) {
+                foreach (var port in outputPorts) {
                     Ecb.SetComponentEnabled<Dirty>(chunkIndex, port, true);
                 }
 

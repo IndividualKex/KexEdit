@@ -34,7 +34,7 @@ namespace KexEdit.Serialization {
                 .WithAspect<NodeAspect>()
                 .Build(EntityManager);
             _connectionQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAspect<ConnectionAspect>()
+                .WithAll<Connection, CoasterReference>()
                 .Build(EntityManager);
             _portQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Port>()
@@ -119,10 +119,11 @@ namespace KexEdit.Serialization {
             using var targetConnections = new NativeList<Entity>(Allocator.Temp);
 
             foreach (var entity in connectionEntities) {
-                var connection = SystemAPI.GetAspect<ConnectionAspect>(entity);
-                if (connection.Coaster == target) {
-                    targetConnections.Add(entity);
-                }
+                var coasterReference = SystemAPI.GetComponent<CoasterReference>(entity);
+                if (coasterReference.Value != target) continue;
+
+                var connection = SystemAPI.GetComponent<Connection>(entity);
+                targetConnections.Add(entity);
             }
 
             graph.Edges = new(targetConnections.Length, Allocator.Temp);
@@ -633,12 +634,12 @@ namespace KexEdit.Serialization {
 
             ecb.AddComponent<Anchor>(entity, node.Anchor);
 
-            if (type == NodeType.ForceSection
-                || type == NodeType.GeometricSection
-                || type == NodeType.CurvedSection
-                || type == NodeType.CopyPathSection
-                || type == NodeType.Bridge
-                || type == NodeType.ReversePath) {
+            if (type == NodeType.ForceSection ||
+                type == NodeType.GeometricSection ||
+                type == NodeType.CurvedSection ||
+                type == NodeType.CopyPathSection ||
+                type == NodeType.Bridge ||
+                type == NodeType.ReversePath) {
                 ecb.AddBuffer<Point>(entity);
                 ecb.AddBuffer<ReadNormalForce>(entity);
                 ecb.AddBuffer<ReadLateralForce>(entity);
@@ -647,11 +648,11 @@ namespace KexEdit.Serialization {
                 ecb.AddBuffer<ReadRollSpeed>(entity);
             }
 
-            if (type == NodeType.ForceSection
-                || type == NodeType.GeometricSection
-                || type == NodeType.CurvedSection
-                || type == NodeType.CopyPathSection
-                || type == NodeType.Bridge) {
+            if (type == NodeType.ForceSection ||
+                type == NodeType.GeometricSection ||
+                type == NodeType.CurvedSection ||
+                type == NodeType.CopyPathSection ||
+                type == NodeType.Bridge) {
                 ecb.AddComponent<Render>(entity, node.Render);
                 ecb.AddComponent(entity, node.PropertyOverrides);
                 ecb.AddComponent(entity, node.SelectedProperties);
@@ -682,8 +683,8 @@ namespace KexEdit.Serialization {
                 ecb.AddComponent<Render>(entity, node.Render);
             }
 
-            if (type == NodeType.ForceSection
-                || type == NodeType.GeometricSection) {
+            if (type == NodeType.ForceSection ||
+                type == NodeType.GeometricSection) {
                 ecb.AddComponent(entity, node.Duration);
 
                 ecb.AddBuffer<RollSpeedKeyframe>(entity);
@@ -713,7 +714,7 @@ namespace KexEdit.Serialization {
                         ecb.AppendToBuffer(entity, keyframe);
                     }
 
-                    bool steering = (node.FieldFlags & NodeFieldFlags.HasSteering) != 0 ? node.Steering : true;
+                    bool steering = (node.FieldFlags & NodeFieldFlags.HasSteering) == 0 || node.Steering;
                     ecb.AddComponent<Steering>(entity, steering);
                 }
             }

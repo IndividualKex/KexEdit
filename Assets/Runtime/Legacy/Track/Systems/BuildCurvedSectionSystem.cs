@@ -1,4 +1,3 @@
-using KexEdit.Core;
 using KexEdit.Nodes.Curved;
 using Unity.Burst;
 using Unity.Collections;
@@ -10,9 +9,7 @@ using CorePoint = KexEdit.Core.Point;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [BurstCompile]
     public partial struct BuildCurvedSectionSystem : ISystem {
-        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
             var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
@@ -34,57 +31,66 @@ namespace KexEdit {
                 [ChunkIndexInQuery] int chunkIndex,
                 Entity entity,
                 EnabledRefRW<Dirty> dirty,
-                CurvedSectionAspect section
+                in Anchor anchor,
+                in CurveData curveData,
+                in PropertyOverrides propertyOverrides,
+                in DynamicBuffer<RollSpeedKeyframe> rollSpeedKeyframes,
+                in DynamicBuffer<FixedVelocityKeyframe> fixedVelocityKeyframes,
+                in DynamicBuffer<HeartKeyframe> heartKeyframes,
+                in DynamicBuffer<FrictionKeyframe> frictionKeyframes,
+                in DynamicBuffer<ResistanceKeyframe> resistanceKeyframes,
+                in DynamicBuffer<InputPortReference> inputPorts,
+                in DynamicBuffer<OutputPortReference> outputPorts,
+                ref DynamicBuffer<Point> points
             ) {
-                PointData anchor = section.Anchor;
-                CorePoint anchorState = ToPoint(in anchor);
+                CorePoint anchorState = ToPoint(in anchor.Value);
 
-                using var rollSpeedKf = ConvertKeyframes(section.RollSpeedKeyframes, Allocator.Temp);
-                using var drivenVelocityKf = ConvertKeyframes(section.FixedVelocityKeyframes, Allocator.Temp);
-                using var heartOffsetKf = ConvertKeyframes(section.HeartKeyframes, Allocator.Temp);
-                using var frictionKf = ConvertKeyframes(section.FrictionKeyframes, Allocator.Temp);
-                using var resistanceKf = ConvertKeyframes(section.ResistanceKeyframes, Allocator.Temp);
+                using var rollSpeedKf = ConvertKeyframes(rollSpeedKeyframes, Allocator.Temp);
+                using var drivenVelocityKf = ConvertKeyframes(fixedVelocityKeyframes, Allocator.Temp);
+                using var heartOffsetKf = ConvertKeyframes(heartKeyframes, Allocator.Temp);
+                using var frictionKf = ConvertKeyframes(frictionKeyframes, Allocator.Temp);
+                using var resistanceKf = ConvertKeyframes(resistanceKeyframes, Allocator.Temp);
 
                 var result = new NativeList<CorePoint>(Allocator.Temp);
 
                 CurvedNode.Build(
                     in anchorState,
-                    section.Radius,
-                    section.Arc,
-                    section.Axis,
-                    section.LeadIn,
-                    section.LeadOut,
-                    section.FixedVelocity,
+                    curveData.Radius,
+                    curveData.Arc,
+                    curveData.Axis,
+                    curveData.LeadIn,
+                    curveData.LeadOut,
+                    propertyOverrides.FixedVelocity,
                     rollSpeedKf,
                     drivenVelocityKf,
                     heartOffsetKf,
                     frictionKf,
                     resistanceKf,
-                    anchor.Heart,
-                    anchor.Friction,
-                    anchor.Resistance,
+                    anchor.Value.Heart,
+                    anchor.Value.Friction,
+                    anchor.Value.Resistance,
                     ref result
                 );
 
-                section.Points.Clear();
-                section.Points.Add(anchor);
+                points.Clear();
+                points.Add(anchor.Value);
                 PointData prev = anchor;
                 for (int i = 1; i < result.Length; i++) {
                     PointData curr = ToPointData(in result.ElementAt(i), in prev);
-                    section.Points.Add(curr);
+                    points.Add(curr);
                     prev = curr;
                 }
                 result.Dispose();
 
-                if (section.OutputPorts.Length > 0 && AnchorPortLookup.TryGetComponent(section.OutputPorts[0], out var anchorPort)) {
-                    anchorPort.Value = section.Points[^1].Value;
-                    Ecb.SetComponent(chunkIndex, section.OutputPorts[0], anchorPort);
+                if (outputPorts.Length > 0 && AnchorPortLookup.TryGetComponent(outputPorts[0], out var anchorPort)) {
+                    anchorPort.Value = points[^1].Value;
+                    Ecb.SetComponent(chunkIndex, outputPorts[0], anchorPort);
                 }
                 else {
                     UnityEngine.Debug.LogWarning("BuildCurvedSectionSystem: No anchor port found");
                 }
 
-                foreach (var port in section.OutputPorts) {
+                foreach (var port in outputPorts) {
                     Ecb.SetComponentEnabled<Dirty>(chunkIndex, port, true);
                 }
 

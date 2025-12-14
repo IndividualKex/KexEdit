@@ -7,9 +7,7 @@ using CorePoint = KexEdit.Core.Point;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [BurstCompile]
     public partial struct BuildReversePathSystem : ISystem {
-        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
             var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
@@ -21,6 +19,7 @@ namespace KexEdit {
         }
 
         [BurstCompile]
+        [WithAll(typeof(ReversePathTag))]
         private partial struct Job : IJobEntity {
             public EntityCommandBuffer.ParallelWriter Ecb;
 
@@ -28,13 +27,15 @@ namespace KexEdit {
             public BufferLookup<PathPort> PathPortLookup;
 
             public void Execute(
-                [ChunkIndexInQuery] int chunkIndex, 
-                Entity entity, 
+                [ChunkIndexInQuery] int chunkIndex,
+                Entity entity,
                 EnabledRefRW<Dirty> dirty,
-                ReversePathAspect section
+                in DynamicBuffer<InputPortReference> inputPorts,
+                in DynamicBuffer<OutputPortReference> outputPorts,
+                ref DynamicBuffer<Point> points
             ) {
-                if (section.InputPorts.Length < 1
-                    || !PathPortLookup.TryGetBuffer(section.InputPorts[0], out var pathBuffer)) {
+                if (inputPorts.Length < 1 ||
+                    !PathPortLookup.TryGetBuffer(inputPorts[0], out var pathBuffer)) {
                     UnityEngine.Debug.LogError("BuildReversePathSystem: No path port found");
                     return;
                 }
@@ -46,18 +47,18 @@ namespace KexEdit {
 
                 ReversePathNode.Build(sourcePath, ref result);
 
-                section.Points.Clear();
+                points.Clear();
                 float totalLength = pathBuffer[^1].Value.TotalLength;
                 PointData firstAnchor = pathBuffer[^1].Value;
                 for (int i = 0; i < result.Length; i++) {
                     PointData curr = ToPointData(in result.ElementAt(i), in firstAnchor);
                     curr.TotalLength = totalLength - sourcePath[sourcePath.Length - 1 - i].HeartArc;
-                    section.Points.Add(curr);
+                    points.Add(curr);
                 }
 
                 result.Dispose();
 
-                foreach (var port in section.OutputPorts) {
+                foreach (var port in outputPorts) {
                     Ecb.SetComponentEnabled<Dirty>(chunkIndex, port, true);
                 }
 

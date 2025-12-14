@@ -1,4 +1,3 @@
-using KexEdit.Core;
 using KexEdit.Nodes.CopyPath;
 using Unity.Burst;
 using Unity.Collections;
@@ -10,9 +9,7 @@ using CorePoint = KexEdit.Core.Point;
 
 namespace KexEdit {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [BurstCompile]
     public partial struct BuildCopyPathSectionSystem : ISystem {
-        [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             var ecbSingleton = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>();
             var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
@@ -27,6 +24,7 @@ namespace KexEdit {
         }
 
         [BurstCompile]
+        [WithAll(typeof(CopyPathSectionTag))]
         private partial struct Job : IJobEntity {
             public EntityCommandBuffer.ParallelWriter Ecb;
 
@@ -46,41 +44,48 @@ namespace KexEdit {
                 [ChunkIndexInQuery] int chunkIndex,
                 Entity entity,
                 EnabledRefRW<Dirty> dirty,
-                CopyPathSectionAspect section
+                in Anchor anchor,
+                in PropertyOverrides propertyOverrides,
+                in DynamicBuffer<FixedVelocityKeyframe> fixedVelocityKeyframes,
+                in DynamicBuffer<HeartKeyframe> heartKeyframes,
+                in DynamicBuffer<FrictionKeyframe> frictionKeyframes,
+                in DynamicBuffer<ResistanceKeyframe> resistanceKeyframes,
+                in DynamicBuffer<InputPortReference> inputPorts,
+                in DynamicBuffer<OutputPortReference> outputPorts,
+                ref DynamicBuffer<Point> points
             ) {
-                if (section.InputPorts.Length != 4) {
+                if (inputPorts.Length != 4) {
                     UnityEngine.Debug.LogError("BuildCopyPathSectionSystem: Expected 4 input ports (anchor, path, start, end)");
                     return;
                 }
 
-                if (!PathPortLookup.TryGetBuffer(section.InputPorts[1], out var pathBuffer)) {
+                if (!PathPortLookup.TryGetBuffer(inputPorts[1], out var pathBuffer)) {
                     UnityEngine.Debug.LogError("BuildCopyPathSectionSystem: No path port found");
                     return;
                 }
 
-                if (!StartPortLookup.TryGetComponent(section.InputPorts[2], out var startPort)) {
+                if (!StartPortLookup.TryGetComponent(inputPorts[2], out var startPort)) {
                     UnityEngine.Debug.LogError("BuildCopyPathSectionSystem: No start port found");
                     return;
                 }
 
-                if (!EndPortLookup.TryGetComponent(section.InputPorts[3], out var endPort)) {
+                if (!EndPortLookup.TryGetComponent(inputPorts[3], out var endPort)) {
                     UnityEngine.Debug.LogError("BuildCopyPathSectionSystem: No end port found");
                     return;
                 }
 
                 if (pathBuffer.Length < 2) return;
 
-                PointData anchor = section.Anchor;
-                CorePoint anchorState = ToPoint(in anchor);
+                CorePoint anchorState = ToPoint(in anchor.Value);
 
                 float startTime = startPort.Value;
                 float endTime = endPort.Value;
 
                 using var sourcePath = ConvertPathBuffer(ref pathBuffer, Allocator.Temp);
-                using var drivenVelocityKf = ConvertKeyframes(section.FixedVelocityKeyframes, Allocator.Temp);
-                using var heartOffsetKf = ConvertKeyframes(section.HeartKeyframes, Allocator.Temp);
-                using var frictionKf = ConvertKeyframes(section.FrictionKeyframes, Allocator.Temp);
-                using var resistanceKf = ConvertKeyframes(section.ResistanceKeyframes, Allocator.Temp);
+                using var drivenVelocityKf = ConvertKeyframes(fixedVelocityKeyframes, Allocator.Temp);
+                using var heartOffsetKf = ConvertKeyframes(heartKeyframes, Allocator.Temp);
+                using var frictionKf = ConvertKeyframes(frictionKeyframes, Allocator.Temp);
+                using var resistanceKf = ConvertKeyframes(resistanceKeyframes, Allocator.Temp);
 
                 var result = new NativeList<CorePoint>(Allocator.Temp);
 
@@ -89,36 +94,36 @@ namespace KexEdit {
                     sourcePath,
                     startTime,
                     endTime,
-                    section.FixedVelocity,
+                    propertyOverrides.FixedVelocity,
                     drivenVelocityKf,
                     heartOffsetKf,
                     frictionKf,
                     resistanceKf,
-                    anchor.Heart,
-                    anchor.Friction,
-                    anchor.Resistance,
+                    anchor.Value.Heart,
+                    anchor.Value.Friction,
+                    anchor.Value.Resistance,
                     ref result
                 );
 
-                section.Points.Clear();
-                section.Points.Add(anchor);
+                points.Clear();
+                points.Add(anchor.Value);
                 PointData prev = anchor;
                 for (int i = 1; i < result.Length; i++) {
                     PointData curr = ToPointData(in result.ElementAt(i), in prev);
-                    section.Points.Add(curr);
+                    points.Add(curr);
                     prev = curr;
                 }
                 result.Dispose();
 
-                if (section.OutputPorts.Length > 0 && AnchorPortLookup.TryGetComponent(section.OutputPorts[0], out var anchorPort)) {
-                    anchorPort.Value = section.Points[^1].Value;
-                    Ecb.SetComponent(chunkIndex, section.OutputPorts[0], anchorPort);
+                if (outputPorts.Length > 0 && AnchorPortLookup.TryGetComponent(outputPorts[0], out var anchorPort)) {
+                    anchorPort.Value = points[^1].Value;
+                    Ecb.SetComponent(chunkIndex, outputPorts[0], anchorPort);
                 }
                 else {
                     UnityEngine.Debug.LogWarning("BuildCopyPathSectionSystem: No anchor port found");
                 }
 
-                foreach (var port in section.OutputPorts) {
+                foreach (var port in outputPorts) {
                     Ecb.SetComponentEnabled<Dirty>(chunkIndex, port, true);
                 }
 

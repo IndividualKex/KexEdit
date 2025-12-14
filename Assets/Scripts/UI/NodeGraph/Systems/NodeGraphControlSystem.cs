@@ -32,7 +32,7 @@ namespace KexEdit.UI.NodeGraph {
                 .WithAspect<NodeAspect>()
                 .Build(EntityManager);
             _connectionQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAspect<ConnectionAspect>()
+                .WithAll<Connection, CoasterReference>()
                 .Build(EntityManager);
             _portQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Port>()
@@ -182,14 +182,15 @@ namespace KexEdit.UI.NodeGraph {
             using var entities = _connectionQuery.ToEntityArray(Allocator.Temp);
             using var set = new NativeHashSet<Entity>(entities.Length, Allocator.Temp);
             foreach (var entity in entities) {
-                var connection = SystemAPI.GetAspect<ConnectionAspect>(entity);
-                if (connection.Coaster != _data.Coaster) continue;
+                var coasterReference = SystemAPI.GetComponent<CoasterReference>(entity);
+                if (coasterReference.Value != _data.Coaster) continue;
 
                 set.Add(entity);
 
                 if (_data.Edges.ContainsKey(entity)) continue;
 
-                var edgeData = EdgeData.Create(connection);
+                var connection = SystemAPI.GetComponent<Connection>(entity);
+                var edgeData = EdgeData.Create(entity, connection);
                 _data.Edges.Add(entity, edgeData);
             }
 
@@ -281,7 +282,7 @@ namespace KexEdit.UI.NodeGraph {
             _data.HasSelectedEdges = false;
 
             foreach (var edgeData in _data.Edges.Values) {
-                var connection = SystemAPI.GetAspect<ConnectionAspect>(edgeData.Entity);
+                var connection = SystemAPI.GetComponent<Connection>(edgeData.Entity);
                 edgeData.Update(connection);
 
                 _data.HasSelectedEdges |= connection.Selected;
@@ -1053,12 +1054,13 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.SetName(resistancePort, PortType.Resistance.GetDisplayName(true));
             }
 
-            if (type == NodeType.ForceSection
-                || type == NodeType.GeometricSection
-                || type == NodeType.CurvedSection
-                || type == NodeType.CopyPathSection
-                || type == NodeType.Bridge
-                || type == NodeType.Reverse) {
+            if (type == NodeType.ForceSection ||
+                type == NodeType.GeometricSection ||
+                type == NodeType.CurvedSection ||
+                type == NodeType.CopyPathSection ||
+                type == NodeType.Bridge ||
+                type == NodeType.Reverse
+            ) {
                 var inputPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(inputPort, Port.Create(PortType.Anchor, true));
                 ecb.AddComponent<Dirty>(inputPort);
@@ -1090,8 +1092,8 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.SetName(inWeightPort, PortType.InWeight.GetDisplayName(true));
             }
 
-            if (type == NodeType.CopyPathSection
-                || type == NodeType.ReversePath) {
+            if (type == NodeType.CopyPathSection ||
+                type == NodeType.ReversePath) {
                 var pathPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(pathPort, Port.Create(PortType.Path, true));
                 ecb.AddComponent<Dirty>(pathPort);
@@ -1193,12 +1195,13 @@ namespace KexEdit.UI.NodeGraph {
                 Value = anchor,
             });
 
-            if (type == NodeType.ForceSection
-                || type == NodeType.GeometricSection
-                || type == NodeType.CurvedSection
-                || type == NodeType.CopyPathSection
-                || type == NodeType.Bridge
-                || type == NodeType.ReversePath) {
+            if (type == NodeType.ForceSection ||
+                type == NodeType.GeometricSection ||
+                type == NodeType.CurvedSection ||
+                type == NodeType.CopyPathSection ||
+                type == NodeType.Bridge ||
+                type == NodeType.ReversePath
+            ) {
                 ecb.AddBuffer<Point>(entity);
                 ecb.AddBuffer<ReadNormalForce>(entity);
                 ecb.AddBuffer<ReadLateralForce>(entity);
@@ -1207,11 +1210,12 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.AddBuffer<ReadRollSpeed>(entity);
             }
 
-            if (type == NodeType.ForceSection
-                || type == NodeType.GeometricSection
-                || type == NodeType.CurvedSection
-                || type == NodeType.CopyPathSection
-                || type == NodeType.Bridge) {
+            if (type == NodeType.ForceSection ||
+                type == NodeType.GeometricSection ||
+                type == NodeType.CurvedSection ||
+                type == NodeType.CopyPathSection ||
+                type == NodeType.Bridge
+            ) {
                 ecb.AddComponent<Render>(entity, true);
                 ecb.AddComponent(entity, PropertyOverrides.Default);
                 ecb.AddComponent<SelectedProperties>(entity);
@@ -1268,13 +1272,14 @@ namespace KexEdit.UI.NodeGraph {
             }
 
             ecb.AddBuffer<OutputPortReference>(entity);
-            if (type == NodeType.Anchor
-                || type == NodeType.ForceSection
-                || type == NodeType.GeometricSection
-                || type == NodeType.CurvedSection
-                || type == NodeType.CopyPathSection
-                || type == NodeType.Bridge
-                || type == NodeType.Reverse) {
+            if (type == NodeType.Anchor ||
+                type == NodeType.ForceSection ||
+                type == NodeType.GeometricSection ||
+                type == NodeType.CurvedSection ||
+                type == NodeType.CopyPathSection ||
+                type == NodeType.Bridge ||
+                type == NodeType.Reverse
+            ) {
                 var outputPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(outputPort, Port.Create(PortType.Anchor, false));
                 ecb.AddComponent<Dirty>(outputPort);
@@ -1283,12 +1288,13 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.SetName(outputPort, PortType.Anchor.GetDisplayName(false));
             }
 
-            if (type == NodeType.ForceSection
-                || type == NodeType.GeometricSection
-                || type == NodeType.CurvedSection
-                || type == NodeType.CopyPathSection
-                || type == NodeType.Bridge
-                || type == NodeType.ReversePath) {
+            if (type == NodeType.ForceSection ||
+                type == NodeType.GeometricSection ||
+                type == NodeType.CurvedSection ||
+                type == NodeType.CopyPathSection ||
+                type == NodeType.Bridge ||
+                type == NodeType.ReversePath
+            ) {
                 var pathPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(pathPort, Port.Create(PortType.Path, false));
                 ecb.AddComponent<Dirty>(pathPort);
