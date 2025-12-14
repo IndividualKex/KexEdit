@@ -21,7 +21,8 @@ Core/
 ├── Keyframe.cs         # Keyframe data structure (input contract)
 ├── KeyframeEvaluator.cs # Bezier curve evaluation
 ├── PhysicsParams.cs    # Per-step physics inputs (heartOffset, friction, roll)
-└── FrameChange.cs      # Frame transform builders (FromAngles, FromAxis)
+├── FrameChange.cs      # Frame transform builders (FromAngles, FromAxis)
+└── Articulation/       # Spline-based body positioning (see subfolder context.md)
 ```
 
 ## Key Types

@@ -112,6 +112,7 @@ KexEdit/
 ## Where to add code
 
 - Portable physics/math (C#) → `Assets/Runtime/Core/`
+- Spline articulation (C#) → `Assets/Runtime/Core/Articulation/`
 - Portable physics/math (Rust) → `rust-backend/kexedit-core/`
 - Rust FFI layer → `rust-backend/kexedit-ffi/`
 - Rust FFI bindings (C#) → `Assets/Runtime/Native/RustCore/`
