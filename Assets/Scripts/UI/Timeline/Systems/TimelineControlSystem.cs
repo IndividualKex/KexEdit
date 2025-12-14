@@ -128,9 +128,7 @@ namespace KexEdit.UI.Timeline {
 
         protected override void OnDestroy() {
             EditOperations.UnregisterHandler(this);
-            if (_data != null) {
-                _data.Dispose();
-            }
+            _data?.Dispose();
         }
 
         protected override void OnUpdate() {

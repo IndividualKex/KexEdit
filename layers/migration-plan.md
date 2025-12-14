@@ -1,6 +1,6 @@
 # Runtime Migration Plan
 
-Rebuild KexEdit runtime with hexagonal architecture. Enables Rust/WASM migration.
+Rebuild KexEdit runtime with hexagonal architecture. Enables Rust/WASM migration and clean separation of concerns.
 
 ## Architecture
 
@@ -8,8 +8,8 @@ Rebuild KexEdit runtime with hexagonal architecture. Enables Rust/WASM migration
 ┌─────────────────────────────────────────────────────────────────┐
 │              INFRASTRUCTURE ADAPTERS (KexEdit.Adapters)         │
 │   ┌─────────────┐ ┌─────────────┐ ┌─────────────┐               │
-│   │ Unity ECS   │ │   File I/O  │ │    UI       │  ...          │
-│   │  Systems    │ │  (Kex/JSON) │ │  Bindings   │               │
+│   │ Unity ECS   │ │   File I/O  │ │ Positioning │  ...          │
+│   │  Systems    │ │  (Kex/JSON) │ │   Systems   │               │
 │   └──────┬──────┘ └──────┬──────┘ └──────┬──────┘               │
 │          └───────────────┼───────────────┘                       │
 │                          ▼                                       │
@@ -39,16 +39,18 @@ Rebuild KexEdit runtime with hexagonal architecture. Enables Rust/WASM migration
 
 ```
 KexEdit/
-├── rust-backend/
-│   ├── kexedit-core/   (Rust) - Pure physics/math (76 tests)
-│   ├── kexedit-nodes/  (Rust) - Node implementations (57 tests)
-│   └── kexedit-ffi/    (Rust) - C FFI layer for Unity integration
+├── rust-backend/               Rust implementation (production-ready)
+│   ├── kexedit-core/           Pure physics/math
+│   ├── kexedit-nodes/          Node implementations
+│   └── kexedit-ffi/            C FFI layer for Unity
 ├── Assets/Runtime/
-│   ├── Core/           (C#) - Pure physics/math
-│   ├── Nodes/          (KexEdit.Nodes.*) - Node implementations
-│   ├── Native/         (KexEdit.Native.RustCore) - Rust FFI bindings
-│   └── Legacy/         (KexEdit) - ECS shell delegating to Core/Nodes
-│       └── Track/Systems/ - ECS adapters (Build*System → Node.Build())
+│   ├── Core/                   Pure physics/math (C#)
+│   ├── Nodes/                  Node implementations (C#)
+│   ├── Native/RustCore/        Rust FFI bindings
+│   └── Legacy/                 ECS adapters and legacy code
+│       ├── Track/              Section building adapters
+│       ├── Trains/             Train systems
+│       └── Physics/            Track following, positioning
 ```
 
 ## Assembly Dependencies
@@ -62,184 +64,123 @@ KexEdit.Adapters ──► KexEdit.Nodes.Force ──► KexEdit.Nodes ──►
 
 ## Design Principles
 
--   **Core is Physics-Only**: No awareness of train direction, section boundaries, or friction resets
--   **Nodes Own State Management**: Node types control initial state for each section
--   **Friction Model**: `frictionTerm = (HeartArc - FrictionOrigin) * Friction`
--   **Hexagonal Architecture**: Core has no dependencies; adapters use core ports
--   **Testability**: Every layer has comprehensive tests before adding outer layers
--   **Portability**: Architecture designed for Rust/WASM port
+- **Core is Physics-Only**: No awareness of train direction, section boundaries, or friction resets
+- **Nodes Own State Management**: Node types control initial state for each section
+- **Hexagonal Architecture**: Core has no dependencies; adapters use core ports
+- **Single Source of Truth**: Continuous buffers; systems interpret as needed
+- **Zero-Copy Aliasing**: Multiple systems read same data via buffer lookups
+- **Testability**: Every layer has comprehensive tests before adding outer layers
+- **Portability**: Architecture designed for Rust/WASM port
 
-## Legacy Naming Mapping
+## Key Architectural Decisions
 
-The legacy code used inverted naming. The clean code uses physically accurate names:
+### Hexagonal Layers
 
-| Legacy Field (Gold JSON) | Clean Name       | Meaning                           |
-| ------------------------ | ---------------- | --------------------------------- |
-| `position`               | `HeartPosition`  | Rider center position             |
-| `totalLength`            | `HeartArc`       | Cumulative rider path length      |
-| `totalHeartLength`       | `SpineArc`       | Cumulative track rail path length |
-| `distanceFromLast`       | `SpineAdvance`   | Per-step track rail distance      |
-| `heartDistanceFromLast`  | `HeartAdvance`   | Per-step rider distance           |
-| `frictionCompensation`   | `FrictionOrigin` | SpineArc baseline for friction    |
-| `heart`                  | `HeartOffset`    | Distance from heart to spine      |
+Core → Nodes → Adapters. Dependencies flow inward. Core is pure physics with no Unity dependencies.
+
+### Rust FFI (Production Ready)
+
+Rust backend validated and outperforms Burst (3.5mm vs 5.2mm drift). Toggle via `USE_RUST_BACKEND` compilation flag.
+
+**Build**: `./build-rust.sh` (cross-platform)
+
+### Continuous Track Buffer
+
+**Previous architecture**: Per-section `DynamicBuffer<Point>` - positioning systems needed graph knowledge to traverse sections.
+
+**New architecture**: Single continuous `DynamicBuffer<TrackPoint>` for entire track.
+
+```
+Track Entity
+└── DynamicBuffer<TrackPoint>  (continuous, resampled, entire track)
+     ↓ (zero-copy read-only aliasing)
+     ├── Rendering System (batches for GPU)
+     ├── Positioning System (sequential reads, no graph knowledge)
+     ├── Physics System (distance queries)
+     └── UI Systems (playhead, stats)
+```
+
+**Benefits**:
+- Positioning has no section/graph dependency
+- Seamless boundary crossing (train at indices [145.3, 147.8, 150.2])
+- Zero-copy via `BufferLookup<TrackPoint>(isReadOnly: true)`
+- Cache-friendly continuous memory
+- Systems choose their own chunking/interpretation
+
+**Data Contract**:
+
+```csharp
+public struct TrackPoint : IBufferElementData {
+    public float3 Position;   // World position
+    public float3 Direction;  // Forward tangent
+    public float3 Normal;     // Up vector
+    public float3 Lateral;    // Right vector
+    public float Distance;    // Cumulative arc length (for queries)
+}
+```
+
+**Resampling Adapter**: Future system will convert per-section `Point` → continuous `TrackPoint` at fixed sample rate or quality criteria.
+
+### Legacy Naming Mapping
+
+The legacy code used inverted naming. Clean code uses physically accurate names:
+
+| Legacy Field         | Clean Name       | Meaning                           |
+| -------------------- | ---------------- | --------------------------------- |
+| `position`           | `HeartPosition`  | Rider center position             |
+| `totalLength`        | `HeartArc`       | Cumulative rider path length      |
+| `totalHeartLength`   | `SpineArc`       | Cumulative track rail path length |
+| `distanceFromLast`   | `SpineAdvance`   | Per-step track rail distance      |
+| `heartDistanceFromLast` | `HeartAdvance` | Per-step rider distance        |
+| `frictionCompensation` | `FrictionOrigin` | SpineArc baseline for friction |
+| `heart`              | `HeartOffset`    | Distance from heart to spine      |
 
 **Heart** = rider center (primary reference for forces); **Spine** = track rail (derived from heart)
 
-## Rust FFI Integration
+## Testing
 
-**Status**: ✅ **Production Ready** - Rust backend validated and outperforms Burst (3.5mm vs 5.2mm drift).
+**Strategy**: Unit tests → Parameterized edge cases → Golden fixtures (265+ tests)
 
-**Toggle**: Use the `USE_RUST_BACKEND` compilation flag to switch between Rust and Burst implementations.
+**Golden fixtures**: `shuttle.kex`, `veloci.kex`, `all_types.kex` (validated against dev branch)
 
--   **Enable Rust**: Add `USE_RUST_BACKEND` to Project Settings → Player → Scripting Define Symbols
--   **Location**: `ProjectSettings/ProjectSettings.asset` → `scriptingDefineSymbols`
--   **Code**: `BuildForceSectionSystem.cs` uses `#if USE_RUST_BACKEND` preprocessor directives
+**Run tests**:
+- All: `./run-tests.sh`
+- Filtered: `./run-tests.sh TestName`
+- Rust backend: `./run-tests.sh --rust-backend`
 
-**Files**:
+**Coverage**:
+- Rust: 76 core tests, 57 node tests
+- C#: Core, Nodes, ECS adapters all validated
+- FFI: Integration tests validate C# ↔ Rust equivalence
 
--   `rust-backend/kexedit-ffi/src/lib.rs` - FFI exports (`kexedit_force_build`)
--   `Assets/Runtime/Native/RustCore/RustForceNode.cs` - C# wrapper
--   `Assets/Runtime/Native/RustCore/RustPoint.cs` - C# ↔ Rust Point interop
--   `Assets/Runtime/Native/RustCore/RustKeyframe.cs` - C# ↔ Rust Keyframe interop
--   `Assets/Runtime/Plugins/kexedit_core.dll` - Compiled Rust library
-
-**Build**: `./build-rust.sh` (auto-detects platform: .dll on Windows, .dylib on macOS, .so on Linux)
-
-**Platform Setup**:
-
--   **macOS**: After cloning from Windows, fix line endings: `sed -i '' 's/\r$//' build-rust.sh run-tests.sh`
--   **macOS**: Make scripts executable: `chmod +x build-rust.sh run-tests.sh`
--   **Windows**: No additional setup required
-
-**Validation**:
-
--   ✅ All 57 Rust unit tests pass
--   ✅ All C# FFI integration tests pass
--   ✅ Rust outperforms Burst in numerical accuracy (3.5mm vs 5.2mm drift on 3000+ step simulations)
-
-## Testing Strategy
-
-```
-                ┌──────────────────────┐
-                │   Golden Fixtures    │  validates full pipeline
-                └──────────┬───────────┘
-          ┌────────────────┴────────────────┐
-          │      Parameterized [TestCase]   │  Edge cases via test params
-          └────────────────┬────────────────┘
-    ┌──────────────────────┴──────────────────────┐
-    │                 Unit Tests                   │  265+ tests, fast
-    └─────────────────────────────────────────────┘
-```
-
-**Golden fixtures**: `shuttle.kex`, `veloci.kex`, `shuttle_v1.kex` in `Assets/Tests/Assets/`
-
-**Equivalence validation**:
-
--   Internal functions: Parallel test coverage (C# and Rust test same behaviors independently)
--   FFI boundary: Integration tests comparing C# and Rust outputs (`RustForceNodeValidationTests`)
--   End-to-end: Golden tests validate full pipeline
-
-**Test coverage by layer**:
-
-| Layer                     | Test File                        | Coverage                                                           |
-| ------------------------- | -------------------------------- | ------------------------------------------------------------------ |
-| **Rust Core**             | **kexedit-core/src/\*.rs**       | **76 tests: math, frame, sim, curvature, forces, point, keyframe** |
-| **Rust Nodes**            | **kexedit-nodes/src/\*.rs**      | **57 tests: all node types with golden validation**                |
-| **Rust FFI**              | **RustForceNodeValidationTests** | **Validates C# ↔ Rust interop with gold data**                     |
-| KexEdit.Core (C#)         | CoreFrameTests                   | Frame rotations, orthonormality, euler angles                      |
-| KexEdit.Core (C#)         | CoreCurvatureTests               | Curvature/Forces computation                                       |
-| KexEdit.Core (C#)         | CoreKeyframeTests                | Bezier interpolation, boundary cases                               |
-| KexEdit.Core (C#)         | CoreSimTests                     | Energy functions, WrapAngle, constants                             |
-| KexEdit.Core (C#)         | CoreStepTests                    | Step.Advance, FrameChange, State roundtrip                         |
-| KexEdit.Nodes             | NodeSchemaTests                  | Port/property enumeration, schema validation                       |
-| KexEdit.Nodes             | PropertyIndexTests               | Bidirectional index mapping                                        |
-| KexEdit.Nodes.Force       | ForceNodeTests                   | Golden: shuttle, veloci force sections                             |
-| KexEdit.Nodes.Geometric   | GeometricNodeTests               | Golden: shuttle, veloci geometric sections                         |
-| KexEdit.Nodes.Curved      | CurvedNodeTests                  | Golden: veloci curved section                                      |
-| KexEdit.Nodes.Anchor      | AnchorNodeTests                  | Unit tests for initial state creation                              |
-| KexEdit.Nodes.Reverse     | ReverseNodeTests                 | Unit tests for direction reversal                                  |
-| KexEdit.Nodes.ReversePath | ReversePathNodeTests             | Unit tests for path order reversal                                 |
-| KexEdit.Nodes.CopyPath    | CopyPathNodeTests                | Golden: all_types copypath sections                                |
-| KexEdit.Nodes.Bridge      | BridgeNodeTests                  | Golden: all_types bridge sections                                  |
-| KexEdit.Adapters          | BuildForceSectionSystemTests     | Golden: Force ECS integration (⚠️ 1 test fails with Rust: Veloci)  |
-| KexEdit.Adapters          | BuildGeometricSectionSystemTests | Golden: Geometric ECS integration                                  |
-| KexEdit.Adapters          | BuildCurvedSectionSystemTests    | Golden: Curved ECS integration                                     |
-| KexEdit.Adapters          | BuildCopyPathSectionSystemTests  | Golden: CopyPath ECS integration                                   |
-
-Run tests:
-
--   All tests: `./run-tests.sh`
--   Filtered: `./run-tests.sh TestName` or `./run-tests.sh --filter "TestName*"`
--   Skip Rust build: `./run-tests.sh --skip-rust TestName`
-
-## Gold Data Validation
-
-**Status**: ✅ All implementations validated against dev branch gold data.
-
-**Gold JSON fixtures**: `Assets/Tests/TrackData/` - exported from dev branch runtime
-
-| Fixture        | Sections | Source     | Status  |
-| -------------- | -------- | ---------- | ------- |
-| shuttle.json   | 6        | dev branch | ✅ Pass |
-| veloci.json    | 6        | dev branch | ✅ Pass |
-| all_types.json | 8        | dev branch | ✅ Pass |
-
-**Point count calculation**: Uses `math.floor(HZ * duration)` to match dev branch truncation behavior.
-
-**Regenerating Gold Data**:
-
-1. Checkout dev branch
-2. Copy `TrackDataExporter.cs` to `Assets/Runtime/Scripts/Editor/`
-3. Enter Play mode, load track, use menu: KexEdit → Export Track Data (Gold)
-4. Copy exported JSON to migration branch `Assets/Tests/TrackData/`
-
-## Current Status & Next Steps
+## Current Status
 
 ### ✅ Completed
 
--   Hexagonal architecture implemented (Core → Nodes → Adapters)
--   Burst C# implementation: fully tested and production-ready
--   **Rust implementation: fully tested, validated, and production-ready**
--   ForceNode, GeometricNode, CurvedNode, CopyPathNode, BridgeNode: all implemented
--   ECS adapter layer: all Build\*System tests passing
--   Rust FFI layer: implemented and validated (outperforms Burst in accuracy)
--   Comprehensive test suite: 265+ tests covering all layers
+- Hexagonal architecture (Core → Nodes → Adapters)
+- Rust implementation: production-ready, outperforms Burst
+- Node types: Force, Geometric, Curved, CopyPath, Bridge
+- ECS adapters: All Build*System tests passing
+- Comprehensive test suite: 265+ tests
 
-### 🔧 Immediate Next Steps
+### 🔧 Next Steps
 
-1. **Additional Node Types in Rust**
+1. **Track Buffer Architecture**
+   - Implement continuous `DynamicBuffer<TrackPoint>`
+   - Create resampling adapter (Point → TrackPoint)
+   - Migrate positioning systems to new buffer
 
-    - Port GeometricNode to Rust
-    - Port CurvedNode to Rust
-    - Port CopyPathNode to Rust
-    - Each with same validation strategy
+2. **Positioning System Rebuild**
+   - Pure positioning logic (no graph knowledge)
+   - Comprehensive tests with synthetic tracks
+   - Replace brittle train car positioning
 
-2. **Performance Benchmarking**
-
-    - Run `ForceSectionPerformanceTests` comparing Burst vs Rust
-    - Document performance characteristics
-    - Update `Assets/Tests/PerformanceTests/context.md`
-
-3. **Production Migration**
-    - Enable Rust backend by default if performance is acceptable
-    - Create migration guide for teams
-    - Monitor production metrics
+3. **Additional Rust Node Types**
+   - Port remaining node types to Rust
+   - Maintain golden test validation
 
 ### 🎯 Long-term Goals
 
-1. **WASM Target**
-
-    - Compile Rust core to WASM
-    - WebGL build for browser-based editor
-    - FFI already designed for portability
-
-2. **GPU Acceleration**
-
-    - Move force integration to compute shader
-    - Process multiple sections in parallel
-    - Keep Rust/Burst as reference implementations
-
-3. **Complete Legacy Removal**
-    - Migrate remaining systems to adapter pattern
-    - Remove monolithic `KexEdit` assembly
-    - Clean architecture with clear boundaries
+- **WASM Target**: Compile Rust core to WASM for WebGL builds
+- **GPU Acceleration**: Move force integration to compute shaders
+- **Legacy Removal**: Complete migration to adapter pattern
