@@ -111,10 +111,12 @@ public struct Graph {
 - `GetOutgoingEdges(uint nodeId, out NativeArray<uint>, Allocator)` - caller owns memory
 - `GetIncomingEdges(uint nodeId, out NativeArray<uint>, Allocator)` - caller owns memory
 
-**Traversal**
-- `FindSourceNodes()` - nodes with no incoming edges
-- `FindSinkNodes()` - nodes with no outgoing edges
-- `TopologicalSort()` - Kahn's algorithm for execution order
+**Traversal** ✓ implemented
+- `GetSuccessorNodes(uint nodeId, out NativeArray<uint>, Allocator)` - nodes reachable via outgoing edges
+- `GetPredecessorNodes(uint nodeId, out NativeArray<uint>, Allocator)` - nodes with edges pointing here
+- `FindSourceNodes(out NativeArray<uint>, Allocator)` - nodes with no incoming edges
+- `FindSinkNodes(out NativeArray<uint>, Allocator)` - nodes with no outgoing edges
+- `TopologicalSort()` - Kahn's algorithm for execution order (future)
 
 **Validation**
 - `HasCycle()` - DFS-based cycle detection
@@ -185,9 +187,11 @@ KexEdit/
 - `[Category("Unit")]` - Pure logic, no ECS
 - `[Category("Performance")]` - Burst-compiled benchmarks
 
-**Current Coverage**: 293 tests passing
+**Current Coverage**: 303 tests passing
 - Graph structure creation/disposal
 - Node add/remove/lookup operations
 - Port add/remove/lookup operations
 - Edge add/remove/lookup operations
 - Outgoing/incoming edge queries
+- Successor/predecessor node queries
+- Source/sink node finding

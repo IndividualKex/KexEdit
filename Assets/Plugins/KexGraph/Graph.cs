@@ -382,5 +382,117 @@ namespace KexGraph {
             tempList.Dispose();
             inputPorts.Dispose();
         }
+
+        public void GetSuccessorNodes(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            GetOutgoingEdges(nodeId, out var edges, Allocator.Temp);
+
+            if (edges.Length == 0) {
+                result = new NativeArray<uint>(0, allocator);
+                edges.Dispose();
+                return;
+            }
+
+            var tempList = new NativeList<uint>(Allocator.Temp);
+            var seen = new NativeHashSet<uint>(edges.Length, Allocator.Temp);
+
+            for (int i = 0; i < edges.Length; i++) {
+                if (!TryGetEdgeIndex(edges[i], out int edgeIndex)) continue;
+
+                uint targetPortId = EdgeTargets[edgeIndex];
+                if (!TryGetPortIndex(targetPortId, out int portIndex)) continue;
+
+                uint targetNodeId = PortOwners[portIndex];
+                if (seen.Add(targetNodeId)) {
+                    tempList.Add(targetNodeId);
+                }
+            }
+
+            result = new NativeArray<uint>(tempList.Length, allocator);
+            for (int i = 0; i < tempList.Length; i++) {
+                result[i] = tempList[i];
+            }
+
+            tempList.Dispose();
+            seen.Dispose();
+            edges.Dispose();
+        }
+
+        public void GetPredecessorNodes(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            GetIncomingEdges(nodeId, out var edges, Allocator.Temp);
+
+            if (edges.Length == 0) {
+                result = new NativeArray<uint>(0, allocator);
+                edges.Dispose();
+                return;
+            }
+
+            var tempList = new NativeList<uint>(Allocator.Temp);
+            var seen = new NativeHashSet<uint>(edges.Length, Allocator.Temp);
+
+            for (int i = 0; i < edges.Length; i++) {
+                if (!TryGetEdgeIndex(edges[i], out int edgeIndex)) continue;
+
+                uint sourcePortId = EdgeSources[edgeIndex];
+                if (!TryGetPortIndex(sourcePortId, out int portIndex)) continue;
+
+                uint sourceNodeId = PortOwners[portIndex];
+                if (seen.Add(sourceNodeId)) {
+                    tempList.Add(sourceNodeId);
+                }
+            }
+
+            result = new NativeArray<uint>(tempList.Length, allocator);
+            for (int i = 0; i < tempList.Length; i++) {
+                result[i] = tempList[i];
+            }
+
+            tempList.Dispose();
+            seen.Dispose();
+            edges.Dispose();
+        }
+
+        public void FindSourceNodes(out NativeArray<uint> result, Allocator allocator) {
+            var tempList = new NativeList<uint>(Allocator.Temp);
+
+            for (int i = 0; i < NodeIds.Length; i++) {
+                uint nodeId = NodeIds[i];
+                GetIncomingEdges(nodeId, out var incoming, Allocator.Temp);
+                bool isSource = incoming.Length == 0;
+                incoming.Dispose();
+
+                if (isSource) {
+                    tempList.Add(nodeId);
+                }
+            }
+
+            result = new NativeArray<uint>(tempList.Length, allocator);
+            for (int i = 0; i < tempList.Length; i++) {
+                result[i] = tempList[i];
+            }
+
+            tempList.Dispose();
+        }
+
+        public void FindSinkNodes(out NativeArray<uint> result, Allocator allocator) {
+            var tempList = new NativeList<uint>(Allocator.Temp);
+
+            for (int i = 0; i < NodeIds.Length; i++) {
+                uint nodeId = NodeIds[i];
+                GetOutgoingEdges(nodeId, out var outgoing, Allocator.Temp);
+                bool isSink = outgoing.Length == 0;
+                outgoing.Dispose();
+
+                if (isSink) {
+                    tempList.Add(nodeId);
+                }
+            }
+
+            result = new NativeArray<uint>(tempList.Length, allocator);
+            for (int i = 0; i < tempList.Length; i++) {
+                result[i] = tempList[i];
+            }
+
+            tempList.Dispose();
+        }
     }
 }

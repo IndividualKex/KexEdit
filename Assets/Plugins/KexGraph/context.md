@@ -54,6 +54,12 @@ KexGraph/
 - `GetIncomingEdges(uint nodeId, out NativeArray<uint>, Allocator)` - Edges to node
 - `TryGetEdgeIndex(uint edgeId, out int index)` - O(1) lookup via hashmap
 
+**Traversal**
+- `GetSuccessorNodes(uint nodeId, out NativeArray<uint>, Allocator)` - Nodes reachable via outgoing edges
+- `GetPredecessorNodes(uint nodeId, out NativeArray<uint>, Allocator)` - Nodes with edges pointing here
+- `FindSourceNodes(out NativeArray<uint>, Allocator)` - Nodes with no incoming edges
+- `FindSinkNodes(out NativeArray<uint>, Allocator)` - Nodes with no outgoing edges
+
 ## Dependencies
 
 **Unity**

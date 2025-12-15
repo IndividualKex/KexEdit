@@ -196,5 +196,181 @@ namespace KexGraph.Tests {
 
             edges.Dispose();
         }
+
+        [Test]
+        public void GetSuccessorNodes_ReturnsConnectedNodes() {
+            using var graph = Graph.Create(Allocator.Temp);
+            uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint out1a = graph.AddOutputPort(node1, portType: 1);
+            uint out1b = graph.AddOutputPort(node1, portType: 1);
+            uint in2 = graph.AddInputPort(node2, portType: 1);
+            uint in3 = graph.AddInputPort(node3, portType: 1);
+
+            graph.AddEdge(out1a, in2);
+            graph.AddEdge(out1b, in3);
+
+            graph.GetSuccessorNodes(node1, out var successors, Allocator.Temp);
+
+            Assert.AreEqual(2, successors.Length);
+            Assert.Contains(node2, successors.ToArray());
+            Assert.Contains(node3, successors.ToArray());
+
+            successors.Dispose();
+        }
+
+        [Test]
+        public void GetSuccessorNodes_NoOutgoingEdges_ReturnsEmpty() {
+            using var graph = Graph.Create(Allocator.Temp);
+            uint node = graph.AddNode(nodeType: 1, position: float2.zero);
+
+            graph.GetSuccessorNodes(node, out var successors, Allocator.Temp);
+
+            Assert.AreEqual(0, successors.Length);
+
+            successors.Dispose();
+        }
+
+        [Test]
+        public void GetSuccessorNodes_MultipleEdgesToSameNode_ReturnsOnce() {
+            using var graph = Graph.Create(Allocator.Temp);
+            uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint out1a = graph.AddOutputPort(node1, portType: 1);
+            uint out1b = graph.AddOutputPort(node1, portType: 1);
+            uint in2a = graph.AddInputPort(node2, portType: 1);
+            uint in2b = graph.AddInputPort(node2, portType: 1);
+
+            graph.AddEdge(out1a, in2a);
+            graph.AddEdge(out1b, in2b);
+
+            graph.GetSuccessorNodes(node1, out var successors, Allocator.Temp);
+
+            Assert.AreEqual(1, successors.Length);
+            Assert.AreEqual(node2, successors[0]);
+
+            successors.Dispose();
+        }
+
+        [Test]
+        public void GetPredecessorNodes_ReturnsConnectedNodes() {
+            using var graph = Graph.Create(Allocator.Temp);
+            uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint out1 = graph.AddOutputPort(node1, portType: 1);
+            uint out2 = graph.AddOutputPort(node2, portType: 1);
+            uint in3a = graph.AddInputPort(node3, portType: 1);
+            uint in3b = graph.AddInputPort(node3, portType: 1);
+
+            graph.AddEdge(out1, in3a);
+            graph.AddEdge(out2, in3b);
+
+            graph.GetPredecessorNodes(node3, out var predecessors, Allocator.Temp);
+
+            Assert.AreEqual(2, predecessors.Length);
+            Assert.Contains(node1, predecessors.ToArray());
+            Assert.Contains(node2, predecessors.ToArray());
+
+            predecessors.Dispose();
+        }
+
+        [Test]
+        public void GetPredecessorNodes_NoIncomingEdges_ReturnsEmpty() {
+            using var graph = Graph.Create(Allocator.Temp);
+            uint node = graph.AddNode(nodeType: 1, position: float2.zero);
+
+            graph.GetPredecessorNodes(node, out var predecessors, Allocator.Temp);
+
+            Assert.AreEqual(0, predecessors.Length);
+
+            predecessors.Dispose();
+        }
+
+        [Test]
+        public void FindSourceNodes_ReturnsNodesWithNoIncomingEdges() {
+            using var graph = Graph.Create(Allocator.Temp);
+            uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint out1 = graph.AddOutputPort(node1, portType: 1);
+            uint out2 = graph.AddOutputPort(node2, portType: 1);
+            uint in2 = graph.AddInputPort(node2, portType: 1);
+            uint in3 = graph.AddInputPort(node3, portType: 1);
+
+            graph.AddEdge(out1, in2);
+            graph.AddEdge(out2, in3);
+
+            graph.FindSourceNodes(out var sources, Allocator.Temp);
+
+            Assert.AreEqual(1, sources.Length);
+            Assert.AreEqual(node1, sources[0]);
+
+            sources.Dispose();
+        }
+
+        [Test]
+        public void FindSourceNodes_AllNodesAreRoots_ReturnsAll() {
+            using var graph = Graph.Create(Allocator.Temp);
+            uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
+
+            graph.FindSourceNodes(out var sources, Allocator.Temp);
+
+            Assert.AreEqual(2, sources.Length);
+            Assert.Contains(node1, sources.ToArray());
+            Assert.Contains(node2, sources.ToArray());
+
+            sources.Dispose();
+        }
+
+        [Test]
+        public void FindSourceNodes_EmptyGraph_ReturnsEmpty() {
+            using var graph = Graph.Create(Allocator.Temp);
+
+            graph.FindSourceNodes(out var sources, Allocator.Temp);
+
+            Assert.AreEqual(0, sources.Length);
+
+            sources.Dispose();
+        }
+
+        [Test]
+        public void FindSinkNodes_ReturnsNodesWithNoOutgoingEdges() {
+            using var graph = Graph.Create(Allocator.Temp);
+            uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint out1 = graph.AddOutputPort(node1, portType: 1);
+            uint out2 = graph.AddOutputPort(node2, portType: 1);
+            uint in2 = graph.AddInputPort(node2, portType: 1);
+            uint in3 = graph.AddInputPort(node3, portType: 1);
+
+            graph.AddEdge(out1, in2);
+            graph.AddEdge(out2, in3);
+
+            graph.FindSinkNodes(out var sinks, Allocator.Temp);
+
+            Assert.AreEqual(1, sinks.Length);
+            Assert.AreEqual(node3, sinks[0]);
+
+            sinks.Dispose();
+        }
+
+        [Test]
+        public void FindSinkNodes_AllNodesAreSinks_ReturnsAll() {
+            using var graph = Graph.Create(Allocator.Temp);
+            uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
+            uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
+
+            graph.FindSinkNodes(out var sinks, Allocator.Temp);
+
+            Assert.AreEqual(2, sinks.Length);
+            Assert.Contains(node1, sinks.ToArray());
+            Assert.Contains(node2, sinks.ToArray());
+
+            sinks.Dispose();
+        }
     }
 }
