@@ -7,36 +7,27 @@ Rebuild KexEdit runtime with hexagonal architecture. Enables Rust/WASM migration
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │              INFRASTRUCTURE ADAPTERS                            │
-│   ┌─────────────┐ ┌─────────────┐ ┌─────────────┐              │
-│   │ Unity ECS   │ │Serialization│ │ Positioning │  ...         │
-│   │  Systems    │ │  Adapter    │ │   Systems   │              │
-│   └──────┬──────┘ └──────┬──────┘ └──────┬──────┘              │
-│          └───────────────┼───────────────┘                      │
-│                          ▼                                      │
-└──────────────────────────┼──────────────────────────────────────┘
+│   Unity ECS systems, serialization, positioning, rendering     │
+└──────────────────────────┬──────────────────────────────────────┘
                            │
 ┌──────────────────────────┼──────────────────────────────────────┐
 │              NODE TYPES (KexEdit.Nodes.*)                       │
-│   ┌─────────────┐ ┌─────────────┐ ┌─────────────┐              │
-│   │  ForceNode  │ │ GeometricN. │ │ CurvedNode  │  ...         │
-│   └──────┬──────┘ └──────┬──────┘ └──────┬──────┘              │
-│          └───────────────┼───────────────┘                      │
-│                          ▼                                      │
+│   ForceNode, GeometricNode, CurvedNode, etc.                    │
 └──────────────────────────┼──────────────────────────────────────┘
                            │
 ┌──────────────────────────┼──────────────────────────────────────┐
 │              NODE SCHEMA (KexEdit.Nodes)                        │
-│   PortId, PropertyId, NodeType, NodeSchema, PropertyIndex       │
+│   NodeSchema, PortId, PropertyId, NodeType enums                │
 └──────────────────────────┼──────────────────────────────────────┘
                            │
 ┌──────────────────────────┼──────────────────────────────────────┐
-│         GRAPH SCHEMA (KexEdit.Graph.Schema)                     │
-│   TypeId enums, Data contracts, Adapter traits                  │
+│         GRAPH SCHEMA (KexEdit.Graph.Schema) - future            │
+│   Type validation, domain-specific contracts                    │
 └──────────────────────────┼──────────────────────────────────────┘
                            │
 ┌──────────────────────────┼──────────────────────────────────────┐
-│              GRAPH CORE (KexEdit.Graph)                         │
-│   Node, Port, Edge, Graph - pure structure, opaque data blobs   │
+│              GRAPH CORE (KexGraph) ✓ implemented                │
+│   Generic graph: nodes, ports, edges, traversal, validation     │
 └──────────────────────────┼──────────────────────────────────────┘
                            │
 ┌──────────────────────────┼──────────────────────────────────────┐
@@ -45,292 +36,155 @@ Rebuild KexEdit runtime with hexagonal architecture. Enables Rust/WASM migration
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## Current State
+
+### Implemented
+
+**KexGraph** (`Assets/Plugins/KexGraph/`)
+- Domain-agnostic graph library
+- Structure of Arrays (SoA) layout with NativeList for dynamic capacity
+- Raw uint IDs (not wrapped structs)
+- Node operations: add, remove, lookup
+- 14 passing tests
+
+### Patterns
+
+**ID System**: Raw `uint` values
+- NodeId, PortId, EdgeId are all `uint`
+- Monotonic generation: 1, 2, 3... (0 reserved for null/invalid)
+- O(1) lookup via `NativeHashMap<uint, int>`
+
+**Memory Layout**: Structure of Arrays
+```csharp
+public struct Graph {
+    public NativeList<uint> NodeIds;
+    public NativeList<uint> NodeTypes;        // Opaque - consumer interprets
+    public NativeList<float2> NodePositions;
+    public NativeList<int> NodeInputStart;    // Index into ports
+    public NativeList<int> NodeInputCount;
+    public NativeList<int> NodeOutputStart;
+    public NativeList<int> NodeOutputCount;
+
+    public NativeList<uint> PortIds;
+    public NativeList<uint> PortTypes;        // Opaque - consumer interprets
+    public NativeList<uint> PortOwners;       // NodeId
+    public NativeList<bool> PortIsInput;
+
+    public NativeList<uint> EdgeIds;
+    public NativeList<uint> EdgeSources;      // PortId
+    public NativeList<uint> EdgeTargets;      // PortId
+}
+```
+
+**Allocators**: Explicit, caller-controlled
+- `Graph.Create(Allocator allocator)`
+- Tests use `Allocator.Temp`
+- Runtime will use `Allocator.Persistent`
+
+**Removal**: Swap-and-pop pattern
+- O(1) removal keeps arrays compact
+- Updates index map when swapping
+
+## Design Principles
+
+- **Graph is Domain-Agnostic**: No coaster knowledge; consumers interpret type IDs
+- **Core is Physics-Only**: No graph, train, or section awareness
+- **Hexagonal Architecture**: Graph has no dependencies; adapters bridge to domain
+- **Single Source of Truth**: SoA buffers; no derived state
+- **Testability**: TDD with headless Unity tests
+- **Portability**: Rust-compatible design (Vec, HashMap, u32)
+
+## Next Steps
+
+### Phase 1: Complete KexGraph Core
+
+**Port Operations**
+- `AddInputPort(uint nodeId, uint portType)` → uint portId
+- `AddOutputPort(uint nodeId, uint portType)` → uint portId
+- `RemovePort(uint portId)` - cascades to edges
+- `GetInputPorts(uint nodeId)` → NativeArray<uint>
+- `GetOutputPorts(uint nodeId)` → NativeArray<uint>
+
+**Edge Operations**
+- `AddEdge(uint sourcePortId, uint targetPortId)` → uint edgeId
+- `RemoveEdge(uint edgeId)`
+- `GetOutgoingEdges(uint nodeId)` → NativeArray<uint>
+- `GetIncomingEdges(uint nodeId)` → NativeArray<uint>
+
+**Traversal**
+- `FindSourceNodes()` - nodes with no incoming edges
+- `FindSinkNodes()` - nodes with no outgoing edges
+- `TopologicalSort()` - Kahn's algorithm for execution order
+
+**Validation**
+- `HasCycle()` - DFS-based cycle detection
+- `Validate()` - returns ValidationResult with errors
+
+**Performance**
+- Burst-compiled jobs for hot paths
+- Benchmarks: <1ms for 1000 node operations
+
+### Phase 2: Graph Schema Layer
+
+**Type System** (`Assets/Runtime/Graph.Schema/`)
+- NodeTypeId, PortTypeId enums specific to KexEdit
+- Type validation rules (what connects to what)
+- Adapter traits for serialization
+
+### Phase 3: Integration
+
+**ECS Adapter** (`Assets/Runtime/Legacy/Track/`)
+- Convert KexGraph → existing Node/Port/Connection entities
+- Convert entities → KexGraph
+- Run both systems in parallel, verify identical results
+
+**Serialization Adapter** (`Assets/Runtime/Serialization/`)
+- Load V1 format → KexGraph
+- Save KexGraph → V2 format
+- Migration tool for existing tracks
+
+### Phase 4: Rust Port
+
+**Rust Implementation** (`rust-backend/graph-core/`)
+- Direct translation: `Vec<u32>`, `HashMap<u32, usize>`
+- FFI layer for Unity interop
+- Performance validation vs Burst
+
 ## Directory Structure
 
 ```
 KexEdit/
-├── rust-backend/
-│   ├── graph-core/            Generic graph (reusable)
-│   ├── kexedit-graph-schema/  Type mappings, data contracts
-│   ├── kexedit-core/          Pure physics/math
-│   ├── kexedit-nodes/         Node implementations
-│   └── kexedit-ffi/           C FFI layer for Unity
-├── Assets/Runtime/
-│   ├── Graph/                 Generic graph (C#)
-│   ├── Graph.Schema/          Type mappings, data contracts (C#)
-│   ├── Core/                  Pure physics/math (C#)
-│   ├── Nodes/                 Node schema + implementations (C#)
-│   ├── Serialization/         Serialization adapter (C#)
-│   ├── Native/RustCore/       Rust FFI bindings
-│   └── Legacy/                ECS adapters and legacy code
+├── Assets/
+│   ├── Plugins/
+│   │   └── KexGraph/              Generic graph library ✓
+│   │       ├── KexGraph.asmdef
+│   │       └── Graph.cs
+│   ├── Runtime/
+│   │   ├── Core/                  Physics/math primitives
+│   │   ├── Nodes/                 Node schema + implementations
+│   │   └── Legacy/                ECS adapters and existing code
+│   └── Tests/
+│       ├── GraphStructureTests.cs ✓
+│       └── GraphNodeTests.cs      ✓
+└── rust-backend/                  Future Rust port
+    ├── graph-core/
+    ├── kexedit-core/
+    ├── kexedit-nodes/
+    └── kexedit-ffi/
 ```
 
-## Assembly Dependencies
+## Testing Strategy
 
-```
-KexEdit.Serialization ──► KexEdit.Graph.Schema ──► KexEdit.Graph
-         │                        │
-         ▼                        ▼
-KexEdit.Nodes.* ──────► KexEdit.Nodes ──────────► KexEdit.Core
-```
+**TDD Workflow**: Red-Green-Refactor
+1. Write failing test first
+2. Implement minimal code to pass
+3. Refactor and optimize
+4. Run `./run-tests.sh` to verify
 
-## Design Principles
+**Test Categories**
+- `[Category("Unit")]` - Pure logic, no ECS
+- `[Category("Performance")]` - Burst-compiled benchmarks
 
--   **Core is Physics-Only**: No awareness of train direction, section boundaries, or friction resets
--   **Graph is Domain-Agnostic**: Pure structure with opaque data blobs, no type awareness
--   **Nodes Own State Management**: Node types control initial state for each section
--   **Hexagonal Architecture**: Core has no dependencies; adapters use core ports
--   **Single Source of Truth**: Continuous buffers; systems interpret as needed
--   **Testability**: Every layer has comprehensive tests before adding outer layers
--   **Portability**: Architecture designed for Rust/WASM port
-
-## Graph + Serialization Architecture
-
-### Layer 1: Graph Core (Pure, Reusable)
-
-Generic graph structure with opaque data. No type awareness.
-
-```csharp
-// KexEdit.Graph - completely domain-agnostic
-using Unity.Burst;
-using Unity.Mathematics;
-using Unity.Collections;
-
-[BurstCompile]
-public readonly struct NodeId {
-    public readonly uint Value;
-    public NodeId(uint value) => Value = value;
-}
-
-[BurstCompile]
-public readonly struct PortId {
-    public readonly uint Value;
-    public PortId(uint value) => Value = value;
-}
-
-[BurstCompile]
-public readonly struct EdgeId {
-    public readonly uint Value;
-    public EdgeId(uint value) => Value = value;
-}
-
-[BurstCompile]
-public readonly struct Node {
-    public readonly NodeId Id;
-    public readonly float2 Position;
-    public readonly NativeArray<byte> Data;
-    public readonly NativeArray<PortId> InputPorts;
-    public readonly NativeArray<PortId> OutputPorts;
-
-    public Node(NodeId id, float2 position, NativeArray<byte> data,
-                NativeArray<PortId> inputPorts, NativeArray<PortId> outputPorts) {
-        Id = id;
-        Position = position;
-        Data = data;
-        InputPorts = inputPorts;
-        OutputPorts = outputPorts;
-    }
-}
-
-[BurstCompile]
-public readonly struct Port {
-    public readonly PortId Id;
-    public readonly NativeArray<byte> Data;
-
-    public Port(PortId id, NativeArray<byte> data) {
-        Id = id;
-        Data = data;
-    }
-}
-
-[BurstCompile]
-public readonly struct Edge {
-    public readonly EdgeId Id;
-    public readonly PortId Source;
-    public readonly PortId Target;
-
-    public Edge(EdgeId id, PortId source, PortId target) {
-        Id = id;
-        Source = source;
-        Target = target;
-    }
-}
-
-public struct Graph {
-    public NativeArray<Node> Nodes;
-    public NativeArray<Port> Ports;
-    public NativeArray<Edge> Edges;
-    public NativeArray<byte> Metadata;
-
-    public void Dispose() {
-        if (Nodes.IsCreated) Nodes.Dispose();
-        if (Ports.IsCreated) Ports.Dispose();
-        if (Edges.IsCreated) Edges.Dispose();
-        if (Metadata.IsCreated) Metadata.Dispose();
-    }
-}
-```
-
-### Layer 2: Graph Schema (KexEdit-specific bindings)
-
-Maps semantic types to graph blobs. Defines data contracts and adapter traits.
-
-```csharp
-// KexEdit.Graph.Schema - project-specific type mappings
-using Unity.Burst;
-using Unity.Mathematics;
-using Unity.Collections;
-
-public enum NodeTypeId : byte {
-    Anchor = 1,
-    ForceSection = 2,
-    GeometricSection = 3,
-}
-
-public enum PortTypeId : byte {
-    Anchor = 1,
-    Path = 2,
-    Float = 3,
-    Float3 = 4,
-}
-
-[BurstCompile]
-public readonly struct AnchorContract {
-    public readonly float3 SpinePosition;
-    public readonly float3 Direction;
-    public readonly float Roll;
-    public readonly float Velocity;
-    public readonly float HeartOffset;
-    public readonly float Friction;
-    public readonly float Resistance;
-
-    public AnchorContract(in float3 spinePosition, in float3 direction, float roll,
-                          float velocity, float heartOffset, float friction, float resistance) {
-        SpinePosition = spinePosition;
-        Direction = direction;
-        Roll = roll;
-        Velocity = velocity;
-        HeartOffset = heartOffset;
-        Friction = friction;
-        Resistance = resistance;
-    }
-
-    public static AnchorContract FromPoint(in Point point) {
-        return new AnchorContract(
-            point.SpinePosition,
-            point.Direction,
-            point.Roll,
-            point.Velocity,
-            point.HeartOffset,
-            point.Friction,
-            point.Resistance
-        );
-    }
-
-    public Point ToPoint() {
-        return Point.Create(
-            SpinePosition,
-            Direction,
-            Roll,
-            Velocity,
-            HeartOffset,
-            Friction,
-            Resistance
-        );
-    }
-}
-
-public interface INodeAdapter<T> where T : unmanaged {
-    NodeTypeId TypeId { get; }
-    void Serialize(in T value, ref NativeArray<byte> output, Allocator allocator);
-    T Deserialize(in NativeArray<byte> data);
-}
-```
-
-### Layer 3: Serialization Adapter (Implementations)
-
-Dedicated assembly that implements adapters for all serializable types.
-
-```csharp
-// KexEdit.Serialization - converts domain ↔ contracts
-using Unity.Burst;
-using Unity.Mathematics;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using KexEdit.Core;
-using KexEdit.Graph.Schema;
-
-[BurstCompile]
-public readonly struct AnchorAdapter : INodeAdapter<Point> {
-    public NodeTypeId TypeId => NodeTypeId.Anchor;
-
-    [BurstCompile]
-    public void Serialize(in Point point, ref NativeArray<byte> output, Allocator allocator) {
-        var contract = AnchorContract.FromPoint(point);
-        int size = UnsafeUtility.SizeOf<AnchorContract>();
-
-        if (!output.IsCreated || output.Length != size) {
-            if (output.IsCreated) output.Dispose();
-            output = new NativeArray<byte>(size, allocator);
-        }
-
-        unsafe {
-            fixed (AnchorContract* ptr = &contract) {
-                UnsafeUtility.MemCpy(output.GetUnsafePtr(), ptr, size);
-            }
-        }
-    }
-
-    [BurstCompile]
-    public Point Deserialize(in NativeArray<byte> data) {
-        unsafe {
-            AnchorContract contract;
-            UnsafeUtility.MemCpy(&contract, data.GetUnsafeReadOnlyPtr(),
-                                 UnsafeUtility.SizeOf<AnchorContract>());
-            return contract.ToPoint();
-        }
-    }
-}
-
-[BurstCompile]
-public static class BurstSerializer {
-    [BurstCompile]
-    public static void SerializePoint(in Point point, ref NativeArray<byte> output, Allocator allocator) {
-        var adapter = new AnchorAdapter();
-        adapter.Serialize(point, ref output, allocator);
-    }
-
-    [BurstCompile]
-    public static Point DeserializePoint(in NativeArray<byte> data) {
-        var adapter = new AnchorAdapter();
-        return adapter.Deserialize(data);
-    }
-}
-```
-
-### Benefits
-
--   **Domain-agnostic graph**: Graph layer is reusable, knows nothing about coasters
--   **Self-describing format**: Type tags + opaque blobs, easy versioning
--   **No manual flag management**: Add fields to contracts, serialization handles it
--   **Type-safe ports**: Proper typed values instead of PointData field overloading
--   **Identical Rust/C#**: Same three layers, same contracts
--   **Easy migration**: V1 → V2 converter reads old format, writes new graph
-
-## Rust FFI
-
-Rust backend validated and outperforms Burst. Toggle via `USE_RUST_BACKEND` flag.
-
-**Build**: `./build-rust.sh` (cross-platform)
-
-## Testing
-
-**Run tests**: `./run-tests.sh` (all), `./run-tests.sh TestName` (filtered), `./run-tests.sh --rust-backend` (Rust)
-
-## Next Steps
-
-1. **Graph Core**: Implement generic graph structure (Burst-first)
-2. **Graph Schema**: Define type IDs and data contracts
-3. **Serialization Adapter**: Implement adapters for all node/port types
-4. **V1 → V2 Migration**: One-way converter from legacy format
-5. **Deprecate Legacy**: Remove old serialization after validation
+**Current Coverage**: 14 tests passing
+- Graph structure creation/disposal
+- Node add/remove/lookup operations

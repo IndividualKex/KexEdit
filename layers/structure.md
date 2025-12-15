@@ -29,6 +29,8 @@ KexEdit/
 ├── CLAUDE.md  # Global context (Tier 0)
 ├── run-tests.sh  # Headless test runner
 ├── Assets/  # Unity assets root
+│   ├── Plugins/  # Reusable libraries
+│   │   └── KexGraph/  # Domain-agnostic graph library (KexGraph)
 │   ├── Runtime/  # Application layer (hexagonal architecture)
 │   │   ├── Core/  # Domain layer - pure physics/math (KexEdit.Core)
 │   │   ├── Nodes/  # Node types (KexEdit.Nodes.*)
@@ -111,6 +113,7 @@ KexEdit/
 
 ## Where to add code
 
+- Generic graph library → `Assets/Plugins/KexGraph/`
 - Portable physics/math (C#) → `Assets/Runtime/Core/`
 - Spline articulation (C#) → `Assets/Runtime/Core/Articulation/`
 - Portable physics/math (Rust) → `rust-backend/kexedit-core/`

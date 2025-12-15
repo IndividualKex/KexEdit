@@ -24,7 +24,8 @@
         "KexEdit.Nodes.Anchor",
         "KexEdit.Nodes.Reverse",
         "KexEdit.Nodes.ReversePath",
-        "KexEdit.Adapters"
+        "KexEdit.Adapters",
+        "KexGraph"
     ],
     "includePlatforms": [
         "Editor"

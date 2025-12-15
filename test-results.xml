@@ -1,55 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
-<test-run id="2" testcasecount="4" result="Passed" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.7196757">
-  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3094" result="Passed" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.719676" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+<test-run id="2" testcasecount="14" result="Passed" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.0695132">
+  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3130" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.069513" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
     <properties>
       <property name="platform" value="EditMode" />
     </properties>
-    <test-suite type="Assembly" id="1265" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="229" result="Passed" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.693975" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <test-suite type="Assembly" id="1303" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="265" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.041779" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
       <properties>
-        <property name="_PID" value="10072" />
+        <property name="_PID" value="38924" />
         <property name="_APPDOMAIN" value="Unity Child Domain" />
         <property name="platform" value="EditMode" />
         <property name="EditorOnly" value="True" />
       </properties>
-      <test-suite type="TestSuite" id="1269" name="Tests" fullname="Tests" runstate="Runnable" testcasecount="208" result="Passed" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.692277" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-suite type="TestSuite" id="1307" name="KexGraph" fullname="KexGraph" runstate="Runnable" testcasecount="14" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.039293" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
         <properties />
-        <test-suite type="TestFixture" id="1043" name="BuildForceSectionSystemTests" fullname="Tests.BuildForceSectionSystemTests" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.689618" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
-          <properties>
-            <property name="Category" value="Golden" />
-          </properties>
-          <test-case id="1047" name="AllTypes_ForceSection_MatchesGoldData" fullname="Tests.BuildForceSectionSystemTests.AllTypes_ForceSection_MatchesGoldData" methodname="AllTypes_ForceSection_MatchesGoldData" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" seed="306100131" result="Passed" start-time="2025-12-14 20:07:00Z" end-time="2025-12-14 20:07:01Z" duration="0.362247" asserts="0">
+        <test-suite type="TestSuite" id="1308" name="Tests" fullname="KexGraph.Tests" runstate="Runnable" testcasecount="14" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.038786" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1025" name="GraphNodeTests" fullname="KexGraph.Tests.GraphNodeTests" classname="KexGraph.Tests.GraphNodeTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.035510" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
             <properties>
-              <property name="retryIteration" value="0" />
-              <property name="repeatIteration" value="0" />
+              <property name="Category" value="Unit" />
             </properties>
-            <output><![CDATA[[PointComparer] Max drift 4.76837158E-06 at index 218
-]]></output>
-          </test-case>
-          <test-case id="1044" name="Shuttle_ForceSection_MatchesGoldData" fullname="Tests.BuildForceSectionSystemTests.Shuttle_ForceSection_MatchesGoldData" methodname="Shuttle_ForceSection_MatchesGoldData" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" seed="1994334471" result="Passed" start-time="2025-12-14 20:07:01Z" end-time="2025-12-14 20:07:01Z" duration="0.045613" asserts="0">
+            <test-case id="1027" name="AddNode_GeneratesUniqueIds" fullname="KexGraph.Tests.GraphNodeTests.AddNode_GeneratesUniqueIds" methodname="AddNode_GeneratesUniqueIds" classname="KexGraph.Tests.GraphNodeTests" runstate="Runnable" seed="794968368" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.018732" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1030" name="AddNode_StoresCorrectPosition" fullname="KexGraph.Tests.GraphNodeTests.AddNode_StoresCorrectPosition" methodname="AddNode_StoresCorrectPosition" classname="KexGraph.Tests.GraphNodeTests" runstate="Runnable" seed="1160880056" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.001612" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1031" name="AddNode_StoresCorrectType" fullname="KexGraph.Tests.GraphNodeTests.AddNode_StoresCorrectType" methodname="AddNode_StoresCorrectType" classname="KexGraph.Tests.GraphNodeTests" runstate="Runnable" seed="1406157573" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.000278" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1026" name="AddNode_ValidData_IncreasesCount" fullname="KexGraph.Tests.GraphNodeTests.AddNode_ValidData_IncreasesCount" methodname="AddNode_ValidData_IncreasesCount" classname="KexGraph.Tests.GraphNodeTests" runstate="Runnable" seed="912036905" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.000548" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1032" name="RemoveNode_DecreasesCount" fullname="KexGraph.Tests.GraphNodeTests.RemoveNode_DecreasesCount" methodname="RemoveNode_DecreasesCount" classname="KexGraph.Tests.GraphNodeTests" runstate="Runnable" seed="1856870052" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.001653" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1033" name="RemoveNode_MakesNodeUnfindable" fullname="KexGraph.Tests.GraphNodeTests.RemoveNode_MakesNodeUnfindable" methodname="RemoveNode_MakesNodeUnfindable" classname="KexGraph.Tests.GraphNodeTests" runstate="Runnable" seed="599810625" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.000342" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1034" name="RemoveNode_MiddleNode_PreservesOtherNodes" fullname="KexGraph.Tests.GraphNodeTests.RemoveNode_MiddleNode_PreservesOtherNodes" methodname="RemoveNode_MiddleNode_PreservesOtherNodes" classname="KexGraph.Tests.GraphNodeTests" runstate="Runnable" seed="1830675912" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.000416" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1028" name="TryGetNodeIndex_ExistingNode_ReturnsTrue" fullname="KexGraph.Tests.GraphNodeTests.TryGetNodeIndex_ExistingNode_ReturnsTrue" methodname="TryGetNodeIndex_ExistingNode_ReturnsTrue" classname="KexGraph.Tests.GraphNodeTests" runstate="Runnable" seed="1075463280" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.000194" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1029" name="TryGetNodeIndex_NonexistentNode_ReturnsFalse" fullname="KexGraph.Tests.GraphNodeTests.TryGetNodeIndex_NonexistentNode_ReturnsFalse" methodname="TryGetNodeIndex_NonexistentNode_ReturnsFalse" classname="KexGraph.Tests.GraphNodeTests" runstate="Runnable" seed="243884932" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.000131" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1035" name="GraphStructureTests" fullname="KexGraph.Tests.GraphStructureTests" classname="KexGraph.Tests.GraphStructureTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.002116" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
             <properties>
-              <property name="retryIteration" value="0" />
-              <property name="repeatIteration" value="0" />
+              <property name="Category" value="Unit" />
             </properties>
-            <output><![CDATA[[PointComparer] Max drift 0.000366210938 at index 540
+            <test-case id="1036" name="Graph_Create_AllocatesLists" fullname="KexGraph.Tests.GraphStructureTests.Graph_Create_AllocatesLists" methodname="Graph_Create_AllocatesLists" classname="KexGraph.Tests.GraphStructureTests" runstate="Runnable" seed="1046539929" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.000172" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1037" name="Graph_Dispose_FreesMemory" fullname="KexGraph.Tests.GraphStructureTests.Graph_Dispose_FreesMemory" methodname="Graph_Dispose_FreesMemory" classname="KexGraph.Tests.GraphStructureTests" runstate="Runnable" seed="1623895618" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.000136" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1040" name="Graph_EdgeCount_ReturnsCorrectValue" fullname="KexGraph.Tests.GraphStructureTests.Graph_EdgeCount_ReturnsCorrectValue" methodname="Graph_EdgeCount_ReturnsCorrectValue" classname="KexGraph.Tests.GraphStructureTests" runstate="Runnable" seed="1820738457" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.000221" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1038" name="Graph_NodeCount_ReturnsCorrectValue" fullname="KexGraph.Tests.GraphStructureTests.Graph_NodeCount_ReturnsCorrectValue" methodname="Graph_NodeCount_ReturnsCorrectValue" classname="KexGraph.Tests.GraphStructureTests" runstate="Runnable" seed="124242753" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.000131" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1039" name="Graph_PortCount_ReturnsCorrectValue" fullname="KexGraph.Tests.GraphStructureTests.Graph_PortCount_ReturnsCorrectValue" methodname="Graph_PortCount_ReturnsCorrectValue" classname="KexGraph.Tests.GraphStructureTests" runstate="Runnable" seed="935649604" result="Passed" start-time="2025-12-15 21:32:22Z" end-time="2025-12-15 21:32:22Z" duration="0.000196" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[Saving results to: C:/Users/dylan/AppData/LocalLow/IndividualKex/KexEdit\TestResults.xml
 ]]></output>
-          </test-case>
-          <test-case id="1045" name="Veloci_ForceSection1_MatchesGoldData" fullname="Tests.BuildForceSectionSystemTests.Veloci_ForceSection1_MatchesGoldData" methodname="Veloci_ForceSection1_MatchesGoldData" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" seed="1101970608" result="Passed" start-time="2025-12-14 20:07:01Z" end-time="2025-12-14 20:07:01Z" duration="0.170296" asserts="0">
-            <properties>
-              <property name="retryIteration" value="0" />
-              <property name="repeatIteration" value="0" />
-            </properties>
-            <output><![CDATA[[PointComparer] Max drift 0.00287628174 at index 3094
-]]></output>
-          </test-case>
-          <test-case id="1046" name="Veloci_ForceSection2_MatchesGoldData" fullname="Tests.BuildForceSectionSystemTests.Veloci_ForceSection2_MatchesGoldData" methodname="Veloci_ForceSection2_MatchesGoldData" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" seed="878474431" result="Passed" start-time="2025-12-14 20:07:01Z" end-time="2025-12-14 20:07:01Z" duration="0.099152" asserts="0">
-            <properties>
-              <property name="retryIteration" value="0" />
-              <property name="repeatIteration" value="0" />
-            </properties>
-            <output><![CDATA[[PointComparer] Max drift 0.0093536377 at index 2873
-Saving results to: C:/Users/dylan/AppData/LocalLow/IndividualKex/KexEdit\TestResults.xml
-]]></output>
-          </test-case>
+            </test-case>
+          </test-suite>
         </test-suite>
       </test-suite>
     </test-suite>

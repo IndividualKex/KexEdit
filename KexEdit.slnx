@@ -62,6 +62,7 @@
   <Project Path="Unity.Entities.Editor.PerformanceTests.csproj" />
   <Project Path="glTFast.Newtonsoft.csproj" />
   <Project Path="Unity.Entities.Editor.Properties.csproj" />
+  <Project Path="KexGraph.csproj" />
   <Project Path="Unity.InternalAPIEditorBridge.013.csproj" />
   <Project Path="KexEdit.Nodes.Anchor.csproj" />
   <Project Path="StandaloneFileBrowser.csproj" />
