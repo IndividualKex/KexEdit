@@ -9,9 +9,7 @@ namespace KexGraph {
         public NativeList<uint> NodeIds;
         public NativeList<uint> NodeTypes;
         public NativeList<float2> NodePositions;
-        public NativeList<int> NodeInputStart;
         public NativeList<int> NodeInputCount;
-        public NativeList<int> NodeOutputStart;
         public NativeList<int> NodeOutputCount;
 
         public NativeList<uint> PortIds;
@@ -39,9 +37,7 @@ namespace KexGraph {
                 NodeIds = new NativeList<uint>(allocator),
                 NodeTypes = new NativeList<uint>(allocator),
                 NodePositions = new NativeList<float2>(allocator),
-                NodeInputStart = new NativeList<int>(allocator),
                 NodeInputCount = new NativeList<int>(allocator),
-                NodeOutputStart = new NativeList<int>(allocator),
                 NodeOutputCount = new NativeList<int>(allocator),
 
                 PortIds = new NativeList<uint>(allocator),
@@ -66,9 +62,7 @@ namespace KexGraph {
             if (NodeIds.IsCreated) NodeIds.Dispose();
             if (NodeTypes.IsCreated) NodeTypes.Dispose();
             if (NodePositions.IsCreated) NodePositions.Dispose();
-            if (NodeInputStart.IsCreated) NodeInputStart.Dispose();
             if (NodeInputCount.IsCreated) NodeInputCount.Dispose();
-            if (NodeOutputStart.IsCreated) NodeOutputStart.Dispose();
             if (NodeOutputCount.IsCreated) NodeOutputCount.Dispose();
 
             if (PortIds.IsCreated) PortIds.Dispose();
@@ -91,9 +85,7 @@ namespace KexGraph {
             NodeIds.Add(nodeId);
             NodeTypes.Add(nodeType);
             NodePositions.Add(position);
-            NodeInputStart.Add(0);
             NodeInputCount.Add(0);
-            NodeOutputStart.Add(0);
             NodeOutputCount.Add(0);
 
             _nodeIndexMap.Add(nodeId, NodeIds.Length - 1);
@@ -101,7 +93,7 @@ namespace KexGraph {
             return nodeId;
         }
 
-        public bool TryGetNodeIndex(uint nodeId, out int index) {
+        public readonly bool TryGetNodeIndex(uint nodeId, out int index) {
             if (_nodeIndexMap.TryGetValue(nodeId, out index)) {
                 return true;
             }
@@ -122,9 +114,7 @@ namespace KexGraph {
                 NodeIds[index] = NodeIds[lastIndex];
                 NodeTypes[index] = NodeTypes[lastIndex];
                 NodePositions[index] = NodePositions[lastIndex];
-                NodeInputStart[index] = NodeInputStart[lastIndex];
                 NodeInputCount[index] = NodeInputCount[lastIndex];
-                NodeOutputStart[index] = NodeOutputStart[lastIndex];
                 NodeOutputCount[index] = NodeOutputCount[lastIndex];
 
                 _nodeIndexMap[lastNodeId] = index;
@@ -133,15 +123,13 @@ namespace KexGraph {
             NodeIds.RemoveAt(lastIndex);
             NodeTypes.RemoveAt(lastIndex);
             NodePositions.RemoveAt(lastIndex);
-            NodeInputStart.RemoveAt(lastIndex);
             NodeInputCount.RemoveAt(lastIndex);
-            NodeOutputStart.RemoveAt(lastIndex);
             NodeOutputCount.RemoveAt(lastIndex);
 
             _nodeIndexMap.Remove(nodeId);
         }
 
-        public bool TryGetPortIndex(uint portId, out int index) {
+        public readonly bool TryGetPortIndex(uint portId, out int index) {
             if (_portIndexMap.TryGetValue(portId, out index)) {
                 return true;
             }
@@ -162,12 +150,7 @@ namespace KexGraph {
             PortIsInput.Add(true);
 
             _portIndexMap.Add(portId, PortIds.Length - 1);
-
-            int currentCount = NodeInputCount[nodeIndex];
-            if (currentCount == 0) {
-                NodeInputStart[nodeIndex] = PortIds.Length - 1;
-            }
-            NodeInputCount[nodeIndex] = currentCount + 1;
+            NodeInputCount[nodeIndex]++;
 
             return portId;
         }
@@ -185,17 +168,12 @@ namespace KexGraph {
             PortIsInput.Add(false);
 
             _portIndexMap.Add(portId, PortIds.Length - 1);
-
-            int currentCount = NodeOutputCount[nodeIndex];
-            if (currentCount == 0) {
-                NodeOutputStart[nodeIndex] = PortIds.Length - 1;
-            }
-            NodeOutputCount[nodeIndex] = currentCount + 1;
+            NodeOutputCount[nodeIndex]++;
 
             return portId;
         }
 
-        public void GetInputPorts(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+        public readonly void GetInputPorts(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
             if (!TryGetNodeIndex(nodeId, out int nodeIndex)) {
                 result = new NativeArray<uint>(0, allocator);
                 return;
@@ -217,7 +195,7 @@ namespace KexGraph {
             }
         }
 
-        public void GetOutputPorts(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+        public readonly void GetOutputPorts(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
             if (!TryGetNodeIndex(nodeId, out int nodeIndex)) {
                 result = new NativeArray<uint>(0, allocator);
                 return;
@@ -276,7 +254,7 @@ namespace KexGraph {
             }
         }
 
-        public bool TryGetEdgeIndex(uint edgeId, out int index) {
+        public readonly bool TryGetEdgeIndex(uint edgeId, out int index) {
             if (_edgeIndexMap.TryGetValue(edgeId, out index)) {
                 return true;
             }
@@ -327,7 +305,7 @@ namespace KexGraph {
             _edgeIndexMap.Remove(edgeId);
         }
 
-        public void GetOutgoingEdges(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+        public readonly void GetOutgoingEdges(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
             if (!TryGetNodeIndex(nodeId, out _)) {
                 result = new NativeArray<uint>(0, allocator);
                 return;
@@ -335,7 +313,7 @@ namespace KexGraph {
 
             GetOutputPorts(nodeId, out var outputPorts, Allocator.Temp);
 
-            var tempList = new NativeList<uint>(allocator);
+            var tempList = new NativeList<uint>(EdgeCount, Allocator.Temp);
 
             for (int i = 0; i < EdgeIds.Length; i++) {
                 for (int j = 0; j < outputPorts.Length; j++) {
@@ -346,16 +324,13 @@ namespace KexGraph {
                 }
             }
 
-            result = new NativeArray<uint>(tempList.Length, allocator);
-            for (int i = 0; i < tempList.Length; i++) {
-                result[i] = tempList[i];
-            }
+            result = new NativeArray<uint>(tempList.AsArray(), allocator);
 
             tempList.Dispose();
             outputPorts.Dispose();
         }
 
-        public void GetIncomingEdges(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+        public readonly void GetIncomingEdges(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
             if (!TryGetNodeIndex(nodeId, out _)) {
                 result = new NativeArray<uint>(0, allocator);
                 return;
@@ -363,7 +338,7 @@ namespace KexGraph {
 
             GetInputPorts(nodeId, out var inputPorts, Allocator.Temp);
 
-            var tempList = new NativeList<uint>(allocator);
+            var tempList = new NativeList<uint>(EdgeCount, Allocator.Temp);
 
             for (int i = 0; i < EdgeIds.Length; i++) {
                 for (int j = 0; j < inputPorts.Length; j++) {
@@ -374,16 +349,13 @@ namespace KexGraph {
                 }
             }
 
-            result = new NativeArray<uint>(tempList.Length, allocator);
-            for (int i = 0; i < tempList.Length; i++) {
-                result[i] = tempList[i];
-            }
+            result = new NativeArray<uint>(tempList.AsArray(), allocator);
 
             tempList.Dispose();
             inputPorts.Dispose();
         }
 
-        public void GetSuccessorNodes(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+        public readonly void GetSuccessorNodes(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
             GetOutgoingEdges(nodeId, out var edges, Allocator.Temp);
 
             if (edges.Length == 0) {
@@ -392,7 +364,7 @@ namespace KexGraph {
                 return;
             }
 
-            var tempList = new NativeList<uint>(Allocator.Temp);
+            var tempList = new NativeList<uint>(edges.Length, Allocator.Temp);
             var seen = new NativeHashSet<uint>(edges.Length, Allocator.Temp);
 
             for (int i = 0; i < edges.Length; i++) {
@@ -407,17 +379,14 @@ namespace KexGraph {
                 }
             }
 
-            result = new NativeArray<uint>(tempList.Length, allocator);
-            for (int i = 0; i < tempList.Length; i++) {
-                result[i] = tempList[i];
-            }
+            result = new NativeArray<uint>(tempList.AsArray(), allocator);
 
             tempList.Dispose();
             seen.Dispose();
             edges.Dispose();
         }
 
-        public void GetPredecessorNodes(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+        public readonly void GetPredecessorNodes(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
             GetIncomingEdges(nodeId, out var edges, Allocator.Temp);
 
             if (edges.Length == 0) {
@@ -426,7 +395,7 @@ namespace KexGraph {
                 return;
             }
 
-            var tempList = new NativeList<uint>(Allocator.Temp);
+            var tempList = new NativeList<uint>(edges.Length, Allocator.Temp);
             var seen = new NativeHashSet<uint>(edges.Length, Allocator.Temp);
 
             for (int i = 0; i < edges.Length; i++) {
@@ -441,18 +410,15 @@ namespace KexGraph {
                 }
             }
 
-            result = new NativeArray<uint>(tempList.Length, allocator);
-            for (int i = 0; i < tempList.Length; i++) {
-                result[i] = tempList[i];
-            }
+            result = new NativeArray<uint>(tempList.AsArray(), allocator);
 
             tempList.Dispose();
             seen.Dispose();
             edges.Dispose();
         }
 
-        public void FindSourceNodes(out NativeArray<uint> result, Allocator allocator) {
-            var tempList = new NativeList<uint>(Allocator.Temp);
+        public readonly void FindSourceNodes(out NativeArray<uint> result, Allocator allocator) {
+            var tempList = new NativeList<uint>(NodeCount, Allocator.Temp);
 
             for (int i = 0; i < NodeIds.Length; i++) {
                 uint nodeId = NodeIds[i];
@@ -465,16 +431,13 @@ namespace KexGraph {
                 }
             }
 
-            result = new NativeArray<uint>(tempList.Length, allocator);
-            for (int i = 0; i < tempList.Length; i++) {
-                result[i] = tempList[i];
-            }
+            result = new NativeArray<uint>(tempList.AsArray(), allocator);
 
             tempList.Dispose();
         }
 
-        public void FindSinkNodes(out NativeArray<uint> result, Allocator allocator) {
-            var tempList = new NativeList<uint>(Allocator.Temp);
+        public readonly void FindSinkNodes(out NativeArray<uint> result, Allocator allocator) {
+            var tempList = new NativeList<uint>(NodeCount, Allocator.Temp);
 
             for (int i = 0; i < NodeIds.Length; i++) {
                 uint nodeId = NodeIds[i];
@@ -487,57 +450,63 @@ namespace KexGraph {
                 }
             }
 
-            result = new NativeArray<uint>(tempList.Length, allocator);
-            for (int i = 0; i < tempList.Length; i++) {
-                result[i] = tempList[i];
-            }
+            result = new NativeArray<uint>(tempList.AsArray(), allocator);
 
             tempList.Dispose();
         }
 
-        public bool HasCycle() {
+        public readonly bool HasCycle() {
             if (NodeCount == 0) return false;
 
             var visited = new NativeHashSet<uint>(NodeCount, Allocator.Temp);
-            var recursionStack = new NativeHashSet<uint>(NodeCount, Allocator.Temp);
+            var inStack = new NativeHashSet<uint>(NodeCount, Allocator.Temp);
+            var stack = new NativeList<long>(NodeCount, Allocator.Temp);
 
             bool cycleFound = false;
+
             for (int i = 0; i < NodeIds.Length && !cycleFound; i++) {
-                uint nodeId = NodeIds[i];
-                if (!visited.Contains(nodeId)) {
-                    cycleFound = HasCycleDFS(nodeId, visited, recursionStack);
+                uint startNode = NodeIds[i];
+                if (visited.Contains(startNode)) continue;
+
+                stack.Add(startNode);
+
+                while (stack.Length > 0 && !cycleFound) {
+                    long item = stack[^1];
+                    stack.RemoveAt(stack.Length - 1);
+
+                    if (item < 0) {
+                        inStack.Remove((uint)(~item));
+                        continue;
+                    }
+
+                    uint nodeId = (uint)item;
+
+                    if (visited.Contains(nodeId)) continue;
+
+                    visited.Add(nodeId);
+                    inStack.Add(nodeId);
+                    stack.Add(~(long)nodeId);
+
+                    GetSuccessorNodes(nodeId, out var successors, Allocator.Temp);
+                    for (int j = 0; j < successors.Length; j++) {
+                        uint succ = successors[j];
+                        if (inStack.Contains(succ)) {
+                            cycleFound = true;
+                            break;
+                        }
+                        if (!visited.Contains(succ)) {
+                            stack.Add(succ);
+                        }
+                    }
+                    successors.Dispose();
                 }
             }
 
+            stack.Dispose();
             visited.Dispose();
-            recursionStack.Dispose();
+            inStack.Dispose();
 
             return cycleFound;
-        }
-
-        private bool HasCycleDFS(uint nodeId, NativeHashSet<uint> visited, NativeHashSet<uint> recursionStack) {
-            visited.Add(nodeId);
-            recursionStack.Add(nodeId);
-
-            GetSuccessorNodes(nodeId, out var successors, Allocator.Temp);
-
-            for (int i = 0; i < successors.Length; i++) {
-                uint successorId = successors[i];
-
-                if (!visited.Contains(successorId)) {
-                    if (HasCycleDFS(successorId, visited, recursionStack)) {
-                        successors.Dispose();
-                        return true;
-                    }
-                } else if (recursionStack.Contains(successorId)) {
-                    successors.Dispose();
-                    return true;
-                }
-            }
-
-            successors.Dispose();
-            recursionStack.Remove(nodeId);
-            return false;
         }
     }
 }
