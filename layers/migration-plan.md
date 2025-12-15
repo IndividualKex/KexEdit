@@ -76,13 +76,13 @@ KexEdit.Nodes.* ──────► KexEdit.Nodes ─────────�
 
 ## Design Principles
 
-- **Core is Physics-Only**: No awareness of train direction, section boundaries, or friction resets
-- **Graph is Domain-Agnostic**: Pure structure with opaque data blobs, no type awareness
-- **Nodes Own State Management**: Node types control initial state for each section
-- **Hexagonal Architecture**: Core has no dependencies; adapters use core ports
-- **Single Source of Truth**: Continuous buffers; systems interpret as needed
-- **Testability**: Every layer has comprehensive tests before adding outer layers
-- **Portability**: Architecture designed for Rust/WASM port
+-   **Core is Physics-Only**: No awareness of train direction, section boundaries, or friction resets
+-   **Graph is Domain-Agnostic**: Pure structure with opaque data blobs, no type awareness
+-   **Nodes Own State Management**: Node types control initial state for each section
+-   **Hexagonal Architecture**: Core has no dependencies; adapters use core ports
+-   **Single Source of Truth**: Continuous buffers; systems interpret as needed
+-   **Testability**: Every layer has comprehensive tests before adding outer layers
+-   **Portability**: Architecture designed for Rust/WASM port
 
 ## Graph + Serialization Architecture
 
@@ -92,30 +92,82 @@ Generic graph structure with opaque data. No type awareness.
 
 ```csharp
 // KexEdit.Graph - completely domain-agnostic
-public struct Node {
-    public ulong Id;
-    public float2 Position;
-    public byte[] Data;           // Opaque payload
-    public ulong[] InputPorts;
-    public ulong[] OutputPorts;
+using Unity.Burst;
+using Unity.Mathematics;
+using Unity.Collections;
+
+[BurstCompile]
+public readonly struct NodeId {
+    public readonly uint Value;
+    public NodeId(uint value) => Value = value;
 }
 
-public struct Port {
-    public ulong Id;
-    public byte[] Data;           // Opaque payload
+[BurstCompile]
+public readonly struct PortId {
+    public readonly uint Value;
+    public PortId(uint value) => Value = value;
 }
 
-public struct Edge {
-    public ulong Id;
-    public ulong Source;          // Port ID
-    public ulong Target;          // Port ID
+[BurstCompile]
+public readonly struct EdgeId {
+    public readonly uint Value;
+    public EdgeId(uint value) => Value = value;
+}
+
+[BurstCompile]
+public readonly struct Node {
+    public readonly NodeId Id;
+    public readonly float2 Position;
+    public readonly NativeArray<byte> Data;
+    public readonly NativeArray<PortId> InputPorts;
+    public readonly NativeArray<PortId> OutputPorts;
+
+    public Node(NodeId id, float2 position, NativeArray<byte> data,
+                NativeArray<PortId> inputPorts, NativeArray<PortId> outputPorts) {
+        Id = id;
+        Position = position;
+        Data = data;
+        InputPorts = inputPorts;
+        OutputPorts = outputPorts;
+    }
+}
+
+[BurstCompile]
+public readonly struct Port {
+    public readonly PortId Id;
+    public readonly NativeArray<byte> Data;
+
+    public Port(PortId id, NativeArray<byte> data) {
+        Id = id;
+        Data = data;
+    }
+}
+
+[BurstCompile]
+public readonly struct Edge {
+    public readonly EdgeId Id;
+    public readonly PortId Source;
+    public readonly PortId Target;
+
+    public Edge(EdgeId id, PortId source, PortId target) {
+        Id = id;
+        Source = source;
+        Target = target;
+    }
 }
 
 public struct Graph {
-    public Node[] Nodes;
-    public Port[] Ports;
-    public Edge[] Edges;
-    public byte[] Metadata;       // UI state, etc.
+    public NativeArray<Node> Nodes;
+    public NativeArray<Port> Ports;
+    public NativeArray<Edge> Edges;
+    public NativeArray<byte> Metadata;
+
+    public void Dispose() {
+        if (Nodes.IsCreated) Nodes.Dispose();
+        if (Ports.IsCreated) Ports.Dispose();
+        if (Edges.IsCreated) Edges.Dispose();
+        if (Metadata.IsCreated) Metadata.Dispose();
+    }
 }
 ```
 
@@ -125,12 +177,14 @@ Maps semantic types to graph blobs. Defines data contracts and adapter traits.
 
 ```csharp
 // KexEdit.Graph.Schema - project-specific type mappings
+using Unity.Burst;
+using Unity.Mathematics;
+using Unity.Collections;
 
 public enum NodeTypeId : byte {
     Anchor = 1,
     ForceSection = 2,
     GeometricSection = 3,
-    // ...
 }
 
 public enum PortTypeId : byte {
@@ -140,22 +194,56 @@ public enum PortTypeId : byte {
     Float3 = 4,
 }
 
-// Data contracts - shapes for serialization
-public struct AnchorContract {
-    public float3 SpinePosition;
-    public float3 Direction;
-    public float Roll;
-    public float Velocity;
-    public float HeartOffset;
-    public float Friction;
-    public float Resistance;
+[BurstCompile]
+public readonly struct AnchorContract {
+    public readonly float3 SpinePosition;
+    public readonly float3 Direction;
+    public readonly float Roll;
+    public readonly float Velocity;
+    public readonly float HeartOffset;
+    public readonly float Friction;
+    public readonly float Resistance;
+
+    public AnchorContract(in float3 spinePosition, in float3 direction, float roll,
+                          float velocity, float heartOffset, float friction, float resistance) {
+        SpinePosition = spinePosition;
+        Direction = direction;
+        Roll = roll;
+        Velocity = velocity;
+        HeartOffset = heartOffset;
+        Friction = friction;
+        Resistance = resistance;
+    }
+
+    public static AnchorContract FromPoint(in Point point) {
+        return new AnchorContract(
+            point.SpinePosition,
+            point.Direction,
+            point.Roll,
+            point.Velocity,
+            point.HeartOffset,
+            point.Friction,
+            point.Resistance
+        );
+    }
+
+    public Point ToPoint() {
+        return Point.Create(
+            SpinePosition,
+            Direction,
+            Roll,
+            Velocity,
+            HeartOffset,
+            Friction,
+            Resistance
+        );
+    }
 }
 
-// Adapter trait
-public interface INodeAdapter {
+public interface INodeAdapter<T> where T : unmanaged {
     NodeTypeId TypeId { get; }
-    byte[] ToContract(object domain);
-    object FromContract(byte[] data);
+    void Serialize(in T value, ref NativeArray<byte> output, Allocator allocator);
+    T Deserialize(in NativeArray<byte> data);
 }
 ```
 
@@ -165,70 +253,75 @@ Dedicated assembly that implements adapters for all serializable types.
 
 ```csharp
 // KexEdit.Serialization - converts domain ↔ contracts
+using Unity.Burst;
+using Unity.Mathematics;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+using KexEdit.Core;
+using KexEdit.Graph.Schema;
 
-public class AnchorAdapter : INodeAdapter {
+[BurstCompile]
+public readonly struct AnchorAdapter : INodeAdapter<Point> {
     public NodeTypeId TypeId => NodeTypeId.Anchor;
 
-    public byte[] ToContract(object domain) {
-        var point = (Point)domain;
-        var contract = new AnchorContract {
-            SpinePosition = point.SpinePosition,
-            Direction = point.Direction,
-            Roll = point.Roll,
-            // ...
-        };
-        return BinarySerializer.Serialize(contract);
+    [BurstCompile]
+    public void Serialize(in Point point, ref NativeArray<byte> output, Allocator allocator) {
+        var contract = AnchorContract.FromPoint(point);
+        int size = UnsafeUtility.SizeOf<AnchorContract>();
+
+        if (!output.IsCreated || output.Length != size) {
+            if (output.IsCreated) output.Dispose();
+            output = new NativeArray<byte>(size, allocator);
+        }
+
+        unsafe {
+            fixed (AnchorContract* ptr = &contract) {
+                UnsafeUtility.MemCpy(output.GetUnsafePtr(), ptr, size);
+            }
+        }
     }
 
-    public object FromContract(byte[] data) {
-        var contract = BinarySerializer.Deserialize<AnchorContract>(data);
-        return Point.Create(
-            contract.SpinePosition,
-            contract.Direction,
-            contract.Roll,
-            // ...
-        );
+    [BurstCompile]
+    public Point Deserialize(in NativeArray<byte> data) {
+        unsafe {
+            AnchorContract contract;
+            UnsafeUtility.MemCpy(&contract, data.GetUnsafeReadOnlyPtr(),
+                                 UnsafeUtility.SizeOf<AnchorContract>());
+            return contract.ToPoint();
+        }
     }
 }
 
-// Registry wires up all adapters
-public static class AdapterRegistry {
-    public static void RegisterAll(Registry registry) {
-        registry.Register(new AnchorAdapter());
-        registry.Register(new ForceSectionAdapter());
-        // ...
+[BurstCompile]
+public static class BurstSerializer {
+    [BurstCompile]
+    public static void SerializePoint(in Point point, ref NativeArray<byte> output, Allocator allocator) {
+        var adapter = new AnchorAdapter();
+        adapter.Serialize(point, ref output, allocator);
+    }
+
+    [BurstCompile]
+    public static Point DeserializePoint(in NativeArray<byte> data) {
+        var adapter = new AnchorAdapter();
+        return adapter.Deserialize(data);
     }
 }
 ```
 
 ### Benefits
 
-- **Domain-agnostic graph**: Graph layer is reusable, knows nothing about coasters
-- **Self-describing format**: Type tags + opaque blobs, easy versioning
-- **No manual flag management**: Add fields to contracts, serialization handles it
-- **Type-safe ports**: Proper typed values instead of PointData field overloading
-- **Identical Rust/C#**: Same three layers, same contracts
-- **Easy migration**: V1 → V2 converter reads old format, writes new graph
+-   **Domain-agnostic graph**: Graph layer is reusable, knows nothing about coasters
+-   **Self-describing format**: Type tags + opaque blobs, easy versioning
+-   **No manual flag management**: Add fields to contracts, serialization handles it
+-   **Type-safe ports**: Proper typed values instead of PointData field overloading
+-   **Identical Rust/C#**: Same three layers, same contracts
+-   **Easy migration**: V1 → V2 converter reads old format, writes new graph
 
 ## Rust FFI
 
 Rust backend validated and outperforms Burst. Toggle via `USE_RUST_BACKEND` flag.
 
 **Build**: `./build-rust.sh` (cross-platform)
-
-## Continuous Track Buffer
-
-Single continuous `DynamicBuffer<TrackPoint>` for entire track, enabling zero-copy aliasing across systems.
-
-```csharp
-public struct TrackPoint : IBufferElementData {
-    public float3 Position;
-    public float3 Direction;
-    public float3 Normal;
-    public float3 Lateral;
-    public float Distance;
-}
-```
 
 ## Testing
 
