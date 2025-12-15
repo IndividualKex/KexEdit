@@ -47,6 +47,13 @@ KexGraph/
 - `GetOutputPorts(uint nodeId, out NativeArray<uint>, Allocator)` - Caller owns memory
 - `RemovePort(uint portId)` - Updates node port counts
 
+**Edge Operations**
+- `AddEdge(uint sourcePortId, uint targetPortId)` - Connects ports, returns edge ID
+- `RemoveEdge(uint edgeId)` - Swap-and-pop removal
+- `GetOutgoingEdges(uint nodeId, out NativeArray<uint>, Allocator)` - Edges from node
+- `GetIncomingEdges(uint nodeId, out NativeArray<uint>, Allocator)` - Edges to node
+- `TryGetEdgeIndex(uint edgeId, out int index)` - O(1) lookup via hashmap
+
 ## Dependencies
 
 **Unity**

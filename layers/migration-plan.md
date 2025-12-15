@@ -105,11 +105,11 @@ public struct Graph {
 - `GetInputPorts(uint nodeId, out NativeArray<uint>, Allocator)` - caller owns memory
 - `GetOutputPorts(uint nodeId, out NativeArray<uint>, Allocator)` - caller owns memory
 
-**Edge Operations**
+**Edge Operations** ✓ implemented
 - `AddEdge(uint sourcePortId, uint targetPortId)` → uint edgeId
 - `RemoveEdge(uint edgeId)`
-- `GetOutgoingEdges(uint nodeId)` → NativeArray<uint>
-- `GetIncomingEdges(uint nodeId)` → NativeArray<uint>
+- `GetOutgoingEdges(uint nodeId, out NativeArray<uint>, Allocator)` - caller owns memory
+- `GetIncomingEdges(uint nodeId, out NativeArray<uint>, Allocator)` - caller owns memory
 
 **Traversal**
 - `FindSourceNodes()` - nodes with no incoming edges
@@ -185,7 +185,9 @@ KexEdit/
 - `[Category("Unit")]` - Pure logic, no ECS
 - `[Category("Performance")]` - Burst-compiled benchmarks
 
-**Current Coverage**: 31 tests passing
+**Current Coverage**: 293 tests passing
 - Graph structure creation/disposal
 - Node add/remove/lookup operations
 - Port add/remove/lookup operations
+- Edge add/remove/lookup operations
+- Outgoing/incoming edge queries

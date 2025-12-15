@@ -25,8 +25,10 @@ namespace KexGraph {
 
         private NativeHashMap<uint, int> _nodeIndexMap;
         private NativeHashMap<uint, int> _portIndexMap;
+        private NativeHashMap<uint, int> _edgeIndexMap;
         private uint _nextNodeId;
         private uint _nextPortId;
+        private uint _nextEdgeId;
 
         public readonly int NodeCount => NodeIds.IsCreated ? NodeIds.Length : 0;
         public readonly int PortCount => PortIds.IsCreated ? PortIds.Length : 0;
@@ -53,8 +55,10 @@ namespace KexGraph {
 
                 _nodeIndexMap = new NativeHashMap<uint, int>(16, allocator),
                 _portIndexMap = new NativeHashMap<uint, int>(16, allocator),
+                _edgeIndexMap = new NativeHashMap<uint, int>(16, allocator),
                 _nextNodeId = 1,
                 _nextPortId = 1,
+                _nextEdgeId = 1,
             };
         }
 
@@ -78,6 +82,7 @@ namespace KexGraph {
 
             if (_nodeIndexMap.IsCreated) _nodeIndexMap.Dispose();
             if (_portIndexMap.IsCreated) _portIndexMap.Dispose();
+            if (_edgeIndexMap.IsCreated) _edgeIndexMap.Dispose();
         }
 
         public uint AddNode(uint nodeType, float2 position) {
@@ -269,6 +274,113 @@ namespace KexGraph {
                     NodeOutputCount[nodeIndex]--;
                 }
             }
+        }
+
+        public bool TryGetEdgeIndex(uint edgeId, out int index) {
+            if (_edgeIndexMap.TryGetValue(edgeId, out index)) {
+                return true;
+            }
+            index = -1;
+            return false;
+        }
+
+        public uint AddEdge(uint sourcePortId, uint targetPortId) {
+            if (!TryGetPortIndex(sourcePortId, out _)) {
+                return 0;
+            }
+            if (!TryGetPortIndex(targetPortId, out _)) {
+                return 0;
+            }
+
+            uint edgeId = _nextEdgeId++;
+
+            EdgeIds.Add(edgeId);
+            EdgeSources.Add(sourcePortId);
+            EdgeTargets.Add(targetPortId);
+
+            _edgeIndexMap.Add(edgeId, EdgeIds.Length - 1);
+
+            return edgeId;
+        }
+
+        public void RemoveEdge(uint edgeId) {
+            if (!TryGetEdgeIndex(edgeId, out int index)) {
+                return;
+            }
+
+            int lastIndex = EdgeIds.Length - 1;
+
+            if (index != lastIndex) {
+                uint lastEdgeId = EdgeIds[lastIndex];
+
+                EdgeIds[index] = EdgeIds[lastIndex];
+                EdgeSources[index] = EdgeSources[lastIndex];
+                EdgeTargets[index] = EdgeTargets[lastIndex];
+
+                _edgeIndexMap[lastEdgeId] = index;
+            }
+
+            EdgeIds.RemoveAt(lastIndex);
+            EdgeSources.RemoveAt(lastIndex);
+            EdgeTargets.RemoveAt(lastIndex);
+
+            _edgeIndexMap.Remove(edgeId);
+        }
+
+        public void GetOutgoingEdges(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            if (!TryGetNodeIndex(nodeId, out _)) {
+                result = new NativeArray<uint>(0, allocator);
+                return;
+            }
+
+            GetOutputPorts(nodeId, out var outputPorts, Allocator.Temp);
+
+            var tempList = new NativeList<uint>(allocator);
+
+            for (int i = 0; i < EdgeIds.Length; i++) {
+                for (int j = 0; j < outputPorts.Length; j++) {
+                    if (EdgeSources[i] == outputPorts[j]) {
+                        tempList.Add(EdgeIds[i]);
+                        break;
+                    }
+                }
+            }
+
+            result = new NativeArray<uint>(tempList.Length, allocator);
+            for (int i = 0; i < tempList.Length; i++) {
+                result[i] = tempList[i];
+            }
+
+            tempList.Dispose();
+            outputPorts.Dispose();
+        }
+
+        public void GetIncomingEdges(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            if (!TryGetNodeIndex(nodeId, out _)) {
+                result = new NativeArray<uint>(0, allocator);
+                return;
+            }
+
+            GetInputPorts(nodeId, out var inputPorts, Allocator.Temp);
+
+            var tempList = new NativeList<uint>(allocator);
+
+            for (int i = 0; i < EdgeIds.Length; i++) {
+                for (int j = 0; j < inputPorts.Length; j++) {
+                    if (EdgeTargets[i] == inputPorts[j]) {
+                        tempList.Add(EdgeIds[i]);
+                        break;
+                    }
+                }
+            }
+
+            result = new NativeArray<uint>(tempList.Length, allocator);
+            for (int i = 0; i < tempList.Length; i++) {
+                result[i] = tempList[i];
+            }
+
+            tempList.Dispose();
+            inputPorts.Dispose();
         }
     }
 }
