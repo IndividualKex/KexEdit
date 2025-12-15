@@ -2,8 +2,8 @@
 Built from '6000.3/respin/6000.3.1f1-f56f53296c2c' branch; Version is '6000.3.1f1 (37142da19a94) revision 3609645'; Using compiler version '194234433'; Build Type 'Release'
 OS: 'Windows 11  (10.0.26200) 64bit Professional' Language: 'en' Physical Memory: 65458 MB
 BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
-Date: 2025-12-14T23:02:51Z
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan" at "2025-12-14T23:02:51.7953365Z"
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan" at "2025-12-15T04:48:18.5278185Z"
+Date: 2025-12-15T04:48:18Z
 
 COMMAND LINE ARGUMENTS:
 C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Unity.exe
@@ -19,8 +19,6 @@ test-log.txt
 EditMode
 -assemblyNames
 Tests
--testFilter
-ArticulationTests
 Successfully changed project path to: C:/Users/dylan/Documents/Games/KexEdit
 C:/Users/dylan/Documents/Games/KexEdit
 Exiting without the bug reporter. Application will terminate with return code 1

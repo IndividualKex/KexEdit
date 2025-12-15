@@ -6,16 +6,17 @@ namespace KexEdit.Core.Articulation {
     [BurstCompile]
     public static class BodyPositioning {
         [BurstCompile]
-        public static BodyTransform FromAnchor(in Anchor anchor) {
-            return new BodyTransform(anchor.Position, anchor.Rotation);
+        public static void FromAnchor(in Anchor anchor, out BodyTransform result) {
+            result = new BodyTransform(anchor.Position, anchor.Rotation);
         }
 
         [BurstCompile]
-        public static BodyTransform FromAnchors(in Anchor leading, in Anchor trailing, float pivot = 0f) {
+        public static void FromAnchors(in Anchor leading, in Anchor trailing, float pivot, out BodyTransform result) {
             float3 toTrailing = trailing.Position - leading.Position;
 
             if (math.lengthsq(toTrailing) < 1e-6f) {
-                return FromAnchor(leading);
+                FromAnchor(leading, out result);
+                return;
             }
 
             float3 forward = math.normalize(toTrailing);
@@ -30,21 +31,31 @@ namespace KexEdit.Core.Articulation {
             quaternion rotation = quaternion.LookRotation(forward, up);
             float3 position = math.lerp(leading.Position, trailing.Position, pivot);
 
-            return new BodyTransform(position, rotation);
+            result = new BodyTransform(position, rotation);
         }
 
         [BurstCompile]
-        public static BodyTransform FromAnchors(in NativeArray<Anchor> anchors, float pivot = 0f) {
-            if (anchors.Length == 0) return BodyTransform.Identity;
-            if (anchors.Length == 1) return FromAnchor(anchors[0]);
-            if (anchors.Length == 2) return FromAnchors(anchors[0], anchors[1], pivot);
+        public static void FromAnchors(in NativeArray<Anchor> anchors, float pivot, out BodyTransform result) {
+            if (anchors.Length == 0) {
+                result = BodyTransform.Identity;
+                return;
+            }
+            if (anchors.Length == 1) {
+                FromAnchor(anchors[0], out result);
+                return;
+            }
+            if (anchors.Length == 2) {
+                FromAnchors(anchors[0], anchors[1], pivot, out result);
+                return;
+            }
 
             Anchor first = anchors[0];
             Anchor last = anchors[^1];
 
             float3 toEnd = last.Position - first.Position;
             if (math.lengthsq(toEnd) < 1e-6f) {
-                return FromAnchor(first);
+                FromAnchor(first, out result);
+                return;
             }
 
             float3 forward = math.normalize(toEnd);
@@ -82,13 +93,19 @@ namespace KexEdit.Core.Articulation {
                 accumulated += segmentLength;
             }
 
-            return new BodyTransform(position, rotation);
+            result = new BodyTransform(position, rotation);
         }
 
         [BurstCompile]
-        public static BodyTransform FromAnchors(in NativeArray<Anchor> anchors, int pivotIndex) {
-            if (anchors.Length == 0) return BodyTransform.Identity;
-            if (anchors.Length == 1) return FromAnchor(anchors[0]);
+        public static void FromAnchors(in NativeArray<Anchor> anchors, int pivotIndex, out BodyTransform result) {
+            if (anchors.Length == 0) {
+                result = BodyTransform.Identity;
+                return;
+            }
+            if (anchors.Length == 1) {
+                FromAnchor(anchors[0], out result);
+                return;
+            }
 
             pivotIndex = math.clamp(pivotIndex, 0, anchors.Length - 1);
             Anchor pivotAnchor = anchors[pivotIndex];
@@ -98,7 +115,8 @@ namespace KexEdit.Core.Articulation {
 
             float3 toEnd = last.Position - first.Position;
             if (math.lengthsq(toEnd) < 1e-6f) {
-                return FromAnchor(pivotAnchor);
+                FromAnchor(pivotAnchor, out result);
+                return;
             }
 
             float3 forward = math.normalize(toEnd);
@@ -114,7 +132,7 @@ namespace KexEdit.Core.Articulation {
 
             quaternion rotation = quaternion.LookRotation(forward, up);
 
-            return new BodyTransform(pivotAnchor.Position, rotation);
+            result = new BodyTransform(pivotAnchor.Position, rotation);
         }
     }
 }

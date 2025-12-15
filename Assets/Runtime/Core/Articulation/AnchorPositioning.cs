@@ -6,59 +6,69 @@ namespace KexEdit.Core.Articulation {
     [BurstCompile]
     public static class AnchorPositioning {
         [BurstCompile]
-        public static Anchor Position(in NativeArray<SplinePoint> spline, float arc) {
-            if (spline.Length < 2) return Anchor.Default;
+        public static void Position(in NativeArray<SplinePoint> spline, float arc, out Anchor result) {
+            if (spline.Length < 2) {
+                result = Anchor.Default;
+                return;
+            }
 
             float startArc = SplineInterpolation.StartArc(spline);
             float endArc = SplineInterpolation.EndArc(spline);
 
             if (arc < startArc) {
-                return ProjectBefore(spline, arc, startArc);
+                ProjectBefore(spline, arc, startArc, out result);
+                return;
             }
 
             if (arc > endArc) {
-                return ProjectAfter(spline, arc, endArc);
+                ProjectAfter(spline, arc, endArc, out result);
+                return;
             }
 
-            SplinePoint point = SplineInterpolation.Interpolate(spline, arc);
-            return new Anchor(point);
+            SplineInterpolation.Interpolate(spline, arc, out SplinePoint point);
+            result = new Anchor(point);
         }
 
         [BurstCompile]
-        public static Anchor Position(in NativeArray<SplinePoint> spline, float arc, float3 localOffset) {
-            if (spline.Length < 2) return Anchor.Default;
+        public static void Position(in NativeArray<SplinePoint> spline, float arc, in float3 localOffset, out Anchor result) {
+            if (spline.Length < 2) {
+                result = Anchor.Default;
+                return;
+            }
 
             float startArc = SplineInterpolation.StartArc(spline);
             float endArc = SplineInterpolation.EndArc(spline);
 
             if (arc < startArc) {
-                return ProjectBefore(spline, arc, startArc, localOffset);
+                ProjectBefore(spline, arc, startArc, localOffset, out result);
+                return;
             }
 
             if (arc > endArc) {
-                return ProjectAfter(spline, arc, endArc, localOffset);
+                ProjectAfter(spline, arc, endArc, localOffset, out result);
+                return;
             }
 
-            SplinePoint point = SplineInterpolation.Interpolate(spline, arc);
-            return new Anchor(point, localOffset);
+            SplineInterpolation.Interpolate(spline, arc, out SplinePoint point);
+            result = new Anchor(point, localOffset);
         }
 
         [BurstCompile]
-        public static Anchor Position(in NativeArray<SplinePoint> spline, float referenceArc, in AnchorOffset offset) {
+        public static void Position(in NativeArray<SplinePoint> spline, float referenceArc, in AnchorOffset offset, out Anchor result) {
             float arc = referenceArc + offset.Arc;
-            return Position(spline, arc, offset.Local);
+            Position(spline, arc, offset.Local, out result);
         }
 
         [BurstCompile]
-        private static Anchor ProjectBefore(in NativeArray<SplinePoint> spline, float arc, float startArc) {
+        private static void ProjectBefore(in NativeArray<SplinePoint> spline, float arc, float startArc, out Anchor result) {
             SplinePoint edge = spline[0];
             float overshoot = startArc - arc;
             float3 position = edge.Position - edge.Direction * overshoot;
-            return new Anchor(position, edge.Direction, edge.Normal, edge.Lateral, arc);
+            result = new Anchor(position, edge.Direction, edge.Normal, edge.Lateral, arc);
         }
 
         [BurstCompile]
-        private static Anchor ProjectBefore(in NativeArray<SplinePoint> spline, float arc, float startArc, float3 localOffset) {
+        private static void ProjectBefore(in NativeArray<SplinePoint> spline, float arc, float startArc, in float3 localOffset, out Anchor result) {
             SplinePoint edge = spline[0];
             float overshoot = startArc - arc;
             float3 basePosition = edge.Position - edge.Direction * overshoot;
@@ -66,19 +76,19 @@ namespace KexEdit.Core.Articulation {
                 + edge.Direction * localOffset.x
                 + edge.Normal * localOffset.y
                 + edge.Lateral * localOffset.z;
-            return new Anchor(position, edge.Direction, edge.Normal, edge.Lateral, arc);
+            result = new Anchor(position, edge.Direction, edge.Normal, edge.Lateral, arc);
         }
 
         [BurstCompile]
-        private static Anchor ProjectAfter(in NativeArray<SplinePoint> spline, float arc, float endArc) {
+        private static void ProjectAfter(in NativeArray<SplinePoint> spline, float arc, float endArc, out Anchor result) {
             SplinePoint edge = spline[^1];
             float overshoot = arc - endArc;
             float3 position = edge.Position + edge.Direction * overshoot;
-            return new Anchor(position, edge.Direction, edge.Normal, edge.Lateral, arc);
+            result = new Anchor(position, edge.Direction, edge.Normal, edge.Lateral, arc);
         }
 
         [BurstCompile]
-        private static Anchor ProjectAfter(in NativeArray<SplinePoint> spline, float arc, float endArc, float3 localOffset) {
+        private static void ProjectAfter(in NativeArray<SplinePoint> spline, float arc, float endArc, in float3 localOffset, out Anchor result) {
             SplinePoint edge = spline[^1];
             float overshoot = arc - endArc;
             float3 basePosition = edge.Position + edge.Direction * overshoot;
@@ -86,7 +96,7 @@ namespace KexEdit.Core.Articulation {
                 + edge.Direction * localOffset.x
                 + edge.Normal * localOffset.y
                 + edge.Lateral * localOffset.z;
-            return new Anchor(position, edge.Direction, edge.Normal, edge.Lateral, arc);
+            result = new Anchor(position, edge.Direction, edge.Normal, edge.Lateral, arc);
         }
     }
 }

@@ -19,13 +19,13 @@ namespace KexEdit.Core.Articulation {
         }
 
         [BurstCompile]
-        public static SplinePoint Lerp(in SplinePoint a, in SplinePoint b, float t) {
+        public static void Lerp(in SplinePoint a, in SplinePoint b, float t, out SplinePoint result) {
             float arc = math.lerp(a.Arc, b.Arc, t);
             float3 position = math.lerp(a.Position, b.Position, t);
             float3 direction = math.normalize(math.lerp(a.Direction, b.Direction, t));
             float3 lateral = math.normalize(math.lerp(a.Lateral, b.Lateral, t));
             float3 normal = math.normalize(math.cross(direction, lateral));
-            return new SplinePoint(arc, position, direction, normal, lateral);
+            result = new SplinePoint(arc, position, direction, normal, lateral);
         }
 
         public float3 LocalToWorld(float3 local) =>

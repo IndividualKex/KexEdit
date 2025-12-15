@@ -10,7 +10,7 @@ namespace KexEdit.Core.Articulation {
             if (spline.Length < 2) return 0;
 
             float startArc = spline[0].Arc;
-            float endArc = spline[spline.Length - 1].Arc;
+            float endArc = spline[^1].Arc;
 
             if (arc <= startArc) return 0;
             if (arc >= endArc) return spline.Length - 2;
@@ -40,20 +40,26 @@ namespace KexEdit.Core.Articulation {
         }
 
         [BurstCompile]
-        public static SplinePoint Interpolate(in NativeArray<SplinePoint> spline, float arc) {
-            if (spline.Length == 0) return SplinePoint.Default;
-            if (spline.Length == 1) return spline[0];
+        public static void Interpolate(in NativeArray<SplinePoint> spline, float arc, out SplinePoint result) {
+            if (spline.Length == 0) {
+                result = SplinePoint.Default;
+                return;
+            }
+            if (spline.Length == 1) {
+                result = spline[0];
+                return;
+            }
 
             int index = FindIndex(spline, arc);
             float t = GetInterpolationFactor(spline, index, arc);
 
-            return SplinePoint.Lerp(spline[index], spline[index + 1], t);
+            SplinePoint.Lerp(spline[index], spline[index + 1], t, out result);
         }
 
         public static float StartArc(in NativeArray<SplinePoint> spline) =>
             spline.Length > 0 ? spline[0].Arc : 0f;
 
         public static float EndArc(in NativeArray<SplinePoint> spline) =>
-            spline.Length > 0 ? spline[spline.Length - 1].Arc : 0f;
+            spline.Length > 0 ? spline[^1].Arc : 0f;
     }
 }

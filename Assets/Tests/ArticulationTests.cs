@@ -34,7 +34,7 @@ namespace Tests {
             var a = new SplinePoint(0f, float3.zero, math.back(), math.down(), math.right());
             var b = new SplinePoint(10f, new float3(0, 0, -10), math.back(), math.down(), math.right());
 
-            SplinePoint mid = SplinePoint.Lerp(a, b, 0.5f);
+            SplinePoint.Lerp(a, b, 0.5f, out SplinePoint mid);
 
             Assert.AreEqual(5f, mid.Arc, TOLERANCE);
             Assert.AreEqual(-5f, mid.Position.z, TOLERANCE);
@@ -84,7 +84,7 @@ namespace Tests {
         [Test]
         public void SplineInterpolation_Interpolate_AtMidpoint_InterpolatesCorrectly() {
             var spline = CreateStraightSpline(10, 10f);
-            SplinePoint point = SplineInterpolation.Interpolate(spline, 25f);
+            SplineInterpolation.Interpolate(spline, 25f, out SplinePoint point);
             Assert.AreEqual(25f, point.Arc, TOLERANCE);
             Assert.AreEqual(-25f, point.Position.z, TOLERANCE);
             spline.Dispose();
@@ -109,7 +109,7 @@ namespace Tests {
         [Test]
         public void AnchorPositioning_OnSpline_ReturnsCorrectPosition() {
             var spline = CreateStraightSpline(10, 10f);
-            Anchor anchor = AnchorPositioning.Position(spline, 25f);
+            AnchorPositioning.Position(spline, 25f, out Anchor anchor);
 
             Assert.AreEqual(25f, anchor.Arc, TOLERANCE);
             Assert.AreEqual(-25f, anchor.Position.z, TOLERANCE);
@@ -119,7 +119,7 @@ namespace Tests {
         [Test]
         public void AnchorPositioning_BeforeSpline_ProjectsAlongTangent() {
             var spline = CreateStraightSpline(10, 10f);
-            Anchor anchor = AnchorPositioning.Position(spline, -5f);
+            AnchorPositioning.Position(spline, -5f, out Anchor anchor);
 
             Assert.AreEqual(-5f, anchor.Arc, TOLERANCE);
             Assert.AreEqual(5f, anchor.Position.z, TOLERANCE);
@@ -129,7 +129,7 @@ namespace Tests {
         [Test]
         public void AnchorPositioning_AfterSpline_ProjectsAlongTangent() {
             var spline = CreateStraightSpline(10, 10f);
-            Anchor anchor = AnchorPositioning.Position(spline, 100f);
+            AnchorPositioning.Position(spline, 100f, out Anchor anchor);
 
             Assert.AreEqual(100f, anchor.Arc, TOLERANCE);
             Assert.AreEqual(-100f, anchor.Position.z, TOLERANCE);
@@ -140,7 +140,7 @@ namespace Tests {
         public void AnchorPositioning_WithLocalOffset_AppliesOffset() {
             var spline = CreateStraightSpline(10, 10f);
             float3 localOffset = new float3(0f, 2f, 0f);
-            Anchor anchor = AnchorPositioning.Position(spline, 50f, localOffset);
+            AnchorPositioning.Position(spline, 50f, localOffset, out Anchor anchor);
 
             Assert.AreEqual(50f, anchor.Arc, TOLERANCE);
             float3 expectedPos = new float3(0, 0, -50) + math.down() * 2f;
@@ -154,7 +154,7 @@ namespace Tests {
         public void AnchorPositioning_WithAnchorOffset_AppliesArcAndLocal() {
             var spline = CreateStraightSpline(10, 10f);
             var offset = new AnchorOffset(10f, new float3(0f, 1f, 0f));
-            Anchor anchor = AnchorPositioning.Position(spline, 40f, offset);
+            AnchorPositioning.Position(spline, 40f, offset, out Anchor anchor);
 
             Assert.AreEqual(50f, anchor.Arc, TOLERANCE);
             spline.Dispose();
@@ -163,7 +163,7 @@ namespace Tests {
         [Test]
         public void BodyPositioning_FromSingleAnchor_UsesAnchorTransform() {
             var anchor = new Anchor(new float3(1, 2, 3), math.back(), math.down(), math.right(), 10f);
-            BodyTransform body = BodyPositioning.FromAnchor(anchor);
+            BodyPositioning.FromAnchor(anchor, out BodyTransform body);
 
             Assert.AreEqual(anchor.Position.x, body.Position.x, TOLERANCE);
             Assert.AreEqual(anchor.Position.y, body.Position.y, TOLERANCE);
@@ -175,7 +175,7 @@ namespace Tests {
             var leading = new Anchor(new float3(0, 0, 0), math.back(), math.down(), math.right(), 0f);
             var trailing = new Anchor(new float3(0, 0, -10), math.back(), math.down(), math.right(), 10f);
 
-            BodyTransform body = BodyPositioning.FromAnchors(leading, trailing, 0f);
+            BodyPositioning.FromAnchors(leading, trailing, 0f, out BodyTransform body);
 
             float3 forward = math.mul(body.Rotation, math.forward());
             Assert.AreEqual(0f, forward.x, TOLERANCE);
@@ -188,7 +188,7 @@ namespace Tests {
             var leading = new Anchor(new float3(0, 0, 0), math.back(), math.down(), math.right(), 0f);
             var trailing = new Anchor(new float3(0, 0, -10), math.back(), math.down(), math.right(), 10f);
 
-            BodyTransform body = BodyPositioning.FromAnchors(leading, trailing, 0f);
+            BodyPositioning.FromAnchors(leading, trailing, 0f, out BodyTransform body);
 
             Assert.AreEqual(leading.Position.x, body.Position.x, TOLERANCE);
             Assert.AreEqual(leading.Position.y, body.Position.y, TOLERANCE);
@@ -200,7 +200,7 @@ namespace Tests {
             var leading = new Anchor(new float3(0, 0, 0), math.back(), math.down(), math.right(), 0f);
             var trailing = new Anchor(new float3(0, 0, -10), math.back(), math.down(), math.right(), 10f);
 
-            BodyTransform body = BodyPositioning.FromAnchors(leading, trailing, 1f);
+            BodyPositioning.FromAnchors(leading, trailing, 1f, out BodyTransform body);
 
             Assert.AreEqual(trailing.Position.x, body.Position.x, TOLERANCE);
             Assert.AreEqual(trailing.Position.y, body.Position.y, TOLERANCE);
@@ -212,7 +212,7 @@ namespace Tests {
             var leading = new Anchor(new float3(0, 0, 0), math.back(), math.down(), math.right(), 0f);
             var trailing = new Anchor(new float3(0, 0, -10), math.back(), math.down(), math.right(), 10f);
 
-            BodyTransform body = BodyPositioning.FromAnchors(leading, trailing, 0.5f);
+            BodyPositioning.FromAnchors(leading, trailing, 0.5f, out BodyTransform body);
 
             float3 expectedPos = (leading.Position + trailing.Position) * 0.5f;
             Assert.AreEqual(expectedPos.x, body.Position.x, TOLERANCE);
@@ -225,7 +225,7 @@ namespace Tests {
             var leading = new Anchor(new float3(0, 0, 0), math.back(), math.down(), math.right(), 0f);
             var trailing = new Anchor(new float3(0, 0, -10), math.normalize(new float3(0, 0.1f, -1)), math.normalize(new float3(0, -1, -0.1f)), math.right(), 10f);
 
-            BodyTransform body = BodyPositioning.FromAnchors(leading, trailing, 0f);
+            BodyPositioning.FromAnchors(leading, trailing, 0f, out BodyTransform body);
 
             float3 up = math.mul(body.Rotation, math.up());
             Assert.Greater(up.y, 0.9f);
@@ -238,7 +238,7 @@ namespace Tests {
             anchors[1] = new Anchor(new float3(5, 0, -5), math.back(), math.down(), math.right(), 7f);
             anchors[2] = new Anchor(new float3(10, 0, -10), math.back(), math.down(), math.right(), 14f);
 
-            BodyTransform body = BodyPositioning.FromAnchors(anchors, 0f);
+            BodyPositioning.FromAnchors(anchors, 0f, out BodyTransform body);
 
             float3 forward = math.mul(body.Rotation, math.forward());
             float3 expectedForward = math.normalize(anchors[2].Position - anchors[0].Position);
@@ -256,7 +256,7 @@ namespace Tests {
             anchors[1] = new Anchor(new float3(5, 0, -5), math.back(), math.down(), math.right(), 7f);
             anchors[2] = new Anchor(new float3(10, 0, -10), math.back(), math.down(), math.right(), 14f);
 
-            BodyTransform body = BodyPositioning.FromAnchors(anchors, 1);
+            BodyPositioning.FromAnchors(anchors, 1, out BodyTransform body);
 
             Assert.AreEqual(anchors[1].Position.x, body.Position.x, TOLERANCE);
             Assert.AreEqual(anchors[1].Position.y, body.Position.y, TOLERANCE);
@@ -268,7 +268,7 @@ namespace Tests {
         [Test]
         public void CurvedSpline_AnchorFollowsCurve() {
             var spline = CreateCurvedSpline();
-            Anchor mid = AnchorPositioning.Position(spline, 20f);
+            AnchorPositioning.Position(spline, 20f, out Anchor mid);
 
             Assert.AreEqual(10f, mid.Position.x, 0.1f);
             Assert.AreEqual(-12f, mid.Position.z, 0.1f);
@@ -279,10 +279,10 @@ namespace Tests {
         public void CurvedSpline_BodyInterpolatesRotation() {
             var spline = CreateCurvedSpline();
 
-            Anchor leading = AnchorPositioning.Position(spline, 18f);
-            Anchor trailing = AnchorPositioning.Position(spline, 22f);
+            AnchorPositioning.Position(spline, 18f, out Anchor leading);
+            AnchorPositioning.Position(spline, 22f, out Anchor trailing);
 
-            BodyTransform body = BodyPositioning.FromAnchors(leading, trailing, 0.5f);
+            BodyPositioning.FromAnchors(leading, trailing, 0.5f, out BodyTransform body);
 
             float3 forward = math.mul(body.Rotation, math.forward());
             Assert.AreNotEqual(0f, forward.x, "Body should be rotated on curve");
@@ -293,13 +293,13 @@ namespace Tests {
         public void SwappingAnchorOrder_FlipsBodyDirection() {
             var spline = CreateStraightSpline(10, 10f);
 
-            Anchor a = AnchorPositioning.Position(spline, 40f);
-            Anchor b = AnchorPositioning.Position(spline, 60f);
+            AnchorPositioning.Position(spline, 40f, out Anchor a);
+            AnchorPositioning.Position(spline, 60f, out Anchor b);
 
-            BodyTransform forward = BodyPositioning.FromAnchors(a, b, 0f);
-            BodyTransform reversed = BodyPositioning.FromAnchors(b, a, 0f);
+            BodyPositioning.FromAnchors(a, b, 0f, out BodyTransform fwd);
+            BodyPositioning.FromAnchors(b, a, 0f, out BodyTransform reversed);
 
-            float3 forwardDir = math.mul(forward.Rotation, math.forward());
+            float3 forwardDir = math.mul(fwd.Rotation, math.forward());
             float3 reversedDir = math.mul(reversed.Rotation, math.forward());
 
             float dot = math.dot(forwardDir, reversedDir);
