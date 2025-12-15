@@ -59,6 +59,7 @@ KexGraph/
 - `GetPredecessorNodes(uint nodeId, out NativeArray<uint>, Allocator)` - Nodes with edges pointing here
 - `FindSourceNodes(out NativeArray<uint>, Allocator)` - Nodes with no incoming edges
 - `FindSinkNodes(out NativeArray<uint>, Allocator)` - Nodes with no outgoing edges
+- `HasCycle()` - DFS-based cycle detection
 
 ## Dependencies
 

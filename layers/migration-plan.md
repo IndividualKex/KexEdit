@@ -118,9 +118,8 @@ public struct Graph {
 - `FindSinkNodes(out NativeArray<uint>, Allocator)` - nodes with no outgoing edges
 - `TopologicalSort()` - Kahn's algorithm for execution order (future)
 
-**Validation**
+**Validation** ✓ implemented
 - `HasCycle()` - DFS-based cycle detection
-- `Validate()` - returns ValidationResult with errors
 
 **Performance**
 - Burst-compiled jobs for hot paths
@@ -187,7 +186,7 @@ KexEdit/
 - `[Category("Unit")]` - Pure logic, no ECS
 - `[Category("Performance")]` - Burst-compiled benchmarks
 
-**Current Coverage**: 303 tests passing
+**Current Coverage**: 310 tests passing
 - Graph structure creation/disposal
 - Node add/remove/lookup operations
 - Port add/remove/lookup operations
@@ -195,3 +194,4 @@ KexEdit/
 - Outgoing/incoming edge queries
 - Successor/predecessor node queries
 - Source/sink node finding
+- Cycle detection

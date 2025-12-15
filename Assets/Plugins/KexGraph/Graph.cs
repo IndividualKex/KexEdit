@@ -494,5 +494,50 @@ namespace KexGraph {
 
             tempList.Dispose();
         }
+
+        public bool HasCycle() {
+            if (NodeCount == 0) return false;
+
+            var visited = new NativeHashSet<uint>(NodeCount, Allocator.Temp);
+            var recursionStack = new NativeHashSet<uint>(NodeCount, Allocator.Temp);
+
+            bool cycleFound = false;
+            for (int i = 0; i < NodeIds.Length && !cycleFound; i++) {
+                uint nodeId = NodeIds[i];
+                if (!visited.Contains(nodeId)) {
+                    cycleFound = HasCycleDFS(nodeId, visited, recursionStack);
+                }
+            }
+
+            visited.Dispose();
+            recursionStack.Dispose();
+
+            return cycleFound;
+        }
+
+        private bool HasCycleDFS(uint nodeId, NativeHashSet<uint> visited, NativeHashSet<uint> recursionStack) {
+            visited.Add(nodeId);
+            recursionStack.Add(nodeId);
+
+            GetSuccessorNodes(nodeId, out var successors, Allocator.Temp);
+
+            for (int i = 0; i < successors.Length; i++) {
+                uint successorId = successors[i];
+
+                if (!visited.Contains(successorId)) {
+                    if (HasCycleDFS(successorId, visited, recursionStack)) {
+                        successors.Dispose();
+                        return true;
+                    }
+                } else if (recursionStack.Contains(successorId)) {
+                    successors.Dispose();
+                    return true;
+                }
+            }
+
+            successors.Dispose();
+            recursionStack.Remove(nodeId);
+            return false;
+        }
     }
 }
