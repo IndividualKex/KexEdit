@@ -6,181 +6,238 @@ Rebuild KexEdit runtime with hexagonal architecture. Enables Rust/WASM migration
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│              INFRASTRUCTURE ADAPTERS (KexEdit.Adapters)         │
-│   ┌─────────────┐ ┌─────────────┐ ┌─────────────┐               │
-│   │ Unity ECS   │ │   File I/O  │ │ Positioning │  ...          │
-│   │  Systems    │ │  (Kex/JSON) │ │   Systems   │               │
-│   └──────┬──────┘ └──────┬──────┘ └──────┬──────┘               │
-│          └───────────────┼───────────────┘                       │
-│                          ▼                                       │
-└──────────────────────────┼───────────────────────────────────────┘
+│              INFRASTRUCTURE ADAPTERS                            │
+│   ┌─────────────┐ ┌─────────────┐ ┌─────────────┐              │
+│   │ Unity ECS   │ │Serialization│ │ Positioning │  ...         │
+│   │  Systems    │ │  Adapter    │ │   Systems   │              │
+│   └──────┬──────┘ └──────┬──────┘ └──────┬──────┘              │
+│          └───────────────┼───────────────┘                      │
+│                          ▼                                      │
+└──────────────────────────┼──────────────────────────────────────┘
                            │
-┌──────────────────────────┼───────────────────────────────────────┐
-│              NODE TYPES (KexEdit.Nodes.*)                        │
-│   ┌─────────────┐ ┌─────────────┐ ┌─────────────┐               │
-│   │  ForceNode  │ │ GeometricN. │ │ CurvedNode  │  ...          │
-│   └──────┬──────┘ └──────┬──────┘ └──────┬──────┘               │
-│          └───────────────┼───────────────┘                       │
-│                          ▼                                       │
-└──────────────────────────┼───────────────────────────────────────┘
+┌──────────────────────────┼──────────────────────────────────────┐
+│              NODE TYPES (KexEdit.Nodes.*)                       │
+│   ┌─────────────┐ ┌─────────────┐ ┌─────────────┐              │
+│   │  ForceNode  │ │ GeometricN. │ │ CurvedNode  │  ...         │
+│   └──────┬──────┘ └──────┬──────┘ └──────┬──────┘              │
+│          └───────────────┼───────────────┘                      │
+│                          ▼                                      │
+└──────────────────────────┼──────────────────────────────────────┘
                            │
-┌──────────────────────────┼───────────────────────────────────────┐
-│              NODE SCHEMA (KexEdit.Nodes)                         │
-│   PortId, PropertyId, NodeType, NodeSchema, PropertyIndex        │
-└──────────────────────────┼───────────────────────────────────────┘
+┌──────────────────────────┼──────────────────────────────────────┐
+│              NODE SCHEMA (KexEdit.Nodes)                        │
+│   PortId, PropertyId, NodeType, NodeSchema, PropertyIndex       │
+└──────────────────────────┼──────────────────────────────────────┘
                            │
-┌──────────────────────────┼───────────────────────────────────────┐
-│                  CORE (KexEdit.Core)                             │
-│   Point, Frame, Curvature, Forces, Sim, Keyframe                 │
-└──────────────────────────────────────────────────────────────────┘
+┌──────────────────────────┼──────────────────────────────────────┐
+│         GRAPH SCHEMA (KexEdit.Graph.Schema)                     │
+│   TypeId enums, Data contracts, Adapter traits                  │
+└──────────────────────────┼──────────────────────────────────────┘
+                           │
+┌──────────────────────────┼──────────────────────────────────────┐
+│              GRAPH CORE (KexEdit.Graph)                         │
+│   Node, Port, Edge, Graph - pure structure, opaque data blobs   │
+└──────────────────────────┼──────────────────────────────────────┘
+                           │
+┌──────────────────────────┼──────────────────────────────────────┐
+│                  CORE (KexEdit.Core)                            │
+│   Point, Frame, Curvature, Forces, Sim, Keyframe                │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Directory Structure
 
 ```
 KexEdit/
-├── rust-backend/               Rust implementation (production-ready)
-│   ├── kexedit-core/           Pure physics/math
-│   ├── kexedit-nodes/          Node implementations
-│   └── kexedit-ffi/            C FFI layer for Unity
+├── rust-backend/
+│   ├── graph-core/            Generic graph (reusable)
+│   ├── kexedit-graph-schema/  Type mappings, data contracts
+│   ├── kexedit-core/          Pure physics/math
+│   ├── kexedit-nodes/         Node implementations
+│   └── kexedit-ffi/           C FFI layer for Unity
 ├── Assets/Runtime/
-│   ├── Core/                   Pure physics/math (C#)
-│   ├── Nodes/                  Node implementations (C#)
-│   ├── Native/RustCore/        Rust FFI bindings
-│   └── Legacy/                 ECS adapters and legacy code
-│       ├── Track/              Section building adapters
-│       ├── Trains/             Train systems
-│       └── Physics/            Track following, positioning
+│   ├── Graph/                 Generic graph (C#)
+│   ├── Graph.Schema/          Type mappings, data contracts (C#)
+│   ├── Core/                  Pure physics/math (C#)
+│   ├── Nodes/                 Node schema + implementations (C#)
+│   ├── Serialization/         Serialization adapter (C#)
+│   ├── Native/RustCore/       Rust FFI bindings
+│   └── Legacy/                ECS adapters and legacy code
 ```
 
 ## Assembly Dependencies
 
 ```
-KexEdit.Adapters ──► KexEdit.Nodes.Force ──► KexEdit.Nodes ──► KexEdit.Core
-                     KexEdit.Nodes.Geometric ─┘
-                     KexEdit.Nodes.Curved ────┘
-                     (node types cannot depend on each other)
+KexEdit.Serialization ──► KexEdit.Graph.Schema ──► KexEdit.Graph
+         │                        │
+         ▼                        ▼
+KexEdit.Nodes.* ──────► KexEdit.Nodes ──────────► KexEdit.Core
 ```
 
 ## Design Principles
 
 - **Core is Physics-Only**: No awareness of train direction, section boundaries, or friction resets
+- **Graph is Domain-Agnostic**: Pure structure with opaque data blobs, no type awareness
 - **Nodes Own State Management**: Node types control initial state for each section
 - **Hexagonal Architecture**: Core has no dependencies; adapters use core ports
 - **Single Source of Truth**: Continuous buffers; systems interpret as needed
-- **Zero-Copy Aliasing**: Multiple systems read same data via buffer lookups
 - **Testability**: Every layer has comprehensive tests before adding outer layers
 - **Portability**: Architecture designed for Rust/WASM port
 
-## Key Architectural Decisions
+## Graph + Serialization Architecture
 
-### Hexagonal Layers
+### Layer 1: Graph Core (Pure, Reusable)
 
-Core → Nodes → Adapters. Dependencies flow inward. Core is pure physics with no Unity dependencies.
-
-### Rust FFI (Production Ready)
-
-Rust backend validated and outperforms Burst (3.5mm vs 5.2mm drift). Toggle via `USE_RUST_BACKEND` compilation flag.
-
-**Build**: `./build-rust.sh` (cross-platform)
-
-### Continuous Track Buffer
-
-**Previous architecture**: Per-section `DynamicBuffer<Point>` - positioning systems needed graph knowledge to traverse sections.
-
-**New architecture**: Single continuous `DynamicBuffer<TrackPoint>` for entire track.
-
-```
-Track Entity
-└── DynamicBuffer<TrackPoint>  (continuous, resampled, entire track)
-     ↓ (zero-copy read-only aliasing)
-     ├── Rendering System (batches for GPU)
-     ├── Positioning System (sequential reads, no graph knowledge)
-     ├── Physics System (distance queries)
-     └── UI Systems (playhead, stats)
-```
-
-**Benefits**:
-- Positioning has no section/graph dependency
-- Seamless boundary crossing (train at indices [145.3, 147.8, 150.2])
-- Zero-copy via `BufferLookup<TrackPoint>(isReadOnly: true)`
-- Cache-friendly continuous memory
-- Systems choose their own chunking/interpretation
-
-**Data Contract**:
+Generic graph structure with opaque data. No type awareness.
 
 ```csharp
-public struct TrackPoint : IBufferElementData {
-    public float3 Position;   // World position
-    public float3 Direction;  // Forward tangent
-    public float3 Normal;     // Up vector
-    public float3 Lateral;    // Right vector
-    public float Distance;    // Cumulative arc length (for queries)
+// KexEdit.Graph - completely domain-agnostic
+public struct Node {
+    public ulong Id;
+    public float2 Position;
+    public byte[] Data;           // Opaque payload
+    public ulong[] InputPorts;
+    public ulong[] OutputPorts;
+}
+
+public struct Port {
+    public ulong Id;
+    public byte[] Data;           // Opaque payload
+}
+
+public struct Edge {
+    public ulong Id;
+    public ulong Source;          // Port ID
+    public ulong Target;          // Port ID
+}
+
+public struct Graph {
+    public Node[] Nodes;
+    public Port[] Ports;
+    public Edge[] Edges;
+    public byte[] Metadata;       // UI state, etc.
 }
 ```
 
-**Resampling Adapter**: Future system will convert per-section `Point` → continuous `TrackPoint` at fixed sample rate or quality criteria.
+### Layer 2: Graph Schema (KexEdit-specific bindings)
 
-### Legacy Naming Mapping
+Maps semantic types to graph blobs. Defines data contracts and adapter traits.
 
-The legacy code used inverted naming. Clean code uses physically accurate names:
+```csharp
+// KexEdit.Graph.Schema - project-specific type mappings
 
-| Legacy Field         | Clean Name       | Meaning                           |
-| -------------------- | ---------------- | --------------------------------- |
-| `position`           | `HeartPosition`  | Rider center position             |
-| `totalLength`        | `HeartArc`       | Cumulative rider path length      |
-| `totalHeartLength`   | `SpineArc`       | Cumulative track rail path length |
-| `distanceFromLast`   | `SpineAdvance`   | Per-step track rail distance      |
-| `heartDistanceFromLast` | `HeartAdvance` | Per-step rider distance        |
-| `frictionCompensation` | `FrictionOrigin` | SpineArc baseline for friction |
-| `heart`              | `HeartOffset`    | Distance from heart to spine      |
+public enum NodeTypeId : byte {
+    Anchor = 1,
+    ForceSection = 2,
+    GeometricSection = 3,
+    // ...
+}
 
-**Heart** = rider center (primary reference for forces); **Spine** = track rail (derived from heart)
+public enum PortTypeId : byte {
+    Anchor = 1,
+    Path = 2,
+    Float = 3,
+    Float3 = 4,
+}
+
+// Data contracts - shapes for serialization
+public struct AnchorContract {
+    public float3 SpinePosition;
+    public float3 Direction;
+    public float Roll;
+    public float Velocity;
+    public float HeartOffset;
+    public float Friction;
+    public float Resistance;
+}
+
+// Adapter trait
+public interface INodeAdapter {
+    NodeTypeId TypeId { get; }
+    byte[] ToContract(object domain);
+    object FromContract(byte[] data);
+}
+```
+
+### Layer 3: Serialization Adapter (Implementations)
+
+Dedicated assembly that implements adapters for all serializable types.
+
+```csharp
+// KexEdit.Serialization - converts domain ↔ contracts
+
+public class AnchorAdapter : INodeAdapter {
+    public NodeTypeId TypeId => NodeTypeId.Anchor;
+
+    public byte[] ToContract(object domain) {
+        var point = (Point)domain;
+        var contract = new AnchorContract {
+            SpinePosition = point.SpinePosition,
+            Direction = point.Direction,
+            Roll = point.Roll,
+            // ...
+        };
+        return BinarySerializer.Serialize(contract);
+    }
+
+    public object FromContract(byte[] data) {
+        var contract = BinarySerializer.Deserialize<AnchorContract>(data);
+        return Point.Create(
+            contract.SpinePosition,
+            contract.Direction,
+            contract.Roll,
+            // ...
+        );
+    }
+}
+
+// Registry wires up all adapters
+public static class AdapterRegistry {
+    public static void RegisterAll(Registry registry) {
+        registry.Register(new AnchorAdapter());
+        registry.Register(new ForceSectionAdapter());
+        // ...
+    }
+}
+```
+
+### Benefits
+
+- **Domain-agnostic graph**: Graph layer is reusable, knows nothing about coasters
+- **Self-describing format**: Type tags + opaque blobs, easy versioning
+- **No manual flag management**: Add fields to contracts, serialization handles it
+- **Type-safe ports**: Proper typed values instead of PointData field overloading
+- **Identical Rust/C#**: Same three layers, same contracts
+- **Easy migration**: V1 → V2 converter reads old format, writes new graph
+
+## Rust FFI
+
+Rust backend validated and outperforms Burst. Toggle via `USE_RUST_BACKEND` flag.
+
+**Build**: `./build-rust.sh` (cross-platform)
+
+## Continuous Track Buffer
+
+Single continuous `DynamicBuffer<TrackPoint>` for entire track, enabling zero-copy aliasing across systems.
+
+```csharp
+public struct TrackPoint : IBufferElementData {
+    public float3 Position;
+    public float3 Direction;
+    public float3 Normal;
+    public float3 Lateral;
+    public float Distance;
+}
+```
 
 ## Testing
 
-**Strategy**: Unit tests → Parameterized edge cases → Golden fixtures (265+ tests)
+**Run tests**: `./run-tests.sh` (all), `./run-tests.sh TestName` (filtered), `./run-tests.sh --rust-backend` (Rust)
 
-**Golden fixtures**: `shuttle.kex`, `veloci.kex`, `all_types.kex` (validated against dev branch)
+## Next Steps
 
-**Run tests**:
-- All: `./run-tests.sh`
-- Filtered: `./run-tests.sh TestName`
-- Rust backend: `./run-tests.sh --rust-backend`
-
-**Coverage**:
-- Rust: 76 core tests, 57 node tests
-- C#: Core, Nodes, ECS adapters all validated
-- FFI: Integration tests validate C# ↔ Rust equivalence
-
-## Current Status
-
-### ✅ Completed
-
-- Hexagonal architecture (Core → Nodes → Adapters)
-- Rust implementation: production-ready, outperforms Burst
-- Node types: Force, Geometric, Curved, CopyPath, Bridge
-- ECS adapters: All Build*System tests passing
-- Comprehensive test suite: 265+ tests
-
-### 🔧 Next Steps
-
-1. **Track Buffer Architecture**
-   - Implement continuous `DynamicBuffer<TrackPoint>`
-   - Create resampling adapter (Point → TrackPoint)
-   - Migrate positioning systems to new buffer
-
-2. **Positioning System Rebuild**
-   - Pure positioning logic (no graph knowledge)
-   - Comprehensive tests with synthetic tracks
-   - Replace brittle train car positioning
-
-3. **Additional Rust Node Types**
-   - Port remaining node types to Rust
-   - Maintain golden test validation
-
-### 🎯 Long-term Goals
-
-- **WASM Target**: Compile Rust core to WASM for WebGL builds
-- **GPU Acceleration**: Move force integration to compute shaders
-- **Legacy Removal**: Complete migration to adapter pattern
+1. **Graph Core**: Implement generic graph structure (Burst-first)
+2. **Graph Schema**: Define type IDs and data contracts
+3. **Serialization Adapter**: Implement adapters for all node/port types
+4. **V1 → V2 Migration**: One-way converter from legacy format
+5. **Deprecate Legacy**: Remove old serialization after validation
