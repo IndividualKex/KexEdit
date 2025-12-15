@@ -24,9 +24,9 @@ namespace KexGraph {
         public NativeList<uint> EdgeTargets;
 
         private NativeHashMap<uint, int> _nodeIndexMap;
+        private NativeHashMap<uint, int> _portIndexMap;
         private uint _nextNodeId;
         private uint _nextPortId;
-        private uint _nextEdgeId;
 
         public readonly int NodeCount => NodeIds.IsCreated ? NodeIds.Length : 0;
         public readonly int PortCount => PortIds.IsCreated ? PortIds.Length : 0;
@@ -52,9 +52,9 @@ namespace KexGraph {
                 EdgeTargets = new NativeList<uint>(allocator),
 
                 _nodeIndexMap = new NativeHashMap<uint, int>(16, allocator),
+                _portIndexMap = new NativeHashMap<uint, int>(16, allocator),
                 _nextNodeId = 1,
                 _nextPortId = 1,
-                _nextEdgeId = 1,
             };
         }
 
@@ -77,6 +77,7 @@ namespace KexGraph {
             if (EdgeTargets.IsCreated) EdgeTargets.Dispose();
 
             if (_nodeIndexMap.IsCreated) _nodeIndexMap.Dispose();
+            if (_portIndexMap.IsCreated) _portIndexMap.Dispose();
         }
 
         public uint AddNode(uint nodeType, float2 position) {
@@ -133,6 +134,141 @@ namespace KexGraph {
             NodeOutputCount.RemoveAt(lastIndex);
 
             _nodeIndexMap.Remove(nodeId);
+        }
+
+        public bool TryGetPortIndex(uint portId, out int index) {
+            if (_portIndexMap.TryGetValue(portId, out index)) {
+                return true;
+            }
+            index = -1;
+            return false;
+        }
+
+        public uint AddInputPort(uint nodeId, uint portType) {
+            if (!TryGetNodeIndex(nodeId, out int nodeIndex)) {
+                return 0;
+            }
+
+            uint portId = _nextPortId++;
+
+            PortIds.Add(portId);
+            PortTypes.Add(portType);
+            PortOwners.Add(nodeId);
+            PortIsInput.Add(true);
+
+            _portIndexMap.Add(portId, PortIds.Length - 1);
+
+            int currentCount = NodeInputCount[nodeIndex];
+            if (currentCount == 0) {
+                NodeInputStart[nodeIndex] = PortIds.Length - 1;
+            }
+            NodeInputCount[nodeIndex] = currentCount + 1;
+
+            return portId;
+        }
+
+        public uint AddOutputPort(uint nodeId, uint portType) {
+            if (!TryGetNodeIndex(nodeId, out int nodeIndex)) {
+                return 0;
+            }
+
+            uint portId = _nextPortId++;
+
+            PortIds.Add(portId);
+            PortTypes.Add(portType);
+            PortOwners.Add(nodeId);
+            PortIsInput.Add(false);
+
+            _portIndexMap.Add(portId, PortIds.Length - 1);
+
+            int currentCount = NodeOutputCount[nodeIndex];
+            if (currentCount == 0) {
+                NodeOutputStart[nodeIndex] = PortIds.Length - 1;
+            }
+            NodeOutputCount[nodeIndex] = currentCount + 1;
+
+            return portId;
+        }
+
+        public void GetInputPorts(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            if (!TryGetNodeIndex(nodeId, out int nodeIndex)) {
+                result = new NativeArray<uint>(0, allocator);
+                return;
+            }
+
+            int count = NodeInputCount[nodeIndex];
+            if (count == 0) {
+                result = new NativeArray<uint>(0, allocator);
+                return;
+            }
+
+            result = new NativeArray<uint>(count, allocator);
+            int resultIndex = 0;
+
+            for (int i = 0; i < PortIds.Length; i++) {
+                if (PortOwners[i] == nodeId && PortIsInput[i]) {
+                    result[resultIndex++] = PortIds[i];
+                }
+            }
+        }
+
+        public void GetOutputPorts(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            if (!TryGetNodeIndex(nodeId, out int nodeIndex)) {
+                result = new NativeArray<uint>(0, allocator);
+                return;
+            }
+
+            int count = NodeOutputCount[nodeIndex];
+            if (count == 0) {
+                result = new NativeArray<uint>(0, allocator);
+                return;
+            }
+
+            result = new NativeArray<uint>(count, allocator);
+            int resultIndex = 0;
+
+            for (int i = 0; i < PortIds.Length; i++) {
+                if (PortOwners[i] == nodeId && !PortIsInput[i]) {
+                    result[resultIndex++] = PortIds[i];
+                }
+            }
+        }
+
+        public void RemovePort(uint portId) {
+            if (!TryGetPortIndex(portId, out int index)) {
+                return;
+            }
+
+            uint ownerId = PortOwners[index];
+            bool isInput = PortIsInput[index];
+
+            int lastIndex = PortIds.Length - 1;
+
+            if (index != lastIndex) {
+                uint lastPortId = PortIds[lastIndex];
+
+                PortIds[index] = PortIds[lastIndex];
+                PortTypes[index] = PortTypes[lastIndex];
+                PortOwners[index] = PortOwners[lastIndex];
+                PortIsInput[index] = PortIsInput[lastIndex];
+
+                _portIndexMap[lastPortId] = index;
+            }
+
+            PortIds.RemoveAt(lastIndex);
+            PortTypes.RemoveAt(lastIndex);
+            PortOwners.RemoveAt(lastIndex);
+            PortIsInput.RemoveAt(lastIndex);
+
+            _portIndexMap.Remove(portId);
+
+            if (TryGetNodeIndex(ownerId, out int nodeIndex)) {
+                if (isInput) {
+                    NodeInputCount[nodeIndex]--;
+                } else {
+                    NodeOutputCount[nodeIndex]--;
+                }
+            }
         }
     }
 }

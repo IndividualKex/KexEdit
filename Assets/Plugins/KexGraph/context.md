@@ -32,10 +32,20 @@ KexGraph/
 
 ## Entrypoints
 
-`Graph.Create(Allocator)` - Creates new graph with explicit allocator
-`AddNode(uint nodeType, float2 position)` - Returns unique node ID
-`RemoveNode(uint nodeId)` - Swap-and-pop removal
-`TryGetNodeIndex(uint nodeId, out int index)` - O(1) lookup via hashmap
+**Graph Lifecycle**
+- `Graph.Create(Allocator)` - Creates new graph with explicit allocator
+
+**Node Operations**
+- `AddNode(uint nodeType, float2 position)` - Returns unique node ID
+- `RemoveNode(uint nodeId)` - Swap-and-pop removal
+- `TryGetNodeIndex(uint nodeId, out int index)` - O(1) lookup via hashmap
+
+**Port Operations**
+- `AddInputPort(uint nodeId, uint portType)` - Returns unique port ID
+- `AddOutputPort(uint nodeId, uint portType)` - Returns unique port ID
+- `GetInputPorts(uint nodeId, out NativeArray<uint>, Allocator)` - Caller owns memory
+- `GetOutputPorts(uint nodeId, out NativeArray<uint>, Allocator)` - Caller owns memory
+- `RemovePort(uint portId)` - Updates node port counts
 
 ## Dependencies
 

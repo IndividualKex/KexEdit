@@ -37,6 +37,7 @@
   <Project Path="Unity.Physics.Hybrid.csproj" />
   <Project Path="Unity.Burst.CodeGen.csproj" />
   <Project Path="Unity.Cinemachine.csproj" />
+  <Project Path="Tests.csproj" />
   <Project Path="Unity.Addressables.DocExampleCode.Editor.Tests.csproj" />
   <Project Path="Unity.VisualScripting.Flow.csproj" />
   <Project Path="KexEdit.Core.csproj" />
@@ -53,7 +54,6 @@
   <Project Path="Unity.Serialization.csproj" />
   <Project Path="Unity.Numerics.Linear.Dense.csproj" />
   <Project Path="Unity.Entities.TestComponents.csproj" />
-  <Project Path="Tests.csproj" />
   <Project Path="Unity.Burst.Editor.csproj" />
   <Project Path="Unity.VisualScripting.State.csproj" />
   <Project Path="Unity.InternalAPIEditorBridge.002.csproj" />

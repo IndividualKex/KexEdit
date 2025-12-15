@@ -98,12 +98,12 @@ public struct Graph {
 
 ### Phase 1: Complete KexGraph Core
 
-**Port Operations**
+**Port Operations** ✓ implemented
 - `AddInputPort(uint nodeId, uint portType)` → uint portId
 - `AddOutputPort(uint nodeId, uint portType)` → uint portId
-- `RemovePort(uint portId)` - cascades to edges
-- `GetInputPorts(uint nodeId)` → NativeArray<uint>
-- `GetOutputPorts(uint nodeId)` → NativeArray<uint>
+- `RemovePort(uint portId)` - updates node port counts
+- `GetInputPorts(uint nodeId, out NativeArray<uint>, Allocator)` - caller owns memory
+- `GetOutputPorts(uint nodeId, out NativeArray<uint>, Allocator)` - caller owns memory
 
 **Edge Operations**
 - `AddEdge(uint sourcePortId, uint targetPortId)` → uint edgeId
@@ -185,6 +185,7 @@ KexEdit/
 - `[Category("Unit")]` - Pure logic, no ECS
 - `[Category("Performance")]` - Burst-compiled benchmarks
 
-**Current Coverage**: 14 tests passing
+**Current Coverage**: 31 tests passing
 - Graph structure creation/disposal
 - Node add/remove/lookup operations
+- Port add/remove/lookup operations
