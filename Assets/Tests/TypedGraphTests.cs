@@ -186,9 +186,9 @@ namespace NodeGraph.Tests {
             uint forceId = graph.CreateNode(NodeType.Force, float2.zero,
                 out var forceIn, out var forceOut, Allocator.Temp);
 
-            graph.ValidateConnection(anchorOut[0], forceIn[0], out var result);
+            bool valid = graph.ValidateConnection(anchorOut[0], forceIn[0], out var error);
 
-            Assert.IsTrue(result.IsValid);
+            Assert.IsTrue(valid);
 
             anchorIn.Dispose();
             anchorOut.Dispose();
@@ -207,10 +207,10 @@ namespace NodeGraph.Tests {
                 out var forceIn, out var forceOut, Allocator.Temp);
 
             // Anchor output (PortId.Anchor) to Duration input (PortId.Duration)
-            graph.ValidateConnection(anchorOut[0], forceIn[1], out var result);
+            bool valid = graph.ValidateConnection(anchorOut[0], forceIn[1], out var error);
 
-            Assert.IsFalse(result.IsValid);
-            Assert.AreEqual(ValidationError.IncompatiblePortTypes, result.Error);
+            Assert.IsFalse(valid);
+            Assert.AreEqual(ValidationError.IncompatiblePortTypes, error);
 
             anchorIn.Dispose();
             anchorOut.Dispose();
@@ -228,10 +228,10 @@ namespace NodeGraph.Tests {
             uint node2 = graph.CreateNode(NodeType.Force, float2.zero,
                 out var in2, out var out2, Allocator.Temp);
 
-            graph.ValidateConnection(out1[0], out2[0], out var result);
+            bool valid = graph.ValidateConnection(out1[0], out2[0], out var error);
 
-            Assert.IsFalse(result.IsValid);
-            Assert.AreEqual(ValidationError.TargetMustBeInput, result.Error);
+            Assert.IsFalse(valid);
+            Assert.AreEqual(ValidationError.TargetMustBeInput, error);
 
             in1.Dispose();
             out1.Dispose();
@@ -249,10 +249,10 @@ namespace NodeGraph.Tests {
             uint node2 = graph.CreateNode(NodeType.Force, float2.zero,
                 out var in2, out var out2, Allocator.Temp);
 
-            graph.ValidateConnection(in1[0], out2[0], out var result);
+            bool valid = graph.ValidateConnection(in1[0], out2[0], out var error);
 
-            Assert.IsFalse(result.IsValid);
-            Assert.AreEqual(ValidationError.SourceMustBeOutput, result.Error);
+            Assert.IsFalse(valid);
+            Assert.AreEqual(ValidationError.SourceMustBeOutput, error);
 
             in1.Dispose();
             out1.Dispose();
@@ -268,10 +268,10 @@ namespace NodeGraph.Tests {
             uint nodeId = graph.CreateNode(NodeType.Force, float2.zero,
                 out var inputs, out var outputs, Allocator.Temp);
 
-            graph.ValidateConnection(outputs[0], inputs[0], out var result);
+            bool valid = graph.ValidateConnection(outputs[0], inputs[0], out var error);
 
-            Assert.IsFalse(result.IsValid);
-            Assert.AreEqual(ValidationError.SelfConnection, result.Error);
+            Assert.IsFalse(valid);
+            Assert.AreEqual(ValidationError.SelfConnection, error);
 
             inputs.Dispose();
             outputs.Dispose();
@@ -287,9 +287,9 @@ namespace NodeGraph.Tests {
             uint forceId = graph.CreateNode(NodeType.Force, float2.zero,
                 out var forceIn, out var forceOut, Allocator.Temp);
 
-            uint edgeId = graph.AddValidatedEdge(anchorOut[0], forceIn[0], out var result);
+            uint edgeId = graph.AddValidatedEdge(anchorOut[0], forceIn[0], out var error);
 
-            Assert.IsTrue(result.IsValid);
+            Assert.AreEqual(ValidationError.None, error);
             Assert.AreNotEqual(0u, edgeId);
             Assert.AreEqual(1, graph.EdgeCount);
 
@@ -309,9 +309,9 @@ namespace NodeGraph.Tests {
             uint forceId = graph.CreateNode(NodeType.Force, float2.zero,
                 out var forceIn, out var forceOut, Allocator.Temp);
 
-            uint edgeId = graph.AddValidatedEdge(anchorOut[0], forceIn[1], out var result);
+            uint edgeId = graph.AddValidatedEdge(anchorOut[0], forceIn[1], out var error);
 
-            Assert.IsFalse(result.IsValid);
+            Assert.AreNotEqual(ValidationError.None, error);
             Assert.AreEqual(0u, edgeId);
             Assert.AreEqual(0, graph.EdgeCount);
 

@@ -14,7 +14,7 @@ NodeGraph/
 ├── KexEdit.NodeGraph.asmdef     # Assembly definition
 ├── TypedGraphExtensions.cs      # Type-safe node creation and lookups
 ├── ConnectionValidator.cs       # Schema-compliant connection validation
-├── ValidationResult.cs          # Validation error types
+├── ValidationError.cs           # Connection validation error codes
 └── PortDataType.cs              # Port data type classification and defaults
 ```
 
@@ -44,9 +44,9 @@ NodeGraph/
 - `graph.RemoveNodeCascade(uint nodeId)` - Remove node, ports, and connected edges
 
 **Connection Validation**
-- `graph.ValidateConnection(uint sourcePortId, uint targetPortId, out ValidationResult)` - Check connection validity
-- `graph.AddValidatedEdge(uint sourcePortId, uint targetPortId, out ValidationResult)` - Create edge if valid
-- `graph.ValidateAllEdges(out int firstInvalidEdgeIndex)` - Validate all edges
+- `graph.ValidateConnection(uint sourcePortId, uint targetPortId, out ValidationError) → bool` - Check connection validity
+- `graph.AddValidatedEdge(uint sourcePortId, uint targetPortId, out ValidationError) → uint` - Create edge if valid
+- `graph.ValidateAllEdges(out int firstInvalidEdgeIndex) → bool` - Validate all edges
 
 **PortId Extensions**
 - `portId.DataType()` - Returns PortDataType (Anchor/Path/Scalar/Vector)
