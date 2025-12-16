@@ -34,6 +34,7 @@ KexEdit/
 │   ├── Runtime/  # Application layer (hexagonal architecture)
 │   │   ├── Core/  # Domain layer - pure physics/math (KexEdit.Core)
 │   │   ├── Nodes/  # Node types (KexEdit.Nodes.*)
+│   │   ├── NodeGraph/  # KexEdit-aware graph extensions (KexEdit.NodeGraph)
 │   │   ├── Native/  # Rust FFI bindings (KexEdit.Native.RustCore)
 │   │   ├── Plugins/  # Native DLLs (kexedit_core.dll)
 │   │   ├── Legacy/  # Monolithic runtime being hollowed out (KexEdit)
@@ -114,6 +115,7 @@ KexEdit/
 ## Where to add code
 
 - Generic graph library → `Assets/Plugins/KexGraph/`
+- KexEdit-aware graph extensions → `Assets/Runtime/NodeGraph/`
 - Portable physics/math (C#) → `Assets/Runtime/Core/`
 - Spline articulation (C#) → `Assets/Runtime/Core/Articulation/`
 - Portable physics/math (Rust) → `rust-backend/kexedit-core/`

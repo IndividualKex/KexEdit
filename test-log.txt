@@ -2,8 +2,8 @@
 Built from '6000.3/respin/6000.3.1f1-f56f53296c2c' branch; Version is '6000.3.1f1 (37142da19a94) revision 3609645'; Using compiler version '194234433'; Build Type 'Release'
 OS: 'Windows 11  (10.0.26200) 64bit Professional' Language: 'en' Physical Memory: 65458 MB
 BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
-Date: 2025-12-16T00:54:04Z
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan" at "2025-12-16T00:54:04.1952328Z"
+Date: 2025-12-16T01:46:00Z
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan" at "2025-12-16T01:46:00.6805211Z"
 
 COMMAND LINE ARGUMENTS:
 C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Unity.exe

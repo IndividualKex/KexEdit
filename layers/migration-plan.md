@@ -125,12 +125,16 @@ public struct Graph {
 - Burst-compiled jobs for hot paths
 - Benchmarks: <1ms for 1000 node operations
 
-### Phase 2: Graph Schema Layer
+### Phase 2: NodeGraph Layer ✓ implemented
 
-**Type System** (`Assets/Runtime/Graph.Schema/`)
-- NodeTypeId, PortTypeId enums specific to KexEdit
-- Type validation rules (what connects to what)
-- Adapter traits for serialization
+**KexEdit.NodeGraph** (`Assets/Runtime/NodeGraph/`)
+- Type-safe `Graph` extensions using `NodeType` and `PortId` enums
+- `graph.CreateNode(NodeType, position, out inputs, out outputs, allocator)` - auto-wires ports per schema
+- `graph.TryGetNodeType/TryGetPortType/TryGetInputPort/TryGetOutputPort` - typed lookups
+- `graph.RemoveNodeCascade(nodeId)` - cascade removal of ports and edges
+- `graph.ValidateConnection/AddValidatedEdge/ValidateAllEdges` - schema-compliant validation
+- `portId.DataType()/DefaultValue()` - port data type classification
+- 10 passing tests
 
 ### Phase 3: Integration
 
@@ -163,12 +167,17 @@ KexEdit/
 │   ├── Runtime/
 │   │   ├── Core/                  Physics/math primitives
 │   │   ├── Nodes/                 Node schema + implementations
+│   │   ├── NodeGraph/             KexEdit-aware graph extensions ✓
+│   │   │   ├── TypedGraphExtensions.cs
+│   │   │   ├── ConnectionValidator.cs
+│   │   │   ├── ValidationResult.cs
+│   │   │   └── PortDataType.cs
 │   │   └── Legacy/                ECS adapters and existing code
 │   └── Tests/
 │       ├── GraphStructureTests.cs ✓
-│       └── GraphNodeTests.cs      ✓
+│       ├── GraphNodeTests.cs      ✓
+│       └── TypedGraphTests.cs     ✓
 └── rust-backend/                  Future Rust port
-    ├── graph-core/
     ├── kexedit-core/
     ├── kexedit-nodes/
     └── kexedit-ffi/
@@ -186,7 +195,7 @@ KexEdit/
 - `[Category("Unit")]` - Pure logic, no ECS
 - `[Category("Performance")]` - Burst-compiled benchmarks
 
-**Current Coverage**: 310 tests passing
+**Current Coverage**: 320 tests passing
 - Graph structure creation/disposal
 - Node add/remove/lookup operations
 - Port add/remove/lookup operations
@@ -195,3 +204,6 @@ KexEdit/
 - Successor/predecessor node queries
 - Source/sink node finding
 - Cycle detection
+- Typed node creation with auto-wired ports
+- Connection validation (port type matching, direction checks)
+- Port data type classification
