@@ -4,10 +4,10 @@ Node schema layer - shared vocabulary for node types.
 
 ## Purpose
 
-- `PortId` - graph connection identifiers (inputs/outputs between nodes)
-- `PropertyId` - keyframe property identifiers (authored curve data)
-- `NodeType` - 8 core node types
-- `NodeSchema` - port/property contracts per node type (Burst-compiled static methods)
+- `NodeType` - 10 node types (Scalar/Vector leaf nodes + 8 track nodes)
+- `PortId` - graph port identifiers (Scalar/Vector generic + typed ports)
+- `PropertyId` - keyframe property identifiers
+- `NodeSchema` - port/property contracts per node type (Burst-compiled)
 - `PropertyIndex` - serialization index ↔ PropertyId mapping
 - `IterationConfig` - time/distance iteration params
 
@@ -15,31 +15,39 @@ Node schema layer - shared vocabulary for node types.
 
 ```
 Nodes/
-├── PortId.cs           # Graph ports (Anchor, Path, Duration, etc.)
-├── PropertyId.cs       # Keyframe properties (RollSpeed, NormalForce, etc.)
-├── NodeType.cs         # 8 node types
+├── NodeType.cs         # 10 node types (Scalar, Vector first)
+├── PortId.cs           # Graph ports (Scalar, Vector, Anchor, Path, etc.)
+├── PropertyId.cs       # Keyframe properties
 ├── NodeSchema.cs       # Static schema queries
 ├── PropertyIndex.cs    # Serialization mapping
 ├── IterationConfig.cs
-├── Anchor/             # AnchorNode - creates initial State from position/rotation
-├── Bridge/             # BridgeNode - Bezier curve between anchors
-├── CopyPath/           # CopyPathNode - copies/transforms existing path
-├── Curved/             # CurvedNode - arc/helix sections
-├── Force/              # ForceNode - FVD force-based track generation
-├── Geometric/          # GeometricNode - pitch/yaw/roll-based generation
-├── Reverse/            # ReverseNode - reverses anchor direction
-└── ReversePath/        # ReversePathNode - reverses path order/orientation
+├── Anchor/             # Creates initial state from position/rotation
+├── Bridge/             # Bezier curve between anchors
+├── CopyPath/           # Copies/transforms existing path
+├── Curved/             # Arc/helix sections
+├── Force/              # FVD force-based track generation
+├── Geometric/          # Pitch/yaw/roll-based generation
+├── Reverse/            # Reverses anchor direction
+└── ReversePath/        # Reverses path order/orientation
 ```
 
-## Legacy Types (Not in Refactor)
+## Node Types
 
-The old KexEdit solution had `Mesh` and `Append` node types. These were vestigial workarounds for UI/rendering concerns and do not belong in the clean core runtime. They are intentionally excluded from this refactored solution.
+**Leaf nodes** (value injection):
+- `Scalar` - outputs generic float, connects to any scalar input
+- `Vector` - outputs generic float3, connects to any vector input
+
+**Track nodes**: Force, Geometric, Curved, CopyPath, Bridge, Anchor, Reverse, ReversePath
 
 ## Port Categories
 
-**PortId** - Graph connections: `Anchor`, `Path`, `Duration`, `Radius`, `Arc`, etc.
+**PortId** types map to **PortDataType** categories:
+- `Scalar` → any scalar port (Duration, Radius, Arc, etc.)
+- `Vector` → any vector port (Position, Rotation)
+- `Anchor` → Anchor ports only
+- `Path` → Path ports only
 
-**PropertyId** - Keyframe curves: `RollSpeed`, `NormalForce`, `LateralForce`, `PitchSpeed`, `YawSpeed`, `DrivenVelocity`, `HeartOffset`, `Friction`, `Resistance`, `TrackStyle`
+**PropertyId** - Keyframe curves: RollSpeed, NormalForce, LateralForce, PitchSpeed, YawSpeed, DrivenVelocity, HeartOffset, Friction, Resistance, TrackStyle
 
 ## Serialization Index Mapping
 

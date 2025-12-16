@@ -1,12 +1,14 @@
 namespace KexEdit.Nodes {
     public enum NodeType : byte {
-        Force = 0,
-        Geometric = 1,
-        Curved = 2,
-        CopyPath = 3,
-        Bridge = 4,
-        Anchor = 5,
-        Reverse = 6,
-        ReversePath = 7,
+        Scalar = 0,
+        Vector = 1,
+        Force = 2,
+        Geometric = 3,
+        Curved = 4,
+        CopyPath = 5,
+        Bridge = 6,
+        Anchor = 7,
+        Reverse = 8,
+        ReversePath = 9,
     }
 }

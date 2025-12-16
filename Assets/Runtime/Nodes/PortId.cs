@@ -14,5 +14,7 @@ namespace KexEdit.Nodes {
         End = 11,
         Position = 12,
         Rotation = 13,
+        Scalar = 14,
+        Vector = 15,
     }
 }

@@ -56,6 +56,36 @@ namespace NodeGraph.Tests {
         }
 
         [Test]
+        public void CreateNode_Scalar_CreatesNoInputsOneOutput() {
+            var graph = Graph.Create(Allocator.Temp);
+
+            graph.CreateNode(NodeType.Scalar, float2.zero,
+                out var inputs, out var outputs, Allocator.Temp);
+
+            Assert.AreEqual(0, inputs.Length);
+            Assert.AreEqual(1, outputs.Length);
+
+            inputs.Dispose();
+            outputs.Dispose();
+            graph.Dispose();
+        }
+
+        [Test]
+        public void CreateNode_Vector_CreatesNoInputsOneOutput() {
+            var graph = Graph.Create(Allocator.Temp);
+
+            graph.CreateNode(NodeType.Vector, float2.zero,
+                out var inputs, out var outputs, Allocator.Temp);
+
+            Assert.AreEqual(0, inputs.Length);
+            Assert.AreEqual(1, outputs.Length);
+
+            inputs.Dispose();
+            outputs.Dispose();
+            graph.Dispose();
+        }
+
+        [Test]
         public void TryGetNodeType_ReturnsCorrectType() {
             var graph = Graph.Create(Allocator.Temp);
             uint nodeId = graph.CreateNode(NodeType.Bridge, float2.zero,
@@ -344,6 +374,74 @@ namespace NodeGraph.Tests {
             forceOut.Dispose();
             graph.Dispose();
         }
+
+        [Test]
+        public void ValidateConnection_ScalarToScalarInput_ReturnsSuccess() {
+            var graph = Graph.Create(Allocator.Temp);
+
+            graph.CreateNode(NodeType.Scalar, float2.zero,
+                out var scalarIn, out var scalarOut, Allocator.Temp);
+            graph.CreateNode(NodeType.Force, float2.zero,
+                out var forceIn, out var forceOut, Allocator.Temp);
+
+            // Scalar output (PortId.Scalar) to Duration input (PortId.Duration)
+            // Should succeed because both have PortDataType.Scalar
+            bool valid = graph.ValidateConnection(scalarOut[0], forceIn[1], out var error);
+
+            Assert.IsTrue(valid);
+            Assert.AreEqual(ValidationError.None, error);
+
+            scalarIn.Dispose();
+            scalarOut.Dispose();
+            forceIn.Dispose();
+            forceOut.Dispose();
+            graph.Dispose();
+        }
+
+        [Test]
+        public void ValidateConnection_VectorToPositionInput_ReturnsSuccess() {
+            var graph = Graph.Create(Allocator.Temp);
+
+            graph.CreateNode(NodeType.Vector, float2.zero,
+                out var vectorIn, out var vectorOut, Allocator.Temp);
+            graph.CreateNode(NodeType.Anchor, float2.zero,
+                out var anchorIn, out var anchorOut, Allocator.Temp);
+
+            // Vector output (PortId.Vector) to Position input (PortId.Position)
+            // Should succeed because both have PortDataType.Vector
+            bool valid = graph.ValidateConnection(vectorOut[0], anchorIn[0], out var error);
+
+            Assert.IsTrue(valid);
+            Assert.AreEqual(ValidationError.None, error);
+
+            vectorIn.Dispose();
+            vectorOut.Dispose();
+            anchorIn.Dispose();
+            anchorOut.Dispose();
+            graph.Dispose();
+        }
+
+        [Test]
+        public void ValidateConnection_ScalarToVectorInput_ReturnsError() {
+            var graph = Graph.Create(Allocator.Temp);
+
+            graph.CreateNode(NodeType.Scalar, float2.zero,
+                out var scalarIn, out var scalarOut, Allocator.Temp);
+            graph.CreateNode(NodeType.Anchor, float2.zero,
+                out var anchorIn, out var anchorOut, Allocator.Temp);
+
+            // Scalar output to Position input - should fail (different categories)
+            bool valid = graph.ValidateConnection(scalarOut[0], anchorIn[0], out var error);
+
+            Assert.IsFalse(valid);
+            Assert.AreEqual(ValidationError.IncompatiblePortTypes, error);
+
+            scalarIn.Dispose();
+            scalarOut.Dispose();
+            anchorIn.Dispose();
+            anchorOut.Dispose();
+            graph.Dispose();
+        }
     }
 
     [TestFixture]
@@ -370,6 +468,12 @@ namespace NodeGraph.Tests {
         public void DataType_VectorPorts_ReturnVector() {
             Assert.AreEqual(PortDataType.Vector, PortId.Position.DataType());
             Assert.AreEqual(PortDataType.Vector, PortId.Rotation.DataType());
+            Assert.AreEqual(PortDataType.Vector, PortId.Vector.DataType());
+        }
+
+        [Test]
+        public void DataType_GenericScalarPort_ReturnsScalar() {
+            Assert.AreEqual(PortDataType.Scalar, PortId.Scalar.DataType());
         }
 
         [Test]

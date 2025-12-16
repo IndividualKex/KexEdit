@@ -32,7 +32,7 @@ namespace KexEdit.NodeGraph {
 
             PortId srcType = (PortId)graph.PortTypes[srcIdx];
             PortId tgtType = (PortId)graph.PortTypes[tgtIdx];
-            if (srcType != tgtType) {
+            if (srcType.DataType() != tgtType.DataType()) {
                 error = ValidationError.IncompatiblePortTypes;
                 return false;
             }

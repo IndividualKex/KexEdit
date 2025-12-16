@@ -8,6 +8,8 @@ namespace Tests {
     public class NodeSchemaTests {
         private static readonly NodeType[] AllNodeTypes = (NodeType[])Enum.GetValues(typeof(NodeType));
 
+        [TestCase(NodeType.Scalar, 0)]
+        [TestCase(NodeType.Vector, 0)]
         [TestCase(NodeType.Force, 2)]
         [TestCase(NodeType.Geometric, 2)]
         [TestCase(NodeType.Curved, 6)]
@@ -21,6 +23,8 @@ namespace Tests {
             Assert.AreEqual(expected, actual, $"{type} input count mismatch");
         }
 
+        [TestCase(NodeType.Scalar, 1)]
+        [TestCase(NodeType.Vector, 1)]
         [TestCase(NodeType.Force, 2)]
         [TestCase(NodeType.Geometric, 2)]
         [TestCase(NodeType.Curved, 2)]
@@ -34,6 +38,8 @@ namespace Tests {
             Assert.AreEqual(expected, actual, $"{type} output count mismatch");
         }
 
+        [TestCase(NodeType.Scalar, 0)]
+        [TestCase(NodeType.Vector, 0)]
         [TestCase(NodeType.Force, 7)]
         [TestCase(NodeType.Geometric, 7)]
         [TestCase(NodeType.Curved, 5)]

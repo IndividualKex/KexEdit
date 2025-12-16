@@ -3,10 +3,10 @@ using Unity.Burst;
 
 namespace KexEdit.NodeGraph {
     public enum PortDataType : byte {
-        Anchor = 0,
-        Path = 1,
-        Scalar = 2,
-        Vector = 3,
+        Scalar = 0,
+        Vector = 1,
+        Anchor = 2,
+        Path = 3,
     }
 
     [BurstCompile]
@@ -17,6 +17,8 @@ namespace KexEdit.NodeGraph {
             PortId.Path => PortDataType.Path,
             PortId.Position => PortDataType.Vector,
             PortId.Rotation => PortDataType.Vector,
+            PortId.Vector => PortDataType.Vector,
+            PortId.Scalar => PortDataType.Scalar,
             _ => PortDataType.Scalar,
         };
 

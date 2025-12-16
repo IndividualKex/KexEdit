@@ -13,6 +13,8 @@ namespace KexEdit.Nodes {
             NodeType.Anchor => 2,
             NodeType.Reverse => 1,
             NodeType.ReversePath => 1,
+            NodeType.Scalar => 0,
+            NodeType.Vector => 0,
             _ => 0,
         };
 
@@ -52,11 +54,15 @@ namespace KexEdit.Nodes {
             NodeType.Anchor => 1,
             NodeType.Reverse => 1,
             NodeType.ReversePath => 1,
+            NodeType.Scalar => 1,
+            NodeType.Vector => 1,
             _ => 0,
         };
 
         [BurstCompile]
         public static PortId Output(NodeType type, int index) => (type, index) switch {
+            (NodeType.Scalar, 0) => PortId.Scalar,
+            (NodeType.Vector, 0) => PortId.Vector,
             (NodeType.Force, 0) => PortId.Anchor,
             (NodeType.Force, 1) => PortId.Path,
             (NodeType.Geometric, 0) => PortId.Anchor,
@@ -75,6 +81,8 @@ namespace KexEdit.Nodes {
 
         [BurstCompile]
         public static int PropertyCount(NodeType type) => type switch {
+            NodeType.Scalar => 0,
+            NodeType.Vector => 0,
             NodeType.Force => 7,
             NodeType.Geometric => 7,
             NodeType.Curved => 5,

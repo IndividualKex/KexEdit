@@ -23,14 +23,14 @@ NodeGraph/
 **In-scope**
 - Type-safe node creation with automatic port wiring
 - Port lookup by `PortId` type
-- Connection validation (port type matching, direction checks)
+- Connection validation (category-based: Scalar↔Scalar, Vector↔Vector, etc.)
 - Cascade node removal (removes ports and edges)
-- Port data category classification
+- Port data category classification (`PortDataType`)
 
 **Out-of-scope**
 - Port data storage (consumer responsibility)
 - Property/keyframe handling (see KexEdit.Nodes)
-- Serialization (see future adapters)
+- Serialization (see PLAN.md)
 - ECS integration (see Legacy)
 
 ## API (Extension Methods on Graph)
@@ -49,7 +49,7 @@ NodeGraph/
 - `graph.ValidateAllEdges(out int firstInvalidEdgeIndex) → bool` - Validate all edges
 
 **PortId Extensions**
-- `portId.DataType()` - Returns PortDataType (Anchor/Path/Scalar/Vector)
+- `portId.DataType()` - Returns PortDataType (Scalar/Vector/Anchor/Path)
 - `portId.DefaultValue()` - Default value for scalar ports
 
 ## Dependencies
