@@ -8,7 +8,7 @@ namespace KexGraph.Tests {
     public class GraphEdgeTests {
         [Test]
         public void AddEdge_ValidPorts_IncreasesEdgeCount() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint outputPort = graph.AddOutputPort(node1, portType: 1);
@@ -18,11 +18,12 @@ namespace KexGraph.Tests {
 
             Assert.AreEqual(1, graph.EdgeCount);
             Assert.AreNotEqual(0u, edgeId);
+            graph.Dispose();
         }
 
         [Test]
         public void AddEdge_GeneratesUniqueIds() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint out1 = graph.AddOutputPort(node1, portType: 1);
@@ -34,11 +35,12 @@ namespace KexGraph.Tests {
             uint edge2 = graph.AddEdge(out2, in2);
 
             Assert.AreNotEqual(edge1, edge2);
+            graph.Dispose();
         }
 
         [Test]
         public void AddEdge_StoresCorrectSourceAndTarget() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint outputPort = graph.AddOutputPort(node1, portType: 1);
@@ -49,11 +51,12 @@ namespace KexGraph.Tests {
 
             Assert.AreEqual(outputPort, graph.EdgeSources[index]);
             Assert.AreEqual(inputPort, graph.EdgeTargets[index]);
+            graph.Dispose();
         }
 
         [Test]
         public void AddEdge_InvalidSourcePort_ReturnsZero() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node = graph.AddNode(nodeType: 1, position: float2.zero);
             uint inputPort = graph.AddInputPort(node, portType: 1);
 
@@ -61,11 +64,12 @@ namespace KexGraph.Tests {
 
             Assert.AreEqual(0u, edgeId);
             Assert.AreEqual(0, graph.EdgeCount);
+            graph.Dispose();
         }
 
         [Test]
         public void AddEdge_InvalidTargetPort_ReturnsZero() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node = graph.AddNode(nodeType: 1, position: float2.zero);
             uint outputPort = graph.AddOutputPort(node, portType: 1);
 
@@ -73,11 +77,12 @@ namespace KexGraph.Tests {
 
             Assert.AreEqual(0u, edgeId);
             Assert.AreEqual(0, graph.EdgeCount);
+            graph.Dispose();
         }
 
         [Test]
         public void RemoveEdge_DecreasesEdgeCount() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint outputPort = graph.AddOutputPort(node1, portType: 1);
@@ -87,11 +92,12 @@ namespace KexGraph.Tests {
             graph.RemoveEdge(edgeId);
 
             Assert.AreEqual(0, graph.EdgeCount);
+            graph.Dispose();
         }
 
         [Test]
         public void RemoveEdge_InvalidEdge_DoesNothing() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint outputPort = graph.AddOutputPort(node1, portType: 1);
@@ -101,11 +107,12 @@ namespace KexGraph.Tests {
             graph.RemoveEdge(999u);
 
             Assert.AreEqual(1, graph.EdgeCount);
+            graph.Dispose();
         }
 
         [Test]
         public void RemoveEdge_MiddleEdge_MaintainsOtherEdges() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint out1 = graph.AddOutputPort(node1, portType: 1);
@@ -125,11 +132,12 @@ namespace KexGraph.Tests {
             Assert.IsTrue(graph.TryGetEdgeIndex(edge1, out _));
             Assert.IsFalse(graph.TryGetEdgeIndex(edge2, out _));
             Assert.IsTrue(graph.TryGetEdgeIndex(edge3, out _));
+            graph.Dispose();
         }
 
         [Test]
         public void GetOutgoingEdges_NodeWithOutgoingEdges_ReturnsCorrectEdges() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
@@ -148,11 +156,12 @@ namespace KexGraph.Tests {
             Assert.Contains(edge2, edges.ToArray());
 
             edges.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void GetOutgoingEdges_NodeWithNoOutgoingEdges_ReturnsEmptyArray() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node = graph.AddNode(nodeType: 1, position: float2.zero);
 
             graph.GetOutgoingEdges(node, out var edges, Allocator.Temp);
@@ -160,11 +169,12 @@ namespace KexGraph.Tests {
             Assert.AreEqual(0, edges.Length);
 
             edges.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void GetIncomingEdges_NodeWithIncomingEdges_ReturnsCorrectEdges() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
@@ -183,11 +193,12 @@ namespace KexGraph.Tests {
             Assert.Contains(edge2, edges.ToArray());
 
             edges.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void GetIncomingEdges_NodeWithNoIncomingEdges_ReturnsEmptyArray() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node = graph.AddNode(nodeType: 1, position: float2.zero);
 
             graph.GetIncomingEdges(node, out var edges, Allocator.Temp);
@@ -195,11 +206,12 @@ namespace KexGraph.Tests {
             Assert.AreEqual(0, edges.Length);
 
             edges.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void GetSuccessorNodes_ReturnsConnectedNodes() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
@@ -218,11 +230,12 @@ namespace KexGraph.Tests {
             Assert.Contains(node3, successors.ToArray());
 
             successors.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void GetSuccessorNodes_NoOutgoingEdges_ReturnsEmpty() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node = graph.AddNode(nodeType: 1, position: float2.zero);
 
             graph.GetSuccessorNodes(node, out var successors, Allocator.Temp);
@@ -230,11 +243,12 @@ namespace KexGraph.Tests {
             Assert.AreEqual(0, successors.Length);
 
             successors.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void GetSuccessorNodes_MultipleEdgesToSameNode_ReturnsOnce() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint out1a = graph.AddOutputPort(node1, portType: 1);
@@ -251,11 +265,12 @@ namespace KexGraph.Tests {
             Assert.AreEqual(node2, successors[0]);
 
             successors.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void GetPredecessorNodes_ReturnsConnectedNodes() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
@@ -274,11 +289,12 @@ namespace KexGraph.Tests {
             Assert.Contains(node2, predecessors.ToArray());
 
             predecessors.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void GetPredecessorNodes_NoIncomingEdges_ReturnsEmpty() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node = graph.AddNode(nodeType: 1, position: float2.zero);
 
             graph.GetPredecessorNodes(node, out var predecessors, Allocator.Temp);
@@ -286,11 +302,12 @@ namespace KexGraph.Tests {
             Assert.AreEqual(0, predecessors.Length);
 
             predecessors.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void FindSourceNodes_ReturnsNodesWithNoIncomingEdges() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
@@ -308,11 +325,12 @@ namespace KexGraph.Tests {
             Assert.AreEqual(node1, sources[0]);
 
             sources.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void FindSourceNodes_AllNodesAreRoots_ReturnsAll() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
 
@@ -323,22 +341,24 @@ namespace KexGraph.Tests {
             Assert.Contains(node2, sources.ToArray());
 
             sources.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void FindSourceNodes_EmptyGraph_ReturnsEmpty() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
 
             graph.FindSourceNodes(out var sources, Allocator.Temp);
 
             Assert.AreEqual(0, sources.Length);
 
             sources.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void FindSinkNodes_ReturnsNodesWithNoOutgoingEdges() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
@@ -356,11 +376,12 @@ namespace KexGraph.Tests {
             Assert.AreEqual(node3, sinks[0]);
 
             sinks.Dispose();
+            graph.Dispose();
         }
 
         [Test]
         public void FindSinkNodes_AllNodesAreSinks_ReturnsAll() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
 
@@ -371,6 +392,7 @@ namespace KexGraph.Tests {
             Assert.Contains(node2, sinks.ToArray());
 
             sinks.Dispose();
+            graph.Dispose();
         }
     }
 }

@@ -4,7 +4,6 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 namespace KexGraph {
-    [BurstCompile]
     public struct Graph : IDisposable {
         public NativeList<uint> NodeIds;
         public NativeList<uint> NodeTypes;
@@ -21,12 +20,12 @@ namespace KexGraph {
         public NativeList<uint> EdgeSources;
         public NativeList<uint> EdgeTargets;
 
-        private NativeHashMap<uint, int> _nodeIndexMap;
-        private NativeHashMap<uint, int> _portIndexMap;
-        private NativeHashMap<uint, int> _edgeIndexMap;
-        private uint _nextNodeId;
-        private uint _nextPortId;
-        private uint _nextEdgeId;
+        internal NativeHashMap<uint, int> NodeIndexMap;
+        internal NativeHashMap<uint, int> PortIndexMap;
+        internal NativeHashMap<uint, int> EdgeIndexMap;
+        internal uint NextNodeId;
+        internal uint NextPortId;
+        internal uint NextEdgeId;
 
         public readonly int NodeCount => NodeIds.IsCreated ? NodeIds.Length : 0;
         public readonly int PortCount => PortIds.IsCreated ? PortIds.Length : 0;
@@ -49,12 +48,12 @@ namespace KexGraph {
                 EdgeSources = new NativeList<uint>(allocator),
                 EdgeTargets = new NativeList<uint>(allocator),
 
-                _nodeIndexMap = new NativeHashMap<uint, int>(16, allocator),
-                _portIndexMap = new NativeHashMap<uint, int>(16, allocator),
-                _edgeIndexMap = new NativeHashMap<uint, int>(16, allocator),
-                _nextNodeId = 1,
-                _nextPortId = 1,
-                _nextEdgeId = 1,
+                NodeIndexMap = new NativeHashMap<uint, int>(16, allocator),
+                PortIndexMap = new NativeHashMap<uint, int>(16, allocator),
+                EdgeIndexMap = new NativeHashMap<uint, int>(16, allocator),
+                NextNodeId = 1,
+                NextPortId = 1,
+                NextEdgeId = 1,
             };
         }
 
@@ -74,112 +73,137 @@ namespace KexGraph {
             if (EdgeSources.IsCreated) EdgeSources.Dispose();
             if (EdgeTargets.IsCreated) EdgeTargets.Dispose();
 
-            if (_nodeIndexMap.IsCreated) _nodeIndexMap.Dispose();
-            if (_portIndexMap.IsCreated) _portIndexMap.Dispose();
-            if (_edgeIndexMap.IsCreated) _edgeIndexMap.Dispose();
+            if (NodeIndexMap.IsCreated) NodeIndexMap.Dispose();
+            if (PortIndexMap.IsCreated) PortIndexMap.Dispose();
+            if (EdgeIndexMap.IsCreated) EdgeIndexMap.Dispose();
+        }
+    }
+
+    [BurstCompile]
+    public static class GraphExtensions {
+        [BurstCompile]
+        public static int GetNodeCount(in this Graph graph) {
+            return graph.NodeIds.IsCreated ? graph.NodeIds.Length : 0;
         }
 
-        public uint AddNode(uint nodeType, float2 position) {
-            uint nodeId = _nextNodeId++;
+        [BurstCompile]
+        public static int GetPortCount(in this Graph graph) {
+            return graph.PortIds.IsCreated ? graph.PortIds.Length : 0;
+        }
 
-            NodeIds.Add(nodeId);
-            NodeTypes.Add(nodeType);
-            NodePositions.Add(position);
-            NodeInputCount.Add(0);
-            NodeOutputCount.Add(0);
+        [BurstCompile]
+        public static int GetEdgeCount(in this Graph graph) {
+            return graph.EdgeIds.IsCreated ? graph.EdgeIds.Length : 0;
+        }
 
-            _nodeIndexMap.Add(nodeId, NodeIds.Length - 1);
+        [BurstCompile]
+        public static uint AddNode(ref this Graph graph, uint nodeType, in float2 position) {
+            uint nodeId = graph.NextNodeId++;
+
+            graph.NodeIds.Add(nodeId);
+            graph.NodeTypes.Add(nodeType);
+            graph.NodePositions.Add(position);
+            graph.NodeInputCount.Add(0);
+            graph.NodeOutputCount.Add(0);
+
+            graph.NodeIndexMap.Add(nodeId, graph.NodeIds.Length - 1);
 
             return nodeId;
         }
 
-        public readonly bool TryGetNodeIndex(uint nodeId, out int index) {
-            if (_nodeIndexMap.TryGetValue(nodeId, out index)) {
+        [BurstCompile]
+        public static bool TryGetNodeIndex(in this Graph graph, uint nodeId, out int index) {
+            if (graph.NodeIndexMap.TryGetValue(nodeId, out index)) {
                 return true;
             }
             index = -1;
             return false;
         }
 
-        public void RemoveNode(uint nodeId) {
-            if (!TryGetNodeIndex(nodeId, out int index)) {
+        [BurstCompile]
+        public static void RemoveNode(ref this Graph graph, uint nodeId) {
+            if (!graph.TryGetNodeIndex(nodeId, out int index)) {
                 return;
             }
 
-            int lastIndex = NodeIds.Length - 1;
+            int lastIndex = graph.NodeIds.Length - 1;
 
             if (index != lastIndex) {
-                uint lastNodeId = NodeIds[lastIndex];
+                uint lastNodeId = graph.NodeIds[lastIndex];
 
-                NodeIds[index] = NodeIds[lastIndex];
-                NodeTypes[index] = NodeTypes[lastIndex];
-                NodePositions[index] = NodePositions[lastIndex];
-                NodeInputCount[index] = NodeInputCount[lastIndex];
-                NodeOutputCount[index] = NodeOutputCount[lastIndex];
+                graph.NodeIds[index] = graph.NodeIds[lastIndex];
+                graph.NodeTypes[index] = graph.NodeTypes[lastIndex];
+                graph.NodePositions[index] = graph.NodePositions[lastIndex];
+                graph.NodeInputCount[index] = graph.NodeInputCount[lastIndex];
+                graph.NodeOutputCount[index] = graph.NodeOutputCount[lastIndex];
 
-                _nodeIndexMap[lastNodeId] = index;
+                graph.NodeIndexMap[lastNodeId] = index;
             }
 
-            NodeIds.RemoveAt(lastIndex);
-            NodeTypes.RemoveAt(lastIndex);
-            NodePositions.RemoveAt(lastIndex);
-            NodeInputCount.RemoveAt(lastIndex);
-            NodeOutputCount.RemoveAt(lastIndex);
+            graph.NodeIds.RemoveAt(lastIndex);
+            graph.NodeTypes.RemoveAt(lastIndex);
+            graph.NodePositions.RemoveAt(lastIndex);
+            graph.NodeInputCount.RemoveAt(lastIndex);
+            graph.NodeOutputCount.RemoveAt(lastIndex);
 
-            _nodeIndexMap.Remove(nodeId);
+            graph.NodeIndexMap.Remove(nodeId);
         }
 
-        public readonly bool TryGetPortIndex(uint portId, out int index) {
-            if (_portIndexMap.TryGetValue(portId, out index)) {
+        [BurstCompile]
+        public static bool TryGetPortIndex(in this Graph graph, uint portId, out int index) {
+            if (graph.PortIndexMap.TryGetValue(portId, out index)) {
                 return true;
             }
             index = -1;
             return false;
         }
 
-        public uint AddInputPort(uint nodeId, uint portType) {
-            if (!TryGetNodeIndex(nodeId, out int nodeIndex)) {
+        [BurstCompile]
+        public static uint AddInputPort(ref this Graph graph, uint nodeId, uint portType) {
+            if (!graph.TryGetNodeIndex(nodeId, out int nodeIndex)) {
                 return 0;
             }
 
-            uint portId = _nextPortId++;
+            uint portId = graph.NextPortId++;
 
-            PortIds.Add(portId);
-            PortTypes.Add(portType);
-            PortOwners.Add(nodeId);
-            PortIsInput.Add(true);
+            graph.PortIds.Add(portId);
+            graph.PortTypes.Add(portType);
+            graph.PortOwners.Add(nodeId);
+            graph.PortIsInput.Add(true);
 
-            _portIndexMap.Add(portId, PortIds.Length - 1);
-            NodeInputCount[nodeIndex]++;
+            graph.PortIndexMap.Add(portId, graph.PortIds.Length - 1);
+            graph.NodeInputCount[nodeIndex]++;
 
             return portId;
         }
 
-        public uint AddOutputPort(uint nodeId, uint portType) {
-            if (!TryGetNodeIndex(nodeId, out int nodeIndex)) {
+        [BurstCompile]
+        public static uint AddOutputPort(ref this Graph graph, uint nodeId, uint portType) {
+            if (!graph.TryGetNodeIndex(nodeId, out int nodeIndex)) {
                 return 0;
             }
 
-            uint portId = _nextPortId++;
+            uint portId = graph.NextPortId++;
 
-            PortIds.Add(portId);
-            PortTypes.Add(portType);
-            PortOwners.Add(nodeId);
-            PortIsInput.Add(false);
+            graph.PortIds.Add(portId);
+            graph.PortTypes.Add(portType);
+            graph.PortOwners.Add(nodeId);
+            graph.PortIsInput.Add(false);
 
-            _portIndexMap.Add(portId, PortIds.Length - 1);
-            NodeOutputCount[nodeIndex]++;
+            graph.PortIndexMap.Add(portId, graph.PortIds.Length - 1);
+            graph.NodeOutputCount[nodeIndex]++;
 
             return portId;
         }
 
-        public readonly void GetInputPorts(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
-            if (!TryGetNodeIndex(nodeId, out int nodeIndex)) {
+        [BurstCompile]
+        public static void GetInputPorts(in this Graph graph, uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            if (!graph.TryGetNodeIndex(nodeId, out int nodeIndex)) {
                 result = new NativeArray<uint>(0, allocator);
                 return;
             }
 
-            int count = NodeInputCount[nodeIndex];
+            int count = graph.NodeInputCount[nodeIndex];
             if (count == 0) {
                 result = new NativeArray<uint>(0, allocator);
                 return;
@@ -188,20 +212,21 @@ namespace KexGraph {
             result = new NativeArray<uint>(count, allocator);
             int resultIndex = 0;
 
-            for (int i = 0; i < PortIds.Length; i++) {
-                if (PortOwners[i] == nodeId && PortIsInput[i]) {
-                    result[resultIndex++] = PortIds[i];
+            for (int i = 0; i < graph.PortIds.Length; i++) {
+                if (graph.PortOwners[i] == nodeId && graph.PortIsInput[i]) {
+                    result[resultIndex++] = graph.PortIds[i];
                 }
             }
         }
 
-        public readonly void GetOutputPorts(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
-            if (!TryGetNodeIndex(nodeId, out int nodeIndex)) {
+        [BurstCompile]
+        public static void GetOutputPorts(in this Graph graph, uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            if (!graph.TryGetNodeIndex(nodeId, out int nodeIndex)) {
                 result = new NativeArray<uint>(0, allocator);
                 return;
             }
 
-            int count = NodeOutputCount[nodeIndex];
+            int count = graph.NodeOutputCount[nodeIndex];
             if (count == 0) {
                 result = new NativeArray<uint>(0, allocator);
                 return;
@@ -210,115 +235,121 @@ namespace KexGraph {
             result = new NativeArray<uint>(count, allocator);
             int resultIndex = 0;
 
-            for (int i = 0; i < PortIds.Length; i++) {
-                if (PortOwners[i] == nodeId && !PortIsInput[i]) {
-                    result[resultIndex++] = PortIds[i];
+            for (int i = 0; i < graph.PortIds.Length; i++) {
+                if (graph.PortOwners[i] == nodeId && !graph.PortIsInput[i]) {
+                    result[resultIndex++] = graph.PortIds[i];
                 }
             }
         }
 
-        public void RemovePort(uint portId) {
-            if (!TryGetPortIndex(portId, out int index)) {
+        [BurstCompile]
+        public static void RemovePort(ref this Graph graph, uint portId) {
+            if (!graph.TryGetPortIndex(portId, out int index)) {
                 return;
             }
 
-            uint ownerId = PortOwners[index];
-            bool isInput = PortIsInput[index];
+            uint ownerId = graph.PortOwners[index];
+            bool isInput = graph.PortIsInput[index];
 
-            int lastIndex = PortIds.Length - 1;
+            int lastIndex = graph.PortIds.Length - 1;
 
             if (index != lastIndex) {
-                uint lastPortId = PortIds[lastIndex];
+                uint lastPortId = graph.PortIds[lastIndex];
 
-                PortIds[index] = PortIds[lastIndex];
-                PortTypes[index] = PortTypes[lastIndex];
-                PortOwners[index] = PortOwners[lastIndex];
-                PortIsInput[index] = PortIsInput[lastIndex];
+                graph.PortIds[index] = graph.PortIds[lastIndex];
+                graph.PortTypes[index] = graph.PortTypes[lastIndex];
+                graph.PortOwners[index] = graph.PortOwners[lastIndex];
+                graph.PortIsInput[index] = graph.PortIsInput[lastIndex];
 
-                _portIndexMap[lastPortId] = index;
+                graph.PortIndexMap[lastPortId] = index;
             }
 
-            PortIds.RemoveAt(lastIndex);
-            PortTypes.RemoveAt(lastIndex);
-            PortOwners.RemoveAt(lastIndex);
-            PortIsInput.RemoveAt(lastIndex);
+            graph.PortIds.RemoveAt(lastIndex);
+            graph.PortTypes.RemoveAt(lastIndex);
+            graph.PortOwners.RemoveAt(lastIndex);
+            graph.PortIsInput.RemoveAt(lastIndex);
 
-            _portIndexMap.Remove(portId);
+            graph.PortIndexMap.Remove(portId);
 
-            if (TryGetNodeIndex(ownerId, out int nodeIndex)) {
+            if (graph.TryGetNodeIndex(ownerId, out int nodeIndex)) {
                 if (isInput) {
-                    NodeInputCount[nodeIndex]--;
+                    graph.NodeInputCount[nodeIndex]--;
                 } else {
-                    NodeOutputCount[nodeIndex]--;
+                    graph.NodeOutputCount[nodeIndex]--;
                 }
             }
         }
 
-        public readonly bool TryGetEdgeIndex(uint edgeId, out int index) {
-            if (_edgeIndexMap.TryGetValue(edgeId, out index)) {
+        [BurstCompile]
+        public static bool TryGetEdgeIndex(in this Graph graph, uint edgeId, out int index) {
+            if (graph.EdgeIndexMap.TryGetValue(edgeId, out index)) {
                 return true;
             }
             index = -1;
             return false;
         }
 
-        public uint AddEdge(uint sourcePortId, uint targetPortId) {
-            if (!TryGetPortIndex(sourcePortId, out _)) {
+        [BurstCompile]
+        public static uint AddEdge(ref this Graph graph, uint sourcePortId, uint targetPortId) {
+            if (!graph.TryGetPortIndex(sourcePortId, out _)) {
                 return 0;
             }
-            if (!TryGetPortIndex(targetPortId, out _)) {
+            if (!graph.TryGetPortIndex(targetPortId, out _)) {
                 return 0;
             }
 
-            uint edgeId = _nextEdgeId++;
+            uint edgeId = graph.NextEdgeId++;
 
-            EdgeIds.Add(edgeId);
-            EdgeSources.Add(sourcePortId);
-            EdgeTargets.Add(targetPortId);
+            graph.EdgeIds.Add(edgeId);
+            graph.EdgeSources.Add(sourcePortId);
+            graph.EdgeTargets.Add(targetPortId);
 
-            _edgeIndexMap.Add(edgeId, EdgeIds.Length - 1);
+            graph.EdgeIndexMap.Add(edgeId, graph.EdgeIds.Length - 1);
 
             return edgeId;
         }
 
-        public void RemoveEdge(uint edgeId) {
-            if (!TryGetEdgeIndex(edgeId, out int index)) {
+        [BurstCompile]
+        public static void RemoveEdge(ref this Graph graph, uint edgeId) {
+            if (!graph.TryGetEdgeIndex(edgeId, out int index)) {
                 return;
             }
 
-            int lastIndex = EdgeIds.Length - 1;
+            int lastIndex = graph.EdgeIds.Length - 1;
 
             if (index != lastIndex) {
-                uint lastEdgeId = EdgeIds[lastIndex];
+                uint lastEdgeId = graph.EdgeIds[lastIndex];
 
-                EdgeIds[index] = EdgeIds[lastIndex];
-                EdgeSources[index] = EdgeSources[lastIndex];
-                EdgeTargets[index] = EdgeTargets[lastIndex];
+                graph.EdgeIds[index] = graph.EdgeIds[lastIndex];
+                graph.EdgeSources[index] = graph.EdgeSources[lastIndex];
+                graph.EdgeTargets[index] = graph.EdgeTargets[lastIndex];
 
-                _edgeIndexMap[lastEdgeId] = index;
+                graph.EdgeIndexMap[lastEdgeId] = index;
             }
 
-            EdgeIds.RemoveAt(lastIndex);
-            EdgeSources.RemoveAt(lastIndex);
-            EdgeTargets.RemoveAt(lastIndex);
+            graph.EdgeIds.RemoveAt(lastIndex);
+            graph.EdgeSources.RemoveAt(lastIndex);
+            graph.EdgeTargets.RemoveAt(lastIndex);
 
-            _edgeIndexMap.Remove(edgeId);
+            graph.EdgeIndexMap.Remove(edgeId);
         }
 
-        public readonly void GetOutgoingEdges(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
-            if (!TryGetNodeIndex(nodeId, out _)) {
+        [BurstCompile]
+        public static void GetOutgoingEdges(in this Graph graph, uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            if (!graph.TryGetNodeIndex(nodeId, out _)) {
                 result = new NativeArray<uint>(0, allocator);
                 return;
             }
 
-            GetOutputPorts(nodeId, out var outputPorts, Allocator.Temp);
+            graph.GetOutputPorts(nodeId, out var outputPorts, Allocator.Temp);
 
-            var tempList = new NativeList<uint>(EdgeCount, Allocator.Temp);
+            int edgeCount = graph.GetEdgeCount();
+            var tempList = new NativeList<uint>(edgeCount, Allocator.Temp);
 
-            for (int i = 0; i < EdgeIds.Length; i++) {
+            for (int i = 0; i < graph.EdgeIds.Length; i++) {
                 for (int j = 0; j < outputPorts.Length; j++) {
-                    if (EdgeSources[i] == outputPorts[j]) {
-                        tempList.Add(EdgeIds[i]);
+                    if (graph.EdgeSources[i] == outputPorts[j]) {
+                        tempList.Add(graph.EdgeIds[i]);
                         break;
                     }
                 }
@@ -330,20 +361,22 @@ namespace KexGraph {
             outputPorts.Dispose();
         }
 
-        public readonly void GetIncomingEdges(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
-            if (!TryGetNodeIndex(nodeId, out _)) {
+        [BurstCompile]
+        public static void GetIncomingEdges(in this Graph graph, uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            if (!graph.TryGetNodeIndex(nodeId, out _)) {
                 result = new NativeArray<uint>(0, allocator);
                 return;
             }
 
-            GetInputPorts(nodeId, out var inputPorts, Allocator.Temp);
+            graph.GetInputPorts(nodeId, out var inputPorts, Allocator.Temp);
 
-            var tempList = new NativeList<uint>(EdgeCount, Allocator.Temp);
+            int edgeCount = graph.GetEdgeCount();
+            var tempList = new NativeList<uint>(edgeCount, Allocator.Temp);
 
-            for (int i = 0; i < EdgeIds.Length; i++) {
+            for (int i = 0; i < graph.EdgeIds.Length; i++) {
                 for (int j = 0; j < inputPorts.Length; j++) {
-                    if (EdgeTargets[i] == inputPorts[j]) {
-                        tempList.Add(EdgeIds[i]);
+                    if (graph.EdgeTargets[i] == inputPorts[j]) {
+                        tempList.Add(graph.EdgeIds[i]);
                         break;
                     }
                 }
@@ -355,8 +388,9 @@ namespace KexGraph {
             inputPorts.Dispose();
         }
 
-        public readonly void GetSuccessorNodes(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
-            GetOutgoingEdges(nodeId, out var edges, Allocator.Temp);
+        [BurstCompile]
+        public static void GetSuccessorNodes(in this Graph graph, uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            graph.GetOutgoingEdges(nodeId, out var edges, Allocator.Temp);
 
             if (edges.Length == 0) {
                 result = new NativeArray<uint>(0, allocator);
@@ -368,12 +402,12 @@ namespace KexGraph {
             var seen = new NativeHashSet<uint>(edges.Length, Allocator.Temp);
 
             for (int i = 0; i < edges.Length; i++) {
-                if (!TryGetEdgeIndex(edges[i], out int edgeIndex)) continue;
+                if (!graph.TryGetEdgeIndex(edges[i], out int edgeIndex)) continue;
 
-                uint targetPortId = EdgeTargets[edgeIndex];
-                if (!TryGetPortIndex(targetPortId, out int portIndex)) continue;
+                uint targetPortId = graph.EdgeTargets[edgeIndex];
+                if (!graph.TryGetPortIndex(targetPortId, out int portIndex)) continue;
 
-                uint targetNodeId = PortOwners[portIndex];
+                uint targetNodeId = graph.PortOwners[portIndex];
                 if (seen.Add(targetNodeId)) {
                     tempList.Add(targetNodeId);
                 }
@@ -386,8 +420,9 @@ namespace KexGraph {
             edges.Dispose();
         }
 
-        public readonly void GetPredecessorNodes(uint nodeId, out NativeArray<uint> result, Allocator allocator) {
-            GetIncomingEdges(nodeId, out var edges, Allocator.Temp);
+        [BurstCompile]
+        public static void GetPredecessorNodes(in this Graph graph, uint nodeId, out NativeArray<uint> result, Allocator allocator) {
+            graph.GetIncomingEdges(nodeId, out var edges, Allocator.Temp);
 
             if (edges.Length == 0) {
                 result = new NativeArray<uint>(0, allocator);
@@ -399,12 +434,12 @@ namespace KexGraph {
             var seen = new NativeHashSet<uint>(edges.Length, Allocator.Temp);
 
             for (int i = 0; i < edges.Length; i++) {
-                if (!TryGetEdgeIndex(edges[i], out int edgeIndex)) continue;
+                if (!graph.TryGetEdgeIndex(edges[i], out int edgeIndex)) continue;
 
-                uint sourcePortId = EdgeSources[edgeIndex];
-                if (!TryGetPortIndex(sourcePortId, out int portIndex)) continue;
+                uint sourcePortId = graph.EdgeSources[edgeIndex];
+                if (!graph.TryGetPortIndex(sourcePortId, out int portIndex)) continue;
 
-                uint sourceNodeId = PortOwners[portIndex];
+                uint sourceNodeId = graph.PortOwners[portIndex];
                 if (seen.Add(sourceNodeId)) {
                     tempList.Add(sourceNodeId);
                 }
@@ -417,12 +452,14 @@ namespace KexGraph {
             edges.Dispose();
         }
 
-        public readonly void FindSourceNodes(out NativeArray<uint> result, Allocator allocator) {
-            var tempList = new NativeList<uint>(NodeCount, Allocator.Temp);
+        [BurstCompile]
+        public static void FindSourceNodes(in this Graph graph, out NativeArray<uint> result, Allocator allocator) {
+            int nodeCount = graph.GetNodeCount();
+            var tempList = new NativeList<uint>(nodeCount, Allocator.Temp);
 
-            for (int i = 0; i < NodeIds.Length; i++) {
-                uint nodeId = NodeIds[i];
-                GetIncomingEdges(nodeId, out var incoming, Allocator.Temp);
+            for (int i = 0; i < graph.NodeIds.Length; i++) {
+                uint nodeId = graph.NodeIds[i];
+                graph.GetIncomingEdges(nodeId, out var incoming, Allocator.Temp);
                 bool isSource = incoming.Length == 0;
                 incoming.Dispose();
 
@@ -436,12 +473,14 @@ namespace KexGraph {
             tempList.Dispose();
         }
 
-        public readonly void FindSinkNodes(out NativeArray<uint> result, Allocator allocator) {
-            var tempList = new NativeList<uint>(NodeCount, Allocator.Temp);
+        [BurstCompile]
+        public static void FindSinkNodes(in this Graph graph, out NativeArray<uint> result, Allocator allocator) {
+            int nodeCount = graph.GetNodeCount();
+            var tempList = new NativeList<uint>(nodeCount, Allocator.Temp);
 
-            for (int i = 0; i < NodeIds.Length; i++) {
-                uint nodeId = NodeIds[i];
-                GetOutgoingEdges(nodeId, out var outgoing, Allocator.Temp);
+            for (int i = 0; i < graph.NodeIds.Length; i++) {
+                uint nodeId = graph.NodeIds[i];
+                graph.GetOutgoingEdges(nodeId, out var outgoing, Allocator.Temp);
                 bool isSink = outgoing.Length == 0;
                 outgoing.Dispose();
 
@@ -455,17 +494,19 @@ namespace KexGraph {
             tempList.Dispose();
         }
 
-        public readonly bool HasCycle() {
-            if (NodeCount == 0) return false;
+        [BurstCompile]
+        public static bool HasCycle(in this Graph graph) {
+            int nodeCount = graph.GetNodeCount();
+            if (nodeCount == 0) return false;
 
-            var visited = new NativeHashSet<uint>(NodeCount, Allocator.Temp);
-            var inStack = new NativeHashSet<uint>(NodeCount, Allocator.Temp);
-            var stack = new NativeList<long>(NodeCount, Allocator.Temp);
+            var visited = new NativeHashSet<uint>(nodeCount, Allocator.Temp);
+            var inStack = new NativeHashSet<uint>(nodeCount, Allocator.Temp);
+            var stack = new NativeList<long>(nodeCount, Allocator.Temp);
 
             bool cycleFound = false;
 
-            for (int i = 0; i < NodeIds.Length && !cycleFound; i++) {
-                uint startNode = NodeIds[i];
+            for (int i = 0; i < graph.NodeIds.Length && !cycleFound; i++) {
+                uint startNode = graph.NodeIds[i];
                 if (visited.Contains(startNode)) continue;
 
                 stack.Add(startNode);
@@ -487,7 +528,7 @@ namespace KexGraph {
                     inStack.Add(nodeId);
                     stack.Add(~(long)nodeId);
 
-                    GetSuccessorNodes(nodeId, out var successors, Allocator.Temp);
+                    graph.GetSuccessorNodes(nodeId, out var successors, Allocator.Temp);
                     for (int j = 0; j < successors.Length; j++) {
                         uint succ = successors[j];
                         if (inStack.Contains(succ)) {

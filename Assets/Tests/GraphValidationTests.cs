@@ -8,26 +8,28 @@ namespace KexGraph.Tests {
     public class GraphValidationTests {
         [Test]
         public void HasCycle_EmptyGraph_ReturnsFalse() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
 
             bool hasCycle = graph.HasCycle();
 
             Assert.IsFalse(hasCycle);
+            graph.Dispose();
         }
 
         [Test]
         public void HasCycle_SingleNode_ReturnsFalse() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             graph.AddNode(nodeType: 1, position: float2.zero);
 
             bool hasCycle = graph.HasCycle();
 
             Assert.IsFalse(hasCycle);
+            graph.Dispose();
         }
 
         [Test]
         public void HasCycle_LinearChain_ReturnsFalse() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
@@ -43,11 +45,12 @@ namespace KexGraph.Tests {
             bool hasCycle = graph.HasCycle();
 
             Assert.IsFalse(hasCycle);
+            graph.Dispose();
         }
 
         [Test]
         public void HasCycle_SimpleCycle_ReturnsTrue() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
 
@@ -62,11 +65,12 @@ namespace KexGraph.Tests {
             bool hasCycle = graph.HasCycle();
 
             Assert.IsTrue(hasCycle);
+            graph.Dispose();
         }
 
         [Test]
         public void HasCycle_SelfLoop_ReturnsTrue() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node = graph.AddNode(nodeType: 1, position: float2.zero);
 
             uint output = graph.AddOutputPort(node, portType: 1);
@@ -77,11 +81,12 @@ namespace KexGraph.Tests {
             bool hasCycle = graph.HasCycle();
 
             Assert.IsTrue(hasCycle);
+            graph.Dispose();
         }
 
         [Test]
         public void HasCycle_ComplexCycle_ReturnsTrue() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
@@ -104,11 +109,12 @@ namespace KexGraph.Tests {
             bool hasCycle = graph.HasCycle();
 
             Assert.IsTrue(hasCycle);
+            graph.Dispose();
         }
 
         [Test]
         public void HasCycle_DiamondShape_ReturnsFalse() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
             uint node1 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node2 = graph.AddNode(nodeType: 1, position: float2.zero);
             uint node3 = graph.AddNode(nodeType: 1, position: float2.zero);
@@ -131,6 +137,7 @@ namespace KexGraph.Tests {
             bool hasCycle = graph.HasCycle();
 
             Assert.IsFalse(hasCycle);
+            graph.Dispose();
         }
     }
 }

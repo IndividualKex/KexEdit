@@ -17,6 +17,7 @@ namespace KexGraph.Tests {
             Assert.IsTrue(graph.EdgeIds.IsCreated);
 
             graph.Dispose();
+            graph.Dispose();
         }
 
         [Test]
@@ -28,27 +29,31 @@ namespace KexGraph.Tests {
             Assert.IsFalse(graph.NodeIds.IsCreated);
             Assert.IsFalse(graph.NodeTypes.IsCreated);
             Assert.IsFalse(graph.NodePositions.IsCreated);
+            graph.Dispose();
         }
 
         [Test]
         public void Graph_NodeCount_ReturnsCorrectValue() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
 
             Assert.AreEqual(0, graph.NodeCount);
+            graph.Dispose();
         }
 
         [Test]
         public void Graph_PortCount_ReturnsCorrectValue() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
 
             Assert.AreEqual(0, graph.PortCount);
+            graph.Dispose();
         }
 
         [Test]
         public void Graph_EdgeCount_ReturnsCorrectValue() {
-            using var graph = Graph.Create(Allocator.Temp);
+            var graph = Graph.Create(Allocator.Temp);
 
             Assert.AreEqual(0, graph.EdgeCount);
+            graph.Dispose();
         }
     }
 }
