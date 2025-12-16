@@ -30,7 +30,10 @@ Implement a clean serialization system following hexagonal architecture, where:
        │              │                   │
        │              │  Storage:         │
        │              │   KeyframeStore   │ ← keyed by uint (opaque)
-       │              │   NodeConfigStore │ ← keyed by uint (opaque)
+       │              │   ScalarStore     │
+       │              │   VectorStore     │
+       │              │   DurationTypeStore│
+       │              │   SteeringStore   │
        │              └────────┬──────────┘
        │                       │
        └───────────┬───────────┘
@@ -47,7 +50,7 @@ Implement a clean serialization system following hexagonal architecture, where:
           │                  │
           │ CoasterDocument  │
           │  = Graph         │
-          │  + KeyframeStore │  ← uint keys = nodeIds
+          │  + Stores        │  ← uint keys = nodeIds
           │  + Extensions    │
           └──────────────────┘
 ```
@@ -64,16 +67,33 @@ Port values are `Scalar`/`Vector` leaf nodes, not port metadata. Graph is self-d
 
 ### Data Stores in Coaster Hexagon
 
-Stores live in `KexEdit.Nodes`, keyed by opaque `uint`:
+Stores live in `KexEdit.Nodes`, keyed by opaque `uint`. Each concern gets its own store (composition over bags). Follow existing patterns (factory, IDisposable, no nested containers):
 
 ```csharp
-// Does NOT depend on KexGraph - uses uint keys
-public struct KeyframeStore {
-    NativeHashMap<uint, NativeHashMap<PropertyId, NativeList<Keyframe>>> data;
+// All stores use uint keys - no dependency on KexGraph
+
+// Animation curves: (nodeId, propertyId) → Keyframe[]
+public struct KeyframeStore : IDisposable {
+    public NativeList<Keyframe> Keyframes;
+    public NativeHashMap<ulong, int2> Ranges;  // key = (nodeId << 8) | propertyId
 }
 
-public struct NodeConfigStore {
-    NativeHashMap<uint, NodeConfig> data;
+// Leaf node values
+public struct ScalarStore : IDisposable {
+    public NativeHashMap<uint, float> Values;
+}
+
+public struct VectorStore : IDisposable {
+    public NativeHashMap<uint, float3> Values;
+}
+
+// Node configuration (separate stores per concern)
+public struct DurationTypeStore : IDisposable {
+    public NativeHashMap<uint, DurationType> Values;
+}
+
+public struct SteeringStore : IDisposable {
+    public NativeHashSet<uint> Enabled;  // presence = true
 }
 ```
 
@@ -97,23 +117,20 @@ UI state is separate from core coaster data:
 
 | Component | Purpose | Location |
 |-----------|---------|----------|
-| **KeyframeStore** | Maps `uint → (PropertyId → Keyframe[])` | `KexEdit.Nodes` |
-| **NodeConfigStore** | Maps `uint → NodeConfig` | `KexEdit.Nodes` |
+| **KeyframeStore** | `(nodeId, propertyId) → Keyframe[]` | `KexEdit.Nodes` |
+| **ScalarStore** | `nodeId → float` (Scalar leaf values) | `KexEdit.Nodes` |
+| **VectorStore** | `nodeId → float3` (Vector leaf values) | `KexEdit.Nodes` |
+| **DurationTypeStore** | `nodeId → DurationType` | `KexEdit.Nodes` |
+| **SteeringStore** | `nodeId → enabled` (set membership) | `KexEdit.Nodes` |
 | **GraphSnapshot** | Serializable graph topology | `KexGraph` |
 | **CoasterDocument** | Composes graph + stores + extensions | `KexEdit.Document` (new) |
 
-### NodeConfig
-
-Per-node configuration beyond scalar inputs:
-- `DurationType` (Time vs Distance) - Force/Geometric
-- `Steering` flag - Geometric
-- `MeshFilePath` - future Mesh nodes
-
 ## Implementation Order
 
-1. **KeyframeStore** in `KexEdit.Nodes` - uint-keyed storage
-2. **NodeConfigStore** in `KexEdit.Nodes` - uint-keyed storage
-3. **GraphSnapshot** in `KexGraph` - graph's own serializable form
-4. **CoasterDocument** in new `KexEdit.Document` - composition layer
-5. **Binary serialization** - Burst-compatible format
-6. **UI extension adapter** - separate, injects metadata
+1. **ScalarStore / VectorStore** in `KexEdit.Nodes` - leaf node values
+2. **KeyframeStore** in `KexEdit.Nodes` - animation curves
+3. **DurationTypeStore / SteeringStore** in `KexEdit.Nodes` - node config
+4. **GraphSnapshot** in `KexGraph` - graph's own serializable form
+5. **CoasterDocument** in new `KexEdit.Document` - composition layer
+6. **Binary serialization** - Burst-compatible format
+7. **UI extension adapter** - separate, injects metadata
