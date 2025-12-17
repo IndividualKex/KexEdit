@@ -17,7 +17,7 @@ Implement a clean serialization system following hexagonal architecture, where:
 │   Hexagon)  │     │                     │
 │             │     │  Point, Frame       │
 │  Graph      │     │  Keyframe           │
-│  Snapshot   │     └──────────┬──────────┘
+│             │     └──────────┬──────────┘
 └──────┬──────┘                │
        │              ┌────────▼──────────┐
        │              │   KexEdit.Nodes   │
@@ -117,20 +117,32 @@ UI state is separate from core coaster data:
 
 | Component | Purpose | Location |
 |-----------|---------|----------|
-| **KeyframeStore** | `(nodeId, propertyId) → Keyframe[]` | `KexEdit.Nodes` |
+| **KeyframeStore** | `(nodeId, propertyId) → Keyframe[]` | `KexEdit.Nodes` ✓ |
 | **ScalarStore** | `nodeId → float` (Scalar leaf values) | `KexEdit.Nodes` |
 | **VectorStore** | `nodeId → float3` (Vector leaf values) | `KexEdit.Nodes` |
 | **DurationTypeStore** | `nodeId → DurationType` | `KexEdit.Nodes` |
 | **SteeringStore** | `nodeId → enabled` (set membership) | `KexEdit.Nodes` |
-| **GraphSnapshot** | Serializable graph topology | `KexGraph` |
+| **Graph serialization support** | Public ID generators + RebuildIndexMaps | `KexGraph` |
 | **CoasterDocument** | Composes graph + stores + extensions | `KexEdit.Document` (new) |
+
+### Graph Serialization Support (Minimal)
+
+No separate GraphSnapshot type needed. Graph is already self-describing (serde-like). Index maps are derived state, excluded from serialization and rebuilt on load.
+
+**Changes to Graph.cs:**
+1. Make `NextNodeId`, `NextPortId`, `NextEdgeId` public (adapter can read/write for serialization)
+2. Add `RebuildIndexMaps()` extension method (restore lookups after deserializing arrays)
+
+**Serialization flow (adapter layer responsibility):**
+- Write: iterate Graph's public NativeLists + ID generators
+- Read: create Graph, populate lists, set ID generators, call `RebuildIndexMaps()`
 
 ## Implementation Order
 
 1. **ScalarStore / VectorStore** in `KexEdit.Nodes` - leaf node values
-2. **KeyframeStore** in `KexEdit.Nodes` - animation curves
+2. **KeyframeStore** in `KexEdit.Nodes` - animation curves ✓
 3. **DurationTypeStore / SteeringStore** in `KexEdit.Nodes` - node config
-4. **GraphSnapshot** in `KexGraph` - graph's own serializable form
+4. **Graph serialization support** in `KexGraph` - public IDs + RebuildIndexMaps
 5. **CoasterDocument** in new `KexEdit.Document` - composition layer
 6. **Binary serialization** - Burst-compatible format
 7. **UI extension adapter** - separate, injects metadata
