@@ -21,6 +21,8 @@ Nodes/
 ├── NodeSchema.cs       # Static schema queries
 ├── PropertyIndex.cs    # Serialization mapping
 ├── IterationConfig.cs
+├── Storage/            # Data storage contracts
+│   └── KeyframeStore.cs  # (nodeId, propertyId) → Keyframe[] storage
 ├── Anchor/             # Creates initial state from position/rotation
 ├── Bridge/             # Bezier curve between anchors
 ├── CopyPath/           # Copies/transforms existing path
@@ -62,6 +64,6 @@ Use `PropertyIndex.ToIndex()`/`FromIndex()` for mapping.
 
 ## Dependencies
 
-- KexEdit.Core, Unity.Mathematics, Unity.Burst
+- KexEdit.Core, Unity.Collections, Unity.Mathematics, Unity.Burst
 
 Node types must NOT depend on each other.

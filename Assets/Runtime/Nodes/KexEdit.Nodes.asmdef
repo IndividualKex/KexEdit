@@ -3,6 +3,7 @@
     "rootNamespace": "KexEdit.Nodes",
     "references": [
         "KexEdit.Core",
+        "Unity.Collections",
         "Unity.Mathematics",
         "Unity.Burst"
     ],
