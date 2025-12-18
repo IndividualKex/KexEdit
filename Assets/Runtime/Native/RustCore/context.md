@@ -22,7 +22,7 @@ RustCore/
 
 ## Toggle
 
-Enable via `USE_RUST_BACKEND` scripting define symbol. See `layers/migration-plan.md`.
+Enable via `USE_RUST_BACKEND` scripting define symbol.
 
 ## Dependencies
 

@@ -1,0 +1,23 @@
+{
+    "name": "KexEdit.LegacyImport",
+    "rootNamespace": "KexEdit.LegacyImport",
+    "references": [
+        "Unity.Burst",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "KexGraph",
+        "KexEdit.Core",
+        "KexEdit.Nodes",
+        "KexEdit.Coaster",
+        "KexEdit.Legacy"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

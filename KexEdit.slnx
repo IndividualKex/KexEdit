@@ -133,4 +133,5 @@
   <Project Path="Unity.Entities.Hybrid.Tests.SeparateAssembly.csproj" />
   <Project Path="KexEdit.Nodes.ReversePath.csproj" />
   <Project Path="Unity.Numerics.Linear.csproj" />
+  <Project Path="KexEdit.LegacyImport.csproj" />
 </Solution>

@@ -36,6 +36,7 @@ KexEdit/
 │   │   ├── Nodes/  # Node types (KexEdit.Nodes.*)
 │   │   ├── NodeGraph/  # KexEdit-aware graph extensions (KexEdit.NodeGraph)
 │   │   ├── Coaster/  # Application layer aggregate (KexEdit.Coaster)
+│   │   ├── LegacyImport/  # Legacy .kex import adapter (KexEdit.LegacyImport)
 │   │   ├── Native/  # Rust FFI bindings (KexEdit.Native.RustCore)
 │   │   ├── Plugins/  # Native DLLs (kexedit_core.dll)
 │   │   ├── Legacy/  # Monolithic runtime being hollowed out (KexEdit.Legacy)
@@ -67,7 +68,6 @@ KexEdit/
 ├── build-rust.sh  # Rust build script (builds submodule)
 ├── layers/
 │   ├── structure.md  # Project-level context (Tier 1)
-│   ├── migration-plan.md  # Runtime migration tracking
 │   └── context-template.md  # Template for context files
 ├── ProjectSettings/  # Unity project settings
 ├── Packages/  # Unity package manifest
@@ -118,6 +118,7 @@ KexEdit/
 - Generic graph library → `Assets/Plugins/KexGraph/`
 - KexEdit-aware graph extensions → `Assets/Runtime/NodeGraph/`
 - Coaster aggregate + evaluator → `Assets/Runtime/Coaster/`
+- Legacy .kex import → `Assets/Runtime/LegacyImport/`
 - Portable physics/math (C#) → `Assets/Runtime/Core/`
 - Spline articulation (C#) → `Assets/Runtime/Core/Articulation/`
 - Portable physics/math (Rust) → `rust-backend/kexedit-core/`

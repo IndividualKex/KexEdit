@@ -2,8 +2,8 @@
 Built from '6000.3/respin/6000.3.1f1-f56f53296c2c' branch; Version is '6000.3.1f1 (37142da19a94) revision 3609645'; Using compiler version '194234433'; Build Type 'Release'
 OS: 'Windows 11  (10.0.26200) 64bit Professional' Language: 'en' Physical Memory: 65458 MB
 BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
-Date: 2025-12-18T02:38:29Z
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan" at "2025-12-18T02:38:29.7163805Z"
+Date: 2025-12-18T03:16:38Z
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan" at "2025-12-18T03:16:38.8742961Z"
 
 COMMAND LINE ARGUMENTS:
 C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Unity.exe
@@ -20,7 +20,7 @@ EditMode
 -assemblyNames
 Tests
 -testFilter
-CoasterEvaluatorTests
+CoasterGoldTests
 Successfully changed project path to: C:/Users/dylan/Documents/Games/KexEdit
 C:/Users/dylan/Documents/Games/KexEdit
 [UnityMemory] Configuration Parameters - Can be set up in boot.config
@@ -58,29 +58,29 @@ C:/Users/dylan/Documents/Games/KexEdit
     "memorysetup-job-temp-allocator-block-size-background=1048576"
     "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
     "memorysetup-temp-allocator-size-cloud-worker=32768"
-Player connection [32700]  Target information:
+Player connection [24156]  Target information:
 
-Player connection [32700]  * "[IP] 172.28.16.1 [Port] 55504 [Flags] 2 [Guid] 721398974 [EditorId] 721398974 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+Player connection [24156]  * "[IP] 172.28.16.1 [Port] 55504 [Flags] 2 [Guid] 2350610825 [EditorId] 2350610825 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
 
-Player connection [32700]  * "[IP] 192.168.0.248 [Port] 55504 [Flags] 2 [Guid] 721398974 [EditorId] 721398974 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+Player connection [24156]  * "[IP] 192.168.0.248 [Port] 55504 [Flags] 2 [Guid] 2350610825 [EditorId] 2350610825 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
 
-Player connection [32700]  * "[IP] 169.254.83.107 [Port] 55504 [Flags] 2 [Guid] 721398974 [EditorId] 721398974 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+Player connection [24156]  * "[IP] 169.254.83.107 [Port] 55504 [Flags] 2 [Guid] 2350610825 [EditorId] 2350610825 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
 
-Player connection [32700] Host joined multi-casting on [225.0.0.222:54997]...
-Player connection [32700] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Player connection [24156] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [24156] Host joined alternative multi-casting on [225.0.0.222:34997]...
 Input System module state changed to: Initialized.
 [Physics::Module] Initialized fallback backend.
 [Physics::Module] Id: 0xdecafbad
-[Package Manager] Connected to IPC stream "Upm-32688" after 0.3 seconds.
+[Package Manager] Connected to IPC stream "Upm-1636" after 0.3 seconds.
 [Licensing::Module] Licensing is not yet initialized.
 [Licensing::Client] Handshaking with LicensingClient:
   Version:                 1.17.4+4293ba1
-  Session Id:              8a9018176769491d9e41cf1e73f57004
+  Session Id:              f4b7a427c3f5494c8cce435e6f774e67
   Correlation Id:          252351222c68fd51320b039e9f15ea5d
-  External correlation Id: 7993271305944036606
+  External correlation Id: 3094773626626021877
   Machine Id:              6eQQ2mRFHlULx/8PLnkZNGE/Exo=
-[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-dylan" (connect: 0.00s, validation: 0.00s, handshake: 1.43s)
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan-notifications" at "2025-12-18T02:38:31.1492419Z"
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-dylan" (connect: 0.00s, validation: 0.00s, handshake: 1.32s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan-notifications" at "2025-12-18T03:16:40.1939305Z"
 [Licensing::Module] Error: Access token is unavailable; failed to update
 [Licensing::Client] Successfully resolved entitlement details
 [Licensing::Module] License group:
@@ -94,8 +94,8 @@ Input System module state changed to: Initialized.
   Type: Assigned
   Expiration: Unlimited
 [Licensing::Client] Successfully updated license, isAsync: True, time: 0.00
-[Licensing::Module] Licensing Background thread has ended after 1.44s
-[Licensing::Module] Licensing is initialized (took 0.97s).
+[Licensing::Module] Licensing Background thread has ended after 1.32s
+[Licensing::Module] Licensing is initialized (took 0.90s).
 [Licensing::Client] Successfully resolved entitlement details
 [Licensing::Module] License group:
   Id: F4-P6BS-9QKE-8EP7-C3FN-XXXX
@@ -114,7 +114,8 @@ Library Redirect Path: Library/
 [Physics::Module] SDK Version: 4.1.2
 [Physics::Module] Integration Version: 1.0.0
 [Physics::Module] Threading Mode: Multi-Threaded
-Refreshing native plugins compatible for Editor in 3.20 ms, found 1 plugins.
+Artifact Garbage Collection - Removed 1 unused hashed content files
+Refreshing native plugins compatible for Editor in 3.05 ms, found 1 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
 Initialize engine version: 6000.3.1f1 (37142da19a94)
 [Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/Resources/UnitySubsystems
@@ -130,7 +131,7 @@ Initialize mono
 Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/Managed'
 Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
 Mono config path = 'C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/MonoBleedingEdge/etc'
-Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56688
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56636
 Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
 Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
 ImportWorker Server TCP listen port: 0
@@ -140,43 +141,43 @@ Registering precompiled unity dll's ...
 Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/PlaybackEngines/MacStandaloneSupport/UnityEditor.OSXStandalone.Extensions.dll
 Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
 Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/PlaybackEngines/LinuxStandaloneSupport/UnityEditor.LinuxStandalone.Extensions.dll
-Registered in 0.007386 seconds.
-- Loaded All Assemblies, in  0.462 seconds
+Registered in 0.006971 seconds.
+- Loaded All Assemblies, in  0.450 seconds
 Native extension for LinuxStandalone target not found
 Native extension for WindowsStandalone target not found
 Native extension for OSXStandalone target not found
 Package Manager log level set to [2]
 [Licensing::Client] Successfully resolved entitlement details
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  2.982 seconds
-Domain Reload Profiling: 3435ms
-	BeginReloadAssembly (165ms)
+- Finished resetting the current domain, in  2.226 seconds
+Domain Reload Profiling: 2667ms
+	BeginReloadAssembly (168ms)
 		ExecutionOrderSort (0ms)
 		DisableScriptedObjects (0ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
-		CreateAndSetChildDomain (8ms)
+		CreateAndSetChildDomain (7ms)
 	RebuildCommonClasses (36ms)
 	RebuildNativeTypeToScriptingClass (10ms)
-	initialDomainReloadingComplete (71ms)
-	LoadAllAssembliesAndSetupDomain (169ms)
-		LoadAssemblies (147ms)
+	initialDomainReloadingComplete (62ms)
+	LoadAllAssembliesAndSetupDomain (164ms)
+		LoadAssemblies (152ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (165ms)
-			TypeCache.Refresh (163ms)
-				TypeCache.ScanAssembly (148ms)
+		AnalyzeDomain (160ms)
+			TypeCache.Refresh (158ms)
+				TypeCache.ScanAssembly (143ms)
 			BuildScriptInfoCaches (0ms)
 			ResolveRequiredComponents (1ms)
-	FinalizeReload (2983ms)
+	FinalizeReload (2226ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (2946ms)
+		SetupLoadedEditorAssemblies (2192ms)
 			LogAssemblyErrors (0ms)
 			InitializePlatformSupportModulesInManaged (57ms)
 			SetLoadedEditorAssemblies (3ms)
-			BeforeProcessingInitializeOnLoad (76ms)
-			ProcessInitializeOnLoadAttributes (145ms)
-			ProcessInitializeOnLoadMethodAttributes (2665ms)
+			BeforeProcessingInitializeOnLoad (79ms)
+			ProcessInitializeOnLoadAttributes (141ms)
+			ProcessInitializeOnLoadMethodAttributes (1912ms)
 			AfterProcessingInitializeOnLoad (0ms)
 			EditorAssembliesLoaded (0ms)
 		ExecutionOrderSort2 (0ms)
@@ -291,18 +292,10 @@ info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
 info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
       Executed endpoint 'gRPC - /UnityILPP.PostProcessing/Ping'
 info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
-      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc - - 200 - application/grpc 38.8050ms
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc - - 200 - application/grpc 35.4566ms
 Starting: C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
 WorkingDir: C:/Users/dylan/Documents/Games/KexEdit
 DisplayProgressbar: Compiling Scripts
-Starting: C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\netcorerun\netcorerun.exe "C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\Tools\BuildPipeline\ScriptCompilationBuildProgram.exe" "Library/Bee/1900b0aE.dag.json" "Library/Bee/1900b0aE-inputdata.json" "Library\Bee\buildprogram0.traceevents"
-WorkingDir: C:/Users/dylan/Documents/Games/KexEdit
-ExitCode: 4 Duration: 0s344ms
-Rebuilding DAG because FileSignature timestamp changed: Assets/csc.rsp
-*** Tundra requires additional run (0.31 seconds), 0 items updated, 1120 evaluated
-ExitCode: 0 Duration: 1s514ms
-Starting: C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --dagfilejson="Library\Bee\1900b0aE.dag.json" --profile="Library/Bee/backend2.traceevents" ScriptAssemblies
-WorkingDir: C:/Users/dylan/Documents/Games/KexEdit
 info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
       Request starting HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/ConfigurePostProcessors application/grpc -
 info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
@@ -320,161 +313,161 @@ info: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
 info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
       Executed endpoint 'gRPC - /UnityILPP.PostProcessing/ConfigurePostProcessors'
 info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
-      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/ConfigurePostProcessors application/grpc - - 200 - application/grpc 91.9417ms
-ExitCode: 0 Duration: 1s191ms
-Finished compiling graph: 1917 nodes, 44447 flattened edges (34555 ToBuild, 334 ToUse), maximum node priority 2896
-[1429/1913  0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
-*** Tundra build success (1.17 seconds), 1 items updated, 1913 evaluated
-AssetDatabase: script compilation time: 3.686650s
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/ConfigurePostProcessors application/grpc - - 200 - application/grpc 82.5527ms
+ExitCode: 4 Duration: 0s540ms
+Rebuilding DAG because FileSignature timestamp changed: Assets/csc.rsp
+[1359/1923  0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
+*** Tundra requires additional run (0.51 seconds), 1 items updated, 1349 evaluated
+Starting: C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\netcorerun\netcorerun.exe "C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\Tools\BuildPipeline\ScriptCompilationBuildProgram.exe" "Library/Bee/1900b0aE.dag.json" "Library/Bee/1900b0aE-inputdata.json" "Library\Bee\buildprogram0.traceevents"
+WorkingDir: C:/Users/dylan/Documents/Games/KexEdit
+ExitCode: 0 Duration: 1s478ms
+Starting: C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --dagfilejson="Library\Bee\1900b0aE.dag.json" --profile="Library/Bee/backend2.traceevents" ScriptAssemblies
+WorkingDir: C:/Users/dylan/Documents/Games/KexEdit
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/ConfigurePostProcessors application/grpc -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'gRPC - /UnityILPP.PostProcessing/ConfigurePostProcessors'
+info: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Current configuration matches the requested one, skipping
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'gRPC - /UnityILPP.PostProcessing/ConfigurePostProcessors'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/ConfigurePostProcessors application/grpc - - 200 - application/grpc 2.0289ms
+ExitCode: 0 Duration: 0s968ms
+Finished compiling graph: 1927 nodes, 44831 flattened edges (34799 ToBuild, 336 ToUse), maximum node priority 2914
+[1436/1923  0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
+*** Tundra build success (0.95 seconds), 1 items updated, 1923 evaluated
+AssetDatabase: script compilation time: 3.524480s
 Begin MonoManager ReloadAssembly
 Symbol file LoadedFromMemory is not a mono symbol file
-- Loaded All Assemblies, in  1.810 seconds
+- Loaded All Assemblies, in  1.675 seconds
 'Packages/com.unity.cinemachine/Editor/Editors/CinemachineVirtualCameraBaseEditor.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
 'Packages/com.unity.cinemachine/Editor/Obsolete/CinemachineVirtualCameraBaseEditor.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
-Refreshing native plugins compatible for Editor in 7.53 ms, found 5 plugins.
+Refreshing native plugins compatible for Editor in 6.01 ms, found 5 plugins.
 Native extension for LinuxStandalone target not found
 Native extension for WindowsStandalone target not found
 Native extension for OSXStandalone target not found
 Assembly reference Packages/com.unity.cinemachine/Editor/Samples/ExposeHDRPInternals/HDRP-Editor-ref.asmref has no target assembly definition
 Assembly reference Packages/com.unity.entities/Unity.Scenes.Editor/Internals/Properties/Unity.Properties.Internals.asmref has no target assembly definition
-Refreshing native plugins compatible for Editor in 6.39 ms, found 5 plugins.
-TypeManager.Initialize took: 721ms
+Refreshing native plugins compatible for Editor in 6.41 ms, found 5 plugins.
+TypeManager.Initialize took: 664ms
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  7.925 seconds
-Domain Reload Profiling: 9707ms
-	BeginReloadAssembly (351ms)
+- Finished resetting the current domain, in  7.402 seconds
+Domain Reload Profiling: 9048ms
+	BeginReloadAssembly (341ms)
 		ExecutionOrderSort (0ms)
-		DisableScriptedObjects (13ms)
+		DisableScriptedObjects (10ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
-		CreateAndSetChildDomain (160ms)
+		CreateAndSetChildDomain (156ms)
 	RebuildCommonClasses (40ms)
-	RebuildNativeTypeToScriptingClass (11ms)
-	initialDomainReloadingComplete (53ms)
-	LoadAllAssembliesAndSetupDomain (1326ms)
-		LoadAssemblies (941ms)
+	RebuildNativeTypeToScriptingClass (12ms)
+	initialDomainReloadingComplete (54ms)
+	LoadAllAssembliesAndSetupDomain (1199ms)
+		LoadAssemblies (830ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (521ms)
-			TypeCache.Refresh (403ms)
-				TypeCache.ScanAssembly (378ms)
-			BuildScriptInfoCaches (98ms)
-			ResolveRequiredComponents (14ms)
-	FinalizeReload (7926ms)
+		AnalyzeDomain (506ms)
+			TypeCache.Refresh (396ms)
+				TypeCache.ScanAssembly (372ms)
+			BuildScriptInfoCaches (91ms)
+			ResolveRequiredComponents (13ms)
+	FinalizeReload (7402ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (7624ms)
+		SetupLoadedEditorAssemblies (7111ms)
 			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (38ms)
-			SetLoadedEditorAssemblies (5ms)
-			BeforeProcessingInitializeOnLoad (462ms)
-			ProcessInitializeOnLoadAttributes (5739ms)
-			ProcessInitializeOnLoadMethodAttributes (1356ms)
-			AfterProcessingInitializeOnLoad (24ms)
+			InitializePlatformSupportModulesInManaged (34ms)
+			SetLoadedEditorAssemblies (4ms)
+			BeforeProcessingInitializeOnLoad (438ms)
+			ProcessInitializeOnLoadAttributes (5393ms)
+			ProcessInitializeOnLoadMethodAttributes (1219ms)
+			AfterProcessingInitializeOnLoad (22ms)
 			EditorAssembliesLoaded (1ms)
 		ExecutionOrderSort2 (0ms)
-		AwakeInstancesAfterBackupRestoration (6ms)
-Start importing Assets/Runtime/Coaster/context.md using Guid(94681594364d3bf44976dbcc27074fcd) (TextScriptImporter) -> (artifact id: '9bfbed44b7e5667ebadd96dcb66dcb87') in 0.0236932 seconds
-Refreshing native plugins compatible for Editor in 8.58 ms, found 5 plugins.
-Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=4b835b1b046c8c342906937d572b67c6): Total: 15.691 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+		AwakeInstancesAfterBackupRestoration (10ms)
+Asset Pipeline Refresh (id=91882c1dacf549f4bbcbff653238e933): Total: 14.270 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
 	Summary:
 		Imports: total=0 (actual=0, local cache=0, cache server=0)
-		Asset DB Process Time: managed=6 ms, native=9265 ms
-		Asset DB Callback time: managed=480 ms, native=28 ms
-		Scripting: domain reloads=1, domain reload time=1811 ms, compile time=3689 ms, other=410 ms
-		Project Asset Count: scripts=2348, non-scripts=3890
-		Asset File Changes: new=0, changed=1, moved=0, deleted=0
+		Asset DB Process Time: managed=0 ms, native=8610 ms
+		Asset DB Callback time: managed=109 ms, native=5 ms
+		Scripting: domain reloads=1, domain reload time=1676 ms, compile time=3526 ms, other=341 ms
+		Project Asset Count: scripts=2349, non-scripts=3891
+		Asset File Changes: new=0, changed=0, moved=0, deleted=0
 		Scan Filter Count: 0
 	InvokeCustomDependenciesCallbacks: 0.001ms
-	InvokePackagesCallback: 11.032ms
-	ApplyChangesToAssetFolders: 1.019ms
-	Scan: 407.429ms
-	OnSourceAssetsModified: 1.210ms
-	CategorizeAssetsWithTransientArtifact: 79.465ms
-	ProcessAssetsWithTransientArtifactChanges: 140.285ms
-	CategorizeAssets: 109.953ms
-	ImportOutOfDateAssets: 7986.705ms (4265.553ms without children)
-		ImportManagerImport: 27.009ms (2.833ms without children)
-			ImportInProcess: 24.176ms
-		CompileScripts: 3688.506ms
-		ReloadNativeAssets: 0.074ms
-		UnloadImportedAssets: 1.977ms
-		ReloadImportedAssets: 0.000ms
-		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 2.256ms
-		InitializingProgressBar: 0.013ms
-		PostProcessAllAssetNotificationsAddChangedAssets: 0.002ms
-		OnDemandSchedulerStart: 1.315ms
-	PostProcessAllAssets: 486.439ms
-	Hotreload: 14.881ms
+	InvokePackagesCallback: 9.832ms
+	ApplyChangesToAssetFolders: 0.881ms
+	Scan: 364.234ms
+	OnSourceAssetsModified: 0.004ms
+	CategorizeAssetsWithTransientArtifact: 79.541ms
+	ProcessAssetsWithTransientArtifactChanges: 142.624ms
+	CategorizeAssets: 87.195ms
+	ImportOutOfDateAssets: 7431.921ms (3900.654ms without children)
+		CompileScripts: 3526.424ms
+		ReloadNativeAssets: 0.040ms
+		UnloadImportedAssets: 2.049ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 1.316ms
+		InitializingProgressBar: 0.000ms
+		PostProcessAllAssetNotificationsAddChangedAssets: 0.001ms
+		OnDemandSchedulerStart: 1.437ms
+	PostProcessAllAssets: 109.431ms
 	GatherAllCurrentPrimaryArtifactRevisions: 0.003ms
-	UnloadStreamsBegin: 2.773ms
-	PersistCurrentRevisions: 0.291ms
-	UnloadStreamsEnd: 0.001ms
-	GenerateScriptTypeHashes: 4.994ms
-	Untracked: 6449.224ms
+	UnloadStreamsBegin: 3.133ms
+	PersistCurrentRevisions: 0.206ms
+	UnloadStreamsEnd: 0.002ms
+	GenerateScriptTypeHashes: 4.079ms
+	Untracked: 6040.905ms
 
 Application.AssetDatabase Initial Refresh End
 Launched and connected shader compiler UnityShaderCompiler.exe after 0.02 seconds
-Scanning for USB devices : 12.898ms
+Scanning for USB devices : 13.762ms
 Initializing Unity extensions:
-(0,0): Burst error BC1064: Unsupported return type `KexEdit.Coaster.EvaluationResult` for function `KexEdit.Coaster.EvaluationResult.Create(Unity.Collections.Allocator allocator, int capacity)`: structs cannot be passed to or returned from external functions in burst. To fix this issue, use a reference or pointer.
+(0,0): Burst error BC1064: Unsupported return type `KexEdit.Core.Point` for function `KexEdit.LegacyImport.LegacyImporter.ConvertPointDataToPoint(ref KexEdit.Legacy.PointData pointData)`: structs cannot be passed to or returned from external functions in burst. To fix this issue, use a reference or pointer.
 
 While compiling job:
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::GetKeyframes(KexEdit.Nodes.Storage.KeyframeStore&, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PropertyId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeArray`1[[KexEdit.Core.Keyframe, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]&, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateAnchorNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputAnchor(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Core.Point&, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateCurvedNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateCopyPathNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateBridgeNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputScalar(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeHashMap`2[[System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateReversePathNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.EvaluationResult, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Create(Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateReverseNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TopologicalSort(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeList`1[[System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateGeometricNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputPath(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeList`1[[KexEdit.Core.Point, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateForceNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Evaluate(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-(0,0): Burst error BC1064: Unsupported return type `KexEdit.Coaster.EvaluationResult` for function `KexEdit.Coaster.CoasterEvaluator.Evaluate(ref KexEdit.Coaster.Coaster coaster, Unity.Collections.Allocator allocator)`: structs cannot be passed to or returned from external functions in burst. To fix this issue, use a reference or pointer.
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportKeyframes(KexEdit.Legacy.Serialization.SerializedNode&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.Storage.KeyframeStore&, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportDuration(KexEdit.Legacy.Serialization.SerializedNode&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportSteering(KexEdit.Legacy.Serialization.SerializedNode&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ConvertPointDataToPoint(KexEdit.Legacy.PointData&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Import(KexEdit.Legacy.Serialization.SerializedGraph&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportGraph(KexEdit.Legacy.Serialization.SerializedGraph&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportPortValues(KexEdit.Legacy.Serialization.SerializedNode&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportAnchor(KexEdit.Legacy.Serialization.SerializedNode&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportNodeData(KexEdit.Legacy.Serialization.SerializedGraph&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+(0,0): Burst error BC1064: Unsupported return type `KexEdit.Coaster.Coaster` for function `KexEdit.LegacyImport.LegacyImporter.Import(ref KexEdit.Legacy.Serialization.SerializedGraph serializedGraph, Unity.Collections.Allocator allocator)`: structs cannot be passed to or returned from external functions in burst. To fix this issue, use a reference or pointer.
 
 While compiling job:
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::GetKeyframes(KexEdit.Nodes.Storage.KeyframeStore&, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PropertyId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeArray`1[[KexEdit.Core.Keyframe, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]&, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateAnchorNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputAnchor(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Core.Point&, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateCurvedNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateCopyPathNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateBridgeNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputScalar(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeHashMap`2[[System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateReversePathNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.EvaluationResult, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Create(Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateReverseNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TopologicalSort(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeList`1[[System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateGeometricNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputPath(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeList`1[[KexEdit.Core.Point, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateForceNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
-KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Evaluate(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportKeyframes(KexEdit.Legacy.Serialization.SerializedNode&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.Storage.KeyframeStore&, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportDuration(KexEdit.Legacy.Serialization.SerializedNode&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportSteering(KexEdit.Legacy.Serialization.SerializedNode&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ConvertPointDataToPoint(KexEdit.Legacy.PointData&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Import(KexEdit.Legacy.Serialization.SerializedGraph&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportGraph(KexEdit.Legacy.Serialization.SerializedGraph&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportPortValues(KexEdit.Legacy.Serialization.SerializedNode&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportAnchor(KexEdit.Legacy.Serialization.SerializedNode&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.LegacyImport.LegacyImporter, KexEdit.LegacyImport, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::ImportNodeData(KexEdit.Legacy.Serialization.SerializedGraph&, KexEdit.Legacy, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
 [MODES] ModeService[none].Initialize
 [MODES] ModeService[none].LoadModes
 [MODES] Loading mode Default (0) for mode-current-id-KexEdit
 Unloading 31 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 10780 unused Assets / (7.8 MB). Loaded Objects now: 11619.
-Memory consumption went from 278.0 MB to 270.2 MB.
-Total: 22.647000 ms (FindLiveObjects: 1.318200 ms CreateObjectMapping: 1.078300 ms MarkObjects: 15.660000 ms  DeleteObjects: 4.588900 ms)
+Unloading 10783 unused Assets / (8.9 MB). Loaded Objects now: 11619.
+Memory consumption went from 273.1 MB to 264.2 MB.
+Total: 20.903500 ms (FindLiveObjects: 1.213700 ms CreateObjectMapping: 0.772000 ms MarkObjects: 14.287700 ms  DeleteObjects: 4.628900 ms)
 
-[Project] Loading completed in 24.652 seconds
-	Project init time: 				24.240 seconds
+[Project] Loading completed in 22.267 seconds
+	Project init time: 				21.810 seconds
 		Template init time: 		0.000 seconds
-		Package Manager init time: 		1.241 seconds
-		Asset Database init time: 		0.206 seconds
-		Global illumination init time: 	0.004 seconds
-		Assemblies load time: 			3.477 seconds
-		Unity extensions init time: 	0.024 seconds
-		Asset Database refresh time: 	15.691 seconds
-	Scene opening time: 			0.209 seconds
-##utp:{"type":"ProjectInfo","version":2,"phase":"Immediate","time":1766025534346,"processId":32688,"projectLoad":24.6516523,"projectInit":24.2396321,"templateInit":0.0,"packageManagerInit":1.2411953,"assetDatabaseInit":0.2059504,"globalIlluminationInit":0.0039104,"assembliesLoad":3.4774203,"unityExtensionsInit":0.0241355,"assetDatabaseRefresh":15.6909115,"sceneOpening":0.2088432}
-##utp:{"type":"EditorInfo","version":2,"phase":"Immediate","time":1766025534346,"processId":32688,"editorVersion":"6000.3.1f1 (37142da19a94)","branch":"6000.3/respin/6000.3.1f1-f56f53296c2c","buildType":"Release","platform":"Windows"}
-Asset Pipeline Refresh (id=730230b6a19d5084a9a0d04ca180ed78): Total: 0.115 seconds - Initiated by RefreshV2(ForceSynchronousImport)
-Asset Pipeline Refresh (id=cccaff46922756e4eb49b47ea4350a96): Total: 0.072 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
+		Package Manager init time: 		1.156 seconds
+		Asset Database init time: 		0.192 seconds
+		Global illumination init time: 	0.003 seconds
+		Assemblies load time: 			2.710 seconds
+		Unity extensions init time: 	0.077 seconds
+		Asset Database refresh time: 	14.270 seconds
+	Scene opening time: 			0.277 seconds
+##utp:{"type":"ProjectInfo","version":2,"phase":"Immediate","time":1766027821122,"processId":1636,"projectLoad":22.2674099,"projectInit":21.8103316,"templateInit":0.0,"packageManagerInit":1.1562573,"assetDatabaseInit":0.1919618,"globalIlluminationInit":0.0033856,"assembliesLoad":2.7102136,"unityExtensionsInit":0.076648,"assetDatabaseRefresh":14.2700557,"sceneOpening":0.2768271}
+##utp:{"type":"EditorInfo","version":2,"phase":"Immediate","time":1766027821122,"processId":1636,"editorVersion":"6000.3.1f1 (37142da19a94)","branch":"6000.3/respin/6000.3.1f1-f56f53296c2c","buildType":"Release","platform":"Windows"}
+Asset Pipeline Refresh (id=16d73f2a6445ff545920fb4a8f07335d): Total: 0.091 seconds - Initiated by RefreshV2(ForceSynchronousImport)
+Asset Pipeline Refresh (id=67752458c28ff504a9be52b23d53d488): Total: 0.059 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
 Running tests for ExecutionSettings with details:
 targetPlatform = 
 playerHeartbeatTimeout = 600
@@ -483,7 +476,7 @@ filters[0] =
    testMode = EditMode
    targetPlatform = 
    testNames = null
-   groupNames = CoasterEvaluatorTests
+   groupNames = CoasterGoldTests
    categoryNames = null
    assemblyNames = Tests
 ignoreTests = {}
@@ -503,11 +496,11 @@ UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
 
 [Indexing] Starting Initial Indexing for Assets
 [UnityConnectServicesConfig] config is NOT valid, switching to default
-Created GICache directory at C:/Users/dylan/AppData/LocalLow/Unity/Caches/GiCache. Took: 0.052s, timestamps: [24.656 - 24.708]
+Created GICache directory at C:/Users/dylan/AppData/LocalLow/Unity/Caches/GiCache. Took: 0.043s, timestamps: [22.272 - 22.315]
 Unloading 15 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 2 unused Assets / (44.9 KB). Loaded Objects now: 11683.
-Memory consumption went from 237.0 MB to 236.9 MB.
-Total: 21.373700 ms (FindLiveObjects: 0.809700 ms CreateObjectMapping: 0.773500 ms MarkObjects: 19.745000 ms  DeleteObjects: 0.044500 ms)
+Unloading 2 unused Assets / (44.9 KB). Loaded Objects now: 11685.
+Memory consumption went from 236.6 MB to 236.6 MB.
+Total: 21.339700 ms (FindLiveObjects: 0.623000 ms CreateObjectMapping: 0.465900 ms MarkObjects: 20.204500 ms  DeleteObjects: 0.045200 ms)
 
 Executing IPrebuildSetup for: Unity.PerformanceTesting.Editor.TestRunBuilder.
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
@@ -523,6 +516,198 @@ UnityEditor.TestTools.TestRunner.TestRun.TestJobRunner:ExecuteCallback () (at ./
 UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
 
 (Filename: ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/Tasks/BuildActionTaskBase.cs Line: 48)
+
+Coaster loaded: 16 nodes, 19 edges
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Tests.CoasterGoldTests:Shuttle_LoadAndEvaluate_MatchesGoldData () (at Assets/Tests/CoasterGoldTests.cs:35)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+NUnit.Framework.Internal.Reflect:InvokeMethod (System.Reflection.MethodInfo,object,object[])
+NUnit.Framework.Internal.MethodWrapper:Invoke (object,object[])
+NUnit.Framework.Internal.Commands.TestMethodCommand:RunNonAsyncTestMethod (NUnit.Framework.Internal.ITestExecutionContext)
+NUnit.Framework.Internal.Commands.TestMethodCommand:RunTestMethod (NUnit.Framework.Internal.ITestExecutionContext)
+NUnit.Framework.Internal.Commands.TestMethodCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext)
+UnityEngine.TestTools.UnityTestMethodCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/UnityTestMethodCommand.cs:19)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand/<>c__DisplayClass2_0:<Execute>b__0 () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:24)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:CaptureException (NUnit.Framework.Internal.TestResult,System.Action) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:72)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:ExecuteAndCheckLog (UnityEngine.TestTools.Logging.LogScope,NUnit.Framework.Internal.TestResult,System.Action) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:83)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:24)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand/<ExecuteEnumerable>d__3:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:35)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<NUnit.Framework.ITestAction>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.ImmediateEnumerableCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/ImmediateEnumerableCommand.cs:18)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<System.Reflection.MethodInfo>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:219)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<System.Reflection.MethodInfo>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<UnityEngine.TestTools.IOuterUnityTestAction>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.RetryCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/RetryCommand.cs:37)
+UnityEngine.TestTools.RepeatCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/RepeatCommand.cs:36)
+UnityEngine.TestTools.IgnoreTestCommand/<ExecuteEnumerable>d__3:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/IgnoreTestCommand.cs:42)
+UnityEngine.TestTools.StrictCheckCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/StrictCheckCommand.cs:29)
+UnityEngine.TestRunner.NUnitExtensions.Runner.DefaultTestWorkItem/<PerformWork>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/DefaultTestWorkItem.cs:50)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEditor.TestTools.TestRunner.EditModeRunner:MoveNextAndUpdateYieldObject () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRunner/EditModeRunner.cs:167)
+UnityEditor.TestTools.TestRunner.EditModeRunner:TestConsumer (UnityEditor.TestTools.TestRunner.TestRunnerStateSerializer) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRunner/EditModeRunner.cs:200)
+UnityEditor.TestTools.TestRunner.TestRun.Tasks.EditModeRunTask/<Execute>d__1:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/Tasks/EditModeRunTask.cs:48)
+UnityEditor.TestTools.TestRunner.TestRun.TestJobRunner:ExecuteStep () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/TestJobRunner.cs:173)
+UnityEditor.TestTools.TestRunner.TestRun.TestJobRunner:ExecuteCallback () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/TestJobRunner.cs:108)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+(Filename: Assets/Tests/CoasterGoldTests.cs Line: 35)
+
+Evaluation result: 0 paths
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Tests.CoasterGoldTests:Shuttle_LoadAndEvaluate_MatchesGoldData () (at Assets/Tests/CoasterGoldTests.cs:36)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+NUnit.Framework.Internal.Reflect:InvokeMethod (System.Reflection.MethodInfo,object,object[])
+NUnit.Framework.Internal.MethodWrapper:Invoke (object,object[])
+NUnit.Framework.Internal.Commands.TestMethodCommand:RunNonAsyncTestMethod (NUnit.Framework.Internal.ITestExecutionContext)
+NUnit.Framework.Internal.Commands.TestMethodCommand:RunTestMethod (NUnit.Framework.Internal.ITestExecutionContext)
+NUnit.Framework.Internal.Commands.TestMethodCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext)
+UnityEngine.TestTools.UnityTestMethodCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/UnityTestMethodCommand.cs:19)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand/<>c__DisplayClass2_0:<Execute>b__0 () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:24)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:CaptureException (NUnit.Framework.Internal.TestResult,System.Action) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:72)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:ExecuteAndCheckLog (UnityEngine.TestTools.Logging.LogScope,NUnit.Framework.Internal.TestResult,System.Action) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:83)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:24)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand/<ExecuteEnumerable>d__3:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:35)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<NUnit.Framework.ITestAction>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.ImmediateEnumerableCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/ImmediateEnumerableCommand.cs:18)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<System.Reflection.MethodInfo>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:219)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<System.Reflection.MethodInfo>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<UnityEngine.TestTools.IOuterUnityTestAction>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.RetryCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/RetryCommand.cs:37)
+UnityEngine.TestTools.RepeatCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/RepeatCommand.cs:36)
+UnityEngine.TestTools.IgnoreTestCommand/<ExecuteEnumerable>d__3:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/IgnoreTestCommand.cs:42)
+UnityEngine.TestTools.StrictCheckCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/StrictCheckCommand.cs:29)
+UnityEngine.TestRunner.NUnitExtensions.Runner.DefaultTestWorkItem/<PerformWork>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/DefaultTestWorkItem.cs:50)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEditor.TestTools.TestRunner.EditModeRunner:MoveNextAndUpdateYieldObject () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRunner/EditModeRunner.cs:167)
+UnityEditor.TestTools.TestRunner.EditModeRunner:TestConsumer (UnityEditor.TestTools.TestRunner.TestRunnerStateSerializer) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRunner/EditModeRunner.cs:200)
+UnityEditor.TestTools.TestRunner.TestRun.Tasks.EditModeRunTask/<Execute>d__1:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/Tasks/EditModeRunTask.cs:48)
+UnityEditor.TestTools.TestRunner.TestRun.TestJobRunner:ExecuteStep () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/TestJobRunner.cs:173)
+UnityEditor.TestTools.TestRunner.TestRun.TestJobRunner:ExecuteCallback () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/TestJobRunner.cs:108)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+(Filename: Assets/Tests/CoasterGoldTests.cs Line: 36)
+
+Coaster loaded: 12 nodes, 11 edges
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Tests.CoasterGoldTests:Veloci_LoadAndEvaluate_MatchesGoldData () (at Assets/Tests/CoasterGoldTests.cs:86)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+NUnit.Framework.Internal.Reflect:InvokeMethod (System.Reflection.MethodInfo,object,object[])
+NUnit.Framework.Internal.MethodWrapper:Invoke (object,object[])
+NUnit.Framework.Internal.Commands.TestMethodCommand:RunNonAsyncTestMethod (NUnit.Framework.Internal.ITestExecutionContext)
+NUnit.Framework.Internal.Commands.TestMethodCommand:RunTestMethod (NUnit.Framework.Internal.ITestExecutionContext)
+NUnit.Framework.Internal.Commands.TestMethodCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext)
+UnityEngine.TestTools.UnityTestMethodCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/UnityTestMethodCommand.cs:19)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand/<>c__DisplayClass2_0:<Execute>b__0 () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:24)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:CaptureException (NUnit.Framework.Internal.TestResult,System.Action) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:72)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:ExecuteAndCheckLog (UnityEngine.TestTools.Logging.LogScope,NUnit.Framework.Internal.TestResult,System.Action) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:83)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:24)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand/<ExecuteEnumerable>d__3:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:35)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<NUnit.Framework.ITestAction>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.ImmediateEnumerableCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/ImmediateEnumerableCommand.cs:18)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<System.Reflection.MethodInfo>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:219)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<System.Reflection.MethodInfo>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<UnityEngine.TestTools.IOuterUnityTestAction>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.RetryCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/RetryCommand.cs:37)
+UnityEngine.TestTools.RepeatCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/RepeatCommand.cs:36)
+UnityEngine.TestTools.IgnoreTestCommand/<ExecuteEnumerable>d__3:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/IgnoreTestCommand.cs:42)
+UnityEngine.TestTools.StrictCheckCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/StrictCheckCommand.cs:29)
+UnityEngine.TestRunner.NUnitExtensions.Runner.DefaultTestWorkItem/<PerformWork>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/DefaultTestWorkItem.cs:50)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEditor.TestTools.TestRunner.EditModeRunner:MoveNextAndUpdateYieldObject () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRunner/EditModeRunner.cs:167)
+UnityEditor.TestTools.TestRunner.EditModeRunner:TestConsumer (UnityEditor.TestTools.TestRunner.TestRunnerStateSerializer) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRunner/EditModeRunner.cs:200)
+UnityEditor.TestTools.TestRunner.TestRun.Tasks.EditModeRunTask/<Execute>d__1:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/Tasks/EditModeRunTask.cs:48)
+UnityEditor.TestTools.TestRunner.TestRun.TestJobRunner:ExecuteStep () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/TestJobRunner.cs:173)
+UnityEditor.TestTools.TestRunner.TestRun.TestJobRunner:ExecuteCallback () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/TestJobRunner.cs:108)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+(Filename: Assets/Tests/CoasterGoldTests.cs Line: 86)
+
+Evaluation result: 0 paths
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+Tests.CoasterGoldTests:Veloci_LoadAndEvaluate_MatchesGoldData () (at Assets/Tests/CoasterGoldTests.cs:87)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+NUnit.Framework.Internal.Reflect:InvokeMethod (System.Reflection.MethodInfo,object,object[])
+NUnit.Framework.Internal.MethodWrapper:Invoke (object,object[])
+NUnit.Framework.Internal.Commands.TestMethodCommand:RunNonAsyncTestMethod (NUnit.Framework.Internal.ITestExecutionContext)
+NUnit.Framework.Internal.Commands.TestMethodCommand:RunTestMethod (NUnit.Framework.Internal.ITestExecutionContext)
+NUnit.Framework.Internal.Commands.TestMethodCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext)
+UnityEngine.TestTools.UnityTestMethodCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/UnityTestMethodCommand.cs:19)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand/<>c__DisplayClass2_0:<Execute>b__0 () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:24)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:CaptureException (NUnit.Framework.Internal.TestResult,System.Action) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:72)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:ExecuteAndCheckLog (UnityEngine.TestTools.Logging.LogScope,NUnit.Framework.Internal.TestResult,System.Action) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:83)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:24)
+UnityEngine.TestRunner.NUnitExtensions.Runner.UnityLogCheckDelegatingCommand/<ExecuteEnumerable>d__3:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/UnityLogCheckDelegatingCommand.cs:35)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<NUnit.Framework.ITestAction>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.ImmediateEnumerableCommand:Execute (NUnit.Framework.Internal.ITestExecutionContext) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/ImmediateEnumerableCommand.cs:18)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<System.Reflection.MethodInfo>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:219)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<System.Reflection.MethodInfo>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.BeforeAfterTestCommandBase`1/<ExecuteEnumerable>d__16<UnityEngine.TestTools.IOuterUnityTestAction>:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/BeforeAfterTestCommandBase.cs:212)
+UnityEngine.TestTools.RetryCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/RetryCommand.cs:37)
+UnityEngine.TestTools.RepeatCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/RepeatCommand.cs:36)
+UnityEngine.TestTools.IgnoreTestCommand/<ExecuteEnumerable>d__3:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/IgnoreTestCommand.cs:42)
+UnityEngine.TestTools.StrictCheckCommand/<ExecuteEnumerable>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Commands/StrictCheckCommand.cs:29)
+UnityEngine.TestRunner.NUnitExtensions.Runner.DefaultTestWorkItem/<PerformWork>d__2:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/DefaultTestWorkItem.cs:50)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<RunChildren>d__17:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:207)
+UnityEngine.TestRunner.NUnitExtensions.Runner.CompositeWorkItem/<PerformWork>d__13:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEngine.TestRunner/NUnitExtensions/Runner/CompositeWorkItem.cs:82)
+UnityEditor.TestTools.TestRunner.EditModeRunner:MoveNextAndUpdateYieldObject () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRunner/EditModeRunner.cs:167)
+UnityEditor.TestTools.TestRunner.EditModeRunner:TestConsumer (UnityEditor.TestTools.TestRunner.TestRunnerStateSerializer) (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRunner/EditModeRunner.cs:200)
+UnityEditor.TestTools.TestRunner.TestRun.Tasks.EditModeRunTask/<Execute>d__1:MoveNext () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/Tasks/EditModeRunTask.cs:48)
+UnityEditor.TestTools.TestRunner.TestRun.TestJobRunner:ExecuteStep () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/TestJobRunner.cs:173)
+UnityEditor.TestTools.TestRunner.TestRun.TestJobRunner:ExecuteCallback () (at ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/TestJobRunner.cs:108)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
+
+(Filename: Assets/Tests/CoasterGoldTests.cs Line: 87)
 
 Saving results to: C:/Users/dylan/AppData/LocalLow/IndividualKex/KexEdit\TestResults.xml
 Saving results to: test-results.xml
@@ -541,14 +726,14 @@ UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
 
 (Filename: ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/Tasks/BuildActionTaskBase.cs Line: 48)
 
-Asset Pipeline Refresh (id=56c240b98a2ae214992d13c78396d9ef): Total: 0.013 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
+Asset Pipeline Refresh (id=0e07ee2df5512484399d46a0c44c3353): Total: 0.008 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 0 unused Assets / (0 B). Loaded Objects now: 11683.
-Memory consumption went from 236.0 MB to 236.0 MB.
-Total: 33.466800 ms (FindLiveObjects: 0.704100 ms CreateObjectMapping: 0.813300 ms MarkObjects: 31.918500 ms  DeleteObjects: 0.029900 ms)
+Unloading 0 unused Assets / (0 B). Loaded Objects now: 11685.
+Memory consumption went from 234.3 MB to 234.3 MB.
+Total: 20.212100 ms (FindLiveObjects: 0.551600 ms CreateObjectMapping: 0.218500 ms MarkObjects: 19.419100 ms  DeleteObjects: 0.022000 ms)
 
 DisplayProgressbar: Undo
-Test run completed. Exiting with code 0 (Ok). Run completed.
+Test run completed. Exiting with code 2 (Failed). One or more tests failed.
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
 UnityEngine.StackTraceUtility:ExtractStackTrace ()
 UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
@@ -562,9 +747,9 @@ UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
 (Filename: ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/CommandLineTest/Executer.cs Line: 81)
 
 Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 0 unused Assets / (0 B). Loaded Objects now: 11693.
-Memory consumption went from 275.4 MB to 275.4 MB.
-Total: 39.249400 ms (FindLiveObjects: 1.160200 ms CreateObjectMapping: 0.492100 ms MarkObjects: 37.566700 ms  DeleteObjects: 0.028500 ms)
+Unloading 0 unused Assets / (0 B). Loaded Objects now: 11695.
+Memory consumption went from 273.7 MB to 273.7 MB.
+Total: 28.207800 ms (FindLiveObjects: 0.752600 ms CreateObjectMapping: 0.293300 ms MarkObjects: 27.135400 ms  DeleteObjects: 0.025200 ms)
 
 [Physics::Module] Cleanup current backend.
 [Physics::Module] Id: 0xf2b8ea05
@@ -575,16 +760,16 @@ Input System module state changed to: Shutdown.
 [Licensing::IpcConnector] LicenseClient-dylan channel disconnected successfully.
 AcceleratorClientConnectionCallback - disconnected - :0
 Cleanup mono
-abort_threads: Failed aborting id: 0000000000008888, mono_thread_manage will ignore it
+abort_threads: Failed aborting id: 0000000000001F98, mono_thread_manage will ignore it
 
-abort_threads: Failed aborting id: 0000000000005CBC, mono_thread_manage will ignore it
+abort_threads: Failed aborting id: 0000000000006850, mono_thread_manage will ignore it
 
-abort_threads: Failed aborting id: 0000000000008888, mono_thread_manage will ignore it
+abort_threads: Failed aborting id: 0000000000001F98, mono_thread_manage will ignore it
 
-abort_threads: Failed aborting id: 0000000000005CBC, mono_thread_manage will ignore it
+abort_threads: Failed aborting id: 0000000000006850, mono_thread_manage will ignore it
 
-debugger-agent: Unable to listen on 4244
+debugger-agent: Unable to listen on 4236
 Checking for leaked weakptr:
   Found no leaked weakptrs.
 [Package Manager] Server process was shutdown
-##utp:{"type":"MemoryLeaks","version":2,"phase":"Immediate","time":1766025540958,"processId":32688,"allocatedMemory":22307618,"memoryLabels":[{"Default":14409},{"Permanent":15524},{"NewDelete":68139},{"Thread":4230344},{"Manager":2914957},{"VertexData":8},{"Geometry":816},{"Texture":296},{"Shader":81662},{"Material":24},{"GfxDevice":55257},{"Animation":392},{"Audio":2664},{"FontEngine":256},{"Physics":2090},{"Physics2D":16},{"Serialization":528},{"Input":14984},{"JobScheduler":33024},{"TextLib":192},{"Mono":32},{"MonoCode":64},{"ScriptingNativeRuntime":155060},{"BaseObject":1620336},{"Resource":1336},{"Renderer":3000},{"Transform":4685},{"File":3933},{"WebCam":616},{"Culling":32},{"Terrain":11394},{"Wind":24},{"STL":40},{"String":13818},{"DynamicArray":132104},{"HashMap":83623},{"Utility":2661766},{"Curl":2579},{"PoolAlloc":22648},{"AI":40},{"TypeTree":5341},{"ScriptManager":512},{"RuntimeInitializeOnLoadManager":64},{"SpriteAtlas":112},{"GI":7792},{"Director":8240},{"CloudService":288},{"WebRequest":808},{"VR":47994},{"SceneManager":504},{"Video":208},{"LazyScriptCache":32},{"Camera":17},{"Secure":2113},{"SerializationCache":1576},{"APIUpdating":10320},{"Subsystems":336},{"VirtualTexturing":57888},{"StaticSafetyDebugInfo":278528},{"Analytics":256},{"Hierarchy":608},{"CoreStats":13000},{"Identifiers":12960},{"Gui":88},{"EditorUtility":143711},{"VersionControl":4},{"Undo":947},{"AssetDatabase":9515898},{"EditorGi":328},{"UnityConnect":29232},{"Upm":1896},{"AssetCompliance":64},{"DrivenProperties":72},{"LocalIPC":211},{"ProfilerEditor":9746},{"CoreBusinessMetrics":2588},{"Licensing":664},{"AssetReference":32},{"IPCStream":32}]}
+##utp:{"type":"MemoryLeaks","version":2,"phase":"Immediate","time":1766027826396,"processId":1636,"allocatedMemory":22307754,"memoryLabels":[{"Default":14409},{"Permanent":15524},{"NewDelete":68139},{"Thread":4230344},{"Manager":2915213},{"VertexData":8},{"Geometry":816},{"Texture":296},{"Shader":81662},{"Material":24},{"GfxDevice":55257},{"Animation":392},{"Audio":2664},{"FontEngine":256},{"Physics":2090},{"Physics2D":16},{"Serialization":528},{"Input":14984},{"JobScheduler":33024},{"TextLib":192},{"Mono":32},{"MonoCode":64},{"ScriptingNativeRuntime":155060},{"BaseObject":1620336},{"Resource":1336},{"Renderer":3000},{"Transform":4685},{"File":3933},{"WebCam":616},{"Culling":32},{"Terrain":11394},{"Wind":24},{"STL":40},{"String":13818},{"DynamicArray":132040},{"HashMap":83623},{"Utility":2661766},{"Curl":2579},{"PoolAlloc":22696},{"AI":40},{"TypeTree":5341},{"ScriptManager":512},{"RuntimeInitializeOnLoadManager":64},{"SpriteAtlas":112},{"GI":7792},{"Director":8240},{"CloudService":288},{"WebRequest":808},{"VR":47994},{"SceneManager":504},{"Video":208},{"LazyScriptCache":32},{"Camera":17},{"Secure":2113},{"SerializationCache":1576},{"APIUpdating":10320},{"Subsystems":336},{"VirtualTexturing":57888},{"StaticSafetyDebugInfo":278528},{"Analytics":256},{"Hierarchy":608},{"CoreStats":13000},{"Identifiers":12960},{"Gui":88},{"EditorUtility":143647},{"VersionControl":4},{"Undo":947},{"AssetDatabase":9515858},{"EditorGi":328},{"UnityConnect":29232},{"Upm":1896},{"AssetCompliance":64},{"DrivenProperties":72},{"LocalIPC":211},{"ProfilerEditor":9746},{"CoreBusinessMetrics":2588},{"Licensing":664},{"AssetReference":32},{"IPCStream":32}]}

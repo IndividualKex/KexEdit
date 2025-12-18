@@ -27,7 +27,8 @@
         "KexEdit.Adapters",
         "KexEdit.NodeGraph",
         "KexGraph",
-        "KexEdit.Coaster"
+        "KexEdit.Coaster",
+        "KexEdit.LegacyImport"
     ],
     "includePlatforms": [
         "Editor"

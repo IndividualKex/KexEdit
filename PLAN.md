@@ -308,10 +308,10 @@ Hexagonal (core → adapters), TDD (tests with each step).
 
 ### Phase 2: Legacy Adapter → Gold Tests
 
-4. **LegacyImporter** + tests
-5. **Gold tests** - load .kex → evaluate → compare to legacy output
+4. ✓ **LegacyImporter** + tests
+5. ⚠ **Gold tests** - load .kex → evaluate → compare to legacy output
 
-Success criteria met here: legacy files load and evaluate correctly.
+Status: LegacyImporter complete and tested. Gold tests load files successfully but evaluator returns 0 paths - requires investigation.
 
 ### Phase 3: New Persistence
 

@@ -5,8 +5,9 @@ Unit and integration tests for KexEdit functionality.
 ## Purpose
 
 - Unit tests for KexGraph library (nodes, ports, edges)
-- Golden fixture tests validating physics against exported ground truth
 - Unit tests for Core primitives and node types
+- Unit tests for LegacyImporter (SerializedGraph → Coaster)
+- Golden fixture tests validating physics against exported ground truth
 - Performance benchmarks comparing Burst vs Rust implementations
 
 ## Layout
@@ -17,6 +18,8 @@ Tests/
 ├── Tests.asmdef
 ├── Graph*Tests.cs              # Unit tests for KexGraph library
 ├── Core*Tests.cs               # Unit tests for Core layer
+├── LegacyImporterTests.cs      # Unit tests for legacy import
+├── CoasterGoldTests.cs         # Integration tests: .kex → evaluate
 ├── *NodeTests.cs               # Golden tests for node types
 ├── Build*SystemTests.cs        # Golden tests for ECS layer
 ├── *TestBuilder.cs             # Build test data from gold fixtures
@@ -39,6 +42,6 @@ Tests/
 ## Dependencies
 
 - KexGraph
-- KexEdit.Core, KexEdit.Nodes.*, KexEdit (ECS)
-- KexEdit.Native.RustCore
+- KexEdit.Core, KexEdit.Nodes.*, KexEdit.Coaster, KexEdit.LegacyImport
+- KexEdit (ECS), KexEdit.Native.RustCore
 - Unity.Entities.Tests, Unity.PerformanceTesting, NUnit
