@@ -30,8 +30,8 @@ Implement a clean serialization system following hexagonal architecture where:
 │   ┌──────────────────────────────────────────────────────────┐ │
 │   │                    KexEdit.Document                       │ │
 │   │                                                           │ │
-│   │  CoasterDocument  - aggregate root (graph + data)         │ │
-│   │  DocumentEvaluator - use case (document → track points)   │ │
+│   │  Coaster          - aggregate root (graph + data)         │ │
+│   │  CoasterEvaluator - use case (coaster → track points)     │ │
 │   └──────────────────────────────────────────────────────────┘ │
 └────────────────────────────────────────────────────────────────┘
                               │
@@ -41,8 +41,8 @@ Implement a clean serialization system following hexagonal architecture where:
 │ KexEdit.Persistence      │    │ KexEdit.LegacyImport     │
 │ (driven adapter)         │    │ (driven adapter)         │
 │                          │    │                          │
-│ DocumentSerializer       │    │ LegacyImporter           │
-│ bytes ↔ Document         │    │ .kex → Document          │
+│ CoasterSerializer        │    │ LegacyImporter           │
+│ bytes ↔ Coaster          │    │ .kex → Coaster           │
 └──────────────────────────┘    └──────────────────────────┘
 ```
 
@@ -57,17 +57,17 @@ Implement a clean serialization system following hexagonal architecture where:
 
 **Application Layer** - Orchestrates domain, implements use cases:
 - `KexEdit.Document` - Contains both the aggregate root AND the evaluator
-  - `CoasterDocument` - The data model (graph + domain data)
-  - `DocumentEvaluator` - Use case: evaluate document → track points
+  - `Coaster` - The data model (graph + domain data)
+  - `CoasterEvaluator` - Use case: evaluate coaster → track points
 
 **Adapters** - Infrastructure concerns:
-- `KexEdit.Persistence` - Serialization (bytes ↔ Document)
+- `KexEdit.Persistence` - Serialization (bytes ↔ Coaster)
 - `KexEdit.LegacyImport` - Legacy .kex file import
 
 ### Why Evaluator is NOT an Adapter
 
-Evaluation is core application logic ("given a coaster, compute the track"), not infrastructure adaptation. It belongs with Document because:
-- Both are application layer, not domain
+Evaluation is core application logic ("given a coaster, compute the track"), not infrastructure adaptation. It belongs in the application layer because:
+- Both Coaster and CoasterEvaluator are application layer, not domain
 - Evaluator implements a use case, not I/O
 - They're conceptually coupled
 
@@ -84,10 +84,10 @@ KexEdit.LegacyImport
   └── KexEdit.Document, KexEdit (legacy serialization)
 ```
 
-### CoasterDocument (Pure Data)
+### Coaster (Pure Data)
 
 ```csharp
-public struct CoasterDocument : IDisposable {
+public struct Coaster : IDisposable {
     // Graph topology
     public Graph Graph;
 
@@ -109,11 +109,11 @@ public struct CoasterDocument : IDisposable {
 }
 ```
 
-### DocumentEvaluator (Use Case)
+### CoasterEvaluator (Use Case)
 
 ```csharp
-public static class DocumentEvaluator {
-    public static EvaluationResult Evaluate(in CoasterDocument doc, Allocator allocator);
+public static class CoasterEvaluator {
+    public static EvaluationResult Evaluate(in Coaster coaster, Allocator allocator);
 }
 
 public struct EvaluationResult : IDisposable {
@@ -126,16 +126,16 @@ Algorithm:
 1. Topologically sort nodes via `Graph.FindSourceNodes()` + BFS
 2. For each node in order:
    - Read inputs from predecessor outputs (via edges)
-   - Read keyframes/config from document's hash maps
+   - Read keyframes/config from coaster's hash maps
    - Call appropriate `*Node.Build()` method
    - Store outputs for successors
 
 ### Extension Mechanism (UI Metadata)
 
 UI state is separate from core coaster data:
-- Document provides opaque `Extensions: NativeArray<byte>` slot
+- Coaster provides opaque `Extensions: NativeArray<byte>` slot
 - UI layer serializes its own state (selection, camera, timeline)
-- Document passes extension bytes through without interpretation
+- Coaster passes extension bytes through without interpretation
 
 ## What's Done
 
@@ -152,10 +152,10 @@ UI state is separate from core coaster data:
 
 | Component | Purpose | Location |
 |-----------|---------|----------|
-| **CoasterDocument** | Aggregate root (graph + data) | `KexEdit.Document` |
-| **DocumentEvaluator** | Use case: document → points | `KexEdit.Document` |
-| **DocumentSerializer** | New binary format | `KexEdit.Persistence` |
-| **LegacyImporter** | .kex → Document | `KexEdit.LegacyImport` |
+| **Coaster** | Aggregate root (graph + data) | `KexEdit.Document` |
+| **CoasterEvaluator** | Use case: coaster → points | `KexEdit.Document` |
+| **CoasterSerializer** | New binary format | `KexEdit.Persistence` |
+| **LegacyImporter** | .kex → Coaster | `KexEdit.LegacyImport` |
 | **Gold tests** | Validate parity with legacy | `Assets/Tests/Document/` |
 
 ### New Binary Format
@@ -183,10 +183,10 @@ UI state is separate from core coaster data:
 ## Implementation Order
 
 1. ✓ **Graph serialization support** - public IDs + RebuildIndexMaps in `KexGraph`
-2. **CoasterDocument** - aggregate root in `KexEdit.Document`
-3. **DocumentEvaluator** - use case in `KexEdit.Document`
-4. **DocumentSerializer** - new binary format in `KexEdit.Persistence`
-5. **LegacyImporter** - .kex → Document in `KexEdit.LegacyImport`
+2. **Coaster** - aggregate root in `KexEdit.Document`
+3. **CoasterEvaluator** - use case in `KexEdit.Document`
+4. **CoasterSerializer** - new binary format in `KexEdit.Persistence`
+5. **LegacyImporter** - .kex → Coaster in `KexEdit.LegacyImport`
 6. **Gold tests** - validate parity with legacy system
 
 ## Files to Create
@@ -194,12 +194,12 @@ UI state is separate from core coaster data:
 | File | Purpose |
 |------|---------|
 | `Assets/Runtime/Document/KexEdit.Document.asmdef` | Assembly def |
-| `Assets/Runtime/Document/CoasterDocument.cs` | Aggregate root |
-| `Assets/Runtime/Document/DocumentEvaluator.cs` | Evaluation use case |
+| `Assets/Runtime/Document/Coaster.cs` | Aggregate root |
+| `Assets/Runtime/Document/CoasterEvaluator.cs` | Evaluation use case |
 | `Assets/Runtime/Document/EvaluationResult.cs` | Output container |
 | `Assets/Runtime/Persistence/KexEdit.Persistence.asmdef` | Assembly def |
-| `Assets/Runtime/Persistence/DocumentSerializer.cs` | Binary format |
+| `Assets/Runtime/Persistence/CoasterSerializer.cs` | Binary format |
 | `Assets/Runtime/LegacyImport/KexEdit.LegacyImport.asmdef` | Assembly def |
-| `Assets/Runtime/LegacyImport/LegacyImporter.cs` | .kex → Document |
-| `Assets/Tests/Document/DocumentEvaluatorTests.cs` | Gold test parity |
+| `Assets/Runtime/LegacyImport/LegacyImporter.cs` | .kex → Coaster |
+| `Assets/Tests/Document/CoasterEvaluatorTests.cs` | Gold test parity |
 | `Assets/Tests/Document/LegacyImporterTests.cs` | Import tests |
