@@ -108,11 +108,10 @@ public struct Coaster : IDisposable {
     public NativeHashMap<uint, Duration> Durations; // nodeId → Duration
     public NativeHashSet<uint> Steering;            // presence = enabled
     public NativeHashMap<uint, Point> Anchors;      // nodeId → initial state
-
-    // Opaque extension data (UI state, etc.)
-    public NativeArray<byte> Extensions;
 }
 ```
+
+Note: No extension data in Coaster itself. Extensions are handled at the serialization layer via chunk-based format (see Binary Format below).
 
 ### CoasterEvaluator (Use Case)
 
@@ -136,14 +135,6 @@ Algorithm:
     - Call appropriate `*Node.Build()` method
     - Store outputs for successors
 
-### Extension Mechanism (UI Metadata)
-
-UI state is separate from core coaster data:
-
--   Coaster provides opaque `Extensions: NativeArray<byte>` slot
--   UI layer serializes its own state (selection, camera, timeline)
--   Coaster passes extension bytes through without interpretation
-
 ## What's Done
 
 | Component                                             | Status     |
@@ -165,48 +156,187 @@ UI state is separate from core coaster data:
 | **LegacyImporter**    | .kex → Coaster                | `KexEdit.LegacyImport`   |
 | **Gold tests**        | Validate parity with legacy   | `Assets/Tests/Document/` |
 
-### New Binary Format
+### Binary Format (Chunk-Based)
+
+Inspired by glTF/PNG/RIFF. Self-describing chunks eliminate size pre-calculation and enable clean extension support.
+
+#### Design Principles
+
+1. **Self-describing**: Each chunk has type + length, can be skipped if unknown
+2. **Per-chunk versioning**: Each chunk versions independently, isolated migrations
+3. **Sub-chunks in CORE**: Graph and data are separate sub-chunks for flexibility
+4. **Compile-time extensions**: Assemblies register chunk handlers via attributes
+5. **No forward compatibility**: Unknown chunks are dropped (simplifies Coaster struct)
+
+#### File Structure
 
 ```
-[Magic: 4 bytes "KEXD"]
-[Version: uint32]
-[Graph section]
-  [NodeCount, PortCount, EdgeCount]
-  [Nodes: id, type, position...]
-  [Ports: id, type, owner, isInput...]
-  [Edges: id, source, target...]
-  [NextNodeId, NextPortId, NextEdgeId]
-[Data section]
-  [KeyframeRanges: count + (key, start, len)[]]
-  [Keyframes: count + keyframes[]]
-  [Scalars: count + (key, value)[]]
-  [Vectors: count + (key, x, y, z)[]]
-  [Durations: count + (key, type, value)[]]
-  [Steering: count + keys[]]
-  [Anchors: count + (key, Point)[]]
-[Extensions: length + bytes]
+┌──────────────────────────────────────────────────────────────┐
+│ FILE HEADER                                                   │
+│   Magic:       "KEXD" (4 bytes)                               │
+│   Version:     uint32 (format version, rarely changes)        │
+│   ChunkCount:  uint32                                         │
+├──────────────────────────────────────────────────────────────┤
+│ CHUNK: CORE (required) ← contains sub-chunks                  │
+│   Type:        "CORE" (4 bytes)                               │
+│   Version:     uint32                                         │
+│   Length:      uint32 (excludes 12-byte header)               │
+│   ┌────────────────────────────────────────────────────────┐ │
+│   │ SUB-CHUNK: GRPH                                         │ │
+│   │   Type: "GRPH", Version: uint32, Length: uint32         │ │
+│   │   [NodeCount, PortCount, EdgeCount]                     │ │
+│   │   [Nodes: id, type, position...]                        │ │
+│   │   [Ports: id, type, owner, isInput...]                  │ │
+│   │   [Edges: id, source, target...]                        │ │
+│   │   [NextNodeId, NextPortId, NextEdgeId]                  │ │
+│   ├────────────────────────────────────────────────────────┤ │
+│   │ SUB-CHUNK: DATA                                         │ │
+│   │   Type: "DATA", Version: uint32, Length: uint32         │ │
+│   │   [KeyframeCount + Keyframes[]]                         │ │
+│   │   [RangeCount + KeyframeRanges[]]                       │ │
+│   │   [ScalarCount + Scalars[]]                             │ │
+│   │   [VectorCount + Vectors[]]                             │ │
+│   │   [DurationCount + Durations[]]                         │ │
+│   │   [SteeringCount + Steering[]]                          │ │
+│   │   [AnchorCount + Anchors[]]                             │ │
+│   └────────────────────────────────────────────────────────┘ │
+├──────────────────────────────────────────────────────────────┤
+│ CHUNK: UIST (optional - UI state extension)                   │
+│   Type:        "UIST" (4 bytes)                               │
+│   Version:     uint32                                         │
+│   Length:      uint32                                         │
+│   [Camera: position, target, distance, pitch, yaw...]         │
+│   [Timeline: offset, zoom]                                    │
+│   [NodeGraph: panX, panY, zoom]                               │
+├──────────────────────────────────────────────────────────────┤
+│ CHUNK: SLCT (optional - selection extension)                  │
+│   Type:        "SLCT" (4 bytes)                               │
+│   Version:     uint32                                         │
+│   Length:      uint32                                         │
+│   [SelectedNodeCount + NodeIds[]]                             │
+│   [PropertySelectionCount + (nodeId, propertyIds[])[]]        │
+└──────────────────────────────────────────────────────────────┘
 ```
+
+#### Chunk Header (12 bytes)
+
+```csharp
+public struct ChunkHeader {
+    public FixedString4Bytes Type;    // "CORE", "UIST", "SLCT", etc.
+    public uint Version;               // Chunk-specific version
+    public uint Length;                // Content length (excludes header)
+}
+```
+
+#### Extension System
+
+```csharp
+// Attribute for compile-time discovery
+[AttributeUsage(AttributeTargets.Class)]
+public class ChunkExtensionAttribute : Attribute {
+    public string ChunkType { get; }
+    public ChunkExtensionAttribute(string type) => ChunkType = type;
+}
+
+// Interface for extension handlers
+public interface IChunkExtension {
+    uint CurrentVersion { get; }
+    void Write(ChunkWriter writer);
+    void Read(ChunkReader reader, uint version);
+    void Clear();  // Reset state when loading new file
+}
+
+// Example: UI state extension (lives in editor assembly)
+[ChunkExtension("UIST")]
+public class UIStateExtension : IChunkExtension {
+    public CameraState Camera;
+    public TimelineState Timeline;
+    public NodeGraphViewState NodeGraph;
+
+    public uint CurrentVersion => 1;
+    public void Write(ChunkWriter w) { /* ... */ }
+    public void Read(ChunkReader r, uint v) { /* ... */ }
+    public void Clear() { /* reset to defaults */ }
+}
+```
+
+#### Serialization API
+
+```csharp
+public static class CoasterSerializer {
+    // Core-only (portable, runtime)
+    public static void WriteCore(ChunkWriter writer, in Coaster coaster);
+    public static Coaster ReadCore(ChunkReader reader, Allocator allocator);
+
+    // With extensions (editor)
+    public static void Write(ChunkWriter writer, in Coaster coaster,
+                             IReadOnlyList<IChunkExtension> extensions);
+    public static Coaster Read(ChunkReader reader, Allocator allocator,
+                               IReadOnlyList<IChunkExtension> extensions);
+}
+
+// Usage in runtime (no extensions)
+var coaster = CoasterSerializer.ReadCore(reader, Allocator.Persistent);
+
+// Usage in editor (with extensions)
+var extensions = ChunkExtensionRegistry.GetAll();  // compile-time discovered
+var coaster = CoasterSerializer.Read(reader, Allocator.Persistent, extensions);
+```
+
+#### Benefits Over Legacy
+
+| Legacy Pain Point              | Chunk-Based Solution                      |
+| ------------------------------ | ----------------------------------------- |
+| SizeCalculator sync            | Length written after content              |
+| Monolithic version             | Per-chunk versioning                      |
+| UI state in core               | Separate UIST chunk, editor-only          |
+| 5-point updates per field      | Add field, bump chunk version             |
+| Can't skip unknown             | Length field enables skip                 |
+| Migration complexity           | Isolated per-chunk migration              |
+| Port type explosion (900 LOC)  | Data-driven via node schemas              |
 
 ## Implementation Order
 
-1. ✓ **Graph serialization support** - public IDs + RebuildIndexMaps in `KexGraph`
-2. **Coaster** - aggregate root in `KexEdit.Coaster`
-3. **CoasterEvaluator** - use case in `KexEdit.Coaster`
-4. **CoasterSerializer** - new binary format in `KexEdit.Persistence`
-5. **LegacyImporter** - .kex → Coaster in `KexEdit.LegacyImport`
-6. **Gold tests** - validate parity with legacy system
+Hexagonal (core → adapters), TDD (tests with each step).
+
+### Phase 1: Application Layer
+
+1. ✓ **Graph serialization** - done
+2. **Coaster** + unit tests
+3. **CoasterEvaluator** + unit tests (hand-crafted coasters)
+
+### Phase 2: Legacy Adapter → Gold Tests
+
+4. **LegacyImporter** + tests
+5. **Gold tests** - load .kex → evaluate → compare to legacy output
+
+Success criteria met here: legacy files load and evaluate correctly.
+
+### Phase 3: New Persistence
+
+6. **Chunk infrastructure** (ChunkReader/Writer, extension registry)
+7. **CoasterSerializer** + round-trip tests
+8. **Editor extensions** (UIST, SLCT)
 
 ## Files to Create
 
-| File                                                      | Purpose             |
-| --------------------------------------------------------- | ------------------- |
-| `Assets/Runtime/Document/KexEdit.Coaster.asmdef`          | Assembly def        |
-| `Assets/Runtime/Document/Coaster.cs`                      | Aggregate root      |
-| `Assets/Runtime/Document/CoasterEvaluator.cs`             | Evaluation use case |
-| `Assets/Runtime/Document/EvaluationResult.cs`             | Output container    |
-| `Assets/Runtime/Persistence/KexEdit.Persistence.asmdef`   | Assembly def        |
-| `Assets/Runtime/Persistence/CoasterSerializer.cs`         | Binary format       |
-| `Assets/Runtime/LegacyImport/KexEdit.LegacyImport.asmdef` | Assembly def        |
-| `Assets/Runtime/LegacyImport/LegacyImporter.cs`           | .kex → Coaster      |
-| `Assets/Tests/Document/CoasterEvaluatorTests.cs`          | Gold test parity    |
-| `Assets/Tests/Document/LegacyImporterTests.cs`            | Import tests        |
+```
+Assets/Runtime/Document/
+  KexEdit.Coaster.asmdef
+  Coaster.cs
+  CoasterEvaluator.cs
+
+Assets/Runtime/Persistence/
+  KexEdit.Persistence.asmdef
+  ChunkReader.cs, ChunkWriter.cs
+  IChunkExtension.cs, ChunkExtensionAttribute.cs
+  CoasterSerializer.cs
+
+Assets/Runtime/LegacyImport/
+  KexEdit.LegacyImport.asmdef
+  LegacyImporter.cs
+
+Assets/Editor/Persistence/
+  UIStateExtension.cs      (UIST chunk)
+  SelectionExtension.cs    (SLCT chunk)
+```
