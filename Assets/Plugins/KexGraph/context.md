@@ -64,6 +64,7 @@ KexGraph/
 
 **Serialization Support**
 - `NextNodeId`, `NextPortId`, `NextEdgeId` - Public ID generators for serialization
+- `NodeIndexMap`, `PortIndexMap`, `EdgeIndexMap` - Public for manual deserialization
 - `RebuildIndexMaps()` - Rebuilds index maps after deserialization
 
 ## Dependencies

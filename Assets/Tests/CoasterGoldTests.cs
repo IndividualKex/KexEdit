@@ -32,17 +32,6 @@ namespace Tests {
                         CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.TempJob);
 
                         try {
-                            Debug.Log($"Coaster loaded: {coaster.Graph.NodeCount} nodes, {coaster.Graph.EdgeCount} edges");
-                            Debug.Log($"Evaluation result: {result.Paths.Count} paths");
-
-                            var pathKeys = result.Paths.GetKeyArray(Allocator.Temp);
-                            foreach (var nId in pathKeys) {
-                                var path = result.Paths[nId];
-                                Debug.Log($"  Node {nId}: {path.Length} points");
-                            }
-
-                            pathKeys.Dispose();
-
                             Assert.Greater(result.Paths.Count, 0, "No paths generated");
                         }
                         finally {
@@ -83,17 +72,6 @@ namespace Tests {
                         CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.TempJob);
 
                         try {
-                            Debug.Log($"Coaster loaded: {coaster.Graph.NodeCount} nodes, {coaster.Graph.EdgeCount} edges");
-                            Debug.Log($"Evaluation result: {result.Paths.Count} paths");
-
-                            var pathKeys = result.Paths.GetKeyArray(Allocator.Temp);
-                            foreach (var nId in pathKeys) {
-                                var path = result.Paths[nId];
-                                Debug.Log($"  Node {nId}: {path.Length} points");
-                            }
-
-                            pathKeys.Dispose();
-
                             Assert.Greater(result.Paths.Count, 0, "No paths generated");
                         }
                         finally {

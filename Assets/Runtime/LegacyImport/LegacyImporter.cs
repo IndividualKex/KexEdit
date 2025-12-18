@@ -24,6 +24,21 @@ namespace KexEdit.LegacyImport {
         }
 
         [BurstCompile]
+        private static uint ConvertNodeType(Legacy.NodeType legacyType) {
+            return legacyType switch {
+                Legacy.NodeType.ForceSection => (uint)Nodes.NodeType.Force,
+                Legacy.NodeType.GeometricSection => (uint)Nodes.NodeType.Geometric,
+                Legacy.NodeType.CurvedSection => (uint)Nodes.NodeType.Curved,
+                Legacy.NodeType.CopyPathSection => (uint)Nodes.NodeType.CopyPath,
+                Legacy.NodeType.Anchor => (uint)Nodes.NodeType.Anchor,
+                Legacy.NodeType.Reverse => (uint)Nodes.NodeType.Reverse,
+                Legacy.NodeType.ReversePath => (uint)Nodes.NodeType.ReversePath,
+                Legacy.NodeType.Bridge => (uint)Nodes.NodeType.Bridge,
+                _ => 0
+            };
+        }
+
+        [BurstCompile]
         private static void ImportGraph(in SerializedGraph serializedGraph, ref Graph graph, Allocator allocator) {
             uint maxNodeId = 0;
             uint maxPortId = 0;
@@ -52,7 +67,7 @@ namespace KexEdit.LegacyImport {
             for (int i = 0; i < serializedGraph.Nodes.Length; i++) {
                 var node = serializedGraph.Nodes[i];
                 uint nodeId = node.Node.Id;
-                uint nodeType = (uint)node.Node.Type;
+                uint nodeType = ConvertNodeType(node.Node.Type);
                 float2 position = node.Node.Position;
 
                 int nodeIndex = graph.NodeIds.Length;
@@ -61,16 +76,19 @@ namespace KexEdit.LegacyImport {
                 graph.NodePositions.Add(position);
                 graph.NodeInputCount.Add(node.InputPorts.Length);
                 graph.NodeOutputCount.Add(node.OutputPorts.Length);
+                graph.NodeIndexMap[nodeId] = nodeIndex;
 
                 for (int j = 0; j < node.InputPorts.Length; j++) {
                     var port = node.InputPorts[j];
                     uint portId = port.Port.Id;
                     uint portType = (uint)port.Port.Type;
 
+                    int portIndex = graph.PortIds.Length;
                     graph.PortIds.Add(portId);
                     graph.PortTypes.Add(portType);
                     graph.PortOwners.Add(nodeId);
                     graph.PortIsInput.Add(true);
+                    graph.PortIndexMap[portId] = portIndex;
                 }
 
                 for (int j = 0; j < node.OutputPorts.Length; j++) {
@@ -78,18 +96,22 @@ namespace KexEdit.LegacyImport {
                     uint portId = port.Port.Id;
                     uint portType = (uint)port.Port.Type;
 
+                    int portIndex = graph.PortIds.Length;
                     graph.PortIds.Add(portId);
                     graph.PortTypes.Add(portType);
                     graph.PortOwners.Add(nodeId);
                     graph.PortIsInput.Add(false);
+                    graph.PortIndexMap[portId] = portIndex;
                 }
             }
 
             for (int i = 0; i < serializedGraph.Edges.Length; i++) {
                 var edge = serializedGraph.Edges[i];
+                int edgeIndex = graph.EdgeIds.Length;
                 graph.EdgeIds.Add(edge.Id);
                 graph.EdgeSources.Add(edge.SourceId);
                 graph.EdgeTargets.Add(edge.TargetId);
+                graph.EdgeIndexMap[edge.Id] = edgeIndex;
             }
         }
 

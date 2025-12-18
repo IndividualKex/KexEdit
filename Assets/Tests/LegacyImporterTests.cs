@@ -83,7 +83,7 @@ namespace Tests {
                 try {
                     Assert.AreEqual(1, coaster.Graph.NodeCount);
                     Assert.AreEqual(1u, coaster.Graph.NodeIds[0]);
-                    Assert.AreEqual((uint)KexEdit.Legacy.NodeType.ForceSection, coaster.Graph.NodeTypes[0]);
+                    Assert.AreEqual((uint)KexEdit.Nodes.NodeType.Force, coaster.Graph.NodeTypes[0]);
                     Assert.AreEqual(new float2(100f, 200f), coaster.Graph.NodePositions[0]);
 
                     Assert.IsTrue(coaster.Anchors.ContainsKey(1u));

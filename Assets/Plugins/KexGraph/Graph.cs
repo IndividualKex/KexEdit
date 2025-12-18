@@ -20,9 +20,9 @@ namespace KexGraph {
         public NativeList<uint> EdgeSources;
         public NativeList<uint> EdgeTargets;
 
-        internal NativeHashMap<uint, int> NodeIndexMap;
-        internal NativeHashMap<uint, int> PortIndexMap;
-        internal NativeHashMap<uint, int> EdgeIndexMap;
+        public NativeHashMap<uint, int> NodeIndexMap;
+        public NativeHashMap<uint, int> PortIndexMap;
+        public NativeHashMap<uint, int> EdgeIndexMap;
         public uint NextNodeId;
         public uint NextPortId;
         public uint NextEdgeId;
