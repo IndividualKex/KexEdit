@@ -311,8 +311,6 @@ Hexagonal (core → adapters), TDD (tests with each step).
 4. ✓ **LegacyImporter** + tests
 5. ✓ **Gold tests** - load .kex → evaluate → compare to legacy output
 
-Status: Complete. Shuttle test passing (392/393 tests pass). Veloci test crashes in evaluator - separate issue to investigate.
-
 ### Phase 3: New Persistence
 
 6. **Chunk infrastructure** (ChunkReader/Writer, extension registry)
