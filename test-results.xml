@@ -1,73 +1,97 @@
 <?xml version="1.0" encoding="utf-8"?>
-<test-run id="2" testcasecount="9" result="Passed" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.0695804">
-  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3221" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.069580" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+<test-run id="2" testcasecount="13" result="Passed" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.074399">
+  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3234" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.074399" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
     <properties>
       <property name="platform" value="EditMode" />
     </properties>
-    <test-suite type="Assembly" id="1401" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="356" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.043278" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <test-suite type="Assembly" id="1415" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="369" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.047533" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
       <properties>
-        <property name="_PID" value="34384" />
+        <property name="_PID" value="35456" />
         <property name="_APPDOMAIN" value="Unity Child Domain" />
         <property name="platform" value="EditMode" />
         <property name="EditorOnly" value="True" />
       </properties>
-      <test-suite type="TestSuite" id="1404" name="Storage" fullname="Storage" runstate="Runnable" testcasecount="9" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.039327" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-suite type="TestSuite" id="1423" name="KexGraph" fullname="KexGraph" runstate="Runnable" testcasecount="72" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.044354" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
         <properties />
-        <test-suite type="TestSuite" id="1405" name="Tests" fullname="Storage.Tests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.038816" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-suite type="TestSuite" id="1424" name="Tests" fullname="KexGraph.Tests" runstate="Runnable" testcasecount="72" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.043448" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
           <properties />
-          <test-suite type="TestFixture" id="1052" name="KeyframeStoreTests" fullname="Storage.Tests.KeyframeStoreTests" classname="Storage.Tests.KeyframeStoreTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.037705" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <test-suite type="TestFixture" id="1119" name="GraphSerializationTests" fullname="KexGraph.Tests.GraphSerializationTests" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" testcasecount="13" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.041930" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
             <properties>
               <property name="Category" value="Unit" />
             </properties>
-            <test-case id="1061" name="Clear_RemovesAllData" fullname="Storage.Tests.KeyframeStoreTests.Clear_RemovesAllData" methodname="Clear_RemovesAllData" classname="Storage.Tests.KeyframeStoreTests" runstate="Runnable" seed="1065335978" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.018028" asserts="0">
+            <test-case id="1125" name="NextEdgeId_AfterAddingEdge_Increments" fullname="KexGraph.Tests.GraphSerializationTests.NextEdgeId_AfterAddingEdge_Increments" methodname="NextEdgeId_AfterAddingEdge_Increments" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="310955295" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.019537" asserts="0">
               <properties>
                 <property name="retryIteration" value="0" />
                 <property name="repeatIteration" value="0" />
               </properties>
             </test-case>
-            <test-case id="1060" name="DifferentNodesAndProperties_StoredSeparately" fullname="Storage.Tests.KeyframeStoreTests.DifferentNodesAndProperties_StoredSeparately" methodname="DifferentNodesAndProperties_StoredSeparately" classname="Storage.Tests.KeyframeStoreTests" runstate="Runnable" seed="2044506677" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.001639" asserts="0">
+            <test-case id="1122" name="NextEdgeId_DefaultGraph_StartsAtOne" fullname="KexGraph.Tests.GraphSerializationTests.NextEdgeId_DefaultGraph_StartsAtOne" methodname="NextEdgeId_DefaultGraph_StartsAtOne" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="1254761433" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000213" asserts="0">
               <properties>
                 <property name="retryIteration" value="0" />
                 <property name="repeatIteration" value="0" />
               </properties>
             </test-case>
-            <test-case id="1059" name="MakeKey_UnpackKey_Roundtrips" fullname="Storage.Tests.KeyframeStoreTests.MakeKey_UnpackKey_Roundtrips" methodname="MakeKey_UnpackKey_Roundtrips" classname="Storage.Tests.KeyframeStoreTests" runstate="Runnable" seed="1415640703" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.001759" asserts="0">
+            <test-case id="1123" name="NextNodeId_AfterAddingNode_Increments" fullname="KexGraph.Tests.GraphSerializationTests.NextNodeId_AfterAddingNode_Increments" methodname="NextNodeId_AfterAddingNode_Increments" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="287226732" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000133" asserts="0">
               <properties>
                 <property name="retryIteration" value="0" />
                 <property name="repeatIteration" value="0" />
               </properties>
             </test-case>
-            <test-case id="1057" name="Remove_ExistingCurve_CannotBeRetrieved" fullname="Storage.Tests.KeyframeStoreTests.Remove_ExistingCurve_CannotBeRetrieved" methodname="Remove_ExistingCurve_CannotBeRetrieved" classname="Storage.Tests.KeyframeStoreTests" runstate="Runnable" seed="38737736" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.000320" asserts="0">
+            <test-case id="1120" name="NextNodeId_DefaultGraph_StartsAtOne" fullname="KexGraph.Tests.GraphSerializationTests.NextNodeId_DefaultGraph_StartsAtOne" methodname="NextNodeId_DefaultGraph_StartsAtOne" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="375203512" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000112" asserts="0">
               <properties>
                 <property name="retryIteration" value="0" />
                 <property name="repeatIteration" value="0" />
               </properties>
             </test-case>
-            <test-case id="1058" name="RemoveNode_RemovesAllPropertiesForNode" fullname="Storage.Tests.KeyframeStoreTests.RemoveNode_RemovesAllPropertiesForNode" methodname="RemoveNode_RemovesAllPropertiesForNode" classname="Storage.Tests.KeyframeStoreTests" runstate="Runnable" seed="982577672" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.002190" asserts="0">
+            <test-case id="1124" name="NextPortId_AfterAddingPort_Increments" fullname="KexGraph.Tests.GraphSerializationTests.NextPortId_AfterAddingPort_Increments" methodname="NextPortId_AfterAddingPort_Increments" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="532991845" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000125" asserts="0">
               <properties>
                 <property name="retryIteration" value="0" />
                 <property name="repeatIteration" value="0" />
               </properties>
             </test-case>
-            <test-case id="1056" name="Set_EmptyArray_RemovesCurve" fullname="Storage.Tests.KeyframeStoreTests.Set_EmptyArray_RemovesCurve" methodname="Set_EmptyArray_RemovesCurve" classname="Storage.Tests.KeyframeStoreTests" runstate="Runnable" seed="2132743356" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.000260" asserts="0">
+            <test-case id="1121" name="NextPortId_DefaultGraph_StartsAtOne" fullname="KexGraph.Tests.GraphSerializationTests.NextPortId_DefaultGraph_StartsAtOne" methodname="NextPortId_DefaultGraph_StartsAtOne" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="2034871714" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000111" asserts="0">
               <properties>
                 <property name="retryIteration" value="0" />
                 <property name="repeatIteration" value="0" />
               </properties>
             </test-case>
-            <test-case id="1053" name="Set_NewCurve_CanBeRetrieved" fullname="Storage.Tests.KeyframeStoreTests.Set_NewCurve_CanBeRetrieved" methodname="Set_NewCurve_CanBeRetrieved" classname="Storage.Tests.KeyframeStoreTests" runstate="Runnable" seed="1479204512" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.000357" asserts="0">
+            <test-case id="1132" name="RebuildIndexMaps_AfterNodeRemoval_CorrectIndices" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_AfterNodeRemoval_CorrectIndices" methodname="RebuildIndexMaps_AfterNodeRemoval_CorrectIndices" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="2112040256" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.003739" asserts="0">
               <properties>
                 <property name="retryIteration" value="0" />
                 <property name="repeatIteration" value="0" />
               </properties>
             </test-case>
-            <test-case id="1055" name="Set_ReplacesExistingCurve" fullname="Storage.Tests.KeyframeStoreTests.Set_ReplacesExistingCurve" methodname="Set_ReplacesExistingCurve" classname="Storage.Tests.KeyframeStoreTests" runstate="Runnable" seed="1486385458" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.000336" asserts="0">
+            <test-case id="1131" name="RebuildIndexMaps_CalledMultipleTimes_Idempotent" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_CalledMultipleTimes_Idempotent" methodname="RebuildIndexMaps_CalledMultipleTimes_Idempotent" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="1898244252" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000159" asserts="0">
               <properties>
                 <property name="retryIteration" value="0" />
                 <property name="repeatIteration" value="0" />
               </properties>
             </test-case>
-            <test-case id="1054" name="TryGet_NonexistentCurve_ReturnsFalse" fullname="Storage.Tests.KeyframeStoreTests.TryGet_NonexistentCurve_ReturnsFalse" methodname="TryGet_NonexistentCurve_ReturnsFalse" classname="Storage.Tests.KeyframeStoreTests" runstate="Runnable" seed="1219298541" result="Passed" start-time="2025-12-17 02:04:34Z" end-time="2025-12-17 02:04:34Z" duration="0.000123" asserts="0">
+            <test-case id="1126" name="RebuildIndexMaps_EmptyGraph_Succeeds" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_EmptyGraph_Succeeds" methodname="RebuildIndexMaps_EmptyGraph_Succeeds" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="1578382673" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000286" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1129" name="RebuildIndexMaps_FullGraph_RebuildsAllIndexMaps" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_FullGraph_RebuildsAllIndexMaps" methodname="RebuildIndexMaps_FullGraph_RebuildsAllIndexMaps" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="1612109563" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000945" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1128" name="RebuildIndexMaps_NodesAndPorts_RebuildsPortIndexMap" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_NodesAndPorts_RebuildsPortIndexMap" methodname="RebuildIndexMaps_NodesAndPorts_RebuildsPortIndexMap" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="748717502" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000227" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1127" name="RebuildIndexMaps_NodesOnly_RebuildsNodeIndexMap" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_NodesOnly_RebuildsNodeIndexMap" methodname="RebuildIndexMaps_NodesOnly_RebuildsNodeIndexMap" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="699490907" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000254" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1130" name="SimulateRoundTrip_ComplexGraph_PreservesStructure" fullname="KexGraph.Tests.GraphSerializationTests.SimulateRoundTrip_ComplexGraph_PreservesStructure" methodname="SimulateRoundTrip_ComplexGraph_PreservesStructure" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="1172515078" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.003614" asserts="0">
               <properties>
                 <property name="retryIteration" value="0" />
                 <property name="repeatIteration" value="0" />

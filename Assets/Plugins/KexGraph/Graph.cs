@@ -23,9 +23,9 @@ namespace KexGraph {
         internal NativeHashMap<uint, int> NodeIndexMap;
         internal NativeHashMap<uint, int> PortIndexMap;
         internal NativeHashMap<uint, int> EdgeIndexMap;
-        internal uint NextNodeId;
-        internal uint NextPortId;
-        internal uint NextEdgeId;
+        public uint NextNodeId;
+        public uint NextPortId;
+        public uint NextEdgeId;
 
         public readonly int NodeCount => NodeIds.IsCreated ? NodeIds.Length : 0;
         public readonly int PortCount => PortIds.IsCreated ? PortIds.Length : 0;

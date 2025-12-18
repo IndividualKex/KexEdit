@@ -25,6 +25,7 @@ Tests/
 ├── PointComparer.cs            # ECS Point comparison
 ├── PerformanceTests/           # Burst vs Rust benchmarks
 ├── GoldData/                   # Gold data loading
+├── Storage/                    # Storage layer tests
 ├── TrackData/                  # Gold test fixtures (JSON)
 └── Assets/                     # Test asset files (.kex)
 ```

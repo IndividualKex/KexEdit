@@ -142,6 +142,7 @@ UI state is separate from core coaster data:
 | Component | Status |
 |-----------|--------|
 | KexGraph (graph algorithms) | ✓ Complete |
+| KexGraph serialization support | ✓ Complete |
 | KexEdit.Core (Point, Frame, Keyframe) | ✓ Complete |
 | KexEdit.Nodes (10 node types, schemas, Build methods) | ✓ Complete |
 | KexEdit.NodeGraph (typed extensions, validation) | ✓ Complete |
@@ -151,24 +152,11 @@ UI state is separate from core coaster data:
 
 | Component | Purpose | Location |
 |-----------|---------|----------|
-| **Graph serialization support** | Public ID generators + RebuildIndexMaps | `KexGraph` |
 | **CoasterDocument** | Aggregate root (graph + data) | `KexEdit.Document` |
 | **DocumentEvaluator** | Use case: document → points | `KexEdit.Document` |
 | **DocumentSerializer** | New binary format | `KexEdit.Persistence` |
 | **LegacyImporter** | .kex → Document | `KexEdit.LegacyImport` |
 | **Gold tests** | Validate parity with legacy | `Assets/Tests/Document/` |
-
-### Graph Serialization Support
-
-Graph is self-describing. Index maps are derived state, excluded from serialization.
-
-**Changes to Graph.cs:**
-1. Make `NextNodeId`, `NextPortId`, `NextEdgeId` public
-2. Add `RebuildIndexMaps()` extension method
-
-**Serialization flow:**
-- Write: iterate Graph's public NativeLists + ID generators
-- Read: create Graph, populate lists, set ID generators, call `RebuildIndexMaps()`
 
 ### New Binary Format
 
@@ -194,7 +182,7 @@ Graph is self-describing. Index maps are derived state, excluded from serializat
 
 ## Implementation Order
 
-1. **Graph serialization support** - public IDs + RebuildIndexMaps in `KexGraph`
+1. ✓ **Graph serialization support** - public IDs + RebuildIndexMaps in `KexGraph`
 2. **CoasterDocument** - aggregate root in `KexEdit.Document`
 3. **DocumentEvaluator** - use case in `KexEdit.Document`
 4. **DocumentSerializer** - new binary format in `KexEdit.Persistence`
@@ -205,7 +193,6 @@ Graph is self-describing. Index maps are derived state, excluded from serializat
 
 | File | Purpose |
 |------|---------|
-| `Assets/Plugins/KexGraph/GraphSerializationExtensions.cs` | RebuildIndexMaps |
 | `Assets/Runtime/Document/KexEdit.Document.asmdef` | Assembly def |
 | `Assets/Runtime/Document/CoasterDocument.cs` | Aggregate root |
 | `Assets/Runtime/Document/DocumentEvaluator.cs` | Evaluation use case |
@@ -216,9 +203,3 @@ Graph is self-describing. Index maps are derived state, excluded from serializat
 | `Assets/Runtime/LegacyImport/LegacyImporter.cs` | .kex → Document |
 | `Assets/Tests/Document/DocumentEvaluatorTests.cs` | Gold test parity |
 | `Assets/Tests/Document/LegacyImporterTests.cs` | Import tests |
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `Assets/Plugins/KexGraph/Graph.cs:26-28` | Make NextNodeId/NextPortId/NextEdgeId public |

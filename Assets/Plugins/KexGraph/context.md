@@ -10,9 +10,10 @@ Generic graph data structure with nodes, ports, and edges. No domain knowledge. 
 
 ```
 KexGraph/
-├── context.md           # This file
-├── KexGraph.asmdef      # Assembly definition
-└── Graph.cs             # Graph struct with SoA layout
+├── context.md                      # This file
+├── KexGraph.asmdef                 # Assembly definition
+├── Graph.cs                        # Graph struct with SoA layout
+└── GraphSerializationExtensions.cs # Index map rebuild for deserialization
 ```
 
 ## Scope
@@ -27,7 +28,7 @@ KexGraph/
 **Out-of-scope**
 - Port data storage (consumer responsibility)
 - Type validation (schema layer responsibility)
-- Serialization (adapter layer responsibility)
+- Binary format and I/O (adapter layer responsibility)
 - Domain-specific logic (KexEdit, shader graphs, etc.)
 
 ## Entrypoints
@@ -60,6 +61,10 @@ KexGraph/
 - `FindSourceNodes(out NativeArray<uint>, Allocator)` - Nodes with no incoming edges
 - `FindSinkNodes(out NativeArray<uint>, Allocator)` - Nodes with no outgoing edges
 - `HasCycle()` - DFS-based cycle detection
+
+**Serialization Support**
+- `NextNodeId`, `NextPortId`, `NextEdgeId` - Public ID generators for serialization
+- `RebuildIndexMaps()` - Rebuilds index maps after deserialization
 
 ## Dependencies
 
