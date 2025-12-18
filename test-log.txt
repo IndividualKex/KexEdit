@@ -1,10 +1,9 @@
 [Licensing::Module] Trying to connect to existing licensing client channel...
 Built from '6000.3/respin/6000.3.1f1-f56f53296c2c' branch; Version is '6000.3.1f1 (37142da19a94) revision 3609645'; Using compiler version '194234433'; Build Type 'Release'
-[Licensing::IpcConnector] Channel LicenseClient-dylan doesn't exist
 OS: 'Windows 11  (10.0.26200) 64bit Professional' Language: 'en' Physical Memory: 65458 MB
 BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
-Date: 2025-12-18T02:13:11Z
-[Licensing::Module] Successfully launched the LicensingClient (PId: 36332)
+Date: 2025-12-18T02:38:29Z
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan" at "2025-12-18T02:38:29.7163805Z"
 
 COMMAND LINE ARGUMENTS:
 C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Unity.exe
@@ -21,7 +20,7 @@ EditMode
 -assemblyNames
 Tests
 -testFilter
-CoasterTests
+CoasterEvaluatorTests
 Successfully changed project path to: C:/Users/dylan/Documents/Games/KexEdit
 C:/Users/dylan/Documents/Games/KexEdit
 [UnityMemory] Configuration Parameters - Can be set up in boot.config
@@ -59,33 +58,29 @@ C:/Users/dylan/Documents/Games/KexEdit
     "memorysetup-job-temp-allocator-block-size-background=1048576"
     "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
     "memorysetup-temp-allocator-size-cloud-worker=32768"
-Player connection [20564]  Target information:
+Player connection [32700]  Target information:
 
-Player connection [20564]  * "[IP] 172.28.16.1 [Port] 55504 [Flags] 2 [Guid] 3612689571 [EditorId] 3612689571 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+Player connection [32700]  * "[IP] 172.28.16.1 [Port] 55504 [Flags] 2 [Guid] 721398974 [EditorId] 721398974 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
 
-Player connection [20564]  * "[IP] 192.168.0.248 [Port] 55504 [Flags] 2 [Guid] 3612689571 [EditorId] 3612689571 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+Player connection [32700]  * "[IP] 192.168.0.248 [Port] 55504 [Flags] 2 [Guid] 721398974 [EditorId] 721398974 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
 
-Player connection [20564]  * "[IP] 169.254.83.107 [Port] 55504 [Flags] 2 [Guid] 3612689571 [EditorId] 3612689571 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+Player connection [32700]  * "[IP] 169.254.83.107 [Port] 55504 [Flags] 2 [Guid] 721398974 [EditorId] 721398974 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-QM209R1) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
 
-Player connection [20564] Host joined multi-casting on [225.0.0.222:54997]...
-Player connection [20564] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Player connection [32700] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [32700] Host joined alternative multi-casting on [225.0.0.222:34997]...
 Input System module state changed to: Initialized.
 [Physics::Module] Initialized fallback backend.
 [Physics::Module] Id: 0xdecafbad
-Starting IPC server.
-Waiting for clients to connect on \\.\pipe\Unity-LicenseClient-dylan, press Ctrl-C to exit.
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan" at "2025-12-18T02:13:11.6888924Z"
-[Package Manager] Connected to IPC stream "Upm-15420" after 0.3 seconds.
+[Package Manager] Connected to IPC stream "Upm-32688" after 0.3 seconds.
 [Licensing::Module] Licensing is not yet initialized.
 [Licensing::Client] Handshaking with LicensingClient:
   Version:                 1.17.4+4293ba1
-  Session Id:              0ad2663ac0214fbcacdd4d4c63acb309
-  Correlation Id:          2c6f57ac8c73c52907777335ed77028d
-  External correlation Id: 1532245147982549216
+  Session Id:              8a9018176769491d9e41cf1e73f57004
+  Correlation Id:          252351222c68fd51320b039e9f15ea5d
+  External correlation Id: 7993271305944036606
   Machine Id:              6eQQ2mRFHlULx/8PLnkZNGE/Exo=
-[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-dylan" (connect: 0.25s, validation: 0.05s, handshake: 1.40s)
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan-notifications" at "2025-12-18T02:13:13.1351777Z"
-[Licensing::Module] Connected to LicensingClient (PId: 36332, launch time: 0.00, total connection time: 1.69s)
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-dylan" (connect: 0.00s, validation: 0.00s, handshake: 1.43s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-dylan-notifications" at "2025-12-18T02:38:31.1492419Z"
 [Licensing::Module] Error: Access token is unavailable; failed to update
 [Licensing::Client] Successfully resolved entitlement details
 [Licensing::Module] License group:
@@ -98,9 +93,9 @@ Waiting for clients to connect on \\.\pipe\Unity-LicenseClient-dylan, press Ctrl
   Product: Unity Personal
   Type: Assigned
   Expiration: Unlimited
-[Licensing::Client] Successfully updated license, isAsync: True, time: 0.01
-[Licensing::Module] Licensing Background thread has ended after 1.72s
-[Licensing::Module] Licensing is initialized (took 1.28s).
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.00
+[Licensing::Module] Licensing Background thread has ended after 1.44s
+[Licensing::Module] Licensing is initialized (took 0.97s).
 [Licensing::Client] Successfully resolved entitlement details
 [Licensing::Module] License group:
   Id: F4-P6BS-9QKE-8EP7-C3FN-XXXX
@@ -119,7 +114,7 @@ Library Redirect Path: Library/
 [Physics::Module] SDK Version: 4.1.2
 [Physics::Module] Integration Version: 1.0.0
 [Physics::Module] Threading Mode: Multi-Threaded
-Refreshing native plugins compatible for Editor in 3.29 ms, found 1 plugins.
+Refreshing native plugins compatible for Editor in 3.20 ms, found 1 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
 Initialize engine version: 6000.3.1f1 (37142da19a94)
 [Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/Resources/UnitySubsystems
@@ -135,7 +130,7 @@ Initialize mono
 Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/Managed'
 Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
 Mono config path = 'C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/MonoBleedingEdge/etc'
-Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56420
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56688
 Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
 Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
 ImportWorker Server TCP listen port: 0
@@ -145,43 +140,43 @@ Registering precompiled unity dll's ...
 Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/PlaybackEngines/MacStandaloneSupport/UnityEditor.OSXStandalone.Extensions.dll
 Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
 Register platform support module: C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Data/PlaybackEngines/LinuxStandaloneSupport/UnityEditor.LinuxStandalone.Extensions.dll
-Registered in 0.006519 seconds.
-- Loaded All Assemblies, in  0.443 seconds
+Registered in 0.007386 seconds.
+- Loaded All Assemblies, in  0.462 seconds
 Native extension for LinuxStandalone target not found
 Native extension for WindowsStandalone target not found
 Native extension for OSXStandalone target not found
 Package Manager log level set to [2]
 [Licensing::Client] Successfully resolved entitlement details
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  2.258 seconds
-Domain Reload Profiling: 2691ms
-	BeginReloadAssembly (166ms)
+- Finished resetting the current domain, in  2.982 seconds
+Domain Reload Profiling: 3435ms
+	BeginReloadAssembly (165ms)
 		ExecutionOrderSort (0ms)
 		DisableScriptedObjects (0ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
-		CreateAndSetChildDomain (3ms)
-	RebuildCommonClasses (34ms)
-	RebuildNativeTypeToScriptingClass (11ms)
-	initialDomainReloadingComplete (58ms)
-	LoadAllAssembliesAndSetupDomain (164ms)
-		LoadAssemblies (154ms)
+		CreateAndSetChildDomain (8ms)
+	RebuildCommonClasses (36ms)
+	RebuildNativeTypeToScriptingClass (10ms)
+	initialDomainReloadingComplete (71ms)
+	LoadAllAssembliesAndSetupDomain (169ms)
+		LoadAssemblies (147ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (159ms)
-			TypeCache.Refresh (157ms)
-				TypeCache.ScanAssembly (143ms)
+		AnalyzeDomain (165ms)
+			TypeCache.Refresh (163ms)
+				TypeCache.ScanAssembly (148ms)
 			BuildScriptInfoCaches (0ms)
-			ResolveRequiredComponents (0ms)
-	FinalizeReload (2258ms)
+			ResolveRequiredComponents (1ms)
+	FinalizeReload (2983ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (2225ms)
+		SetupLoadedEditorAssemblies (2946ms)
 			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (56ms)
+			InitializePlatformSupportModulesInManaged (57ms)
 			SetLoadedEditorAssemblies (3ms)
-			BeforeProcessingInitializeOnLoad (70ms)
-			ProcessInitializeOnLoadAttributes (132ms)
-			ProcessInitializeOnLoadMethodAttributes (1963ms)
+			BeforeProcessingInitializeOnLoad (76ms)
+			ProcessInitializeOnLoadAttributes (145ms)
+			ProcessInitializeOnLoadMethodAttributes (2665ms)
 			AfterProcessingInitializeOnLoad (0ms)
 			EditorAssembliesLoaded (0ms)
 		ExecutionOrderSort2 (0ms)
@@ -296,16 +291,16 @@ info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
 info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
       Executed endpoint 'gRPC - /UnityILPP.PostProcessing/Ping'
 info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
-      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc - - 200 - application/grpc 35.5198ms
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc - - 200 - application/grpc 38.8050ms
 Starting: C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
 WorkingDir: C:/Users/dylan/Documents/Games/KexEdit
 DisplayProgressbar: Compiling Scripts
-ExitCode: 4 Duration: 0s350ms
-Rebuilding DAG because FileSignature timestamp changed: Assets/csc.rsp
-*** Tundra requires additional run (0.32 seconds), 0 items updated, 1221 evaluated
 Starting: C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\netcorerun\netcorerun.exe "C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\Tools\BuildPipeline\ScriptCompilationBuildProgram.exe" "Library/Bee/1900b0aE.dag.json" "Library/Bee/1900b0aE-inputdata.json" "Library\Bee\buildprogram0.traceevents"
 WorkingDir: C:/Users/dylan/Documents/Games/KexEdit
-ExitCode: 0 Duration: 1s384ms
+ExitCode: 4 Duration: 0s344ms
+Rebuilding DAG because FileSignature timestamp changed: Assets/csc.rsp
+*** Tundra requires additional run (0.31 seconds), 0 items updated, 1120 evaluated
+ExitCode: 0 Duration: 1s514ms
 Starting: C:\Program Files\Unity\Hub\Editor\6000.3.1f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --dagfilejson="Library\Bee\1900b0aE.dag.json" --profile="Library/Bee/backend2.traceevents" ScriptAssemblies
 WorkingDir: C:/Users/dylan/Documents/Games/KexEdit
 info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
@@ -325,125 +320,161 @@ info: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
 info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
       Executed endpoint 'gRPC - /UnityILPP.PostProcessing/ConfigurePostProcessors'
 info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
-      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/ConfigurePostProcessors application/grpc - - 200 - application/grpc 78.2467ms
-ExitCode: 0 Duration: 1s50ms
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/ConfigurePostProcessors application/grpc - - 200 - application/grpc 91.9417ms
+ExitCode: 0 Duration: 1s191ms
 Finished compiling graph: 1917 nodes, 44447 flattened edges (34555 ToBuild, 334 ToUse), maximum node priority 2896
 [1429/1913  0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
-*** Tundra build success (1.03 seconds), 1 items updated, 1913 evaluated
-AssetDatabase: script compilation time: 3.371958s
+*** Tundra build success (1.17 seconds), 1 items updated, 1913 evaluated
+AssetDatabase: script compilation time: 3.686650s
 Begin MonoManager ReloadAssembly
 Symbol file LoadedFromMemory is not a mono symbol file
-- Loaded All Assemblies, in  1.645 seconds
+- Loaded All Assemblies, in  1.810 seconds
 'Packages/com.unity.cinemachine/Editor/Editors/CinemachineVirtualCameraBaseEditor.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
 'Packages/com.unity.cinemachine/Editor/Obsolete/CinemachineVirtualCameraBaseEditor.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
-Refreshing native plugins compatible for Editor in 7.03 ms, found 5 plugins.
+Refreshing native plugins compatible for Editor in 7.53 ms, found 5 plugins.
 Native extension for LinuxStandalone target not found
 Native extension for WindowsStandalone target not found
 Native extension for OSXStandalone target not found
 Assembly reference Packages/com.unity.cinemachine/Editor/Samples/ExposeHDRPInternals/HDRP-Editor-ref.asmref has no target assembly definition
 Assembly reference Packages/com.unity.entities/Unity.Scenes.Editor/Internals/Properties/Unity.Properties.Internals.asmref has no target assembly definition
-Refreshing native plugins compatible for Editor in 5.99 ms, found 5 plugins.
-TypeManager.Initialize took: 691ms
+Refreshing native plugins compatible for Editor in 6.39 ms, found 5 plugins.
+TypeManager.Initialize took: 721ms
 Mono: successfully reloaded assembly
-- Finished resetting the current domain, in  7.289 seconds
-Domain Reload Profiling: 8907ms
-	BeginReloadAssembly (323ms)
+- Finished resetting the current domain, in  7.925 seconds
+Domain Reload Profiling: 9707ms
+	BeginReloadAssembly (351ms)
 		ExecutionOrderSort (0ms)
-		DisableScriptedObjects (22ms)
+		DisableScriptedObjects (13ms)
 		BackupInstance (0ms)
 		ReleaseScriptingObjects (0ms)
-		CreateAndSetChildDomain (146ms)
-	RebuildCommonClasses (33ms)
-	RebuildNativeTypeToScriptingClass (10ms)
-	initialDomainReloadingComplete (50ms)
-	LoadAllAssembliesAndSetupDomain (1201ms)
-		LoadAssemblies (842ms)
+		CreateAndSetChildDomain (160ms)
+	RebuildCommonClasses (40ms)
+	RebuildNativeTypeToScriptingClass (11ms)
+	initialDomainReloadingComplete (53ms)
+	LoadAllAssembliesAndSetupDomain (1326ms)
+		LoadAssemblies (941ms)
 		RebuildTransferFunctionScriptingTraits (0ms)
-		AnalyzeDomain (478ms)
-			TypeCache.Refresh (368ms)
-				TypeCache.ScanAssembly (344ms)
-			BuildScriptInfoCaches (92ms)
+		AnalyzeDomain (521ms)
+			TypeCache.Refresh (403ms)
+				TypeCache.ScanAssembly (378ms)
+			BuildScriptInfoCaches (98ms)
 			ResolveRequiredComponents (14ms)
-	FinalizeReload (7290ms)
+	FinalizeReload (7926ms)
 		ReleaseScriptCaches (0ms)
 		RebuildScriptCaches (0ms)
-		SetupLoadedEditorAssemblies (7009ms)
+		SetupLoadedEditorAssemblies (7624ms)
 			LogAssemblyErrors (0ms)
-			InitializePlatformSupportModulesInManaged (31ms)
-			SetLoadedEditorAssemblies (4ms)
-			BeforeProcessingInitializeOnLoad (438ms)
-			ProcessInitializeOnLoadAttributes (5358ms)
-			ProcessInitializeOnLoadMethodAttributes (1146ms)
-			AfterProcessingInitializeOnLoad (31ms)
+			InitializePlatformSupportModulesInManaged (38ms)
+			SetLoadedEditorAssemblies (5ms)
+			BeforeProcessingInitializeOnLoad (462ms)
+			ProcessInitializeOnLoadAttributes (5739ms)
+			ProcessInitializeOnLoadMethodAttributes (1356ms)
+			AfterProcessingInitializeOnLoad (24ms)
 			EditorAssembliesLoaded (1ms)
 		ExecutionOrderSort2 (0ms)
-		AwakeInstancesAfterBackupRestoration (9ms)
-Start importing Assets/Runtime/Coaster/context.md using Guid(94681594364d3bf44976dbcc27074fcd) (TextScriptImporter) -> (artifact id: 'cbaa041ceaf89d1917f9a2b2ac875b88') in 0.0789578 seconds
-Refreshing native plugins compatible for Editor in 7.95 ms, found 5 plugins.
+		AwakeInstancesAfterBackupRestoration (6ms)
+Start importing Assets/Runtime/Coaster/context.md using Guid(94681594364d3bf44976dbcc27074fcd) (TextScriptImporter) -> (artifact id: '9bfbed44b7e5667ebadd96dcb66dcb87') in 0.0236932 seconds
+Refreshing native plugins compatible for Editor in 8.58 ms, found 5 plugins.
 Preloading 0 native plugins for Editor in 0.00 ms.
-Asset Pipeline Refresh (id=bfed2c09a9bfaca498d2b5a406c15f68): Total: 14.340 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+Asset Pipeline Refresh (id=4b835b1b046c8c342906937d572b67c6): Total: 15.691 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
 	Summary:
 		Imports: total=0 (actual=0, local cache=0, cache server=0)
-		Asset DB Process Time: managed=5 ms, native=8509 ms
-		Asset DB Callback time: managed=433 ms, native=23 ms
-		Scripting: domain reloads=1, domain reload time=1646 ms, compile time=3373 ms, other=347 ms
+		Asset DB Process Time: managed=6 ms, native=9265 ms
+		Asset DB Callback time: managed=480 ms, native=28 ms
+		Scripting: domain reloads=1, domain reload time=1811 ms, compile time=3689 ms, other=410 ms
 		Project Asset Count: scripts=2348, non-scripts=3890
-		Asset File Changes: new=1, changed=1, moved=0, deleted=0
+		Asset File Changes: new=0, changed=1, moved=0, deleted=0
 		Scan Filter Count: 0
 	InvokeCustomDependenciesCallbacks: 0.001ms
-	InvokePackagesCallback: 10.579ms
-	ApplyChangesToAssetFolders: 1.075ms
-	Scan: 335.599ms
-	OnSourceAssetsModified: 0.778ms
-	CategorizeAssetsWithTransientArtifact: 75.806ms
-	ProcessAssetsWithTransientArtifactChanges: 139.846ms
-	CategorizeAssets: 77.267ms
-	ImportOutOfDateAssets: 7401.777ms (3941.391ms without children)
-		ImportManagerImport: 81.889ms (2.519ms without children)
-			ImportInProcess: 79.370ms
-		CompileScripts: 3373.339ms
-		ReloadNativeAssets: 0.067ms
-		UnloadImportedAssets: 2.176ms
-		ReloadImportedAssets: 0.001ms
-		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 1.734ms
-		InitializingProgressBar: 0.008ms
-		PostProcessAllAssetNotificationsAddChangedAssets: 0.001ms
-		OnDemandSchedulerStart: 1.172ms
-	PostProcessAllAssets: 435.960ms
-	Hotreload: 14.706ms
+	InvokePackagesCallback: 11.032ms
+	ApplyChangesToAssetFolders: 1.019ms
+	Scan: 407.429ms
+	OnSourceAssetsModified: 1.210ms
+	CategorizeAssetsWithTransientArtifact: 79.465ms
+	ProcessAssetsWithTransientArtifactChanges: 140.285ms
+	CategorizeAssets: 109.953ms
+	ImportOutOfDateAssets: 7986.705ms (4265.553ms without children)
+		ImportManagerImport: 27.009ms (2.833ms without children)
+			ImportInProcess: 24.176ms
+		CompileScripts: 3688.506ms
+		ReloadNativeAssets: 0.074ms
+		UnloadImportedAssets: 1.977ms
+		ReloadImportedAssets: 0.000ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 2.256ms
+		InitializingProgressBar: 0.013ms
+		PostProcessAllAssetNotificationsAddChangedAssets: 0.002ms
+		OnDemandSchedulerStart: 1.315ms
+	PostProcessAllAssets: 486.439ms
+	Hotreload: 14.881ms
 	GatherAllCurrentPrimaryArtifactRevisions: 0.003ms
-	UnloadStreamsBegin: 2.848ms
-	PersistCurrentRevisions: 0.223ms
-	UnloadStreamsEnd: 0.002ms
-	GenerateScriptTypeHashes: 4.099ms
-	Untracked: 5843.873ms
+	UnloadStreamsBegin: 2.773ms
+	PersistCurrentRevisions: 0.291ms
+	UnloadStreamsEnd: 0.001ms
+	GenerateScriptTypeHashes: 4.994ms
+	Untracked: 6449.224ms
 
 Application.AssetDatabase Initial Refresh End
 Launched and connected shader compiler UnityShaderCompiler.exe after 0.02 seconds
-Scanning for USB devices : 11.828ms
+Scanning for USB devices : 12.898ms
 Initializing Unity extensions:
+(0,0): Burst error BC1064: Unsupported return type `KexEdit.Coaster.EvaluationResult` for function `KexEdit.Coaster.EvaluationResult.Create(Unity.Collections.Allocator allocator, int capacity)`: structs cannot be passed to or returned from external functions in burst. To fix this issue, use a reference or pointer.
+
+While compiling job:
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::GetKeyframes(KexEdit.Nodes.Storage.KeyframeStore&, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PropertyId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeArray`1[[KexEdit.Core.Keyframe, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]&, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateAnchorNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputAnchor(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Core.Point&, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateCurvedNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateCopyPathNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateBridgeNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputScalar(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeHashMap`2[[System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateReversePathNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.EvaluationResult, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Create(Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateReverseNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TopologicalSort(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeList`1[[System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateGeometricNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputPath(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeList`1[[KexEdit.Core.Point, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateForceNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Evaluate(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+(0,0): Burst error BC1064: Unsupported return type `KexEdit.Coaster.EvaluationResult` for function `KexEdit.Coaster.CoasterEvaluator.Evaluate(ref KexEdit.Coaster.Coaster coaster, Unity.Collections.Allocator allocator)`: structs cannot be passed to or returned from external functions in burst. To fix this issue, use a reference or pointer.
+
+While compiling job:
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::GetKeyframes(KexEdit.Nodes.Storage.KeyframeStore&, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PropertyId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeArray`1[[KexEdit.Core.Keyframe, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]&, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateAnchorNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputAnchor(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Core.Point&, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateCurvedNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateCopyPathNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateBridgeNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputScalar(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeHashMap`2[[System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Single, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateReversePathNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.EvaluationResult, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Create(Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateReverseNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TopologicalSort(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeList`1[[System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateGeometricNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::TryGetInputPath(KexGraph.Graph&, KexGraph, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Nodes.PortId, KexEdit.Nodes, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.NativeList`1[[KexEdit.Core.Point, KexEdit.Core, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null]]&, Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::EvaluateForceNode(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089|KexEdit.Coaster.EvaluationResult&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
+KexEdit.Coaster.CoasterEvaluator, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null::Evaluate(KexEdit.Coaster.Coaster&, KexEdit.Coaster, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null|Unity.Collections.Allocator, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null)
 [MODES] ModeService[none].Initialize
 [MODES] ModeService[none].LoadModes
 [MODES] Loading mode Default (0) for mode-current-id-KexEdit
 Unloading 31 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 10778 unused Assets / (7.8 MB). Loaded Objects now: 11619.
-Memory consumption went from 280.1 MB to 272.3 MB.
-Total: 19.244600 ms (FindLiveObjects: 1.351400 ms CreateObjectMapping: 1.014700 ms MarkObjects: 12.695400 ms  DeleteObjects: 4.181800 ms)
+Unloading 10780 unused Assets / (7.8 MB). Loaded Objects now: 11619.
+Memory consumption went from 278.0 MB to 270.2 MB.
+Total: 22.647000 ms (FindLiveObjects: 1.318200 ms CreateObjectMapping: 1.078300 ms MarkObjects: 15.660000 ms  DeleteObjects: 4.588900 ms)
 
-[Project] Loading completed in 22.104 seconds
-	Project init time: 				21.762 seconds
+[Project] Loading completed in 24.652 seconds
+	Project init time: 				24.240 seconds
 		Template init time: 		0.000 seconds
-		Package Manager init time: 		1.541 seconds
-		Asset Database init time: 		0.188 seconds
-		Global illumination init time: 	0.003 seconds
-		Assemblies load time: 			2.735 seconds
-		Unity extensions init time: 	0.019 seconds
-		Asset Database refresh time: 	14.341 seconds
-	Scene opening time: 			0.163 seconds
-##utp:{"type":"ProjectInfo","version":2,"phase":"Immediate","time":1766024013523,"processId":15420,"projectLoad":22.1035237,"projectInit":21.7622175,"templateInit":0.0,"packageManagerInit":1.5405527,"assetDatabaseInit":0.1884817,"globalIlluminationInit":0.003231,"assembliesLoad":2.734844,"unityExtensionsInit":0.0188101,"assetDatabaseRefresh":14.3405082,"sceneOpening":0.1630469}
-##utp:{"type":"EditorInfo","version":2,"phase":"Immediate","time":1766024013523,"processId":15420,"editorVersion":"6000.3.1f1 (37142da19a94)","branch":"6000.3/respin/6000.3.1f1-f56f53296c2c","buildType":"Release","platform":"Windows"}
-Asset Pipeline Refresh (id=514f5c77be4011c44a07fb9a20930f35): Total: 0.081 seconds - Initiated by RefreshV2(ForceSynchronousImport)
-Asset Pipeline Refresh (id=79dbb689d3341954096549a30089c682): Total: 0.058 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
+		Package Manager init time: 		1.241 seconds
+		Asset Database init time: 		0.206 seconds
+		Global illumination init time: 	0.004 seconds
+		Assemblies load time: 			3.477 seconds
+		Unity extensions init time: 	0.024 seconds
+		Asset Database refresh time: 	15.691 seconds
+	Scene opening time: 			0.209 seconds
+##utp:{"type":"ProjectInfo","version":2,"phase":"Immediate","time":1766025534346,"processId":32688,"projectLoad":24.6516523,"projectInit":24.2396321,"templateInit":0.0,"packageManagerInit":1.2411953,"assetDatabaseInit":0.2059504,"globalIlluminationInit":0.0039104,"assembliesLoad":3.4774203,"unityExtensionsInit":0.0241355,"assetDatabaseRefresh":15.6909115,"sceneOpening":0.2088432}
+##utp:{"type":"EditorInfo","version":2,"phase":"Immediate","time":1766025534346,"processId":32688,"editorVersion":"6000.3.1f1 (37142da19a94)","branch":"6000.3/respin/6000.3.1f1-f56f53296c2c","buildType":"Release","platform":"Windows"}
+Asset Pipeline Refresh (id=730230b6a19d5084a9a0d04ca180ed78): Total: 0.115 seconds - Initiated by RefreshV2(ForceSynchronousImport)
+Asset Pipeline Refresh (id=cccaff46922756e4eb49b47ea4350a96): Total: 0.072 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
 Running tests for ExecutionSettings with details:
 targetPlatform = 
 playerHeartbeatTimeout = 600
@@ -452,7 +483,7 @@ filters[0] =
    testMode = EditMode
    targetPlatform = 
    testNames = null
-   groupNames = CoasterTests
+   groupNames = CoasterEvaluatorTests
    categoryNames = null
    assemblyNames = Tests
 ignoreTests = {}
@@ -472,11 +503,11 @@ UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
 
 [Indexing] Starting Initial Indexing for Assets
 [UnityConnectServicesConfig] config is NOT valid, switching to default
-Created GICache directory at C:/Users/dylan/AppData/LocalLow/Unity/Caches/GiCache. Took: 0.040s, timestamps: [22.108 - 22.148]
+Created GICache directory at C:/Users/dylan/AppData/LocalLow/Unity/Caches/GiCache. Took: 0.052s, timestamps: [24.656 - 24.708]
 Unloading 15 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 2 unused Assets / (44.9 KB). Loaded Objects now: 11683.
-Memory consumption went from 239.0 MB to 239.0 MB.
-Total: 17.284700 ms (FindLiveObjects: 0.508100 ms CreateObjectMapping: 0.260500 ms MarkObjects: 16.469800 ms  DeleteObjects: 0.045300 ms)
+Memory consumption went from 237.0 MB to 236.9 MB.
+Total: 21.373700 ms (FindLiveObjects: 0.809700 ms CreateObjectMapping: 0.773500 ms MarkObjects: 19.745000 ms  DeleteObjects: 0.044500 ms)
 
 Executing IPrebuildSetup for: Unity.PerformanceTesting.Editor.TestRunBuilder.
 UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
@@ -510,11 +541,11 @@ UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
 
 (Filename: ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/TestRun/Tasks/BuildActionTaskBase.cs Line: 48)
 
-Asset Pipeline Refresh (id=b8129e04d9c64964e9143f6036469ce0): Total: 0.008 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
+Asset Pipeline Refresh (id=56c240b98a2ae214992d13c78396d9ef): Total: 0.013 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
 Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
 Unloading 0 unused Assets / (0 B). Loaded Objects now: 11683.
-Memory consumption went from 237.0 MB to 237.0 MB.
-Total: 21.259500 ms (FindLiveObjects: 0.540500 ms CreateObjectMapping: 0.211500 ms MarkObjects: 20.478000 ms  DeleteObjects: 0.027900 ms)
+Memory consumption went from 236.0 MB to 236.0 MB.
+Total: 33.466800 ms (FindLiveObjects: 0.704100 ms CreateObjectMapping: 0.813300 ms MarkObjects: 31.918500 ms  DeleteObjects: 0.029900 ms)
 
 DisplayProgressbar: Undo
 Test run completed. Exiting with code 0 (Ok). Run completed.
@@ -531,9 +562,9 @@ UnityEditor.EditorApplication:Internal_CallUpdateFunctions ()
 (Filename: ./Library/PackageCache/com.unity.test-framework@0b7a23ab2e1d/UnityEditor.TestRunner/CommandLineTest/Executer.cs Line: 81)
 
 Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
-Unloading 0 unused Assets / (0 B). Loaded Objects now: 11691.
-Memory consumption went from 276.4 MB to 276.4 MB.
-Total: 31.763500 ms (FindLiveObjects: 0.888300 ms CreateObjectMapping: 0.440200 ms MarkObjects: 30.386000 ms  DeleteObjects: 0.047600 ms)
+Unloading 0 unused Assets / (0 B). Loaded Objects now: 11693.
+Memory consumption went from 275.4 MB to 275.4 MB.
+Total: 39.249400 ms (FindLiveObjects: 1.160200 ms CreateObjectMapping: 0.492100 ms MarkObjects: 37.566700 ms  DeleteObjects: 0.028500 ms)
 
 [Physics::Module] Cleanup current backend.
 [Physics::Module] Id: 0xf2b8ea05
@@ -543,18 +574,17 @@ Input System module state changed to: Shutdown.
 [Licensing::IpcConnector] LicenseClient-dylan-notifications channel disconnected successfully.
 [Licensing::IpcConnector] LicenseClient-dylan channel disconnected successfully.
 AcceleratorClientConnectionCallback - disconnected - :0
-Shut down.
 Cleanup mono
-abort_threads: Failed aborting id: 00000000000046C4, mono_thread_manage will ignore it
+abort_threads: Failed aborting id: 0000000000008888, mono_thread_manage will ignore it
 
-abort_threads: Failed aborting id: 00000000000036E8, mono_thread_manage will ignore it
+abort_threads: Failed aborting id: 0000000000005CBC, mono_thread_manage will ignore it
 
-abort_threads: Failed aborting id: 00000000000046C4, mono_thread_manage will ignore it
+abort_threads: Failed aborting id: 0000000000008888, mono_thread_manage will ignore it
 
-abort_threads: Failed aborting id: 00000000000036E8, mono_thread_manage will ignore it
+abort_threads: Failed aborting id: 0000000000005CBC, mono_thread_manage will ignore it
 
 debugger-agent: Unable to listen on 4244
 Checking for leaked weakptr:
   Found no leaked weakptrs.
 [Package Manager] Server process was shutdown
-##utp:{"type":"MemoryLeaks","version":2,"phase":"Immediate","time":1766024018644,"processId":15420,"allocatedMemory":22308425,"memoryLabels":[{"Default":14409},{"Permanent":15524},{"NewDelete":68139},{"Thread":4230344},{"Manager":2914957},{"VertexData":8},{"Geometry":816},{"Texture":296},{"Shader":81662},{"Material":24},{"GfxDevice":55257},{"Animation":392},{"Audio":2664},{"FontEngine":256},{"Physics":2090},{"Physics2D":16},{"Serialization":528},{"Input":14984},{"JobScheduler":33024},{"TextLib":192},{"Mono":32},{"MonoCode":64},{"ScriptingNativeRuntime":155060},{"BaseObject":1620336},{"Resource":1336},{"Renderer":3000},{"Transform":4685},{"File":3933},{"WebCam":616},{"Culling":32},{"Terrain":11394},{"Wind":24},{"STL":40},{"String":13929},{"DynamicArray":132264},{"HashMap":83623},{"Utility":2661766},{"Curl":2579},{"PoolAlloc":22648},{"AI":40},{"TypeTree":5341},{"ScriptManager":512},{"RuntimeInitializeOnLoadManager":64},{"SpriteAtlas":112},{"GI":7792},{"Director":8240},{"CloudService":288},{"WebRequest":808},{"VR":47994},{"SceneManager":504},{"Video":208},{"LazyScriptCache":32},{"Camera":17},{"Secure":2113},{"SerializationCache":1576},{"APIUpdating":10320},{"Subsystems":336},{"VirtualTexturing":57888},{"StaticSafetyDebugInfo":278528},{"Analytics":256},{"Hierarchy":608},{"CoreStats":13000},{"Identifiers":12960},{"Gui":88},{"EditorUtility":143679},{"VersionControl":4},{"Undo":947},{"AssetDatabase":9515898},{"EditorGi":328},{"UnityConnect":29232},{"Upm":1896},{"AssetCompliance":64},{"DrivenProperties":72},{"LocalIPC":211},{"ProfilerEditor":9746},{"CoreBusinessMetrics":2588},{"Licensing":1232},{"AssetReference":32},{"IPCStream":32}]}
+##utp:{"type":"MemoryLeaks","version":2,"phase":"Immediate","time":1766025540958,"processId":32688,"allocatedMemory":22307618,"memoryLabels":[{"Default":14409},{"Permanent":15524},{"NewDelete":68139},{"Thread":4230344},{"Manager":2914957},{"VertexData":8},{"Geometry":816},{"Texture":296},{"Shader":81662},{"Material":24},{"GfxDevice":55257},{"Animation":392},{"Audio":2664},{"FontEngine":256},{"Physics":2090},{"Physics2D":16},{"Serialization":528},{"Input":14984},{"JobScheduler":33024},{"TextLib":192},{"Mono":32},{"MonoCode":64},{"ScriptingNativeRuntime":155060},{"BaseObject":1620336},{"Resource":1336},{"Renderer":3000},{"Transform":4685},{"File":3933},{"WebCam":616},{"Culling":32},{"Terrain":11394},{"Wind":24},{"STL":40},{"String":13818},{"DynamicArray":132104},{"HashMap":83623},{"Utility":2661766},{"Curl":2579},{"PoolAlloc":22648},{"AI":40},{"TypeTree":5341},{"ScriptManager":512},{"RuntimeInitializeOnLoadManager":64},{"SpriteAtlas":112},{"GI":7792},{"Director":8240},{"CloudService":288},{"WebRequest":808},{"VR":47994},{"SceneManager":504},{"Video":208},{"LazyScriptCache":32},{"Camera":17},{"Secure":2113},{"SerializationCache":1576},{"APIUpdating":10320},{"Subsystems":336},{"VirtualTexturing":57888},{"StaticSafetyDebugInfo":278528},{"Analytics":256},{"Hierarchy":608},{"CoreStats":13000},{"Identifiers":12960},{"Gui":88},{"EditorUtility":143711},{"VersionControl":4},{"Undo":947},{"AssetDatabase":9515898},{"EditorGi":328},{"UnityConnect":29232},{"Upm":1896},{"AssetCompliance":64},{"DrivenProperties":72},{"LocalIPC":211},{"ProfilerEditor":9746},{"CoreBusinessMetrics":2588},{"Licensing":664},{"AssetReference":32},{"IPCStream":32}]}

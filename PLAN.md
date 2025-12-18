@@ -147,12 +147,12 @@ Algorithm:
 | Rust backend (kexedit-core, kexedit-ffi)              | ✓ Complete |
 | KexEdit.Legacy namespace migration                    | ✓ Complete |
 | KexEdit.Coaster (aggregate root)                      | ✓ Complete |
+| KexEdit.Coaster.CoasterEvaluator                      | ✓ Complete |
 
 ## What's Missing
 
 | Component             | Purpose                       | Location                 |
 | --------------------- | ----------------------------- | ------------------------ |
-| **CoasterEvaluator**  | Use case: coaster → points    | `KexEdit.Coaster`        |
 | **CoasterSerializer** | New binary format             | `KexEdit.Persistence`    |
 | **LegacyImporter**    | .kex → Coaster                | `KexEdit.LegacyImport`   |
 | **Gold tests**        | Validate parity with legacy   | `Assets/Tests/Coaster/`  |
@@ -304,7 +304,7 @@ Hexagonal (core → adapters), TDD (tests with each step).
 
 1. ✓ **Graph serialization**
 2. ✓ **Coaster** + unit tests
-3. **CoasterEvaluator** + unit tests (hand-crafted coasters)
+3. ✓ **CoasterEvaluator** + unit tests (hand-crafted coasters)
 
 ### Phase 2: Legacy Adapter → Gold Tests
 

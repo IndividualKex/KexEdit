@@ -1,61 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<test-run id="2" testcasecount="8" result="Passed" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.085488">
-  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3242" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.085488" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+<test-run id="2" testcasecount="10" result="Passed" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.1468965">
+  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3252" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.146897" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
     <properties>
       <property name="platform" value="EditMode" />
     </properties>
-    <test-suite type="Assembly" id="1424" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="377" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.058169" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <test-suite type="Assembly" id="1435" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="387" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.115289" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
       <properties>
-        <property name="_PID" value="15420" />
+        <property name="_PID" value="32688" />
         <property name="_APPDOMAIN" value="Unity Child Domain" />
         <property name="platform" value="EditMode" />
         <property name="EditorOnly" value="True" />
       </properties>
-      <test-suite type="TestFixture" id="1001" name="CoasterTests" fullname="CoasterTests" classname="CoasterTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.054234" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-suite type="TestFixture" id="1001" name="CoasterEvaluatorTests" fullname="CoasterEvaluatorTests" classname="CoasterEvaluatorTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.110804" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
         <properties />
-        <test-case id="1004" name="AddAnchorNode_StoresPositionAndRotation" fullname="CoasterTests.AddAnchorNode_StoresPositionAndRotation" methodname="AddAnchorNode_StoresPositionAndRotation" classname="CoasterTests" runstate="Runnable" seed="250493874" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.026829" asserts="0">
+        <test-case id="1006" name="Evaluate_AnchorToCurved_ProducesPathAndOutputAnchor" fullname="CoasterEvaluatorTests.Evaluate_AnchorToCurved_ProducesPathAndOutputAnchor" methodname="Evaluate_AnchorToCurved_ProducesPathAndOutputAnchor" classname="CoasterEvaluatorTests" runstate="Runnable" seed="360769347" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.055652" asserts="0">
           <properties>
             <property name="retryIteration" value="0" />
             <property name="repeatIteration" value="0" />
           </properties>
         </test-case>
-        <test-case id="1005" name="AddForceNode_StoresDurationAndKeyframes" fullname="CoasterTests.AddForceNode_StoresDurationAndKeyframes" methodname="AddForceNode_StoresDurationAndKeyframes" classname="CoasterTests" runstate="Runnable" seed="1964832702" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.005667" asserts="0">
+        <test-case id="1004" name="Evaluate_AnchorToForce_ProducesPathAndOutputAnchor" fullname="CoasterEvaluatorTests.Evaluate_AnchorToForce_ProducesPathAndOutputAnchor" methodname="Evaluate_AnchorToForce_ProducesPathAndOutputAnchor" classname="CoasterEvaluatorTests" runstate="Runnable" seed="1856678847" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.011144" asserts="0">
           <properties>
             <property name="retryIteration" value="0" />
             <property name="repeatIteration" value="0" />
           </properties>
         </test-case>
-        <test-case id="1009" name="Anchor_StoresInitialPointState" fullname="CoasterTests.Anchor_StoresInitialPointState" methodname="Anchor_StoresInitialPointState" classname="CoasterTests" runstate="Runnable" seed="1312927535" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.006187" asserts="0">
+        <test-case id="1005" name="Evaluate_AnchorToGeometric_ProducesPathAndOutputAnchor" fullname="CoasterEvaluatorTests.Evaluate_AnchorToGeometric_ProducesPathAndOutputAnchor" methodname="Evaluate_AnchorToGeometric_ProducesPathAndOutputAnchor" classname="CoasterEvaluatorTests" runstate="Runnable" seed="173681751" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.003933" asserts="0">
           <properties>
             <property name="retryIteration" value="0" />
             <property name="repeatIteration" value="0" />
           </properties>
         </test-case>
-        <test-case id="1002" name="Create_InitializesEmptyCoaster" fullname="CoasterTests.Create_InitializesEmptyCoaster" methodname="Create_InitializesEmptyCoaster" classname="CoasterTests" runstate="Runnable" seed="1851391560" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.000775" asserts="0">
+        <test-case id="1007" name="Evaluate_AnchorToReverse_ReversesDirection" fullname="CoasterEvaluatorTests.Evaluate_AnchorToReverse_ReversesDirection" methodname="Evaluate_AnchorToReverse_ReversesDirection" classname="CoasterEvaluatorTests" runstate="Runnable" seed="506845042" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.002934" asserts="0">
           <properties>
             <property name="retryIteration" value="0" />
             <property name="repeatIteration" value="0" />
           </properties>
         </test-case>
-        <test-case id="1003" name="Dispose_CleansUpAllContainers" fullname="CoasterTests.Dispose_CleansUpAllContainers" methodname="Dispose_CleansUpAllContainers" classname="CoasterTests" runstate="Runnable" seed="1666972184" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.000356" asserts="0">
+        <test-case id="1010" name="Evaluate_Bridge_CreatesBezierPath" fullname="CoasterEvaluatorTests.Evaluate_Bridge_CreatesBezierPath" methodname="Evaluate_Bridge_CreatesBezierPath" classname="CoasterEvaluatorTests" runstate="Runnable" seed="9217736" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.008922" asserts="0">
           <properties>
             <property name="retryIteration" value="0" />
             <property name="repeatIteration" value="0" />
           </properties>
         </test-case>
-        <test-case id="1006" name="GeometricNode_SteeringSupportedViaHashSet" fullname="CoasterTests.GeometricNode_SteeringSupportedViaHashSet" methodname="GeometricNode_SteeringSupportedViaHashSet" classname="CoasterTests" runstate="Runnable" seed="1699213159" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.000674" asserts="0">
+        <test-case id="1002" name="Evaluate_EmptyCoaster_ReturnsEmptyResult" fullname="CoasterEvaluatorTests.Evaluate_EmptyCoaster_ReturnsEmptyResult" methodname="Evaluate_EmptyCoaster_ReturnsEmptyResult" classname="CoasterEvaluatorTests" runstate="Runnable" seed="1099724175" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.000878" asserts="0">
           <properties>
             <property name="retryIteration" value="0" />
             <property name="repeatIteration" value="0" />
           </properties>
         </test-case>
-        <test-case id="1007" name="ScalarNode_StoresValue" fullname="CoasterTests.ScalarNode_StoresValue" methodname="ScalarNode_StoresValue" classname="CoasterTests" runstate="Runnable" seed="2050750983" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.000529" asserts="0">
+        <test-case id="1009" name="Evaluate_ForceToCopyPath_CopiesPath" fullname="CoasterEvaluatorTests.Evaluate_ForceToCopyPath_CopiesPath" methodname="Evaluate_ForceToCopyPath_CopiesPath" classname="CoasterEvaluatorTests" runstate="Runnable" seed="243794666" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.007094" asserts="0">
           <properties>
             <property name="retryIteration" value="0" />
             <property name="repeatIteration" value="0" />
           </properties>
         </test-case>
-        <test-case id="1008" name="VectorNode_StoresValue" fullname="CoasterTests.VectorNode_StoresValue" methodname="VectorNode_StoresValue" classname="CoasterTests" runstate="Runnable" seed="881064014" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.000227" asserts="0">
+        <test-case id="1008" name="Evaluate_ForceToReversePath_ReversesPath" fullname="CoasterEvaluatorTests.Evaluate_ForceToReversePath_ReversesPath" methodname="Evaluate_ForceToReversePath_ReversesPath" classname="CoasterEvaluatorTests" runstate="Runnable" seed="702059123" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.003385" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1011" name="Evaluate_ScalarNodeInjectsToCurvedRadius" fullname="CoasterEvaluatorTests.Evaluate_ScalarNodeInjectsToCurvedRadius" methodname="Evaluate_ScalarNodeInjectsToCurvedRadius" classname="CoasterEvaluatorTests" runstate="Runnable" seed="354306643" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.001064" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1003" name="Evaluate_SingleAnchorNode_ProducesOutputAnchor" fullname="CoasterEvaluatorTests.Evaluate_SingleAnchorNode_ProducesOutputAnchor" methodname="Evaluate_SingleAnchorNode_ProducesOutputAnchor" classname="CoasterEvaluatorTests" runstate="Runnable" seed="174880797" result="Passed" start-time="2025-12-18 02:38:57Z" end-time="2025-12-18 02:38:57Z" duration="0.000434" asserts="0">
           <properties>
             <property name="retryIteration" value="0" />
             <property name="repeatIteration" value="0" />

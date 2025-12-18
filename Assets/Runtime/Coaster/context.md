@@ -1,11 +1,11 @@
 # Coaster Context
 
-Application layer aggregate root and use cases for coaster evaluation.
+Application layer aggregate root and evaluator.
 
 ## Purpose
 
-- `Coaster` - Aggregate root combining graph topology with node data (keyframes, durations, scalars, vectors)
-- `CoasterEvaluator` - Use case: evaluate coaster → track points (pending)
+- `Coaster` - Aggregate: graph + node data (keyframes, durations, scalars, vectors, anchors)
+- `CoasterEvaluator` - Use case: topologically evaluate graph → paths and output anchors
 
 ## Layout
 
@@ -13,13 +13,10 @@ Application layer aggregate root and use cases for coaster evaluation.
 Coaster/
 ├── context.md
 ├── KexEdit.Coaster.asmdef
-├── Coaster.cs           # Aggregate root struct
-└── CoasterEvaluator.cs  # Use case (pending)
+├── Coaster.cs
+└── CoasterEvaluator.cs
 ```
 
 ## Dependencies
 
-- KexGraph (graph topology)
-- KexEdit.Core (Point, Keyframe)
-- KexEdit.Nodes (node schemas, Build methods)
-- KexEdit.NodeGraph (typed graph extensions)
+- KexGraph, KexEdit.Core, KexEdit.Nodes, KexEdit.NodeGraph
