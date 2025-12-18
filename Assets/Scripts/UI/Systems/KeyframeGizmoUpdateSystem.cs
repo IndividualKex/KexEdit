@@ -5,9 +5,11 @@ using UnityEngine;
 using Unity.Jobs;
 using Unity.Burst;
 using UnityEngine.UIElements;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
+using Keyframe = KexEdit.Legacy.Keyframe;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class KeyframeGizmoUpdateSystem : SystemBase {
@@ -55,7 +57,7 @@ namespace KexEdit.UI {
             _gizmoMaterial = Resources.Load<Material>("KeyframeGizmo");
             _matProps = new MaterialPropertyBlock();
 
-            RequireForUpdate<KexEdit.Preferences>();
+            RequireForUpdate<KexEdit.Legacy.Preferences>();
             RequireForUpdate<GameViewData>();
         }
 
@@ -91,7 +93,7 @@ namespace KexEdit.UI {
         }
 
         protected override void OnUpdate() {
-            var gizmos = SystemAPI.GetSingleton<KexEdit.Preferences>();
+            var gizmos = SystemAPI.GetSingleton<KexEdit.Legacy.Preferences>();
             ref var gameViewData = ref SystemAPI.GetSingletonRW<GameViewData>().ValueRW;
             if (!gizmos.DrawGizmos) {
                 gameViewData.IntersectionKeyframe = default;

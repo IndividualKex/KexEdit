@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 using KexEdit;
 using Unity.Entities;
 using Unity.Mathematics;

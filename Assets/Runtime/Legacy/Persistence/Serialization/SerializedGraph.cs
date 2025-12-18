@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace KexEdit.Serialization {
+namespace KexEdit.Legacy.Serialization {
     /*
      * HOW TO ADD NEW FIELDS TO SERIALIZATION:
      * 1. Add field to SerializedNode struct

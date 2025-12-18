@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public static class ObjImporter {
         public static Mesh LoadMesh(string filePath) {
             if (!File.Exists(filePath)) {

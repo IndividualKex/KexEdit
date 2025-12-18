@@ -3,9 +3,10 @@ using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using KexEdit.Serialization;
+using KexEdit.Legacy.Serialization;
 using Unity.Entities;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class ProjectOperations {
         public static string CurrentFilePath { get; private set; }

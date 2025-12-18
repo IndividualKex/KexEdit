@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [Serializable]
     public struct Node : IComponentData {
         public uint Id;

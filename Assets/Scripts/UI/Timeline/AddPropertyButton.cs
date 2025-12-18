@@ -3,6 +3,7 @@ using UnityEngine.UIElements;
 using Unity.Properties;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public class AddPropertyButton : Label {
         public AddPropertyButton() {

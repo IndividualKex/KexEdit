@@ -1,7 +1,7 @@
 using UnityEngine;
 using System;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public class CapMeshBuffers : IDisposable {
         public Mesh Mesh;
         public Material Material;

@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class VideoControlData {
         public float TotalLength;

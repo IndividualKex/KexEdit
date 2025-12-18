@@ -35,9 +35,10 @@ KexEdit/
 │   │   ├── Core/  # Domain layer - pure physics/math (KexEdit.Core)
 │   │   ├── Nodes/  # Node types (KexEdit.Nodes.*)
 │   │   ├── NodeGraph/  # KexEdit-aware graph extensions (KexEdit.NodeGraph)
+│   │   ├── Coaster/  # Application layer aggregate (KexEdit.Coaster)
 │   │   ├── Native/  # Rust FFI bindings (KexEdit.Native.RustCore)
 │   │   ├── Plugins/  # Native DLLs (kexedit_core.dll)
-│   │   ├── Legacy/  # Monolithic runtime being hollowed out (KexEdit)
+│   │   ├── Legacy/  # Monolithic runtime being hollowed out (KexEdit.Legacy)
 │   │   │   ├── Core/  # Foundation & utilities
 │   │   │   ├── Track/  # Track construction & graph
 │   │   │   ├── Trains/  # Vehicle systems
@@ -116,6 +117,7 @@ KexEdit/
 
 - Generic graph library → `Assets/Plugins/KexGraph/`
 - KexEdit-aware graph extensions → `Assets/Runtime/NodeGraph/`
+- Coaster aggregate + evaluator → `Assets/Runtime/Coaster/`
 - Portable physics/math (C#) → `Assets/Runtime/Core/`
 - Spline articulation (C#) → `Assets/Runtime/Core/Articulation/`
 - Portable physics/math (Rust) → `rust-backend/kexedit-core/`

@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using Unity.Entities;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public struct Connection : IComponentData {
         public uint Id;
         public Entity Source;

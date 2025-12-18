@@ -6,7 +6,7 @@ using Unity.Transforms;
 using Unity.Mathematics;
 using Unity.Physics;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [BurstCompile]
     public partial struct TrackColliderCreationSystem : ISystem {
         private EntityQuery _query;

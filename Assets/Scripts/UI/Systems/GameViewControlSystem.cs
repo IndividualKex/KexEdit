@@ -8,6 +8,7 @@ using KexEdit.UI.NodeGraph;
 using KexEdit.UI.Timeline;
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class GameViewControlSystem : SystemBase, IEditableHandler {

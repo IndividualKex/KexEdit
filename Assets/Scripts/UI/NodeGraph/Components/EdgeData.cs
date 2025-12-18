@@ -1,5 +1,6 @@
 using Unity.Entities;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class EdgeData {
         public Entity Entity;

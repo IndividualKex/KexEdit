@@ -2,7 +2,7 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Collections;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public class KexEditManager : MonoBehaviour {
         public int TrainLayer = 0;
 

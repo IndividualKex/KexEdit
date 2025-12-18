@@ -3,6 +3,7 @@ using UnityEngine.UIElements;
 using System;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class ArrowButton : VisualElement {
         private bool _hovered;

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using Unity.Entities;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateAfter(typeof(TrackStyleBuildSystem))]
     public partial class TrackStyleRenderSystem : SystemBase {

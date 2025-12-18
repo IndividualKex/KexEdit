@@ -4,7 +4,7 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public class TrainStyleManaged : IComponentData {
         public TrainStyleData Data;
 

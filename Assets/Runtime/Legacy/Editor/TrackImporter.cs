@@ -2,7 +2,7 @@ using System.IO;
 using UnityEngine;
 using UnityEditor.AssetImporters;
 
-namespace KexEdit.Editor {
+namespace KexEdit.Legacy.Editor {
     [ScriptedImporter(1, "kex")]
     public class TrackImporter : ScriptedImporter {
         public override void OnImportAsset(AssetImportContext ctx) {

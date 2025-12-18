@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using Unity.Mathematics;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [Serializable]
     public struct PointData {
         public float3 Position;

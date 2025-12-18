@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class CameraProperties {
         public const float OrbitSpeed = 35f;

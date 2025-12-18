@@ -1,7 +1,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public struct Preferences : IComponentData {
         public float2 VelocityRange;
         public float2 NormalForceRange;

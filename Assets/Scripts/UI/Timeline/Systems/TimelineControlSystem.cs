@@ -8,9 +8,10 @@ using System;
 using System.Collections;
 using Unity.Burst;
 using Unity.Jobs;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Timeline.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class TimelineControlSystem : SystemBase, IEditableHandler {

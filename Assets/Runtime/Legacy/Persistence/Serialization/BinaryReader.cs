@@ -2,7 +2,7 @@ using System;
 using Unity.Burst;
 using Unity.Collections;
 
-namespace KexEdit.Serialization {
+namespace KexEdit.Legacy.Serialization {
     [BurstCompile]
     public struct BinaryReader {
         private readonly NativeArray<byte> _buffer;

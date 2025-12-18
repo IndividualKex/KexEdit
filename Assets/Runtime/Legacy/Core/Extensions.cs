@@ -1,9 +1,9 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public static class Extensions {
         public static int GCD(int a, int b) {
             while (b != 0) {

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public class ExtrusionGizmoBuffers : IDisposable {
         public Material Material;
         public float Heart;

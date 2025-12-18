@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 using System;
 using System.Collections.Generic;
 using KexEdit;

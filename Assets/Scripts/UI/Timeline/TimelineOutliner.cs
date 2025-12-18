@@ -3,6 +3,7 @@ using Unity.Properties;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public class TimelineOutliner : VisualElement {
         private VisualElement _header;

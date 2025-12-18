@@ -1,7 +1,7 @@
 using System;
 using Unity.Entities;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [Serializable]
     public struct YawSpeedKeyframe : IBufferElementData {
         public Keyframe Value;

@@ -4,9 +4,9 @@ using System.IO;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 
-namespace KexEdit.Serialization {
+namespace KexEdit.Legacy.Serialization {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class SerializationSystem : SystemBase {
         public static SerializationSystem Instance { get; private set; }

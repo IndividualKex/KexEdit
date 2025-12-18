@@ -2,9 +2,9 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateBefore(typeof(TrackFollowerUpdateSystem))]
     [BurstCompile]

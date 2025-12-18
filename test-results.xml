@@ -1,106 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<test-run id="2" testcasecount="13" result="Passed" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.074399">
-  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3234" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.074399" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
+<test-run id="2" testcasecount="8" result="Passed" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.085488">
+  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3242" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.085488" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
     <properties>
       <property name="platform" value="EditMode" />
     </properties>
-    <test-suite type="Assembly" id="1415" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="369" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.047533" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <test-suite type="Assembly" id="1424" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="377" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.058169" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
       <properties>
-        <property name="_PID" value="35456" />
+        <property name="_PID" value="15420" />
         <property name="_APPDOMAIN" value="Unity Child Domain" />
         <property name="platform" value="EditMode" />
         <property name="EditorOnly" value="True" />
       </properties>
-      <test-suite type="TestSuite" id="1423" name="KexGraph" fullname="KexGraph" runstate="Runnable" testcasecount="72" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.044354" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-suite type="TestFixture" id="1001" name="CoasterTests" fullname="CoasterTests" classname="CoasterTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.054234" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
         <properties />
-        <test-suite type="TestSuite" id="1424" name="Tests" fullname="KexGraph.Tests" runstate="Runnable" testcasecount="72" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.043448" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
-          <properties />
-          <test-suite type="TestFixture" id="1119" name="GraphSerializationTests" fullname="KexGraph.Tests.GraphSerializationTests" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" testcasecount="13" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.041930" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
-            <properties>
-              <property name="Category" value="Unit" />
-            </properties>
-            <test-case id="1125" name="NextEdgeId_AfterAddingEdge_Increments" fullname="KexGraph.Tests.GraphSerializationTests.NextEdgeId_AfterAddingEdge_Increments" methodname="NextEdgeId_AfterAddingEdge_Increments" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="310955295" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.019537" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1122" name="NextEdgeId_DefaultGraph_StartsAtOne" fullname="KexGraph.Tests.GraphSerializationTests.NextEdgeId_DefaultGraph_StartsAtOne" methodname="NextEdgeId_DefaultGraph_StartsAtOne" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="1254761433" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000213" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1123" name="NextNodeId_AfterAddingNode_Increments" fullname="KexGraph.Tests.GraphSerializationTests.NextNodeId_AfterAddingNode_Increments" methodname="NextNodeId_AfterAddingNode_Increments" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="287226732" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000133" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1120" name="NextNodeId_DefaultGraph_StartsAtOne" fullname="KexGraph.Tests.GraphSerializationTests.NextNodeId_DefaultGraph_StartsAtOne" methodname="NextNodeId_DefaultGraph_StartsAtOne" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="375203512" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000112" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1124" name="NextPortId_AfterAddingPort_Increments" fullname="KexGraph.Tests.GraphSerializationTests.NextPortId_AfterAddingPort_Increments" methodname="NextPortId_AfterAddingPort_Increments" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="532991845" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000125" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1121" name="NextPortId_DefaultGraph_StartsAtOne" fullname="KexGraph.Tests.GraphSerializationTests.NextPortId_DefaultGraph_StartsAtOne" methodname="NextPortId_DefaultGraph_StartsAtOne" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="2034871714" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000111" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1132" name="RebuildIndexMaps_AfterNodeRemoval_CorrectIndices" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_AfterNodeRemoval_CorrectIndices" methodname="RebuildIndexMaps_AfterNodeRemoval_CorrectIndices" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="2112040256" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.003739" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1131" name="RebuildIndexMaps_CalledMultipleTimes_Idempotent" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_CalledMultipleTimes_Idempotent" methodname="RebuildIndexMaps_CalledMultipleTimes_Idempotent" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="1898244252" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000159" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1126" name="RebuildIndexMaps_EmptyGraph_Succeeds" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_EmptyGraph_Succeeds" methodname="RebuildIndexMaps_EmptyGraph_Succeeds" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="1578382673" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000286" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1129" name="RebuildIndexMaps_FullGraph_RebuildsAllIndexMaps" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_FullGraph_RebuildsAllIndexMaps" methodname="RebuildIndexMaps_FullGraph_RebuildsAllIndexMaps" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="1612109563" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000945" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1128" name="RebuildIndexMaps_NodesAndPorts_RebuildsPortIndexMap" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_NodesAndPorts_RebuildsPortIndexMap" methodname="RebuildIndexMaps_NodesAndPorts_RebuildsPortIndexMap" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="748717502" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000227" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1127" name="RebuildIndexMaps_NodesOnly_RebuildsNodeIndexMap" fullname="KexGraph.Tests.GraphSerializationTests.RebuildIndexMaps_NodesOnly_RebuildsNodeIndexMap" methodname="RebuildIndexMaps_NodesOnly_RebuildsNodeIndexMap" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="699490907" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.000254" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-            </test-case>
-            <test-case id="1130" name="SimulateRoundTrip_ComplexGraph_PreservesStructure" fullname="KexGraph.Tests.GraphSerializationTests.SimulateRoundTrip_ComplexGraph_PreservesStructure" methodname="SimulateRoundTrip_ComplexGraph_PreservesStructure" classname="KexGraph.Tests.GraphSerializationTests" runstate="Runnable" seed="1172515078" result="Passed" start-time="2025-12-18 00:59:15Z" end-time="2025-12-18 00:59:15Z" duration="0.003614" asserts="0">
-              <properties>
-                <property name="retryIteration" value="0" />
-                <property name="repeatIteration" value="0" />
-              </properties>
-              <output><![CDATA[Saving results to: C:/Users/dylan/AppData/LocalLow/IndividualKex/KexEdit\TestResults.xml
+        <test-case id="1004" name="AddAnchorNode_StoresPositionAndRotation" fullname="CoasterTests.AddAnchorNode_StoresPositionAndRotation" methodname="AddAnchorNode_StoresPositionAndRotation" classname="CoasterTests" runstate="Runnable" seed="250493874" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.026829" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1005" name="AddForceNode_StoresDurationAndKeyframes" fullname="CoasterTests.AddForceNode_StoresDurationAndKeyframes" methodname="AddForceNode_StoresDurationAndKeyframes" classname="CoasterTests" runstate="Runnable" seed="1964832702" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.005667" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1009" name="Anchor_StoresInitialPointState" fullname="CoasterTests.Anchor_StoresInitialPointState" methodname="Anchor_StoresInitialPointState" classname="CoasterTests" runstate="Runnable" seed="1312927535" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.006187" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1002" name="Create_InitializesEmptyCoaster" fullname="CoasterTests.Create_InitializesEmptyCoaster" methodname="Create_InitializesEmptyCoaster" classname="CoasterTests" runstate="Runnable" seed="1851391560" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.000775" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1003" name="Dispose_CleansUpAllContainers" fullname="CoasterTests.Dispose_CleansUpAllContainers" methodname="Dispose_CleansUpAllContainers" classname="CoasterTests" runstate="Runnable" seed="1666972184" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.000356" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1006" name="GeometricNode_SteeringSupportedViaHashSet" fullname="CoasterTests.GeometricNode_SteeringSupportedViaHashSet" methodname="GeometricNode_SteeringSupportedViaHashSet" classname="CoasterTests" runstate="Runnable" seed="1699213159" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.000674" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1007" name="ScalarNode_StoresValue" fullname="CoasterTests.ScalarNode_StoresValue" methodname="ScalarNode_StoresValue" classname="CoasterTests" runstate="Runnable" seed="2050750983" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.000529" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1008" name="VectorNode_StoresValue" fullname="CoasterTests.VectorNode_StoresValue" methodname="VectorNode_StoresValue" classname="CoasterTests" runstate="Runnable" seed="881064014" result="Passed" start-time="2025-12-18 02:13:35Z" end-time="2025-12-18 02:13:35Z" duration="0.000227" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <output><![CDATA[Saving results to: C:/Users/dylan/AppData/LocalLow/IndividualKex/KexEdit\TestResults.xml
 ]]></output>
-            </test-case>
-          </test-suite>
-        </test-suite>
+        </test-case>
       </test-suite>
     </test-suite>
   </test-suite>

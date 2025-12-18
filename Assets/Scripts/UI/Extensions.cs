@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class Extensions {
         private static readonly Dictionary<NodeType, string> s_NodeNames = new() {

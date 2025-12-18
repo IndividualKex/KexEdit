@@ -9,6 +9,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using SFB;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class NoLimits2Exporter {
         public static void ExportTrack(float metersPerNode = 2f) {

@@ -3,7 +3,7 @@ using System;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public class DuplicationMeshBuffers : IDisposable {
         public Mesh Mesh;
         public Material Material;

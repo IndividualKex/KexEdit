@@ -5,7 +5,7 @@ using Unity.Physics;
 using Unity.Transforms;
 using Resources = UnityEngine.Resources;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class InitializationSystem : SystemBase {
         private BlobAssetReference<Collider> _trackColliderBlob;

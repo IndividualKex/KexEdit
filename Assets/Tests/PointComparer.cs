@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 using System.Collections.Generic;
 using KexEdit;
 using NUnit.Framework;

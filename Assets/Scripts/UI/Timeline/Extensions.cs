@@ -6,6 +6,8 @@ using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.Timeline.Constants;
 
+using KexEdit.Legacy;
+using Keyframe = KexEdit.Legacy.Keyframe;
 namespace KexEdit.UI.Timeline {
     public static class Extensions {
         private static readonly Dictionary<EasingType, string> s_EasingStringCache = new() {

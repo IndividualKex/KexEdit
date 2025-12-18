@@ -1,9 +1,9 @@
 using UnityEngine;
-using KexEdit.Serialization;
+using KexEdit.Legacy.Serialization;
 using Unity.Entities;
 using System.Collections;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public class CoasterLoader : MonoBehaviour {
         public Track Track;
         public TrackStyleSettingsData TrackStyle;

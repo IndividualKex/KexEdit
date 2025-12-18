@@ -1,7 +1,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public struct PositionPort : IComponentData {
         public float3 Value;
 

@@ -3,6 +3,7 @@ using System.IO;
 using System;
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class FileManager {
         private const string FileExtension = ".kex";

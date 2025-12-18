@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [Serializable]
     public class TrackStyleSettingsData {
         public List<TrackStyleData> Styles = new();

@@ -2,7 +2,7 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateBefore(typeof(TrackSegmentInitializationSystem))]
     [BurstCompile]

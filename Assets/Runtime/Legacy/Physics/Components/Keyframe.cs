@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [Serializable]
     public struct Keyframe {
         private static InterpolationType _defaultInInterpolation = InterpolationType.Bezier;

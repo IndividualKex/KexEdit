@@ -2,6 +2,7 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class UIManager : MonoBehaviour {
         private void Start() {

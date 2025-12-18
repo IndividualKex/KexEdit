@@ -4,7 +4,7 @@
   <Project Path="Unity.Entities.Editor.Tests.csproj" />
   <Project Path="Unity.Localization.csproj" />
   <Project Path="Unity.Entities.Graphics.csproj" />
-  <Project Path="KexEdit.csproj" />
+  <Project Path="KexEdit.Legacy.csproj" />
   <Project Path="Unity.Physics.csproj" />
   <Project Path="Unity.ScriptableBuildPipeline.Editor.csproj" />
   <Project Path="Unity.Mathematics.csproj" />
@@ -46,7 +46,7 @@
   <Project Path="Unity.PerformanceTesting.csproj" />
   <Project Path="Unity.Scenes.Editor.csproj" />
   <Project Path="Unity.InternalAPIEngineBridge.013.csproj" />
-  <Project Path="KexEdit.Editor.csproj" />
+  <Project Path="KexEdit.Legacy.Editor.csproj" />
   <Project Path="Unity.Entities.Hybrid.Tests.csproj" />
   <Project Path="glTFast.Export.csproj" />
   <Project Path="Unity.Entities.ContentDelivery.Tests.csproj" />
@@ -127,6 +127,7 @@
   <Project Path="Unity.InternalAPIEditorBridge.003.csproj" />
   <Project Path="Unity.ScriptableBuildPipeline.csproj" />
   <Project Path="Unity.PlasticSCM.Editor.Entities.csproj" />
+  <Project Path="KexEdit.Coaster.csproj" />
   <Project Path="Unity.Entities.Tests.InAnotherAssembly.csproj" />
   <Project Path="Unity.Collections.Editor.csproj" />
   <Project Path="Unity.Entities.Hybrid.Tests.SeparateAssembly.csproj" />

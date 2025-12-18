@@ -3,9 +3,9 @@ using Unity.Entities;
 using Unity.Collections;
 using Unity.Burst;
 using Unity.Jobs;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
     [BurstCompile]
     public partial struct TrackPointSystem : ISystem {

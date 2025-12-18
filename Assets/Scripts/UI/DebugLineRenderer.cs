@@ -1,5 +1,6 @@
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class DebugLineRenderer : MonoBehaviour {
         public Vector3 StartPosition = new(-10f, 0f, 0f);

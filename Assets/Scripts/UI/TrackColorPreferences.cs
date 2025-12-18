@@ -1,5 +1,6 @@
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class TrackColorPreferences {
         public static Color GetColor(string trackStyle, int colorIndex, Color defaultColor) {

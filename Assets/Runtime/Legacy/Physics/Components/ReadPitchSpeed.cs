@@ -1,6 +1,6 @@
 using Unity.Entities;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public struct ReadPitchSpeed : IBufferElementData {
         public float Value;
 

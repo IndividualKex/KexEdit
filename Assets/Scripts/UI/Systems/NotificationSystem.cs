@@ -1,6 +1,7 @@
 using Unity.Entities;
 using UnityEngine.UIElements;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class NotificationSystem : SystemBase {

@@ -4,7 +4,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace KexEdit.Serialization {
+namespace KexEdit.Legacy.Serialization {
     [System.Serializable]
     internal struct KeyframeV1 {
 #pragma warning disable 0649

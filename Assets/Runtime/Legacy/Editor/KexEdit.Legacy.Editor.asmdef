@@ -1,10 +1,10 @@
 {
-    "name": "KexEdit.Editor",
-    "rootNamespace": "",
+    "name": "KexEdit.Legacy.Editor",
+    "rootNamespace": "KexEdit.Legacy.Editor",
     "references": [
         "Unity.Mathematics",
         "Unity.Collections",
-        "KexEdit",
+        "KexEdit.Legacy",
         "Unity.Entities",
         "Unity.Burst",
         "KexEdit.UI"

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [Serializable]
     public class TrainStyleData {
         public List<TrainCarData> TrainCars = new();

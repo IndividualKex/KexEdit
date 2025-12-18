@@ -1,7 +1,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public struct TrackPoint : IBufferElementData {
         public float3 Position;
         public float3 Direction;

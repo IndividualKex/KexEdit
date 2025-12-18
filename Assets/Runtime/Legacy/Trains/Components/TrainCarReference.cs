@@ -1,6 +1,6 @@
 using Unity.Entities;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public struct TrainCarReference : IBufferElementData {
         public Entity Value;
 

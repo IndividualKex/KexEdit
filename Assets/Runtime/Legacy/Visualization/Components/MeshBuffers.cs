@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public class MeshBuffers : IDisposable {
         public ComputeBuffer PointsBuffer;
         public ComputeBuffer VisualizationDataBuffer;

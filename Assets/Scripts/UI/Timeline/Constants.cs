@@ -1,5 +1,6 @@
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public static class Constants {
         public static readonly Color s_RollSpeedCurveColor = new(0.85f, 0.4f, 0.4f);        // Red

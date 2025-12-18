@@ -1,6 +1,6 @@
 using Unity.Entities;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public struct TrackStyleSettings : IComponentData {
         public int DefaultStyle;
         public int Version;

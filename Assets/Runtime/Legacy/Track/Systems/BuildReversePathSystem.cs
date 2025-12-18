@@ -5,7 +5,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using CorePoint = KexEdit.Core.Point;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct BuildReversePathSystem : ISystem {
         public void OnUpdate(ref SystemState state) {

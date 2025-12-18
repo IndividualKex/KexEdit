@@ -10,7 +10,7 @@ using UnityEditor;
 using UnityEngine;
 using KexEdit.UI;
 
-namespace KexEdit.Editor {
+namespace KexEdit.Legacy.Editor {
     public static class TrackDataExporter {
         [MenuItem("KexEdit/Export Track Data")]
         public static void Export() {

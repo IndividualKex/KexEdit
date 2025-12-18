@@ -1,6 +1,6 @@
 using Unity.Entities;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public struct TrackFollower : IComponentData {
         public Entity Section;
         public float Index;

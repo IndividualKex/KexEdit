@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public static class Constants {
         public const float M = 1f; // Mass in KG
         public const float G = 9.80665f; // Gravity in m/s^2

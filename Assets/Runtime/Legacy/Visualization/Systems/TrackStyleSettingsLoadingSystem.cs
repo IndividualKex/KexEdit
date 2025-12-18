@@ -1,7 +1,7 @@
 using Unity.Collections;
 using Unity.Entities;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class TrackStyleSettingsLoadingSystem : SystemBase {
         protected override void OnCreate() {

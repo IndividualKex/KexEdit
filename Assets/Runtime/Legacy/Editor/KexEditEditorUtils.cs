@@ -2,7 +2,7 @@ using Unity.Collections;
 using UnityEditor;
 using UnityEngine;
 
-namespace KexEdit.Editor {
+namespace KexEdit.Legacy.Editor {
     public class KexEditEditorUtils {
         [MenuItem("KexEdit/Generate Default Rail")]
         public static void GenerateDefaultRail() {

@@ -3,11 +3,11 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 using CoreKeyframe = KexEdit.Core.Keyframe;
 using CorePoint = KexEdit.Core.Point;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct BuildCopyPathSectionSystem : ISystem {
         public void OnUpdate(ref SystemState state) {

@@ -3,9 +3,9 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Burst;
 using Unity.Jobs;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [BurstCompile]
     public partial struct TrackSegmentInitializationSystem : ISystem {

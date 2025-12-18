@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class NodeData {
         public Entity Entity;

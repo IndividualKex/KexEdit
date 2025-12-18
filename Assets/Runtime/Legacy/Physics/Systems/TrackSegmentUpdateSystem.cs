@@ -2,7 +2,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Burst;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [BurstCompile]
     public partial struct TrackSegmentUpdateSystem : ISystem {

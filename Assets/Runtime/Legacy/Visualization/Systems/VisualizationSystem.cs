@@ -2,7 +2,7 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial class VisualizationSystem : SystemBase {
         protected override void OnCreate() {

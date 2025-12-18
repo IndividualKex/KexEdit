@@ -2,7 +2,7 @@ using KexEdit.Nodes;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 using CoreKeyframe = KexEdit.Core.Keyframe;
 using CorePoint = KexEdit.Core.Point;
 #if USE_RUST_BACKEND
@@ -12,7 +12,7 @@ using Unity.Burst;
 using KexEdit.Nodes.Force;
 #endif
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial struct BuildForceSectionSystem : ISystem {
         public void OnUpdate(ref SystemState state) {

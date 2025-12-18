@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [Serializable]
     public class TrainStyleConfig {

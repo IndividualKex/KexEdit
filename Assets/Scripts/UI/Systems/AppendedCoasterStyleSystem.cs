@@ -1,6 +1,7 @@
 using Unity.Collections;
 using Unity.Entities;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class AppendedCoasterStyleSystem : SystemBase {

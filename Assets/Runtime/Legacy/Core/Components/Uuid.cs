@@ -1,7 +1,7 @@
 using System;
 using Unity.Mathematics;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public struct Uuid {
         public static uint Create() {
             var guid = Guid.NewGuid();

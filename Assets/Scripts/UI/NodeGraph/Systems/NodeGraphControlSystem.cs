@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
-using KexEdit.Serialization;
+using KexEdit.Legacy.Serialization;
 using SFB;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Extensions;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class NodeGraphControlSystem : SystemBase, IEditableHandler {

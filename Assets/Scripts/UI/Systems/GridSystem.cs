@@ -5,6 +5,7 @@ using Unity.Jobs;
 using Unity.Burst;
 using Unity.Mathematics;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class GridSystem : SystemBase {

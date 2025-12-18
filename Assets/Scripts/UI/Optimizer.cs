@@ -2,6 +2,7 @@ using KexEdit.UI.Timeline;
 using Unity.Entities;
 using Unity.Mathematics;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public struct Optimizer {
         private const float TOLERANCE = 1e-3f;

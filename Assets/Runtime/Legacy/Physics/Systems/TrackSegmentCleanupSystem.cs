@@ -2,7 +2,7 @@ using Unity.Entities;
 using Unity.Collections;
 using Unity.Burst;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(CleanupSystemGroup))]
     [UpdateAfter(typeof(TrackColliderCleanupSystem))]
     [BurstCompile]

@@ -1,8 +1,9 @@
+using KexEdit.Legacy;
 using NUnit.Framework;
 using UnityEngine;
 using Unity.Collections;
 using Unity.Mathematics;
-using KexEdit.Serialization;
+using KexEdit.Legacy.Serialization;
 
 public class SerializationTests {
     [Test]
@@ -411,7 +412,7 @@ public class SerializationTests {
 
     [Test]
     public void TestKeyframeLockingFlags() {
-        var keyframe = KexEdit.Keyframe.Default;
+        var keyframe = KexEdit.Legacy.Keyframe.Default;
 
         Assert.IsFalse(keyframe.IsTimeLocked);
         Assert.IsFalse(keyframe.IsValueLocked);

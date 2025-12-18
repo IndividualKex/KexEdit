@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using Unity.Collections;
 
-namespace KexEdit.Serialization {
+namespace KexEdit.Legacy.Serialization {
     public static class SizeCalculator {
         public static int CalculateSize(ref SerializedGraph graph) {
             int size = sizeof(int); // Version

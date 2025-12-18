@@ -11,7 +11,7 @@ using Unity.Transforms;
 using UnityEngine;
 using ComponentType = Unity.Entities.ComponentType;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public static class EntityImporter {
         public static async void ImportGltfFile(string path, int layer, Action<Entity> onSuccess = null, Action onFailure = null) {
             if (!File.Exists(path)) {

@@ -3,7 +3,7 @@ using UnityEngine.Rendering;
 using Unity.Entities;
 using Unity.Collections;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [UpdateBefore(typeof(TrackStyleRenderSystem))]
     public partial class TrackStyleBuildSystem : SystemBase {

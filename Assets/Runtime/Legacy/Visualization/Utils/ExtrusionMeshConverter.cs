@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public static class ExtrusionMeshConverter {
         public static bool Convert(Mesh inputMesh, out Mesh outputMesh) {
             outputMesh = null;

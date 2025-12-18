@@ -1,6 +1,6 @@
 using Unity.Entities;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public class LoadTrainStyleEvent : IComponentData {
         public TrainStyleData Data;
     }

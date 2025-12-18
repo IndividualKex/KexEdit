@@ -1,14 +1,15 @@
 using Unity.Entities;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIInitializationSystemGroup))]
     public partial class PreferencesUpdateSystem : SystemBase {
         protected override void OnCreate() {
-            RequireForUpdate<KexEdit.Preferences>();
+            RequireForUpdate<KexEdit.Legacy.Preferences>();
         }
 
         protected override void OnUpdate() {
-            ref var preferences = ref SystemAPI.GetSingletonRW<KexEdit.Preferences>().ValueRW;
+            ref var preferences = ref SystemAPI.GetSingletonRW<KexEdit.Legacy.Preferences>().ValueRW;
 
             preferences.VelocityRange = Preferences.GetVisualizationRange(VisualizationMode.Velocity);
             preferences.NormalForceRange = Preferences.GetVisualizationRange(VisualizationMode.NormalForce);

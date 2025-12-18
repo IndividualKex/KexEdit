@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class TrainStyleResourceLoader {
         public static TrainStyleConfig LoadConfig(string configPath) {

@@ -1,5 +1,6 @@
 using Unity.Entities;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public struct PlayheadGizmoReference : IComponentData {
         public Entity Value;

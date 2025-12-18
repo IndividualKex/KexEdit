@@ -5,6 +5,7 @@ using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.Timeline.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public class DopeSheetView : VisualElement {
         private SelectionBox _selectionBox;

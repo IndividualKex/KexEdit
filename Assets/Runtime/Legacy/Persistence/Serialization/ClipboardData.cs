@@ -2,7 +2,7 @@ using System;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace KexEdit.Serialization {
+namespace KexEdit.Legacy.Serialization {
     public struct ClipboardData : IDisposable {
         public SerializedGraph Graph;
         public NativeArray<float2> NodeOffsets;

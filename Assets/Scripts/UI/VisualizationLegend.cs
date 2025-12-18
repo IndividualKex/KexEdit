@@ -2,9 +2,10 @@ using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class VisualizationLegend : VisualElement {
         private VisualizationLegendData _data;

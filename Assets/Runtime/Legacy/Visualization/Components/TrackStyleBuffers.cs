@@ -3,7 +3,7 @@ using UnityEngine.Rendering;
 using System;
 using System.Collections.Generic;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public class TrackStyleBuffers : IComponentData, IDisposable {
         public AsyncGPUReadbackRequest? ComputeFence;
         public MeshBuffers CurrentBuffers;

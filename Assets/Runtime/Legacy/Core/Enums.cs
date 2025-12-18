@@ -1,6 +1,6 @@
 using System;
 
-namespace KexEdit {
+namespace KexEdit.Legacy {
     public enum DurationType {
         Time,
         Distance,

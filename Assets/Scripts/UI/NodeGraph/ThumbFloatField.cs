@@ -3,6 +3,7 @@ using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class ThumbFloatField : VisualElement {
         private static readonly string[] s_DisplayNames = new string[] { "X", "Y", "Z" };

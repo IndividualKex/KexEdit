@@ -12,6 +12,7 @@ using SFB;
 using Unity.Burst;
 using System.Runtime.InteropServices;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [BurstCompile]
     public static class TrackMeshExporter {

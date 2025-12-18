@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class ResizeHandle : VisualElement {
         private const float MIN_SIZE = 100f;

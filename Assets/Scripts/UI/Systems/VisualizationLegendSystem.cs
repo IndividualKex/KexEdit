@@ -2,6 +2,7 @@ using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class VisualizationLegendSystem : SystemBase {

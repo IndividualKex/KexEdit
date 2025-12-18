@@ -1,7 +1,7 @@
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace KexEdit.Serialization {
+namespace KexEdit.Legacy.Serialization {
     public static class ClipboardSerializer {
         public static byte[] Serialize(ref ClipboardData clipboardData) {
             // Calculate total size

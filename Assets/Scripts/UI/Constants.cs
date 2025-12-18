@@ -1,5 +1,6 @@
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class Constants {
         public static readonly Color s_BackgroundColor = new(0.3f, 0.3f, 0.3f);

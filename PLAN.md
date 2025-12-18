@@ -86,7 +86,7 @@ KexEdit.Persistence
   └── KexEdit.Coaster only
 
 KexEdit.LegacyImport
-  └── KexEdit.Coaster, KexEdit (legacy serialization)
+  └── KexEdit.Coaster, KexEdit.Legacy (legacy serialization)
 ```
 
 ### Coaster (Pure Data)
@@ -145,16 +145,17 @@ Algorithm:
 | KexEdit.Nodes (10 node types, schemas, Build methods) | ✓ Complete |
 | KexEdit.NodeGraph (typed extensions, validation)      | ✓ Complete |
 | Rust backend (kexedit-core, kexedit-ffi)              | ✓ Complete |
+| KexEdit.Legacy namespace migration                    | ✓ Complete |
+| KexEdit.Coaster (aggregate root)                      | ✓ Complete |
 
 ## What's Missing
 
 | Component             | Purpose                       | Location                 |
 | --------------------- | ----------------------------- | ------------------------ |
-| **Coaster**           | Aggregate root (graph + data) | `KexEdit.Coaster`        |
 | **CoasterEvaluator**  | Use case: coaster → points    | `KexEdit.Coaster`        |
 | **CoasterSerializer** | New binary format             | `KexEdit.Persistence`    |
 | **LegacyImporter**    | .kex → Coaster                | `KexEdit.LegacyImport`   |
-| **Gold tests**        | Validate parity with legacy   | `Assets/Tests/Document/` |
+| **Gold tests**        | Validate parity with legacy   | `Assets/Tests/Coaster/`  |
 
 ### Binary Format (Chunk-Based)
 
@@ -301,8 +302,8 @@ Hexagonal (core → adapters), TDD (tests with each step).
 
 ### Phase 1: Application Layer
 
-1. ✓ **Graph serialization** - done
-2. **Coaster** + unit tests
+1. ✓ **Graph serialization**
+2. ✓ **Coaster** + unit tests
 3. **CoasterEvaluator** + unit tests (hand-crafted coasters)
 
 ### Phase 2: Legacy Adapter → Gold Tests
@@ -321,7 +322,7 @@ Success criteria met here: legacy files load and evaluate correctly.
 ## Files to Create
 
 ```
-Assets/Runtime/Document/
+Assets/Runtime/Coaster/
   KexEdit.Coaster.asmdef
   Coaster.cs
   CoasterEvaluator.cs
