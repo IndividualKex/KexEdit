@@ -44,8 +44,12 @@ namespace KexEdit.LegacyImport {
             uint maxPortId = 0;
             uint maxEdgeId = 0;
 
+            var seenNodes = new NativeHashSet<uint>(serializedGraph.Nodes.Length, Allocator.Temp);
+
             for (int i = 0; i < serializedGraph.Nodes.Length; i++) {
                 var node = serializedGraph.Nodes[i];
+                if (!seenNodes.Add(node.Node.Id)) continue;
+
                 maxNodeId = math.max(maxNodeId, node.Node.Id);
 
                 for (int j = 0; j < node.InputPorts.Length; j++) {
@@ -61,12 +65,18 @@ namespace KexEdit.LegacyImport {
             }
 
             graph.NextNodeId = maxNodeId + 1;
-            graph.NextPortId = maxPortId + 1;
+            uint nextPortId = maxPortId + 1;
             graph.NextEdgeId = maxEdgeId + 1;
+
+            seenNodes.Clear();
+            var portIdRemap = new NativeHashMap<uint, uint>(serializedGraph.Nodes.Length * 4, Allocator.Temp);
 
             for (int i = 0; i < serializedGraph.Nodes.Length; i++) {
                 var node = serializedGraph.Nodes[i];
                 uint nodeId = node.Node.Id;
+
+                if (!seenNodes.Add(nodeId)) continue;
+
                 uint nodeType = ConvertNodeType(node.Node.Type);
                 float2 position = node.Node.Position;
 
@@ -81,6 +91,12 @@ namespace KexEdit.LegacyImport {
                 for (int j = 0; j < node.InputPorts.Length; j++) {
                     var port = node.InputPorts[j];
                     uint portId = port.Port.Id;
+
+                    if (portIdRemap.ContainsKey(portId)) {
+                        portId = nextPortId++;
+                    }
+                    portIdRemap[port.Port.Id] = portId;
+
                     uint portType = (uint)port.Port.Type;
 
                     int portIndex = graph.PortIds.Length;
@@ -94,6 +110,12 @@ namespace KexEdit.LegacyImport {
                 for (int j = 0; j < node.OutputPorts.Length; j++) {
                     var port = node.OutputPorts[j];
                     uint portId = port.Port.Id;
+
+                    if (portIdRemap.ContainsKey(portId)) {
+                        portId = nextPortId++;
+                    }
+                    portIdRemap[port.Port.Id] = portId;
+
                     uint portType = (uint)port.Port.Type;
 
                     int portIndex = graph.PortIds.Length;
@@ -105,21 +127,46 @@ namespace KexEdit.LegacyImport {
                 }
             }
 
+            seenNodes.Dispose();
+
+            var seenEdges = new NativeHashSet<uint>(serializedGraph.Edges.Length, Allocator.Temp);
+
             for (int i = 0; i < serializedGraph.Edges.Length; i++) {
                 var edge = serializedGraph.Edges[i];
+                if (!seenEdges.Add(edge.Id)) continue;
+
+                uint sourceId = edge.SourceId;
+                uint targetId = edge.TargetId;
+
+                if (portIdRemap.TryGetValue(sourceId, out uint remappedSource)) {
+                    sourceId = remappedSource;
+                }
+                if (portIdRemap.TryGetValue(targetId, out uint remappedTarget)) {
+                    targetId = remappedTarget;
+                }
+
                 int edgeIndex = graph.EdgeIds.Length;
                 graph.EdgeIds.Add(edge.Id);
-                graph.EdgeSources.Add(edge.SourceId);
-                graph.EdgeTargets.Add(edge.TargetId);
+                graph.EdgeSources.Add(sourceId);
+                graph.EdgeTargets.Add(targetId);
                 graph.EdgeIndexMap[edge.Id] = edgeIndex;
             }
+
+            portIdRemap.Dispose();
+            seenEdges.Dispose();
+
+            graph.NextPortId = nextPortId;
         }
 
         [BurstCompile]
         private static void ImportNodeData(in SerializedGraph serializedGraph, ref Coaster.Coaster coaster) {
+            var seenNodes = new NativeHashSet<uint>(serializedGraph.Nodes.Length, Allocator.Temp);
+
             for (int i = 0; i < serializedGraph.Nodes.Length; i++) {
                 var node = serializedGraph.Nodes[i];
                 uint nodeId = node.Node.Id;
+
+                if (!seenNodes.Add(nodeId)) continue;
 
                 ImportAnchor(in node, nodeId, ref coaster);
                 ImportKeyframes(in node, nodeId, ref coaster.Keyframes);
@@ -127,6 +174,8 @@ namespace KexEdit.LegacyImport {
                 ImportSteering(in node, nodeId, ref coaster);
                 ImportPortValues(in node, nodeId, ref coaster);
             }
+
+            seenNodes.Dispose();
         }
 
         [BurstCompile]
