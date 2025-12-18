@@ -13,7 +13,7 @@ public class CoasterEvaluatorTests {
     public void Evaluate_EmptyCoaster_ReturnsEmptyResult() {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
-            var result = CoasterEvaluator.Evaluate(in coaster, Allocator.Temp);
+            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
             try {
                 Assert.AreEqual(0, result.Paths.Count);
                 Assert.AreEqual(0, result.OutputAnchors.Count);
@@ -33,7 +33,7 @@ public class CoasterEvaluatorTests {
             coaster.Vectors[nodeId] = new float3(10f, 20f, 30f);
             coaster.SetRotation(nodeId, new float3(0f, 0f, 0f));
 
-            var result = CoasterEvaluator.Evaluate(in coaster, Allocator.Temp);
+            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
             try {
                 Assert.AreEqual(1, result.OutputAnchors.Count);
                 Assert.IsTrue(result.OutputAnchors.ContainsKey(nodeId));
@@ -66,7 +66,7 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             forceInputs.Dispose();
 
-            var result = CoasterEvaluator.Evaluate(in coaster, Allocator.Temp);
+            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
             try {
                 Assert.IsTrue(result.OutputAnchors.ContainsKey(forceId), "Force node should have output anchor");
                 Assert.IsTrue(result.Paths.ContainsKey(forceId), "Force node should have path");
@@ -100,7 +100,7 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             geoInputs.Dispose();
 
-            var result = CoasterEvaluator.Evaluate(in coaster, Allocator.Temp);
+            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
             try {
                 Assert.IsTrue(result.OutputAnchors.ContainsKey(geoId), "Geometric node should have output anchor");
                 Assert.IsTrue(result.Paths.ContainsKey(geoId), "Geometric node should have path");
@@ -131,7 +131,7 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             curvedInputs.Dispose();
 
-            var result = CoasterEvaluator.Evaluate(in coaster, Allocator.Temp);
+            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
             try {
                 Assert.IsTrue(result.OutputAnchors.ContainsKey(curvedId), "Curved node should have output anchor");
                 Assert.IsTrue(result.Paths.ContainsKey(curvedId), "Curved node should have path");
@@ -161,7 +161,7 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             reverseInputs.Dispose();
 
-            var result = CoasterEvaluator.Evaluate(in coaster, Allocator.Temp);
+            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
             try {
                 Assert.IsTrue(result.OutputAnchors.ContainsKey(reverseId), "Reverse node should have output anchor");
 
@@ -199,7 +199,7 @@ public class CoasterEvaluatorTests {
             forceOutputs.Dispose();
             rpInputs.Dispose();
 
-            var result = CoasterEvaluator.Evaluate(in coaster, Allocator.Temp);
+            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
             try {
                 Assert.IsTrue(result.Paths.ContainsKey(reversePathId), "ReversePath should have path");
 
@@ -241,7 +241,7 @@ public class CoasterEvaluatorTests {
             anchor2Outputs.Dispose();
             copyInputs.Dispose();
 
-            var result = CoasterEvaluator.Evaluate(in coaster, Allocator.Temp);
+            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
             try {
                 Assert.IsTrue(result.Paths.ContainsKey(copyId), "CopyPath should have path");
                 Assert.IsTrue(result.OutputAnchors.ContainsKey(copyId), "CopyPath should have output anchor");
@@ -276,7 +276,7 @@ public class CoasterEvaluatorTests {
             anchor1Outputs.Dispose();
             bridgeInputs.Dispose();
 
-            var result = CoasterEvaluator.Evaluate(in coaster, Allocator.Temp);
+            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
             try {
                 Assert.IsTrue(result.Paths.ContainsKey(bridgeId), "Bridge should have path");
                 Assert.IsTrue(result.OutputAnchors.ContainsKey(bridgeId), "Bridge should have output anchor");
@@ -310,7 +310,7 @@ public class CoasterEvaluatorTests {
             scalarOutputs.Dispose();
             curvedInputs.Dispose();
 
-            var result = CoasterEvaluator.Evaluate(in coaster, Allocator.Temp);
+            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
             try {
                 Assert.IsTrue(result.Paths.ContainsKey(curvedId), "Curved node should have path");
 

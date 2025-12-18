@@ -22,8 +22,8 @@ namespace KexEdit.Coaster {
         public NativeHashMap<uint, Point> OutputAnchors;
 
         [BurstCompile]
-        public static EvaluationResult Create(Allocator allocator, int capacity = 16) {
-            return new EvaluationResult {
+        public static void Create(out EvaluationResult result, Allocator allocator, int capacity = 16) {
+            result = new EvaluationResult {
                 Paths = new NativeHashMap<uint, NativeList<Point>>(capacity, allocator),
                 OutputAnchors = new NativeHashMap<uint, Point>(capacity, allocator)
             };
@@ -52,11 +52,11 @@ namespace KexEdit.Coaster {
         private const float DEFAULT_RESISTANCE = 0f;
 
         [BurstCompile]
-        public static EvaluationResult Evaluate(in Coaster coaster, Allocator allocator) {
+        public static void Evaluate(in Coaster coaster, out EvaluationResult result, Allocator allocator) {
             int nodeCount = coaster.Graph.NodeCount;
-            var result = EvaluationResult.Create(allocator, math.max(nodeCount, 16));
+            EvaluationResult.Create(out result, allocator, math.max(nodeCount, 16));
 
-            if (nodeCount == 0) return result;
+            if (nodeCount == 0) return;
 
             TopologicalSort(in coaster.Graph, out var sortedNodes, Allocator.Temp);
 
@@ -93,7 +93,6 @@ namespace KexEdit.Coaster {
             }
 
             sortedNodes.Dispose();
-            return result;
         }
 
         [BurstCompile]
@@ -318,7 +317,8 @@ namespace KexEdit.Coaster {
             Point targetAnchor;
             if (coaster.Anchors.TryGetValue(nodeId, out var stored)) {
                 targetAnchor = stored;
-            } else {
+            }
+            else {
                 return;
             }
 
@@ -459,7 +459,8 @@ namespace KexEdit.Coaster {
                 for (int i = 0; i < slice.Length; i++) {
                     keyframes[i] = slice[i];
                 }
-            } else {
+            }
+            else {
                 keyframes = new NativeArray<Keyframe>(0, Allocator.Temp);
             }
         }
