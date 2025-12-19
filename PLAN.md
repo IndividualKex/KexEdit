@@ -40,9 +40,9 @@ ECS Entity                    Domain Layer                 ECS Buffer
 
 Incremental phases that maintain runtime compatibility:
 
-### Phase 1: Centralize Converters
+### Phase 1: Centralize Converters ✓
 
-Extract duplicated `ToPoint()`, `ToPointData()`, `ConvertKeyframes()` from 7 build systems into `PointConverter.cs`. Pure refactoring, no behavioral change.
+Extracted duplicated converters from 7 build systems into `PointConverter.cs`.
 
 ### Phase 2: Extend Core.Point
 
@@ -72,6 +72,7 @@ Single `CoasterSyncSystem` maintains Coaster struct mirroring ECS graph, calls `
 
 | Area | Files |
 |------|-------|
+| Point converter | `Assets/Runtime/Legacy/Track/Utils/PointConverter.cs` |
 | Build systems (×7) | `Assets/Runtime/Legacy/Track/Systems/Build*System.cs` |
 | Legacy point | `Assets/Runtime/Legacy/Track/Components/PointData.cs` |
 | New point | `Assets/Runtime/Core/Point.cs` |
