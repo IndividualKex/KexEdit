@@ -97,6 +97,7 @@
   <Project Path="Unity.Transforms.PerformanceTests.csproj" />
   <Project Path="Unity.Burst.Tests.csproj" />
   <Project Path="Unity.Entities.Hybrid.Tests.ExcludedAssembly.csproj" />
+  <Project Path="KexEdit.Persistence.csproj" />
   <Project Path="KexEdit.Native.RustCore.csproj" />
   <Project Path="Unity.Transforms.Tests.csproj" />
   <Project Path="Unity.Numerics.Random.csproj" />

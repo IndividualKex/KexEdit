@@ -36,6 +36,7 @@ KexEdit/
 │   │   ├── Nodes/  # Node types (KexEdit.Nodes.*)
 │   │   ├── NodeGraph/  # KexEdit-aware graph extensions (KexEdit.NodeGraph)
 │   │   ├── Coaster/  # Application layer aggregate (KexEdit.Coaster)
+│   │   ├── Persistence/  # Chunk-based serialization (KexEdit.Persistence)
 │   │   ├── LegacyImport/  # Legacy .kex import adapter (KexEdit.LegacyImport)
 │   │   ├── Native/  # Rust FFI bindings (KexEdit.Native.RustCore)
 │   │   ├── Plugins/  # Native DLLs (kexedit_core.dll)
@@ -118,6 +119,7 @@ KexEdit/
 - Generic graph library → `Assets/Plugins/KexGraph/`
 - KexEdit-aware graph extensions → `Assets/Runtime/NodeGraph/`
 - Coaster aggregate + evaluator → `Assets/Runtime/Coaster/`
+- New serialization format → `Assets/Runtime/Persistence/`
 - Legacy .kex import → `Assets/Runtime/LegacyImport/`
 - Portable physics/math (C#) → `Assets/Runtime/Core/`
 - Spline articulation (C#) → `Assets/Runtime/Core/Articulation/`

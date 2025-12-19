@@ -313,9 +313,9 @@ Hexagonal (core → adapters), TDD (tests with each step).
 
 ### Phase 3: New Persistence
 
-6. **Chunk infrastructure** (ChunkReader/Writer, extension registry)
-7. **CoasterSerializer** + round-trip tests
-8. **Editor extensions** (UIST, SLCT)
+6. ✓ **Chunk infrastructure** (ChunkReader/Writer, extension interfaces)
+7. ✓ **CoasterSerializer** + round-trip tests
+8. **Editor extensions** (UIST, SLCT) - optional, for UI state persistence
 
 ## Files to Create
 
