@@ -14,7 +14,6 @@ namespace Tests {
                 typeof(Steering)
             );
 
-            em.AddBuffer<Point>(entity);
             em.AddBuffer<CorePointBuffer>(entity);
             em.AddBuffer<InputPortReference>(entity);
             em.AddBuffer<OutputPortReference>(entity);

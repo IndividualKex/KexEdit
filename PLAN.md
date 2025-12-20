@@ -70,7 +70,7 @@ UI systems (StatsOverlaySystem, TimelineControlSystem, KeyframeGizmoUpdateSystem
 **Phase 5b (COMPLETE)**: Remaining runtime systems migrated to CorePointBuffer:
 - GraphSystem, GraphTraversalSystem, AppendedCoasterTrainPositionSystem
 
-**Phase 5c**: Remove dual-write from build systems, delete Point.cs/PointData.cs
+**Phase 5c (COMPLETE)**: Remove dual-write from build systems, delete Point.cs (PointData.cs retained for port compatibility)
 
 ### Phase 6: Replace Build Systems
 
@@ -90,4 +90,3 @@ Single `CoasterSyncSystem` mirrors ECS graph to Coaster, calls `CoasterEvaluator
 
 - `./run-tests.sh` after each phase
 - Gold tests validate physics parity
-- Dual-write mode catches mismatches before consumer migration

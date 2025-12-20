@@ -5,6 +5,7 @@
         "Unity.Mathematics",
         "Unity.Collections",
         "KexEdit.Legacy",
+        "KexEdit.Core",
         "Unity.Entities",
         "Unity.Burst",
         "KexEdit.UI"

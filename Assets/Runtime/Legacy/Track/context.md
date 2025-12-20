@@ -15,15 +15,15 @@ Track construction, node graph, and section building
 - `Connection` - Links between nodes
 - `Port` - Connection points (position, velocity, rotation, etc.)
 - `Segment` - Track segment data
-- `Point` / `PointData` - Legacy point buffer wrapping mutable point data
-- `CorePointBuffer` - Migration target wrapping `Core.Point` with cached derived values
+- `PointData` - Legacy point struct used by ports (Anchor, AnchorPort, PathPort)
+- `CorePointBuffer` - ECS buffer wrapping `Core.Point` with cached derived values
 - Section tags - `BridgeTag`, `ReverseTag`, etc.
 
 ## Key Systems
 
 - `GraphSystem` - Manages node graph structure
 - `GraphTraversalSystem` - Traverses and processes graph
-- `Build*System` - ECS adapters delegating to KexEdit.Nodes.*, dual-write to Point and CorePointBuffer
+- `Build*System` - ECS adapters delegating to KexEdit.Nodes.*, write to CorePointBuffer
 - `TrackSegmentInitializationSystem` - Initializes segments (reads CorePointBuffer)
 
 ## Entry Points

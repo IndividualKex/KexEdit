@@ -44,9 +44,9 @@ namespace KexEdit.UI {
 
             var allPoints = new List<PointData>();
             foreach (var nodeEntity in orderedNodes) {
-                var points = entityManager.GetBuffer<Point>(nodeEntity);
+                var points = entityManager.GetBuffer<CorePointBuffer>(nodeEntity);
                 for (int i = 0; i < points.Length; i++) {
-                    allPoints.Add(points[i]);
+                    allPoints.Add(points[i].ToPointData());
                 }
             }
 

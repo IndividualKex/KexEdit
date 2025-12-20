@@ -177,15 +177,15 @@ namespace KexEdit.Legacy.Editor {
                 ExtractBridgeInputs(entityManager, nodeEntity, section);
             }
 
-            if (entityManager.HasBuffer<Point>(nodeEntity)) {
-                var points = entityManager.GetBuffer<Point>(nodeEntity);
+            if (entityManager.HasBuffer<CorePointBuffer>(nodeEntity)) {
+                var points = entityManager.GetBuffer<CorePointBuffer>(nodeEntity);
                 section.Outputs.Points = new List<TrackDataPoint>(points.Length);
                 for (int i = 0; i < points.Length; i++) {
-                    section.Outputs.Points.Add(ToPointDataDto(points[i].Value));
+                    section.Outputs.Points.Add(ToPointDataDto(points[i].ToPointData()));
                 }
                 section.Outputs.PointCount = points.Length;
                 if (points.Length > 0) {
-                    section.Outputs.TotalLength = points[^1].Value.TotalLength;
+                    section.Outputs.TotalLength = points[^1].TotalLength();
                 }
             }
 

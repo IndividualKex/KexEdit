@@ -13,7 +13,7 @@ namespace KexEdit.Legacy {
                 .Query<NodeReference, SegmentReference>()
                 .WithEntityAccess()
             ) {
-                bool sectionExists = SystemAPI.HasBuffer<Point>(node);
+                bool sectionExists = SystemAPI.HasBuffer<CorePointBuffer>(node);
                 bool segmentExists = SystemAPI.HasComponent<Segment>(segment);
                 if (sectionExists && segmentExists) continue;
                 ecb.DestroyEntity(entity);

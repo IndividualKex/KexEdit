@@ -34,7 +34,7 @@ namespace Tests {
             _buildSystem.Update(World.Unmanaged);
             _ecbSystem.Update(World.Unmanaged);
 
-            var points = m_Manager.GetBuffer<Point>(entity);
+            var points = m_Manager.GetBuffer<CorePointBuffer>(entity);
             PointComparer.AssertPointsMatch(points, section.outputs.points);
         }
     }

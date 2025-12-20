@@ -64,5 +64,18 @@ namespace KexEdit.Legacy {
             };
         }
 
+        [BurstCompile]
+        public static void CreateFromAnchor(in CorePoint point, in PointData anchor, out CorePointBuffer result) {
+            result = new CorePointBuffer {
+                Point = point,
+                DistanceFromLast = anchor.DistanceFromLast,
+                SpineDistanceFromLast = anchor.HeartDistanceFromLast,
+                PitchFromLast = anchor.PitchFromLast,
+                YawFromLast = anchor.YawFromLast,
+                AngleFromLast = anchor.AngleFromLast,
+                Facing = anchor.Facing
+            };
+        }
+
     }
 }

@@ -13,7 +13,7 @@ namespace Tests {
         private const int SampleInterval = 50;
 
         public static void AssertPointsMatch(
-            DynamicBuffer<Point> actual,
+            DynamicBuffer<CorePointBuffer> actual,
             List<GoldPointData> expected,
             float tolerance = BaseTolerance
         ) {
@@ -24,7 +24,7 @@ namespace Tests {
             float maxDrift = 0f;
             int maxDriftIndex = 0;
             for (int i = 0; i < expected.Count; i++) {
-                var drift = ComputeDrift(actual[i].Value, expected[i]);
+                var drift = ComputeDrift(actual[i].ToPointData(), expected[i]);
                 if (drift > maxDrift) {
                     maxDrift = drift;
                     maxDriftIndex = i;
@@ -34,7 +34,7 @@ namespace Tests {
 
             foreach (int i in GetSampleIndices(expected.Count)) {
                 float indexTolerance = BaseTolerance + TolerancePerStep * i;
-                AssertPointMatch(actual[i].Value, expected[i], i, indexTolerance);
+                AssertPointMatch(actual[i].ToPointData(), expected[i], i, indexTolerance);
             }
         }
 
