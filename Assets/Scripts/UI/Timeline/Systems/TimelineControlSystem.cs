@@ -27,7 +27,7 @@ namespace KexEdit.UI.Timeline {
             _coasterQuery = GetEntityQuery(typeof(Coaster), typeof(EditorCoasterTag));
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Node, CoasterReference>()
-                .WithAll<Point>()
+                .WithAll<CorePointBuffer>()
                 .Build(EntityManager);
 
             RequireForUpdate<TimelineState>();
@@ -222,7 +222,7 @@ namespace KexEdit.UI.Timeline {
                 return;
             }
 
-            var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+            var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (pointBuffer.Length < 2) return;
 
             if (SystemAPI.HasComponent<Duration>(_data.Entity)) {
@@ -235,8 +235,8 @@ namespace KexEdit.UI.Timeline {
                     float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
                     float targetDistance = anchorLength + _data.Time;
                     for (int i = 0; i < pointBuffer.Length - 1; i++) {
-                        float currentDistance = pointBuffer[i].Value.TotalLength;
-                        float nextDistance = pointBuffer[i + 1].Value.TotalLength;
+                        float currentDistance = pointBuffer[i].TotalLength();
+                        float nextDistance = pointBuffer[i + 1].TotalLength();
                         if (targetDistance >= currentDistance && targetDistance < nextDistance) {
                             float t = (nextDistance - currentDistance) > 0 ?
                                 (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;
@@ -376,7 +376,7 @@ namespace KexEdit.UI.Timeline {
             if (!hasAnyReadOnly) return;
             if (!_data.Active || _data.Entity == Entity.Null) return;
 
-            var pointBufferLookup = SystemAPI.GetBufferLookup<Point>(true);
+            var pointBufferLookup = SystemAPI.GetBufferLookup<CorePointBuffer>(true);
             var pointBuffer = pointBufferLookup[_data.Entity];
 
             new UpdateTimesJob {
@@ -424,7 +424,7 @@ namespace KexEdit.UI.Timeline {
         [BurstCompile]
         private struct UpdateTimesJob : IJob {
             [ReadOnly]
-            public DynamicBuffer<Point> Points;
+            public DynamicBuffer<CorePointBuffer> Points;
             public NativeList<float> Times;
             public DurationType DurationType;
 
@@ -432,14 +432,13 @@ namespace KexEdit.UI.Timeline {
                 if (Points.Length == 0) return;
                 Times.Clear();
                 Times.ResizeUninitialized(Points.Length);
-                float startLength = Points[0].Value.TotalLength;
+                float startLength = Points[0].TotalLength();
                 for (int i = 0; i < Points.Length; i++) {
-                    var point = Points[i].Value;
                     if (DurationType == DurationType.Time) {
                         Times[i] = i / HZ;
                     }
                     else {
-                        Times[i] = point.TotalLength - startLength;
+                        Times[i] = Points[i].TotalLength() - startLength;
                     }
                 }
             }
@@ -612,8 +611,8 @@ namespace KexEdit.UI.Timeline {
                 return SystemAPI.GetComponent<Duration>(_data.Entity).Value;
             }
 
-            if (SystemAPI.HasBuffer<Point>(_data.Entity)) {
-                var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+            if (SystemAPI.HasBuffer<CorePointBuffer>(_data.Entity)) {
+                var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
                 return pointBuffer.Length > 0 ? pointBuffer.Length / HZ : 0f;
             }
 
@@ -953,8 +952,8 @@ namespace KexEdit.UI.Timeline {
                         trackFollowerRW.ValueRW.Section = _data.Entity;
                         float trainPosition = TimeToTrainPosition(_data.Time);
 
-                        if (SystemAPI.HasBuffer<Point>(_data.Entity)) {
-                            var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+                        if (SystemAPI.HasBuffer<CorePointBuffer>(_data.Entity)) {
+                            var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
                             trainPosition = math.clamp(trainPosition, 0f, math.max(0f, pointBuffer.Length - 1));
                         }
 
@@ -983,13 +982,13 @@ namespace KexEdit.UI.Timeline {
                 return trainPosition / HZ;
             }
 
-            var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+            var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (pointBuffer.Length < 2) return 0f;
 
             int index = math.clamp((int)math.floor(trainPosition), 0, pointBuffer.Length - 2);
             float t = trainPosition - index;
 
-            float distance = math.lerp(pointBuffer[index].Value.TotalLength, pointBuffer[index + 1].Value.TotalLength, t);
+            float distance = math.lerp(pointBuffer[index].TotalLength(), pointBuffer[index + 1].TotalLength(), t);
             float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
             return distance - anchorLength;
         }
@@ -999,16 +998,16 @@ namespace KexEdit.UI.Timeline {
                 return 0f;
             }
 
-            var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+            var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (pointBuffer.Length < 2) return 0f;
 
-            if (targetDistance < pointBuffer[0].Value.TotalLength) {
+            if (targetDistance < pointBuffer[0].TotalLength()) {
                 return 0f;
             }
 
             for (int i = 0; i < pointBuffer.Length - 1; i++) {
-                float currentDistance = pointBuffer[i].Value.TotalLength;
-                float nextDistance = pointBuffer[i + 1].Value.TotalLength;
+                float currentDistance = pointBuffer[i].TotalLength();
+                float nextDistance = pointBuffer[i + 1].TotalLength();
                 if (targetDistance >= currentDistance && targetDistance < nextDistance) {
                     float t = (nextDistance - currentDistance) > 0 ?
                         (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;
@@ -1645,21 +1644,21 @@ namespace KexEdit.UI.Timeline {
             int index = (int)math.floor(playheadPosition);
             int nextIndex = index + 1;
 
-            var points = SystemAPI.GetBuffer<Point>(_data.Entity);
+            var points = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (index < 0 || nextIndex >= points.Length) {
                 UnityEngine.Debug.LogError($"Playhead position {playheadPosition} is out of bounds for entity {_data.Entity}");
                 return PointData.Create();
             }
 
-            PointData p0 = points[index].Value;
-            PointData p1 = points[nextIndex].Value;
+            PointData p0 = points[index].ToPointData();
+            PointData p1 = points[nextIndex].ToPointData();
 
             float t = playheadPosition - math.floor(playheadPosition);
             return PointData.Lerp(p0, p1, t);
         }
 
         private PointData GetPointAtTime(float time) {
-            var points = SystemAPI.GetBuffer<Point>(_data.Entity);
+            var points = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (points.Length == 0) {
                 return PointData.Create();
             }
@@ -1684,11 +1683,11 @@ namespace KexEdit.UI.Timeline {
             int nextIndex = math.min(index + 1, points.Length - 1);
 
             if (index == nextIndex) {
-                return points[index].Value;
+                return points[index].ToPointData();
             }
 
-            PointData p0 = points[index].Value;
-            PointData p1 = points[nextIndex].Value;
+            PointData p0 = points[index].ToPointData();
+            PointData p1 = points[nextIndex].ToPointData();
 
             float t = position - math.floor(position);
             return PointData.Lerp(p0, p1, t);
@@ -1735,9 +1734,8 @@ namespace KexEdit.UI.Timeline {
                             trackFollowerRW.ValueRW.Section = _data.Entity;
                             float trainPosition = TimeToTrainPosition(_data.Time);
 
-                            // Clamp to valid point buffer range
-                            if (SystemAPI.HasBuffer<Point>(_data.Entity)) {
-                                var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+                            if (SystemAPI.HasBuffer<CorePointBuffer>(_data.Entity)) {
+                                var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
                                 trainPosition = math.clamp(trainPosition, 0f, math.max(0f, pointBuffer.Length - 1));
                             }
 

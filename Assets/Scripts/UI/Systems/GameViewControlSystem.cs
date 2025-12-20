@@ -121,10 +121,10 @@ namespace KexEdit.UI {
             float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
             bool foundAny = false;
 
-            foreach (var (node, entity) in SystemAPI.Query<Node>().WithAll<Point>().WithEntityAccess()) {
+            foreach (var (node, entity) in SystemAPI.Query<Node>().WithAll<CorePointBuffer>().WithEntityAccess()) {
                 if (!node.Selected) continue;
 
-                var pointBuffer = SystemAPI.GetBuffer<Point>(entity);
+                var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(entity);
                 if (pointBuffer.Length < 2) continue;
 
                 int midIndex = pointBuffer.Length / 2;
@@ -135,8 +135,7 @@ namespace KexEdit.UI {
                 };
 
                 foreach (var idx in indices) {
-                    PointData point = pointBuffer[idx];
-                    var pos = point.Position;
+                    var pos = pointBuffer[idx].Position();
                     if (pos.x < minX) minX = pos.x;
                     if (pos.x > maxX) maxX = pos.x;
                     if (pos.y < minY) minY = pos.y;

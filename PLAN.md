@@ -63,7 +63,13 @@ UI systems (StatsOverlaySystem, TimelineControlSystem, KeyframeGizmoUpdateSystem
 
 ### Phase 5: Remove Old Buffer
 
-Delete `Point` buffer and `PointData` once all consumers migrated.
+**Phase 5a (COMPLETE)**: UI systems migrated to CorePointBuffer:
+- StatsOverlaySystem, TimelineControlSystem, KeyframeGizmoUpdateSystem
+- VideoControlSystem, GameViewControlSystem
+
+**Phase 5b**: Remaining runtime systems (GraphSystem, AppendedCoasterTrainPositionSystem, etc.)
+
+**Phase 5c**: Remove dual-write from build systems, delete Point.cs/PointData.cs
 
 ### Phase 6: Replace Build Systems
 

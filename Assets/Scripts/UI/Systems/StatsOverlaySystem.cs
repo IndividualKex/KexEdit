@@ -335,14 +335,14 @@ namespace KexEdit.UI {
             bool hasValidTrain = trainEntity != Entity.Null &&
                                follower.Section != Entity.Null &&
                                SystemAPI.Exists(follower.Section) &&
-                               SystemAPI.HasBuffer<Point>(follower.Section);
+                               SystemAPI.HasBuffer<CorePointBuffer>(follower.Section);
 
             if (!hasValidTrain) {
                 ShowNoStatsMessage();
                 return;
             }
 
-            var pointBuffer = SystemAPI.GetBuffer<Point>(follower.Section);
+            var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(follower.Section);
             if (pointBuffer.Length == 0) {
                 ShowNoStatsMessage();
                 return;
@@ -501,23 +501,23 @@ namespace KexEdit.UI {
             return (Entity.Null, default);
         }
 
-        private void GetInterpolatedPoint(ref PointData result, DynamicBuffer<Point> points, float position) {
+        private void GetInterpolatedPoint(ref PointData result, DynamicBuffer<CorePointBuffer> points, float position) {
             position = math.clamp(position, 0f, points.Length - 1f);
             int frontIndex = (int)math.floor(position);
             float t = position - frontIndex;
 
             if (frontIndex >= points.Length - 1) {
-                result = points[^1].Value;
+                result = points[^1].ToPointData();
                 return;
             }
 
             if (t < 0.001f) {
-                result = points[frontIndex].Value;
+                result = points[frontIndex].ToPointData();
                 return;
             }
 
-            PointData frontPoint = points[frontIndex].Value;
-            PointData backPoint = points[frontIndex + 1].Value;
+            PointData frontPoint = points[frontIndex].ToPointData();
+            PointData backPoint = points[frontIndex + 1].ToPointData();
 
             result.Position = math.lerp(frontPoint.Position, backPoint.Position, t);
             result.Direction = math.normalize(math.lerp(frontPoint.Direction, backPoint.Direction, t));
@@ -537,13 +537,13 @@ namespace KexEdit.UI {
             result.Facing = frontPoint.Facing;
         }
 
-        private void GetInterpolatedPointWithReadOnlyForces(ref PointData result, DynamicBuffer<Point> points, Entity section, float position) {
+        private void GetInterpolatedPointWithReadOnlyForces(ref PointData result, DynamicBuffer<CorePointBuffer> points, Entity section, float position) {
             position = math.clamp(position, 0f, points.Length - 1f);
             int frontIndex = (int)math.floor(position);
             float t = position - frontIndex;
 
             if (frontIndex >= points.Length - 1) {
-                result = points[^1].Value;
+                result = points[^1].ToPointData();
                 if (SystemAPI.HasBuffer<ReadNormalForce>(section)) {
                     var normalForces = SystemAPI.GetBuffer<ReadNormalForce>(section);
                     if (normalForces.Length > 0 && frontIndex < normalForces.Length) {
@@ -560,7 +560,7 @@ namespace KexEdit.UI {
             }
 
             if (t < 0.001f) {
-                result = points[frontIndex].Value;
+                result = points[frontIndex].ToPointData();
                 if (SystemAPI.HasBuffer<ReadNormalForce>(section)) {
                     var normalForces = SystemAPI.GetBuffer<ReadNormalForce>(section);
                     if (normalForces.Length > frontIndex) {
@@ -576,8 +576,8 @@ namespace KexEdit.UI {
                 return;
             }
 
-            PointData frontPoint = points[frontIndex].Value;
-            PointData backPoint = points[frontIndex + 1].Value;
+            PointData frontPoint = points[frontIndex].ToPointData();
+            PointData backPoint = points[frontIndex + 1].ToPointData();
 
             if (SystemAPI.HasBuffer<ReadNormalForce>(section)) {
                 var normalForces = SystemAPI.GetBuffer<ReadNormalForce>(section);

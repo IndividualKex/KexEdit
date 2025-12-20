@@ -141,7 +141,7 @@ namespace KexEdit.UI {
                 DurationLookup = SystemAPI.GetComponentLookup<Duration>(true),
                 AnchorLookup = SystemAPI.GetComponentLookup<Anchor>(true),
                 NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
-                PointLookup = SystemAPI.GetBufferLookup<Point>(true),
+                PointLookup = SystemAPI.GetBufferLookup<CorePointBuffer>(true),
                 Matrices = matrices,
                 VisualizationData = visualizationData
             }.Schedule(count, 16).Complete();
@@ -365,7 +365,7 @@ namespace KexEdit.UI {
             [ReadOnly] public ComponentLookup<Duration> DurationLookup;
             [ReadOnly] public ComponentLookup<Anchor> AnchorLookup;
             [ReadOnly] public ComponentLookup<Node> NodeLookup;
-            [ReadOnly] public BufferLookup<Point> PointLookup;
+            [ReadOnly] public BufferLookup<CorePointBuffer> PointLookup;
             [WriteOnly] public NativeArray<float4x4> Matrices;
             [WriteOnly] public NativeArray<float4> VisualizationData;
 
@@ -389,13 +389,13 @@ namespace KexEdit.UI {
                 float4 visualizationData = new(propertyColor.x, propertyColor.y, propertyColor.z, selected ? 1f : 0f);
 
                 if (index == nextIndex) {
-                    worldPosition = points[index].Value.Position;
+                    worldPosition = points[index].Position();
                 }
                 else {
                     float t = position - index;
-                    PointData p0 = points[index].Value;
-                    PointData p1 = points[nextIndex].Value;
-                    worldPosition = math.lerp(p0.Position, p1.Position, t);
+                    float3 p0 = points[index].Position();
+                    float3 p1 = points[nextIndex].Position();
+                    worldPosition = math.lerp(p0, p1, t);
                 }
 
                 Matrices[i] = float4x4.TRS(worldPosition, quaternion.identity, new float3(0.3f));
@@ -421,8 +421,8 @@ namespace KexEdit.UI {
                 float targetDistance = anchor.Value.TotalLength + time;
 
                 for (int i = 0; i < pointBuffer.Length - 1; i++) {
-                    float currentDistance = pointBuffer[i].Value.TotalLength;
-                    float nextDistance = pointBuffer[i + 1].Value.TotalLength;
+                    float currentDistance = pointBuffer[i].TotalLength();
+                    float nextDistance = pointBuffer[i + 1].TotalLength();
                     if (targetDistance >= currentDistance && targetDistance <= nextDistance) {
                         float t = (nextDistance - currentDistance) > 0 ?
                             (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;
