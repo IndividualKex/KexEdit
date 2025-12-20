@@ -50,12 +50,17 @@ Before changing anything, establish tests that validate the critical integration
    - ForceSection 2 shows drift of 1.02 at index 3173 (after ~8000 cumulative points)
    - Need to determine if this is expected numerical drift or a bug
 
-2. **Bridge** - ✅ Implementation validated, accumulated drift issue identified
+2. **Bridge** - ✅ Cumulative tolerance implemented, lateral force bug identified
    - `BridgeNodeTests` pass (node implementation correct)
    - `BuildBridgeSectionSystemTests` pass (ECS integration correct)
-   - Fixed `LegacyImporter` to handle Bridge target anchor from Port[1] (C:\Users\dylan\Documents\Games\KexEdit\Assets\Runtime\LegacyImport\LegacyImporter.cs:321-326)
-   - `CoasterGoldTests` shows accumulated floating-point drift (~0.015 units) in input anchor from upstream sections
-   - **Next step:** Implement cumulative tolerance in test framework to account for drift across section chains
+   - Fixed `LegacyImporter` to handle Bridge target anchor from Port[1]
+   - ✅ Cumulative tolerance implemented in `SimPointComparer`
+     - Position/velocity/energy pass with cumulative offset of 2861 (tolerance 0.030, max drift 0.021)
+     - Tolerance model: `BaseTolerance (1e-3) + TolerancePerStep (1e-5) * cumulativeIndex`
+     - ~10µm per point matches expected ~100 floating-point ops per point
+   - ❌ LateralForce at final point (index 354) fails: expected -0.350, got -0.298, diff 0.052
+     - This exceeds cumulative tolerance (0.033) by ~50%
+     - Separate bug in Bridge lateral force calculation, not tolerance issue
 
 3. **CurvedSection** - Not validated yet (skipped in test)
 

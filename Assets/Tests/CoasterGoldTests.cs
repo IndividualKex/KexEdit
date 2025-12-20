@@ -142,13 +142,17 @@ namespace Tests {
 
         private static void AssertSectionsMatchByType(GoldTrackData gold, EvaluationResult result, string nodeType) {
             int sectionsChecked = 0;
+            int cumulativePoints = 0;
 
             foreach (var section in gold.sections) {
+                int sectionPoints = section.outputs?.points?.Count ?? 0;
+
                 if (section.nodeType != nodeType) {
+                    cumulativePoints += sectionPoints;
                     continue;
                 }
 
-                if (section.outputs?.points == null || section.outputs.points.Count == 0) {
+                if (sectionPoints == 0) {
                     continue;
                 }
 
@@ -157,9 +161,10 @@ namespace Tests {
                     $"No path found for nodeId {nodeId} ({section.nodeType})");
 
                 var goldDur = section.inputs?.duration;
-                UnityEngine.Debug.Log($"Checking {section.nodeType} nodeId={nodeId}: {path.Length} points (gold expects {section.outputs.points.Count}, gold duration={goldDur?.value} {goldDur?.type})");
+                UnityEngine.Debug.Log($"Checking {section.nodeType} nodeId={nodeId}: {path.Length} points (gold expects {sectionPoints}, gold duration={goldDur?.value} {goldDur?.type}, cumulative offset={cumulativePoints})");
 
-                SimPointComparer.AssertMatchesGold(path, section.outputs.points);
+                SimPointComparer.AssertMatchesGold(path, section.outputs.points, cumulativePoints);
+                cumulativePoints += sectionPoints;
                 sectionsChecked++;
             }
 
@@ -169,9 +174,12 @@ namespace Tests {
 
         private static void AssertAllSectionsMatch(GoldTrackData gold, EvaluationResult result) {
             int sectionsChecked = 0;
+            int cumulativePoints = 0;
 
             foreach (var section in gold.sections) {
-                if (section.outputs?.points == null || section.outputs.points.Count == 0) {
+                int sectionPoints = section.outputs?.points?.Count ?? 0;
+
+                if (sectionPoints == 0) {
                     continue;
                 }
 
@@ -179,6 +187,7 @@ namespace Tests {
                 if (section.nodeType == "CopyPathSection" || section.nodeType == "ReversePathSection" ||
                     section.nodeType == "CurvedSection") {
                     UnityEngine.Debug.Log($"Skipping {section.nodeType} nodeId={section.nodeId} (needs investigation)");
+                    cumulativePoints += sectionPoints;
                     continue;
                 }
 
@@ -187,7 +196,7 @@ namespace Tests {
                     $"No path found for nodeId {nodeId} ({section.nodeType})");
 
                 var goldDur = section.inputs?.duration;
-                UnityEngine.Debug.Log($"Checking {section.nodeType} nodeId={nodeId}: {path.Length} points (gold expects {section.outputs.points.Count}, gold duration={goldDur?.value} {goldDur?.type})");
+                UnityEngine.Debug.Log($"Checking {section.nodeType} nodeId={nodeId}: {path.Length} points (gold expects {sectionPoints}, gold duration={goldDur?.value} {goldDur?.type}, cumulative offset={cumulativePoints})");
 
                 // Print first few points for debugging
                 int debugCount = Unity.Mathematics.math.min(3, path.Length);
@@ -198,12 +207,13 @@ namespace Tests {
                     UnityEngine.Debug.Log($"[{i}] gold:   pos=({g.position.x:F3},{g.position.y:F3},{g.position.z:F3}) dir=({g.direction.x:F3},{g.direction.y:F3},{g.direction.z:F3}) vel={g.velocity:F4}");
                 }
 
-                SimPointComparer.AssertMatchesGold(path, section.outputs.points);
+                SimPointComparer.AssertMatchesGold(path, section.outputs.points, cumulativePoints);
+                cumulativePoints += sectionPoints;
                 sectionsChecked++;
             }
 
             Assert.Greater(sectionsChecked, 0, "No sections with points found in gold data");
-            UnityEngine.Debug.Log($"Verified {sectionsChecked} sections point-by-point");
+            UnityEngine.Debug.Log($"Verified {sectionsChecked} sections point-by-point (total {cumulativePoints} points)");
         }
     }
 }

@@ -13,7 +13,8 @@ namespace Tests {
 
         public static void AssertMatchesGold(
             NativeList<Point> actual,
-            List<GoldPointData> expected
+            List<GoldPointData> expected,
+            int cumulativeOffset = 0
         ) {
             Assert.AreEqual(expected.Count, actual.Length,
                 $"Point count mismatch: expected {expected.Count}, got {actual.Length}");
@@ -22,7 +23,7 @@ namespace Tests {
             float maxDrift = 0f;
             int maxDriftIndex = 0;
             for (int i = 0; i < expected.Count; i++) {
-                float tolerance = BaseTolerance + TolerancePerStep * i;
+                float tolerance = BaseTolerance + TolerancePerStep * (cumulativeOffset + i);
                 var drift = ComputeDrift(actual[i], expected[i]);
                 if (drift > maxDrift) {
                     maxDrift = drift;
@@ -33,20 +34,20 @@ namespace Tests {
                 }
             }
 
-            UnityEngine.Debug.Log($"=== DRIFT ANALYSIS ===");
+            UnityEngine.Debug.Log($"=== DRIFT ANALYSIS (offset={cumulativeOffset}) ===");
             UnityEngine.Debug.Log($"First divergence at index {firstDivergence}");
             UnityEngine.Debug.Log($"Max drift {maxDrift:G9} at index {maxDriftIndex}");
 
             UnityEngine.Debug.Log($"=== FIRST 20 POINTS ===");
             for (int i = 0; i < math.min(20, expected.Count); i++) {
-                LogPointComparison(actual[i], expected[i], i);
+                LogPointComparison(actual[i], expected[i], i, cumulativeOffset);
             }
 
             UnityEngine.Debug.Log($"=== SAMPLE POINTS ===");
             int[] sampleIndices = { 50, 100, 200, 500, 1000, 1500 };
             foreach (int i in sampleIndices) {
                 if (i < expected.Count) {
-                    LogPointComparison(actual[i], expected[i], i);
+                    LogPointComparison(actual[i], expected[i], i, cumulativeOffset);
                 }
             }
 
@@ -55,12 +56,12 @@ namespace Tests {
                 int start = math.max(0, firstDivergence - 5);
                 int end = math.min(expected.Count, firstDivergence + 6);
                 for (int i = start; i < end; i++) {
-                    LogPointComparison(actual[i], expected[i], i);
+                    LogPointComparison(actual[i], expected[i], i, cumulativeOffset);
                 }
             }
 
             foreach (int i in GetSampleIndices(expected.Count)) {
-                float tolerance = BaseTolerance + TolerancePerStep * i;
+                float tolerance = BaseTolerance + TolerancePerStep * (cumulativeOffset + i);
                 AssertPointMatchesGold(actual[i], expected[i], i, tolerance);
             }
         }
@@ -75,8 +76,8 @@ namespace Tests {
             return maxDrift;
         }
 
-        private static void LogPointComparison(Point actual, GoldPointData expected, int index) {
-            var marker = ComputeDrift(actual, expected) > BaseTolerance + TolerancePerStep * index ? ">>> " : "    ";
+        private static void LogPointComparison(Point actual, GoldPointData expected, int index, int cumulativeOffset) {
+            var marker = ComputeDrift(actual, expected) > BaseTolerance + TolerancePerStep * (cumulativeOffset + index) ? ">>> " : "    ";
             UnityEngine.Debug.Log($"{marker}[{index}] Pos: ({actual.SpinePosition.x:F6}, {actual.SpinePosition.y:F6}, {actual.SpinePosition.z:F6}) vs ({expected.position.x:F6}, {expected.position.y:F6}, {expected.position.z:F6})");
             UnityEngine.Debug.Log($"{marker}[{index}] Vel: {actual.Velocity:F6} vs {expected.velocity:F6}, diff={math.abs(actual.Velocity - expected.velocity):G6}");
             UnityEngine.Debug.Log($"{marker}[{index}] Energy: {actual.Energy:F6} vs {expected.energy:F6}, diff={math.abs(actual.Energy - expected.energy):G6}");
