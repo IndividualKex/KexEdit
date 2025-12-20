@@ -306,6 +306,12 @@ namespace KexEdit.LegacyImport {
                 var value = port.Value;
 
                 switch (portType) {
+                    case PortType.Anchor:
+                        if (node.Node.Type == Legacy.NodeType.Bridge && i == 1) {
+                            ConvertPointDataToPoint(in value, out var targetAnchor);
+                            coaster.Anchors[nodeId] = targetAnchor;
+                        }
+                        break;
                     case PortType.Position:
                         coaster.Vectors[nodeId] = new float3(value.Roll, value.Velocity, value.Energy);
                         break;

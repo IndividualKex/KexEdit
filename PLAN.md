@@ -50,7 +50,14 @@ Before changing anything, establish tests that validate the critical integration
    - ForceSection 2 shows drift of 1.02 at index 3173 (after ~8000 cumulative points)
    - Need to determine if this is expected numerical drift or a bug
 
-2. **Bridge** - Not validated yet (skipped in test)
+2. **Bridge** - ✅ Implementation validated, accumulated drift issue identified
+   - `BridgeNodeTests` pass (node implementation correct)
+   - `BuildBridgeSectionSystemTests` pass (ECS integration correct)
+   - Fixed `LegacyImporter` to handle Bridge target anchor from Port[1] (C:\Users\dylan\Documents\Games\KexEdit\Assets\Runtime\LegacyImport\LegacyImporter.cs:321-326)
+   - `CoasterGoldTests` shows accumulated floating-point drift (~0.015 units) in input anchor from upstream sections
+   - **Next step:** Implement cumulative tolerance in test framework to account for drift across section chains
+
+3. **CurvedSection** - Not validated yet (skipped in test)
 
 **Test strategy:**
 ```csharp

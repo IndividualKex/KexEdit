@@ -20,6 +20,57 @@ namespace Tests {
             RunParityTest("veloci");
         }
 
+        [Test]
+        public void AllTypes_LoadAndEvaluate_MatchesGoldData() {
+            RunParityTest("all_types");
+        }
+
+        [Test]
+        public void AllTypes_BridgeSectionsOnly_MatchesGoldData() {
+            RunParityTestForNodeType("all_types", "Bridge");
+        }
+
+        private static void RunParityTestForNodeType(string name, string nodeType) {
+            var gold = GoldDataLoader.Load($"Assets/Tests/TrackData/{name}.json");
+            var kexPath = $"Assets/Tests/Assets/{name}.kex";
+
+            Assert.IsTrue(File.Exists(kexPath), $"Test file not found: {kexPath}");
+
+            byte[] kexData = File.ReadAllBytes(kexPath);
+            var buffer = new NativeArray<byte>(kexData, Allocator.Temp);
+
+            try {
+                var serializedGraph = new SerializedGraph();
+                GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
+
+                try {
+                    LegacyImporter.Import(in serializedGraph, Allocator.TempJob, out var coaster);
+
+                    try {
+                        CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.TempJob);
+
+                        try {
+                            Assert.Greater(result.Paths.Count, 0, "No paths generated");
+                            LogCoasterDiagnostics(coaster, gold);
+                            AssertSectionsMatchByType(gold, result, nodeType);
+                        }
+                        finally {
+                            result.Dispose();
+                        }
+                    }
+                    finally {
+                        coaster.Dispose();
+                    }
+                }
+                finally {
+                    serializedGraph.Dispose();
+                }
+            }
+            finally {
+                buffer.Dispose();
+            }
+        }
+
         private static void RunParityTest(string name) {
             var gold = GoldDataLoader.Load($"Assets/Tests/TrackData/{name}.json");
             var kexPath = $"Assets/Tests/Assets/{name}.kex";
@@ -89,6 +140,33 @@ namespace Tests {
             }
         }
 
+        private static void AssertSectionsMatchByType(GoldTrackData gold, EvaluationResult result, string nodeType) {
+            int sectionsChecked = 0;
+
+            foreach (var section in gold.sections) {
+                if (section.nodeType != nodeType) {
+                    continue;
+                }
+
+                if (section.outputs?.points == null || section.outputs.points.Count == 0) {
+                    continue;
+                }
+
+                uint nodeId = section.nodeId;
+                Assert.IsTrue(result.Paths.TryGetValue(nodeId, out var path),
+                    $"No path found for nodeId {nodeId} ({section.nodeType})");
+
+                var goldDur = section.inputs?.duration;
+                UnityEngine.Debug.Log($"Checking {section.nodeType} nodeId={nodeId}: {path.Length} points (gold expects {section.outputs.points.Count}, gold duration={goldDur?.value} {goldDur?.type})");
+
+                SimPointComparer.AssertMatchesGold(path, section.outputs.points);
+                sectionsChecked++;
+            }
+
+            Assert.Greater(sectionsChecked, 0, $"No {nodeType} sections with points found in gold data");
+            UnityEngine.Debug.Log($"Verified {sectionsChecked} {nodeType} sections point-by-point");
+        }
+
         private static void AssertAllSectionsMatch(GoldTrackData gold, EvaluationResult result) {
             int sectionsChecked = 0;
 
@@ -99,7 +177,7 @@ namespace Tests {
 
                 // Skip sections that need additional investigation
                 if (section.nodeType == "CopyPathSection" || section.nodeType == "ReversePathSection" ||
-                    section.nodeType == "CurvedSection" || section.nodeType == "Bridge") {
+                    section.nodeType == "CurvedSection") {
                     UnityEngine.Debug.Log($"Skipping {section.nodeType} nodeId={section.nodeId} (needs investigation)");
                     continue;
                 }
