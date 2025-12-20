@@ -52,9 +52,14 @@ Incremental phases that maintain runtime compatibility:
 
 Build systems write to both `DynamicBuffer<Point>` and `DynamicBuffer<CorePointBuffer>`.
 
-### Phase 4: Migrate Consumers
+### Phase 4: Migrate Consumers ✓
 
-Migrate downstream systems (StyleHash, TrackFollower, Train, Mesh) from old to new buffer.
+Runtime ECS systems migrated from `DynamicBuffer<Point>` to `DynamicBuffer<CorePointBuffer>`:
+- StyleHashSystem, TrainUpdateSystem, TrackFollowerUpdateSystem
+- TrackPointSystem, ReadOnlyForceComputationSystem, DistanceFollowerUpdateSystem
+- TrackSegmentInitializationSystem
+
+UI systems (StatsOverlaySystem, TimelineControlSystem, KeyframeGizmoUpdateSystem) deferred to Phase 5.
 
 ### Phase 5: Remove Old Buffer
 

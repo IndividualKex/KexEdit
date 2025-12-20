@@ -12,7 +12,7 @@ namespace KexEdit.Legacy {
         [BurstCompile]
         public void OnCreate(ref SystemState state) {
             _segmentQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<Point>()
+                .WithAll<CorePointBuffer>()
                 .Build(state.EntityManager);
 
             state.RequireForUpdate(_segmentQuery);
@@ -24,7 +24,7 @@ namespace KexEdit.Legacy {
             var pivot = SystemAPI.GetSingleton<ReadPivot>();
 
             state.Dependency = new ComputeReadOnlyForcesJob {
-                PointLookup = SystemAPI.GetBufferLookup<Point>(true),
+                PointLookup = SystemAPI.GetBufferLookup<CorePointBuffer>(true),
                 ReadNormalForceLookup = SystemAPI.GetBufferLookup<ReadNormalForce>(false),
                 ReadLateralForceLookup = SystemAPI.GetBufferLookup<ReadLateralForce>(false),
                 ReadPitchSpeedLookup = SystemAPI.GetBufferLookup<ReadPitchSpeed>(false),
@@ -36,7 +36,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         private partial struct ComputeReadOnlyForcesJob : IJobEntity {
-            [ReadOnly] public BufferLookup<Point> PointLookup;
+            [ReadOnly] public BufferLookup<CorePointBuffer> PointLookup;
             [NativeDisableParallelForRestriction] public BufferLookup<ReadNormalForce> ReadNormalForceLookup;
             [NativeDisableParallelForRestriction] public BufferLookup<ReadLateralForce> ReadLateralForceLookup;
             [NativeDisableParallelForRestriction] public BufferLookup<ReadPitchSpeed> ReadPitchSpeedLookup;
@@ -60,9 +60,9 @@ namespace KexEdit.Legacy {
                 rollSpeeds.Clear();
 
                 for (int i = 0; i < points.Length; i++) {
-                    var centroidPoint = points[i].Value;
+                    var centroidPoint = points[i];
                     var offsetPoint = GetOffsetPoint(points, i, Pivot.Offset);
-                    float centroidVelocity = centroidPoint.Velocity;
+                    float centroidVelocity = centroidPoint.Velocity();
 
                     float adjustedPitchFromLast = offsetPoint.PitchFromLast;
                     float adjustedYawFromLast = offsetPoint.YawFromLast;
@@ -112,19 +112,19 @@ namespace KexEdit.Legacy {
                 }
             }
 
-            private PointData GetOffsetPoint(DynamicBuffer<Point> points, int currentIndex, float offset) {
+            private PointData GetOffsetPoint(DynamicBuffer<CorePointBuffer> points, int currentIndex, float offset) {
                 if (math.abs(offset) < 0.01f || points.Length <= 1) {
-                    return points[currentIndex].Value;
+                    return points[currentIndex].ToPointData();
                 }
 
-                float currentLength = points[currentIndex].Value.TotalLength;
+                float currentLength = points[currentIndex].TotalLength();
                 float targetLength = currentLength + offset;
 
                 if (targetLength <= 0) {
-                    return points[0].Value;
+                    return points[0].ToPointData();
                 }
-                if (targetLength >= points[^1].Value.TotalLength) {
-                    return points[^1].Value;
+                if (targetLength >= points[^1].TotalLength()) {
+                    return points[^1].ToPointData();
                 }
 
                 int startIndex = 0;
@@ -132,15 +132,15 @@ namespace KexEdit.Legacy {
 
                 while (endIndex - startIndex > 1) {
                     int midIndex = (startIndex + endIndex) / 2;
-                    if (points[midIndex].Value.TotalLength <= targetLength) {
+                    if (points[midIndex].TotalLength() <= targetLength) {
                         startIndex = midIndex;
                     } else {
                         endIndex = midIndex;
                     }
                 }
 
-                var p0 = points[startIndex].Value;
-                var p1 = points[endIndex].Value;
+                var p0 = points[startIndex].ToPointData();
+                var p1 = points[endIndex].ToPointData();
                 float segmentLength = p1.TotalLength - p0.TotalLength;
 
                 if (segmentLength < 0.001f) {

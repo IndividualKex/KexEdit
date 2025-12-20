@@ -31,12 +31,12 @@ namespace KexEdit.Legacy {
 
             foreach (var (coaster, render, trackStyleBuffer, entity) in SystemAPI
                 .Query<CoasterReference, Render, DynamicBuffer<TrackStyleKeyframe>>()
-                .WithAll<Point>()
+                .WithAll<CorePointBuffer>()
                 .WithEntityAccess()
             ) {
                 if (!render || existing.Contains(entity)) continue;
 
-                var points = SystemAPI.GetBuffer<Point>(entity);
+                var points = SystemAPI.GetBuffer<CorePointBuffer>(entity);
                 if (points.Length == 0) continue;
 
                 if (!SystemAPI.HasComponent<TrackStyleSettingsReference>(coaster)) continue;
@@ -86,7 +86,7 @@ namespace KexEdit.Legacy {
         private NativeArray<StyleBreakpoint> DetectManualStyleBreakpoints(
             ref SystemState state,
             DynamicBuffer<TrackStyleKeyframe> keyframes,
-            DynamicBuffer<Point> points,
+            DynamicBuffer<CorePointBuffer> points,
             int styleCount
         ) {
             var breakpoints = new NativeList<StyleBreakpoint>(Allocator.TempJob);
@@ -107,7 +107,7 @@ namespace KexEdit.Legacy {
 
         private NativeArray<StyleBreakpoint> DetectAutoStyleBreakpoints(
             ref SystemState state,
-            DynamicBuffer<Point> points,
+            DynamicBuffer<CorePointBuffer> points,
             TrackStyleSettings settings,
             DynamicBuffer<TrackStyleReference> styleReferences
         ) {
@@ -138,7 +138,7 @@ namespace KexEdit.Legacy {
 
         private NativeArray<StyleBreakpoint> DetectDefaultStyleBreakpoints(
             ref SystemState state,
-            DynamicBuffer<Point> points,
+            DynamicBuffer<CorePointBuffer> points,
             TrackStyleSettings settings,
             int styleCount
         ) {
@@ -170,7 +170,7 @@ namespace KexEdit.Legacy {
             public DynamicBuffer<TrackStyleKeyframe> Keyframes;
 
             [ReadOnly]
-            public DynamicBuffer<Point> Points;
+            public DynamicBuffer<CorePointBuffer> Points;
 
             [ReadOnly]
             public int MaxStyleCount;
@@ -281,10 +281,10 @@ namespace KexEdit.Legacy {
 
                 int startIndex = math.clamp((int)math.round(segment.StartTime * HZ), 0, Points.Length - 1);
                 float segmentStartTime = segment.StartTime;
-                float segmentStartLength = Points[startIndex].Value.TotalLength;
+                float segmentStartLength = Points[startIndex].TotalLength();
 
                 for (int i = startIndex; i < Points.Length - 1; i++) {
-                    float currentLength = Points[i].Value.TotalLength;
+                    float currentLength = Points[i].TotalLength();
                     float currentSegmentLength = currentLength - segmentStartLength;
 
                     if (currentSegmentLength >= MAX_SEGMENT_LENGTH) {
@@ -315,8 +315,8 @@ namespace KexEdit.Legacy {
 
                 if (startIndex >= endIndex) return 0f;
 
-                float startLength = Points[startIndex].Value.TotalLength;
-                float endLength = Points[endIndex].Value.TotalLength;
+                float startLength = Points[startIndex].TotalLength();
+                float endLength = Points[endIndex].TotalLength();
 
                 return endLength - startLength;
             }
@@ -327,7 +327,7 @@ namespace KexEdit.Legacy {
             public NativeList<StyleBreakpoint> Breakpoints;
 
             [ReadOnly]
-            public DynamicBuffer<Point> Points;
+            public DynamicBuffer<CorePointBuffer> Points;
 
             [ReadOnly]
             public NativeArray<float> StyleThresholds;
@@ -357,7 +357,7 @@ namespace KexEdit.Legacy {
 
                 int currentStyleIndex = SelectStyleByStress(windowSum / windowSize);
                 float segmentStartTime = 0f;
-                float segmentStartLength = Points[0].Value.TotalLength;
+                float segmentStartLength = Points[0].TotalLength();
 
                 int lastWindowStart = 0;
                 int lastWindowEnd = windowSize - 1;
@@ -389,7 +389,7 @@ namespace KexEdit.Legacy {
                     float avgStress = windowSum / actualWindowSize;
                     int newStyleIndex = SelectStyleByStress(avgStress);
 
-                    float currentLength = Points[center].Value.TotalLength;
+                    float currentLength = Points[center].TotalLength();
                     float segmentLength = currentLength - segmentStartLength;
 
                     bool styleChanged = newStyleIndex != currentStyleIndex;
@@ -414,7 +414,7 @@ namespace KexEdit.Legacy {
 
                 allStress.Dispose();
 
-                var finalSegmentLength = Points[^1].Value.TotalLength - segmentStartLength;
+                var finalSegmentLength = Points[^1].TotalLength() - segmentStartLength;
                 if (finalSegmentLength > MAX_SEGMENT_LENGTH) {
                     var segmentCount = (int)math.ceil(finalSegmentLength / MAX_SEGMENT_LENGTH);
                     var segmentLengthStep = finalSegmentLength / segmentCount;
@@ -442,20 +442,20 @@ namespace KexEdit.Legacy {
 
             private int FindPointIndexByLength(float targetLength) {
                 for (int i = 0; i < Points.Length; i++) {
-                    if (Points[i].Value.TotalLength >= targetLength) {
+                    if (Points[i].TotalLength() >= targetLength) {
                         return i;
                     }
                 }
                 return Points.Length - 1;
             }
 
-            private float CalculateStress(PointData point) {
+            private float CalculateStress(in CorePointBuffer point) {
                 float pitchCurvature = math.abs(math.radians(point.PitchFromLast));
                 float yawCurvature = math.abs(math.radians(point.YawFromLast));
                 float totalCurvature = math.max(MIN_CURVATURE, math.sqrt(pitchCurvature * pitchCurvature + yawCurvature * yawCurvature));
-                float structuralStress = totalCurvature * point.Velocity * point.Velocity;
+                float structuralStress = totalCurvature * point.Velocity() * point.Velocity();
 
-                float torsionalStress = math.abs(point.RollSpeed) * point.Velocity * TORSION_STRESS_FACTOR;
+                float torsionalStress = math.abs(point.RollSpeed()) * point.Velocity() * TORSION_STRESS_FACTOR;
 
                 return structuralStress + torsionalStress;
             }
@@ -477,7 +477,7 @@ namespace KexEdit.Legacy {
             public NativeList<StyleBreakpoint> Breakpoints;
 
             [ReadOnly]
-            public DynamicBuffer<Point> Points;
+            public DynamicBuffer<CorePointBuffer> Points;
 
             [ReadOnly]
             public int DefaultStyleIndex;
@@ -548,10 +548,10 @@ namespace KexEdit.Legacy {
 
                 int startIndex = math.clamp((int)math.round(segment.StartTime * HZ), 0, Points.Length - 1);
                 float segmentStartTime = segment.StartTime;
-                float segmentStartLength = Points[startIndex].Value.TotalLength;
+                float segmentStartLength = Points[startIndex].TotalLength();
 
                 for (int i = startIndex; i < Points.Length - 1; i++) {
-                    float currentLength = Points[i].Value.TotalLength;
+                    float currentLength = Points[i].TotalLength();
                     float currentSegmentLength = currentLength - segmentStartLength;
 
                     if (currentSegmentLength >= MAX_SEGMENT_LENGTH) {
@@ -582,8 +582,8 @@ namespace KexEdit.Legacy {
 
                 if (startIndex >= endIndex) return 0f;
 
-                float startLength = Points[startIndex].Value.TotalLength;
-                float endLength = Points[endIndex].Value.TotalLength;
+                float startLength = Points[startIndex].TotalLength();
+                float endLength = Points[endIndex].TotalLength();
 
                 return endLength - startLength;
             }

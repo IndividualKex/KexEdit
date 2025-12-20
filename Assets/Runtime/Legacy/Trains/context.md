@@ -20,7 +20,7 @@ Train vehicles, cars, and wheel assemblies
 ## Key Systems
 
 - `TrainCreationSystem` - Spawns trains
-- `TrainUpdateSystem` - Updates train state
+- `TrainUpdateSystem` - Updates train state (reads CorePointBuffer)
 - `TrainCarCreationSystem` - Creates train cars
 - `TrainCarUpdateSystem` - Updates car physics
 - `TrainCarTransformUpdateSystem` - Positions cars on track

@@ -11,14 +11,14 @@ namespace KexEdit.Legacy {
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
             state.Dependency = new Job {
-                PointLookup = SystemAPI.GetBufferLookup<Point>(true),
+                PointLookup = SystemAPI.GetBufferLookup<CorePointBuffer>(true),
             }.ScheduleParallel(state.Dependency);
         }
 
         [BurstCompile]
         private partial struct Job : IJobEntity {
             [ReadOnly]
-            public BufferLookup<Point> PointLookup;
+            public BufferLookup<CorePointBuffer> PointLookup;
 
             public void Execute(in TrackFollower follower, ref LocalTransform transform) {
                 if (!follower.Active || !PointLookup.TryGetBuffer(follower.Section, out var points) || points.Length < 2) {
@@ -50,28 +50,28 @@ namespace KexEdit.Legacy {
                 transform = LocalTransform.FromPositionRotation(position, rotation);
             }
 
-            private float3 GetPosition(DynamicBuffer<Point> points, int index, float t) {
-                PointData point = points[index].Value;
-                PointData next = points[index + 1].Value;
+            private float3 GetPosition(DynamicBuffer<CorePointBuffer> points, int index, float t) {
+                var point = points[index];
+                var next = points[index + 1];
                 return math.lerp(
-                    point.GetHeartPosition(point.Heart),
-                    next.GetHeartPosition(next.Heart),
+                    point.GetHeartPosition(point.Heart()),
+                    next.GetHeartPosition(next.Heart()),
                     t
                 );
             }
 
-            private quaternion GetRotation(DynamicBuffer<Point> points, int index, float t) {
-                PointData point = points[index].Value;
-                PointData next = points[index + 1].Value;
+            private quaternion GetRotation(DynamicBuffer<CorePointBuffer> points, int index, float t) {
+                var point = points[index];
+                var next = points[index + 1];
                 int facing = point.Facing;
                 float3 direction = math.normalize(math.lerp(
-                    point.GetHeartDirection(point.Heart),
-                    next.GetHeartDirection(next.Heart),
+                    point.GetHeartDirection(point.Heart()),
+                    next.GetHeartDirection(next.Heart()),
                     t
                 ));
                 float3 lateral = math.normalize(math.lerp(
-                    point.GetHeartLateral(point.Heart),
-                    next.GetHeartLateral(next.Heart),
+                    point.GetHeartLateral(point.Heart()),
+                    next.GetHeartLateral(next.Heart()),
                     t
                 ));
                 float3 normal = math.normalize(math.cross(direction, lateral));
@@ -80,24 +80,24 @@ namespace KexEdit.Legacy {
                 return quaternion.LookRotation(finalDirection, -normal);
             }
 
-            private void HandleOutOfBounds(in TrackFollower follower, DynamicBuffer<Point> points, ref LocalTransform transform) {
-                PointData edgePoint;
+            private void HandleOutOfBounds(in TrackFollower follower, DynamicBuffer<CorePointBuffer> points, ref LocalTransform transform) {
+                CorePointBuffer edgePoint;
                 float3 projectionDirection;
 
                 if (follower.Index <= 0f) {
-                    edgePoint = points[0].Value;
-                    projectionDirection = -math.normalize(edgePoint.GetHeartDirection(edgePoint.Heart));
+                    edgePoint = points[0];
+                    projectionDirection = -math.normalize(edgePoint.GetHeartDirection(edgePoint.Heart()));
                 }
                 else {
-                    edgePoint = points[^1].Value;
-                    projectionDirection = math.normalize(edgePoint.GetHeartDirection(edgePoint.Heart));
+                    edgePoint = points[^1];
+                    projectionDirection = math.normalize(edgePoint.GetHeartDirection(edgePoint.Heart()));
                 }
 
-                float3 edgePosition = edgePoint.GetHeartPosition(edgePoint.Heart);
+                float3 edgePosition = edgePoint.GetHeartPosition(edgePoint.Heart());
                 float3 position = edgePosition + projectionDirection * follower.ProjectionDistance;
 
-                float3 direction = math.normalize(edgePoint.GetHeartDirection(edgePoint.Heart));
-                float3 lateral = math.normalize(edgePoint.GetHeartLateral(edgePoint.Heart));
+                float3 direction = math.normalize(edgePoint.GetHeartDirection(edgePoint.Heart()));
+                float3 lateral = math.normalize(edgePoint.GetHeartLateral(edgePoint.Heart()));
                 float3 normal = math.normalize(math.cross(direction, lateral));
 
                 float3 finalDirection = edgePoint.Facing > 0 ? -direction : direction;

@@ -24,7 +24,7 @@ Track construction, node graph, and section building
 - `GraphSystem` - Manages node graph structure
 - `GraphTraversalSystem` - Traverses and processes graph
 - `Build*System` - ECS adapters delegating to KexEdit.Nodes.*, dual-write to Point and CorePointBuffer
-- `TrackSegmentInitializationSystem` - Initializes segments
+- `TrackSegmentInitializationSystem` - Initializes segments (reads CorePointBuffer)
 
 ## Entry Points
 

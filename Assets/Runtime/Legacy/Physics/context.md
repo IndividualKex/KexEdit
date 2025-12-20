@@ -24,6 +24,8 @@ Simulation, dynamics, and movement systems
 
 ## Key Systems
 
+All physics systems read from `CorePointBuffer`:
+
 - `TrackPointSystem` - Generates track sample points with visualization values
 - `ReadOnlyForceComputationSystem` - Computes forces at offset positions with velocity-adjusted angular rates
 - `TrackFollowerUpdateSystem` - Updates followers on track

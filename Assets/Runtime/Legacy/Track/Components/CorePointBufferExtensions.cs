@@ -91,5 +91,15 @@ namespace KexEdit.Legacy {
                 Facing = p.Facing
             };
         }
+
+        public static CorePointBuffer Lerp(in CorePointBuffer p0, in CorePointBuffer p1, float t) {
+            PointData pd0 = p0.ToPointData();
+            PointData pd1 = p1.ToPointData();
+            PointData result = PointData.Lerp(pd0, pd1, t);
+            PointConverter.ToPoint(in result, out var corePoint);
+            CorePointBuffer.Create(in corePoint, in p0.Point, p0.Facing, out CorePointBuffer buffer);
+            return buffer;
+        }
     }
 }
+

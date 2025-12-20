@@ -20,7 +20,7 @@ namespace KexEdit.Legacy {
                     hashRef = CalculateStyleHash(trackStyleBuffer);
                 }
                 else {
-                    hashRef = CalculatePointHash(SystemAPI.GetBuffer<Point>(entity));
+                    hashRef = CalculatePointHash(SystemAPI.GetBuffer<CorePointBuffer>(entity));
                 }
             }
         }
@@ -41,17 +41,17 @@ namespace KexEdit.Legacy {
             return hash;
         }
 
-        private uint CalculatePointHash(DynamicBuffer<Point> points) {
+        private uint CalculatePointHash(DynamicBuffer<CorePointBuffer> points) {
             if (points.Length == 0) return 17;
             if (points.Length == 1) {
-                PointData point = points[0];
-                return math.hash(new float4(point.Velocity, point.Energy, point.Friction, 1));
+                var point = points[0];
+                return math.hash(new float4(point.Velocity(), point.Energy(), point.Friction(), 1));
             }
 
-            PointData first = points[0];
-            PointData last = points[^1];
-            uint firstHash = math.hash(new float4(first.Velocity, first.Energy, first.Friction, (uint)points.Length));
-            uint lastHash = math.hash(new float4(last.Velocity, last.Energy, last.Friction, firstHash));
+            var first = points[0];
+            var last = points[^1];
+            uint firstHash = math.hash(new float4(first.Velocity(), first.Energy(), first.Friction(), (uint)points.Length));
+            uint lastHash = math.hash(new float4(last.Velocity(), last.Energy(), last.Friction(), firstHash));
             return lastHash;
         }
     }

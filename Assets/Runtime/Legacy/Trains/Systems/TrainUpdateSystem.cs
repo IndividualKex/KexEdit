@@ -20,7 +20,7 @@ namespace KexEdit.Legacy {
             state.Dependency = new TrainJob {
                 NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
                 CoasterLookup = SystemAPI.GetComponentLookup<Coaster>(true),
-                PointLookup = SystemAPI.GetBufferLookup<Point>(true),
+                PointLookup = SystemAPI.GetBufferLookup<CorePointBuffer>(true),
                 DeltaTime = SystemAPI.Time.DeltaTime,
                 Paused = paused,
             }.ScheduleParallel(state.Dependency);
@@ -35,7 +35,7 @@ namespace KexEdit.Legacy {
             public ComponentLookup<Coaster> CoasterLookup;
 
             [ReadOnly]
-            public BufferLookup<Point> PointLookup;
+            public BufferLookup<CorePointBuffer> PointLookup;
 
             [ReadOnly]
             public float DeltaTime;
@@ -88,17 +88,17 @@ namespace KexEdit.Legacy {
                 }
 
                 float distance = GetDistance(points, intIndex, t);
-                int facing = points[intIndex].Value.Facing;
+                int facing = points[intIndex].Facing;
                 train.Distance = distance;
                 train.Facing = facing;
             }
 
-            private float GetDistance(DynamicBuffer<Point> points, int index, float t) {
-                PointData point = points[index].Value;
-                PointData next = points[index + 1].Value;
+            private float GetDistance(DynamicBuffer<CorePointBuffer> points, int index, float t) {
+                var point = points[index];
+                var next = points[index + 1];
                 return math.lerp(
-                    point.TotalLength,
-                    next.TotalLength,
+                    point.TotalLength(),
+                    next.TotalLength(),
                     t
                 );
             }
