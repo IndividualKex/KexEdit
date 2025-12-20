@@ -221,7 +221,7 @@ namespace KexEdit.Coaster {
             );
 
             if (path.Length > 0) {
-                result.OutputAnchors[nodeId] = path[path.Length - 1];
+                result.OutputAnchors[nodeId] = path[^1];
             }
             result.Paths[nodeId] = path;
         }
@@ -262,7 +262,7 @@ namespace KexEdit.Coaster {
             );
 
             if (path.Length > 0) {
-                result.OutputAnchors[nodeId] = path[path.Length - 1];
+                result.OutputAnchors[nodeId] = path[^1];
             }
             result.Paths[nodeId] = path;
         }
@@ -297,7 +297,7 @@ namespace KexEdit.Coaster {
             );
 
             if (path.Length > 0) {
-                result.OutputAnchors[nodeId] = path[path.Length - 1];
+                result.OutputAnchors[nodeId] = path[^1];
             }
             result.Paths[nodeId] = path;
         }
@@ -335,7 +335,7 @@ namespace KexEdit.Coaster {
             );
 
             if (path.Length > 0) {
-                result.OutputAnchors[nodeId] = path[path.Length - 1];
+                result.OutputAnchors[nodeId] = path[^1];
             }
             result.Paths[nodeId] = path;
         }
@@ -369,7 +369,7 @@ namespace KexEdit.Coaster {
             );
 
             if (path.Length > 0) {
-                result.OutputAnchors[nodeId] = path[path.Length - 1];
+                result.OutputAnchors[nodeId] = path[^1];
             }
             result.Paths[nodeId] = path;
         }
@@ -394,7 +394,7 @@ namespace KexEdit.Coaster {
             ReversePathNode.Build(sourcePath.AsArray(), ref path);
 
             if (path.Length > 0) {
-                result.OutputAnchors[nodeId] = path[path.Length - 1];
+                result.OutputAnchors[nodeId] = path[^1];
             }
             result.Paths[nodeId] = path;
         }

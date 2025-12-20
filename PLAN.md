@@ -31,29 +31,26 @@
 
 Before changing anything, establish tests that validate the critical integration point.
 
-**Status: In Progress**
+**Status: Complete**
 
 **Completed:**
 - ✅ Extended `CoasterGoldTests.cs` with point-by-point parity checking using `SimPointComparer`
-- ✅ Fixed driven velocity mode (Shuttle test passes)
-- ✅ Fixed CurvedSection scalar port values:
-  - `LegacyImporter.ImportPortValues` now stores scalars keyed by `portId` (not nodeId)
-  - `CoasterEvaluator.TryGetInputScalar` checks inline port values when no edge connected
-  - CurvedSection now produces correct 674 points with matching direction
+- ✅ Fixed driven velocity mode
+- ✅ Fixed CurvedSection scalar port values
+- ✅ Fixed ReversePathNode arc recalculation
+  - `ReversePathNode.Build` now recalculates `heartArc` and `spineArc` for reversed paths
+  - Arc values start at 0 and accumulate along the reversed path direction
+  - CopyPath nodes can now correctly iterate through reversed source paths
+- ✅ Shuttle test passes with full parity
 
 **Remaining work:**
 
 1. **Veloci test** - Cumulative drift investigation needed
-   - First 5 sections pass: GeometricSection 9 → CurvedSection 10 → GeometricSection 8 → ForceSection 1 → GeometricSection 5
+   - First 5 sections pass
    - ForceSection 2 shows drift of 1.02 at index 3173 (after ~8000 cumulative points)
-   - Root cause unclear: anchor drift compounds through physics simulation
-   - Need to determine if this is expected numerical drift or a bug in anchor propagation
+   - Need to determine if this is expected numerical drift or a bug
 
-2. **CopyPathSection** - Source path not found via graph edges
-   - Issue: `TryGetInputPath` returns path with <2 points
-   - Likely cause: Graph edges for CopyPath's Path input port not correctly imported
-
-3. **Bridge** - Not validated yet (skipped in test)
+2. **Bridge** - Not validated yet (skipped in test)
 
 **Test strategy:**
 ```csharp

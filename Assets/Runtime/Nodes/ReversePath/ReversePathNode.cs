@@ -1,6 +1,7 @@
 using KexEdit.Core;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Mathematics;
 
 namespace KexEdit.Nodes.ReversePath {
     [BurstCompile]
@@ -11,8 +12,18 @@ namespace KexEdit.Nodes.ReversePath {
 
             if (path.Length == 0) return;
 
+            float heartArc = 0f;
+            float spineArc = 0f;
+
             for (int i = path.Length - 1; i >= 0; i--) {
                 Point p = path[i];
+
+                float spineAdvance = 0f;
+                if (i > 0) {
+                    Point next = path[i - 1];
+                    spineAdvance = math.distance(p.SpinePosition, next.SpinePosition);
+                }
+
                 result.Add(new Point(
                     spinePosition: p.SpinePosition,
                     direction: -p.Direction,
@@ -22,15 +33,18 @@ namespace KexEdit.Nodes.ReversePath {
                     energy: p.Energy,
                     normalForce: p.NormalForce,
                     lateralForce: -p.LateralForce,
-                    heartArc: p.HeartArc,
-                    spineArc: p.SpineArc,
-                    spineAdvance: p.SpineAdvance,
-                    frictionOrigin: p.FrictionOrigin,
+                    heartArc: heartArc,
+                    spineArc: spineArc,
+                    spineAdvance: spineAdvance,
+                    frictionOrigin: 0f,
                     rollSpeed: p.RollSpeed,
                     heartOffset: p.HeartOffset,
                     friction: p.Friction,
                     resistance: p.Resistance
                 ));
+
+                heartArc += spineAdvance;
+                spineArc += spineAdvance;
             }
         }
     }

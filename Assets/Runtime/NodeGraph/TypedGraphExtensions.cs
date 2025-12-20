@@ -62,13 +62,10 @@ namespace KexEdit.NodeGraph {
             in this Graph graph, uint nodeId, PortId targetPortType, out uint portId
         ) {
             portId = 0;
-            if (!graph.TryGetNodeType(nodeId, out NodeType nodeType)) return false;
-
-            int inputCount = NodeSchema.InputCount(nodeType);
             graph.GetInputPorts(nodeId, out var inputPorts, Allocator.Temp);
 
-            for (int i = 0; i < inputCount; i++) {
-                if (NodeSchema.Input(nodeType, i) == targetPortType) {
+            for (int i = 0; i < inputPorts.Length; i++) {
+                if (graph.TryGetPortType(inputPorts[i], out var portType) && portType == targetPortType) {
                     portId = inputPorts[i];
                     inputPorts.Dispose();
                     return true;
@@ -84,13 +81,10 @@ namespace KexEdit.NodeGraph {
             in this Graph graph, uint nodeId, PortId targetPortType, out uint portId
         ) {
             portId = 0;
-            if (!graph.TryGetNodeType(nodeId, out NodeType nodeType)) return false;
-
-            int outputCount = NodeSchema.OutputCount(nodeType);
             graph.GetOutputPorts(nodeId, out var outputPorts, Allocator.Temp);
 
-            for (int i = 0; i < outputCount; i++) {
-                if (NodeSchema.Output(nodeType, i) == targetPortType) {
+            for (int i = 0; i < outputPorts.Length; i++) {
+                if (graph.TryGetPortType(outputPorts[i], out var portType) && portType == targetPortType) {
                     portId = outputPorts[i];
                     outputPorts.Dispose();
                     return true;

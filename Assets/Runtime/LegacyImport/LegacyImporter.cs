@@ -39,6 +39,27 @@ namespace KexEdit.LegacyImport {
         }
 
         [BurstCompile]
+        private static uint ConvertPortType(Legacy.PortType legacyType) {
+            return legacyType switch {
+                Legacy.PortType.Anchor => (uint)Nodes.PortId.Anchor,
+                Legacy.PortType.Path => (uint)Nodes.PortId.Path,
+                Legacy.PortType.Duration => (uint)Nodes.PortId.Duration,
+                Legacy.PortType.Radius => (uint)Nodes.PortId.Radius,
+                Legacy.PortType.Arc => (uint)Nodes.PortId.Arc,
+                Legacy.PortType.Axis => (uint)Nodes.PortId.Axis,
+                Legacy.PortType.LeadIn => (uint)Nodes.PortId.LeadIn,
+                Legacy.PortType.LeadOut => (uint)Nodes.PortId.LeadOut,
+                Legacy.PortType.InWeight => (uint)Nodes.PortId.InWeight,
+                Legacy.PortType.OutWeight => (uint)Nodes.PortId.OutWeight,
+                Legacy.PortType.Start => (uint)Nodes.PortId.Start,
+                Legacy.PortType.End => (uint)Nodes.PortId.End,
+                Legacy.PortType.Position => (uint)Nodes.PortId.Position,
+                Legacy.PortType.Rotation => (uint)Nodes.PortId.Rotation,
+                _ => 255
+            };
+        }
+
+        [BurstCompile]
         private static void ImportGraph(in SerializedGraph serializedGraph, ref Graph graph, Allocator allocator) {
             uint maxNodeId = 0;
             uint maxPortId = 0;
@@ -97,7 +118,7 @@ namespace KexEdit.LegacyImport {
                     }
                     portIdRemap[port.Port.Id] = portId;
 
-                    uint portType = (uint)port.Port.Type;
+                    uint portType = ConvertPortType(port.Port.Type);
 
                     int portIndex = graph.PortIds.Length;
                     graph.PortIds.Add(portId);
@@ -116,7 +137,7 @@ namespace KexEdit.LegacyImport {
                     }
                     portIdRemap[port.Port.Id] = portId;
 
-                    uint portType = (uint)port.Port.Type;
+                    uint portType = ConvertPortType(port.Port.Type);
 
                     int portIndex = graph.PortIds.Length;
                     graph.PortIds.Add(portId);
