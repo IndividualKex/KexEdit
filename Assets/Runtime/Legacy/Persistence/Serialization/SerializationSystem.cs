@@ -641,6 +641,7 @@ namespace KexEdit.Legacy.Serialization {
                 type == NodeType.Bridge ||
                 type == NodeType.ReversePath) {
                 ecb.AddBuffer<Point>(entity);
+                ecb.AddBuffer<CorePointBuffer>(entity);
                 ecb.AddBuffer<ReadNormalForce>(entity);
                 ecb.AddBuffer<ReadLateralForce>(entity);
                 ecb.AddBuffer<ReadPitchSpeed>(entity);

@@ -16,7 +16,7 @@ namespace KexEdit.Legacy {
         public int Facing;
 
         [BurstCompile]
-        public static CorePointBuffer Create(in CorePoint point, in CorePoint prev, int facing) {
+        public static void Create(in CorePoint point, in CorePoint prev, int facing, out CorePointBuffer result) {
             float3 heartPos = point.SpinePosition + point.Normal * point.HeartOffset;
             float3 prevHeartPos = prev.SpinePosition + prev.Normal * prev.HeartOffset;
 
@@ -40,7 +40,7 @@ namespace KexEdit.Legacy {
                 + pitchFromLast * pitchFromLast
             );
 
-            return new CorePointBuffer {
+            result = new CorePointBuffer {
                 Point = point,
                 DistanceFromLast = math.distance(heartPos, prevHeartPos),
                 SpineDistanceFromLast = math.distance(point.SpinePosition, prev.SpinePosition),
@@ -52,8 +52,8 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        public static CorePointBuffer CreateFirst(in CorePoint point, int facing) {
-            return new CorePointBuffer {
+        public static void CreateFirst(in CorePoint point, int facing, out CorePointBuffer result) {
+            result = new CorePointBuffer {
                 Point = point,
                 DistanceFromLast = 0f,
                 SpineDistanceFromLast = 0f,

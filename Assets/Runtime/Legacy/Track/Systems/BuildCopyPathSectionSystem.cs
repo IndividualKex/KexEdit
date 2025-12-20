@@ -49,7 +49,8 @@ namespace KexEdit.Legacy {
                 in DynamicBuffer<ResistanceKeyframe> resistanceKeyframes,
                 in DynamicBuffer<InputPortReference> inputPorts,
                 in DynamicBuffer<OutputPortReference> outputPorts,
-                ref DynamicBuffer<Point> points
+                ref DynamicBuffer<Point> points,
+                ref DynamicBuffer<CorePointBuffer> corePoints
             ) {
                 if (inputPorts.Length != 4) {
                     UnityEngine.Debug.LogError("BuildCopyPathSectionSystem: Expected 4 input ports (anchor, path, start, end)");
@@ -110,6 +111,16 @@ namespace KexEdit.Legacy {
                     points.Add(curr);
                     prev = curr;
                 }
+
+                int facing = anchor.Value.Facing;
+                corePoints.Clear();
+                CorePointBuffer.CreateFirst(in result.ElementAt(0), facing, out CorePointBuffer first);
+                corePoints.Add(first);
+                for (int i = 1; i < result.Length; i++) {
+                    CorePointBuffer.Create(in result.ElementAt(i), in result.ElementAt(i - 1), facing, out CorePointBuffer curr);
+                    corePoints.Add(curr);
+                }
+
                 result.Dispose();
 
                 if (outputPorts.Length > 0 && AnchorPortLookup.TryGetComponent(outputPorts[0], out var anchorPort)) {

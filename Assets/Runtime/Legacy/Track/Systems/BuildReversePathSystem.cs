@@ -31,7 +31,8 @@ namespace KexEdit.Legacy {
                 EnabledRefRW<Dirty> dirty,
                 in DynamicBuffer<InputPortReference> inputPorts,
                 in DynamicBuffer<OutputPortReference> outputPorts,
-                ref DynamicBuffer<Point> points
+                ref DynamicBuffer<Point> points,
+                ref DynamicBuffer<CorePointBuffer> corePoints
             ) {
                 if (inputPorts.Length < 1 ||
                     !PathPortLookup.TryGetBuffer(inputPorts[0], out var pathBuffer)) {
@@ -53,6 +54,13 @@ namespace KexEdit.Legacy {
                     PointConverter.ToPointDataZeroAngles(in result.ElementAt(i), in firstAnchor, out PointData curr);
                     curr.TotalLength = totalLength - sourcePath[sourcePath.Length - 1 - i].HeartArc;
                     points.Add(curr);
+                }
+
+                int facing = firstAnchor.Facing;
+                corePoints.Clear();
+                for (int i = 0; i < result.Length; i++) {
+                    CorePointBuffer.CreateFirst(in result.ElementAt(i), facing, out CorePointBuffer curr);
+                    corePoints.Add(curr);
                 }
 
                 result.Dispose();

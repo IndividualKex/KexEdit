@@ -48,9 +48,9 @@ Incremental phases that maintain runtime compatibility:
 
 `CorePointBuffer` IBufferElementData wraps `Core.Point` with cached derived values and PointData-compatible extension methods.
 
-### Phase 3: Dual-Write Mode
+### Phase 3: Dual-Write Mode ✓
 
-Build systems write to both `DynamicBuffer<Point>` and `DynamicBuffer<CorePointBuffer>`. Validate parity in debug builds.
+Build systems write to both `DynamicBuffer<Point>` and `DynamicBuffer<CorePointBuffer>`.
 
 ### Phase 4: Migrate Consumers
 
