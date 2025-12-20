@@ -15,6 +15,8 @@ Track construction, node graph, and section building
 - `Connection` - Links between nodes
 - `Port` - Connection points (position, velocity, rotation, etc.)
 - `Segment` - Track segment data
+- `Point` / `PointData` - Legacy point buffer wrapping mutable point data
+- `CorePointBuffer` - Migration target wrapping `Core.Point` with cached derived values
 - Section tags - `BridgeTag`, `ReverseTag`, etc.
 
 ## Key Systems

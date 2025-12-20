@@ -42,45 +42,40 @@ Incremental phases that maintain runtime compatibility:
 
 ### Phase 1: Centralize Converters ✓
 
-Extracted duplicated converters from 7 build systems into `PointConverter.cs`.
+`PointConverter.cs` provides shared conversion between `Core.Point` and `PointData`.
 
-### Phase 2: Extend Core.Point
+### Phase 2: ECS-Compatible Point Buffer ✓
 
-Add computed property methods to `Core.Point` for derived fields (GetPitch, GetYaw, GetDistanceFromLast, etc.) so it can eventually replace PointData.
+`CorePointBuffer` IBufferElementData wraps `Core.Point` with cached derived values and PointData-compatible extension methods.
 
-### Phase 3: ECS-Compatible Point Wrapper
+### Phase 3: Dual-Write Mode
 
-Create `CorePointBuffer` that wraps `Core.Point` with extension methods for PointData-like access patterns.
+Build systems write to both `DynamicBuffer<Point>` and `DynamicBuffer<CorePointBuffer>`. Validate parity in debug builds.
 
-### Phase 4: Dual-Write Mode
+### Phase 4: Migrate Consumers
 
-Build systems write to both old `DynamicBuffer<Point>` (PointData) and new `DynamicBuffer<CorePointBuffer>`. Validate parity in debug builds.
+Migrate downstream systems (StyleHash, TrackFollower, Train, Mesh) from old to new buffer.
 
-### Phase 5: Migrate Consumers
+### Phase 5: Remove Old Buffer
 
-One-by-one, migrate downstream systems (StyleHash, TrackFollower, Train, Mesh) from old to new buffer.
+Delete `Point` buffer and `PointData` once all consumers migrated.
 
-### Phase 6: Remove Old Buffer
+### Phase 6: Replace Build Systems
 
-Delete old Point buffer and PointData conversion once all consumers migrated.
-
-### Phase 7: Replace Build Systems
-
-Single `CoasterSyncSystem` maintains Coaster struct mirroring ECS graph, calls `CoasterEvaluator.Evaluate()` when dirty, writes results to ECS buffers.
+Single `CoasterSyncSystem` mirrors ECS graph to Coaster, calls `CoasterEvaluator.Evaluate()` when dirty, writes to ECS buffers.
 
 ## Key Files
 
 | Area | Files |
 |------|-------|
+| Domain point | `Assets/Runtime/Core/Point.cs` |
+| ECS point buffer | `Assets/Runtime/Legacy/Track/Components/CorePointBuffer.cs` |
 | Point converter | `Assets/Runtime/Legacy/Track/Utils/PointConverter.cs` |
-| Build systems (×7) | `Assets/Runtime/Legacy/Track/Systems/Build*System.cs` |
-| Legacy point | `Assets/Runtime/Legacy/Track/Components/PointData.cs` |
-| New point | `Assets/Runtime/Core/Point.cs` |
+| Build systems | `Assets/Runtime/Legacy/Track/Systems/Build*System.cs` |
 | Coaster evaluator | `Assets/Runtime/Coaster/CoasterEvaluator.cs` |
-| Proven converter | `Assets/Runtime/LegacyImport/LegacyImporter.cs` |
 
 ## Validation
 
 - `./run-tests.sh` after each phase
-- Gold tests validate physics parity throughout migration
+- Gold tests validate physics parity
 - Dual-write mode catches mismatches before consumer migration
