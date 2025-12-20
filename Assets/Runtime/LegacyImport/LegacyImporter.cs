@@ -172,6 +172,7 @@ namespace KexEdit.LegacyImport {
                 ImportKeyframes(in node, nodeId, ref coaster.Keyframes);
                 ImportDuration(in node, nodeId, ref coaster);
                 ImportSteering(in node, nodeId, ref coaster);
+                ImportDriven(in node, nodeId, ref coaster);
                 ImportPortValues(in node, nodeId, ref coaster);
             }
 
@@ -187,16 +188,13 @@ namespace KexEdit.LegacyImport {
 
         [BurstCompile]
         private static void ConvertPointDataToPoint(in PointData pointData, out Point point) {
-            float3 heartPos = pointData.Position + pointData.Normal * pointData.Heart;
-            float energy = 0.5f * pointData.Velocity * pointData.Velocity + Core.Sim.G * heartPos.y;
-
             point = new Point(
                 spinePosition: pointData.Position,
                 direction: pointData.Direction,
                 normal: pointData.Normal,
                 lateral: pointData.Lateral,
                 velocity: pointData.Velocity,
-                energy: energy,
+                energy: pointData.Energy,
                 normalForce: pointData.NormalForce,
                 lateralForce: pointData.LateralForce,
                 heartArc: pointData.TotalHeartLength,
@@ -272,10 +270,18 @@ namespace KexEdit.LegacyImport {
         }
 
         [BurstCompile]
+        private static void ImportDriven(in SerializedNode node, uint nodeId, ref Coaster.Coaster coaster) {
+            if ((node.FieldFlags & NodeFieldFlags.HasPropertyOverrides) != 0 && node.PropertyOverrides.FixedVelocity) {
+                coaster.Driven.Add(nodeId);
+            }
+        }
+
+        [BurstCompile]
         private static void ImportPortValues(in SerializedNode node, uint nodeId, ref Coaster.Coaster coaster) {
             for (int i = 0; i < node.InputPorts.Length; i++) {
                 var port = node.InputPorts[i];
                 var portType = port.Port.Type;
+                var portId = port.Port.Id;
                 var value = port.Value;
 
                 switch (portType) {
@@ -301,7 +307,7 @@ namespace KexEdit.LegacyImport {
                     case PortType.Heart:
                     case PortType.Friction:
                     case PortType.Resistance:
-                        coaster.Scalars[nodeId] = value.Roll;
+                        coaster.Scalars[portId] = value.Roll;
                         break;
                 }
             }

@@ -165,27 +165,21 @@ namespace KexEdit.Coaster {
 
         [BurstCompile]
         private static void EvaluateAnchorNode(in Coaster coaster, uint nodeId, ref EvaluationResult result) {
+            if (coaster.Anchors.TryGetValue(nodeId, out var storedAnchor)) {
+                result.OutputAnchors[nodeId] = storedAnchor;
+                return;
+            }
+
             float3 position = coaster.Vectors.TryGetValue(nodeId, out var pos) ? pos : float3.zero;
             float3 rotation = coaster.GetRotation(nodeId);
 
             float velocity = DEFAULT_VELOCITY;
-            float heartOffset = DEFAULT_HEART_OFFSET;
-            float friction = DEFAULT_FRICTION;
-            float resistance = DEFAULT_RESISTANCE;
-
-            if (coaster.Anchors.TryGetValue(nodeId, out var storedAnchor)) {
-                velocity = storedAnchor.Velocity;
-                heartOffset = storedAnchor.HeartOffset;
-                friction = storedAnchor.Friction;
-                resistance = storedAnchor.Resistance;
-            }
-
             float energy = 0.5f * velocity * velocity + Sim.G * position.y;
 
             AnchorNode.Build(
                 in position, rotation.x, rotation.y, rotation.z,
                 velocity, energy,
-                heartOffset, friction, resistance,
+                DEFAULT_HEART_OFFSET, DEFAULT_FRICTION, DEFAULT_RESISTANCE,
                 out Point anchor
             );
 
@@ -206,7 +200,7 @@ namespace KexEdit.Coaster {
             }
 
             var config = new IterationConfig(duration, (KexEdit.Nodes.DurationType)durationType);
-            bool driven = false;
+            bool driven = coaster.Driven.Contains(nodeId);
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.RollSpeed, out var rollSpeed);
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.NormalForce, out var normalForce);
@@ -246,7 +240,7 @@ namespace KexEdit.Coaster {
             }
 
             var config = new IterationConfig(duration, (KexEdit.Nodes.DurationType)durationType);
-            bool driven = false;
+            bool driven = coaster.Driven.Contains(nodeId);
             bool steering = coaster.Steering.Contains(nodeId);
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.RollSpeed, out var rollSpeed);
@@ -285,7 +279,7 @@ namespace KexEdit.Coaster {
             float leadIn = TryGetInputScalar(in coaster.Graph, in coaster.Scalars, nodeId, PortId.LeadIn, 0f);
             float leadOut = TryGetInputScalar(in coaster.Graph, in coaster.Scalars, nodeId, PortId.LeadOut, 0f);
 
-            bool driven = false;
+            bool driven = coaster.Driven.Contains(nodeId);
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.RollSpeed, out var rollSpeed);
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.DrivenVelocity, out var drivenVelocity);
@@ -324,7 +318,7 @@ namespace KexEdit.Coaster {
 
             float inWeight = TryGetInputScalar(in coaster.Graph, in coaster.Scalars, nodeId, PortId.InWeight, 0.5f);
             float outWeight = TryGetInputScalar(in coaster.Graph, in coaster.Scalars, nodeId, PortId.OutWeight, 0.5f);
-            bool driven = false;
+            bool driven = coaster.Driven.Contains(nodeId);
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.DrivenVelocity, out var drivenVelocity);
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.HeartOffset, out var heartOffset);
@@ -358,7 +352,7 @@ namespace KexEdit.Coaster {
 
             float start = TryGetInputScalar(in coaster.Graph, in coaster.Scalars, nodeId, PortId.Start, -1f);
             float end = TryGetInputScalar(in coaster.Graph, in coaster.Scalars, nodeId, PortId.End, -1f);
-            bool driven = false;
+            bool driven = coaster.Driven.Contains(nodeId);
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.DrivenVelocity, out var drivenVelocity);
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.HeartOffset, out var heartOffset);
@@ -438,13 +432,15 @@ namespace KexEdit.Coaster {
                 if (graph.EdgeTargets[i] != portId) continue;
 
                 uint sourcePortId = graph.EdgeSources[i];
-                if (!graph.TryGetPortIndex(sourcePortId, out int portIndex)) continue;
-
-                uint sourceNodeId = graph.PortOwners[portIndex];
-                if (scalars.TryGetValue(sourceNodeId, out float value)) {
+                if (scalars.TryGetValue(sourcePortId, out float value)) {
                     return value;
                 }
             }
+
+            if (scalars.TryGetValue(portId, out float inlineValue)) {
+                return inlineValue;
+            }
+
             return defaultValue;
         }
 

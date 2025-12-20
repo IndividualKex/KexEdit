@@ -31,8 +31,29 @@
 
 Before changing anything, establish tests that validate the critical integration point.
 
-**Files to create:**
-- `Assets/Tests/CoasterEvaluatorParityTests.cs` - full evaluation parity tests
+**Status: In Progress**
+
+**Completed:**
+- ✅ Extended `CoasterGoldTests.cs` with point-by-point parity checking using `SimPointComparer`
+- ✅ Fixed driven velocity mode (Shuttle test passes)
+- ✅ Fixed CurvedSection scalar port values:
+  - `LegacyImporter.ImportPortValues` now stores scalars keyed by `portId` (not nodeId)
+  - `CoasterEvaluator.TryGetInputScalar` checks inline port values when no edge connected
+  - CurvedSection now produces correct 674 points with matching direction
+
+**Remaining work:**
+
+1. **Veloci test** - Cumulative drift investigation needed
+   - First 5 sections pass: GeometricSection 9 → CurvedSection 10 → GeometricSection 8 → ForceSection 1 → GeometricSection 5
+   - ForceSection 2 shows drift of 1.02 at index 3173 (after ~8000 cumulative points)
+   - Root cause unclear: anchor drift compounds through physics simulation
+   - Need to determine if this is expected numerical drift or a bug in anchor propagation
+
+2. **CopyPathSection** - Source path not found via graph edges
+   - Issue: `TryGetInputPath` returns path with <2 points
+   - Likely cause: Graph edges for CopyPath's Path input port not correctly imported
+
+3. **Bridge** - Not validated yet (skipped in test)
 
 **Test strategy:**
 ```csharp
@@ -42,11 +63,6 @@ Before changing anything, establish tests that validate the critical integration
 // 3. Compare against gold JSON point data
 // 4. Assert physics parity (position, velocity, forces within epsilon)
 ```
-
-**Current gap analysis:**
-- `CoasterGoldTests.cs` only checks path count, not point-by-point parity
-- Need to extend to validate actual physics output matches gold data
-- This creates the safety net for all subsequent changes
 
 **Acceptance:**
 - All gold coasters pass point-by-point parity check

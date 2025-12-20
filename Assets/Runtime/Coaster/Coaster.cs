@@ -30,6 +30,7 @@ namespace KexEdit.Coaster {
         public NativeHashMap<uint, float3> Rotations;
         public NativeHashMap<uint, Duration> Durations;
         public NativeHashSet<uint> Steering;
+        public NativeHashSet<uint> Driven;
         public NativeHashMap<uint, Point> Anchors;
 
         public static Coaster Create(Allocator allocator) {
@@ -41,6 +42,7 @@ namespace KexEdit.Coaster {
                 Rotations = new NativeHashMap<uint, float3>(16, allocator),
                 Durations = new NativeHashMap<uint, Duration>(16, allocator),
                 Steering = new NativeHashSet<uint>(8, allocator),
+                Driven = new NativeHashSet<uint>(8, allocator),
                 Anchors = new NativeHashMap<uint, Point>(8, allocator),
             };
         }
@@ -61,6 +63,7 @@ namespace KexEdit.Coaster {
             if (Rotations.IsCreated) Rotations.Dispose();
             if (Durations.IsCreated) Durations.Dispose();
             if (Steering.IsCreated) Steering.Dispose();
+            if (Driven.IsCreated) Driven.Dispose();
             if (Anchors.IsCreated) Anchors.Dispose();
         }
     }
