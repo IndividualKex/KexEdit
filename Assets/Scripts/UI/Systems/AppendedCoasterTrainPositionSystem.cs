@@ -82,8 +82,8 @@ namespace KexEdit.UI {
 
                 if (currentEntity == targetSection) return distance;
 
-                if (SystemAPI.HasBuffer<Point>(currentEntity)) {
-                    distance += SystemAPI.GetBuffer<Point>(currentEntity).Length;
+                if (SystemAPI.HasBuffer<CorePointBuffer>(currentEntity)) {
+                    distance += SystemAPI.GetBuffer<CorePointBuffer>(currentEntity).Length;
                 }
 
                 currentEntity = SystemAPI.HasComponent<Node>(currentEntity)
@@ -104,8 +104,8 @@ namespace KexEdit.UI {
             while (current != Entity.Null && !processedEntities.Contains(current)) {
                 processedEntities.Add(current);
 
-                if (SystemAPI.HasBuffer<Point>(current)) {
-                    var points = SystemAPI.GetBuffer<Point>(current);
+                if (SystemAPI.HasBuffer<CorePointBuffer>(current)) {
+                    var points = SystemAPI.GetBuffer<CorePointBuffer>(current);
                     float sectionLength = points.Length;
 
                     lastSection = current;

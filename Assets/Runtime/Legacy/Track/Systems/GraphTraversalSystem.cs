@@ -122,7 +122,7 @@ namespace KexEdit.Legacy {
                 var rawGraph = new NativeHashMap<Entity, Entity>(nodes.Length, Allocator.Temp);
                 TraverseGraph(ref state, bestRoot, ref rawGraph, nodeMap, connectionMap);
 
-                var pointLookup = SystemAPI.GetBufferLookup<Point>(true);
+                var pointLookup = SystemAPI.GetBufferLookup<CorePointBuffer>(true);
                 using var processedGraph = PostProcessGraph(rawGraph, pointLookup);
 
                 using var reverseGraph = new NativeHashMap<Entity, Entity>(processedGraph.Count, Allocator.Temp);
@@ -137,7 +137,7 @@ namespace KexEdit.Legacy {
                 }
 
                 if (!pointLookup.TryGetBuffer(bestRoot, out var rootPoints) || rootPoints.Length < 2) {
-                    bestRoot = FindValidRoot(rawGraph, pointLookup, bestRoot);
+                    bestRoot = FindValidRoot(in rawGraph, in pointLookup, bestRoot);
                 }
 
                 rawGraph.Dispose();
@@ -179,7 +179,7 @@ namespace KexEdit.Legacy {
         private Entity FindNextValidNode(
             Entity start,
             in NativeHashMap<Entity, Entity> rawGraph,
-            in BufferLookup<Point> pointLookup
+            in BufferLookup<CorePointBuffer> pointLookup
         ) {
             Entity current = start;
             while (current != Entity.Null) {
@@ -195,7 +195,7 @@ namespace KexEdit.Legacy {
 
         private NativeHashMap<Entity, Entity> PostProcessGraph(
             in NativeHashMap<Entity, Entity> rawGraph,
-            in BufferLookup<Point> pointLookup
+            in BufferLookup<CorePointBuffer> pointLookup
         ) {
             var graph = new NativeHashMap<Entity, Entity>(rawGraph.Count, Allocator.Temp);
 
@@ -217,7 +217,7 @@ namespace KexEdit.Legacy {
 
         private Entity FindValidRoot(
             in NativeHashMap<Entity, Entity> rawGraph,
-            in BufferLookup<Point> pointLookup,
+            in BufferLookup<CorePointBuffer> pointLookup,
             Entity startRoot
         ) {
             return FindNextValidNode(startRoot, rawGraph, pointLookup);

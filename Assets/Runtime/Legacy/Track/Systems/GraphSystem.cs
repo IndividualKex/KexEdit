@@ -200,11 +200,11 @@ namespace KexEdit.Legacy {
                 targetPointPortRef.Value = sourcePointPort.Value;
             }
             else if (SystemAPI.HasBuffer<PathPort>(sourcePort) && SystemAPI.HasBuffer<PathPort>(targetPort)) {
-                var sourceBuffer = SystemAPI.GetBuffer<Point>(nodeEntity);
+                var sourceBuffer = SystemAPI.GetBuffer<CorePointBuffer>(nodeEntity);
                 var portBuffer = SystemAPI.GetBuffer<PathPort>(targetPort);
                 portBuffer.Clear();
                 foreach (var point in sourceBuffer) {
-                    portBuffer.Add((PathPort)point.Value);
+                    portBuffer.Add((PathPort)point.ToPointData());
                 }
             }
             else {

@@ -67,7 +67,8 @@ UI systems (StatsOverlaySystem, TimelineControlSystem, KeyframeGizmoUpdateSystem
 - StatsOverlaySystem, TimelineControlSystem, KeyframeGizmoUpdateSystem
 - VideoControlSystem, GameViewControlSystem
 
-**Phase 5b**: Remaining runtime systems (GraphSystem, AppendedCoasterTrainPositionSystem, etc.)
+**Phase 5b (COMPLETE)**: Remaining runtime systems migrated to CorePointBuffer:
+- GraphSystem, GraphTraversalSystem, AppendedCoasterTrainPositionSystem
 
 **Phase 5c**: Remove dual-write from build systems, delete Point.cs/PointData.cs
 
