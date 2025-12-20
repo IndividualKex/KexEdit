@@ -4,217 +4,153 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ UI Layer                                                     │
-│   NodeGraphControlSystem modifies Coaster directly          │
+│ UI Layer (Unity-specific, ECS ok)                           │
+│   NodeGraphControlSystem modifies Coaster via ECS mapping   │
 ├─────────────────────────────────────────────────────────────┤
-│ Domain Layer (authoritative)                                 │
+│ Application Layer (derived ECS view)                        │
+│   CoasterSyncSystem: Coaster evaluation → CorePointBuffer   │
+│   ECS entities: uint-indexed references, visualization      │
+├─────────────────────────────────────────────────────────────┤
+│ Core Layer (portable, unopinionated)                        │
 │   Coaster aggregate: Graph + Keyframes + Properties         │
-│   CoasterEvaluator: incremental subgraph evaluation         │
-├─────────────────────────────────────────────────────────────┤
-│ Application Layer (derived)                                  │
-│   CoasterSyncSystem: Coaster → ECS CorePointBuffer          │
-│   ECS entities: visualization, physics, rendering           │
+│   CoasterEvaluator: full or incremental subgraph eval       │
+│   Nodes.*: pure build functions (Burst/Rust backend)        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Key changes from legacy:**
-- Coaster is authoritative (not ECS entities)
-- Per-entity Coaster storage (supports multiple coasters)
-- Incremental dirty subgraph evaluation (not full rebuild)
-- UI modifies Coaster directly (not ECS components)
-- ECS becomes a derived view for rendering/physics
+**Key principles:**
+- Coaster is pure blittable data (no Unity dependencies beyond Collections/Mathematics)
+- Core layer is portable - can have swappable Rust or Burst backend
+- ECS is a derived view for UI interaction and rendering
+- uint-indexed data maps naturally to/from ECS entities
+- No managed storage needed - DynamicBuffers can alias blittable structs
 
 ## Migration Phases
 
-### Phase 1: Per-Entity Coaster Storage
+### Phase 1: Parity Tests (Test-First Foundation)
 
-Add managed Coaster storage alongside existing ECS flow.
-
-**Files to create:**
-- `Assets/Runtime/Legacy/Persistence/Components/CoasterStore.cs` - IComponentData with Entity→Coaster mapping via managed singleton
-
-**Files to modify:**
-- `Assets/Runtime/Legacy/Persistence/Components/Coaster.cs` - rename to `CoasterEntity` to avoid confusion
-
-**Acceptance:**
-- CoasterStore holds KexEdit.Coaster.Coaster instances keyed by Entity
-- Lifecycle management (create on entity spawn, dispose on destroy)
-- Tests pass
-
-### Phase 2: ECS → Coaster Sync (Scaffolding)
-
-Create temporary sync that mirrors ECS state to Coaster for validation.
+Before changing anything, establish tests that validate the critical integration point.
 
 **Files to create:**
-- `Assets/Runtime/Legacy/Track/Systems/EcsToCoasterSyncSystem.cs` - reads ECS entities, populates Coaster struct
-
-**Sync mapping:**
-- `Node.Id` → Coaster.Graph node
-- `Port` entities → Coaster.Graph ports
-- `Connection` entities → Coaster.Graph edges
-- Port value components → Coaster.Scalars/Vectors/Rotations
-- Keyframe buffers → Coaster.Keyframes
-- `Duration` → Coaster.Durations
-- `Steering` → Coaster.Steering
-- `Anchor` → Coaster.Anchors
-
-**Acceptance:**
-- After sync, Coaster contains equivalent data to ECS
-- Can call CoasterEvaluator.Evaluate() and get results
-- Tests pass
-
-### Phase 3: Evaluation Parity Validation
-
-Verify CoasterEvaluator produces identical results to Build*Systems.
-
-**Files to create:**
-- `Assets/Tests/EditMode/CoasterEvaluatorParityTests.cs`
+- `Assets/Tests/CoasterEvaluatorParityTests.cs` - full evaluation parity tests
 
 **Test strategy:**
-- Load gold test coasters
-- Run legacy Build*Systems → capture CorePointBuffer
-- Run EcsToCoasterSync → CoasterEvaluator.Evaluate() → compare
-- Assert physics parity (positions, velocities, forces within epsilon)
-
-**Acceptance:**
-- All gold tests pass parity check
-- CoasterEvaluator matches Build*Systems output
-
-### Phase 4: Dirty Tracking Infrastructure
-
-Add dirty node tracking to Coaster for incremental evaluation.
-
-**Files to modify:**
-- `Assets/Runtime/Coaster/Coaster.cs` - add `NativeHashSet<uint> DirtyNodes`
-
-**Files to create:**
-- `Assets/Runtime/Coaster/CoasterDirtyTracker.cs` - utilities for marking dirty and computing affected subgraph
-
-**Dirty propagation:**
-- When node X is marked dirty, all downstream nodes (via graph edges) are also dirty
-- Topological sort of dirty set determines evaluation order
-- Clean nodes retain cached results
-
-**Acceptance:**
-- Can mark individual nodes dirty
-- Dirty propagation follows graph topology
-- Tests pass
-
-### Phase 5: Incremental Subgraph Evaluation
-
-Modify CoasterEvaluator to support partial evaluation.
-
-**Files to modify:**
-- `Assets/Runtime/Coaster/CoasterEvaluator.cs` - add overload accepting dirty set
-- `Assets/Runtime/Coaster/Coaster.cs` - add result caching (OutputAnchors, Paths stored on Coaster)
-
-**New signature:**
 ```csharp
-public static void EvaluateIncremental(
-    ref Coaster coaster,
-    in NativeHashSet<uint> dirtyNodes,
-    Allocator allocator
-)
+// For each gold coaster:
+// 1. Load .kex → LegacyImport → Coaster
+// 2. Run CoasterEvaluator.Evaluate()
+// 3. Compare against gold JSON point data
+// 4. Assert physics parity (position, velocity, forces within epsilon)
 ```
 
-**Behavior:**
-- Only evaluates nodes in dirtyNodes (topologically sorted)
-- Reads cached anchors/paths for clean upstream nodes
-- Updates cached results for evaluated nodes
-- Clears dirtyNodes after successful evaluation
+**Current gap analysis:**
+- `CoasterGoldTests.cs` only checks path count, not point-by-point parity
+- Need to extend to validate actual physics output matches gold data
+- This creates the safety net for all subsequent changes
 
 **Acceptance:**
-- Partial evaluation produces same results as full evaluation
-- Only dirty nodes are re-computed
-- Tests pass
+- All gold coasters pass point-by-point parity check
+- CoasterEvaluator output matches Build*System output for same inputs
 
-### Phase 6: Coaster → ECS Sync System
+### Phase 2: Dual-Flow Validation
 
-Create the forward sync that writes evaluation results to ECS.
+Run both flows simultaneously to prove CoasterEvaluator matches legacy ECS flow.
 
 **Files to create:**
-- `Assets/Runtime/Legacy/Track/Systems/CoasterToEcsSyncSystem.cs`
+- `Assets/Tests/DualFlowParityTests.cs` - ECS tests comparing both paths
 
-**Sync logic:**
-- For each node in Coaster.Graph:
-  - Find corresponding ECS entity via Node.Id lookup
-  - If node has cached Path, write to CorePointBuffer
-  - Update output port AnchorPort from OutputAnchors
-- Run in parallel per-coaster (IJobEntity with coaster entity)
-
-**Acceptance:**
-- CorePointBuffer populated from Coaster evaluation results
-- Downstream ECS systems (rendering, physics) work unchanged
-- Tests pass
-
-### Phase 7: Dual-Mode Validation
-
-Run both flows simultaneously and compare results.
-
-**Files to modify:**
-- `Assets/Runtime/Legacy/Track/Systems/CoasterToEcsSyncSystem.cs` - add validation mode
-
-**Validation:**
-- Legacy Build*Systems write to CorePointBuffer
-- CoasterToEcsSyncSystem writes to separate validation buffer
-- Compare buffers, log discrepancies
-- Feature flag to enable/disable validation
+**Test strategy:**
+```csharp
+// For each gold section:
+// 1. Create ECS entity via EntityBuilder (existing pattern)
+// 2. Run Build*System → capture CorePointBuffer
+// 3. Create Coaster from same inputs → CoasterEvaluator.Evaluate()
+// 4. Compare point-by-point
+```
 
 **Acceptance:**
-- No discrepancies in any test scenario
-- Performance acceptable with both flows active
+- Every Build*System produces identical output to CoasterEvaluator
+- Tests cover all node types (Force, Geometric, Curved, Bridge, CopyPath, Reverse)
 
-### Phase 8: UI → Coaster Modification (Reading)
+### Phase 3: ECS Entity Simplification
 
-UI reads from Coaster instead of ECS for display.
+Reduce ECS entities to minimal derived view. Coaster holds authoritative data.
 
-**Files to modify:**
-- `Assets/Scripts/UI/NodeGraph/Systems/NodeGraphControlSystem.cs` - add CoasterStore access
-- `Assets/Scripts/UI/NodeGraph/Data/NodeData.cs` - read from Coaster
+**Current ECS archetype:**
+- Node, Anchor, Duration, PropertyOverrides
+- DynamicBuffer<*Keyframe> (7 buffers per node)
+- Port entities, Connection entities
+- OutputPortReference, CorePointBuffer
+
+**Target ECS archetype:**
+- `CoasterReference` - IComponentData with uint coasterIndex + uint nodeId
+- `CorePointBuffer` - DynamicBuffer for rendering (derived from Coaster eval)
+- Node entity for UI position/selection (UI-only metadata)
 
 **Strategy:**
-- Create helper methods that read Coaster data
-- Replace ECS reads with Coaster reads in UI
-- ECS entities still exist but UI doesn't read them
+- Coaster struct already holds all authoritative data (Graph, Keyframes, Scalars, etc.)
+- ECS entities become thin references: `(coasterIndex, nodeId)`
+- CorePointBuffer populated by sync system from evaluation result
+- Can alias DynamicBuffer to NativeList for zero-copy where possible
+
+**Files to create:**
+- `Assets/Runtime/Legacy/Track/Components/CoasterReference.cs`
 
 **Acceptance:**
-- UI displays correct data from Coaster
-- No visual regressions
+- CoasterReference component created
+- Can look up Coaster data from ECS entity
+
+### Phase 4: CoasterSyncSystem
+
+Create the forward sync that evaluates Coaster and writes to ECS.
+
+**Files to create:**
+- `Assets/Runtime/Legacy/Track/Systems/CoasterSyncSystem.cs`
+
+**Sync logic:**
+```csharp
+// 1. Get Coaster from storage (NativeHashMap<uint, Coaster> or singleton)
+// 2. CoasterEvaluator.Evaluate(in coaster, out result)
+// 3. For each node with path in result.Paths:
+//    - Find ECS entity via CoasterReference lookup
+//    - Write path to CorePointBuffer
+```
+
+**Acceptance:**
+- CorePointBuffer populated from Coaster evaluation
+- Rendering/physics systems work unchanged
 - Tests pass
 
-### Phase 9: UI → Coaster Modification (Writing)
+### Phase 5: UI → Coaster Modification
 
-UI writes to Coaster instead of ECS. This is the flip point.
+UI modifies Coaster directly instead of ECS components.
 
 **Files to modify:**
-- `Assets/Scripts/UI/NodeGraph/Systems/NodeGraphControlSystem.cs` - all event handlers
+- `Assets/Scripts/UI/NodeGraph/Systems/NodeGraphControlSystem.cs`
 
-**Handler migration (per NodeGraphControlSystem methods):**
-| Method | Current | Target |
-|--------|---------|--------|
-| `AddNode()` | EntityManager.CreateEntity | Coaster.Graph.CreateNode + mark dirty |
-| `RemoveSelected()` | ecb.DestroyEntity | Coaster.Graph.RemoveNodeCascade |
-| `OnDragNodes()` | Node.Position write | (UI-only, no Coaster change) |
-| `OnDurationTypeChange()` | Duration.Type write | Coaster.Durations update + mark dirty |
-| `OnRenderToggleChange()` | Render.Value write | (UI-only metadata) |
-| `OnSteeringToggleChange()` | Steering.Value write | Coaster.Steering update + mark dirty |
-| `OnPriorityChange()` | Node.Priority write | (UI-only metadata) |
-| `ApplyInputPortValue()` | Port component writes | Coaster.Scalars/Vectors + mark dirty |
-| `AddConnection()` | Create Connection entity | Coaster.Graph.AddEdge + mark dirty |
+**Handler migration:**
+| UI Action | Current (ECS) | Target (Coaster) |
+|-----------|---------------|------------------|
+| Add node | EntityManager.CreateEntity | Coaster.Graph.CreateNode |
+| Remove node | ecb.DestroyEntity | Coaster.Graph.RemoveNodeCascade |
+| Change duration | Duration.Value write | Coaster.Durations[nodeId] = |
+| Change steering | Steering.Value write | Coaster.Steering.Add/Remove |
+| Apply port value | Port component write | Coaster.Scalars/Vectors[portId] = |
+| Add connection | Create Connection entity | Coaster.Graph.AddEdge |
 
-**Dirty marking:**
-- After any modification, mark affected nodeId dirty
-- CoasterToEcsSyncSystem will evaluate and sync
+**Strategy:**
+- UI still uses ECS for selection, position, visual state
+- Authoritative data modifications go to Coaster
+- CoasterSyncSystem propagates changes to ECS CorePointBuffers
 
 **Acceptance:**
 - All UI operations modify Coaster
-- Dirty tracking triggers re-evaluation
-- ECS updated via sync system
+- ECS updated via CoasterSyncSystem
 - Tests pass
 
-### Phase 10: Remove Legacy Flow
+### Phase 6: Remove Legacy Build*Systems
 
-Delete Build*Systems and ECS propagation.
+Delete the per-node ECS build systems.
 
 **Files to delete:**
 - `Assets/Runtime/Legacy/Track/Systems/BuildForceSectionSystem.cs`
@@ -224,63 +160,81 @@ Delete Build*Systems and ECS propagation.
 - `Assets/Runtime/Legacy/Track/Systems/BuildReverseSystem.cs`
 - `Assets/Runtime/Legacy/Track/Systems/BuildReversePathSystem.cs`
 - `Assets/Runtime/Legacy/Track/Systems/BuildCopyPathSectionSystem.cs`
-- `Assets/Runtime/Legacy/Track/Systems/EcsToCoasterSyncSystem.cs` (scaffolding)
 
-**Files to modify:**
-- `Assets/Runtime/Legacy/Track/Systems/GraphSystem.cs` - remove propagation logic, keep minimal node linking
-- `Assets/Runtime/Legacy/Track/Systems/GraphTraversalSystem.cs` - simplify (graph topology now in Coaster)
+**Files to simplify:**
+- `Assets/Runtime/Legacy/Track/Systems/GraphSystem.cs` - remove propagation logic
+- `Assets/Runtime/Legacy/Track/Systems/GraphTraversalSystem.cs` - remove (topology in Coaster.Graph)
 
 **Acceptance:**
-- Only CoasterToEcsSyncSystem writes CorePointBuffer
-- Legacy systems deleted
-- Tests pass
+- Only CoasterSyncSystem writes CorePointBuffer
+- Legacy Build*Systems deleted
+- All tests still pass
 
-### Phase 11: ECS Entity Simplification
+### Phase 7: Remove Redundant ECS Components
 
-Reduce ECS to minimal derived view.
+Strip out components that are now stored in Coaster.
 
-**Files to modify/delete:**
-- Remove unused port components (data now in Coaster)
-- Remove keyframe buffers from entities (data now in Coaster)
-- Keep: Node (for UI position), CorePointBuffer (for rendering)
+**Components to remove from entities:**
+- Keyframe buffers (RollSpeedKeyframe, etc.) - data in Coaster.Keyframes
+- Duration, PropertyOverrides - data in Coaster.Durations, Coaster.Steering
+- Anchor (data component) - data in Coaster.Anchors
+- Port value components - data in Coaster.Scalars/Vectors
 
-**New ECS archetype:**
-- Node entity: Node, CorePointBuffer, CoasterReference
-- Coaster entity: CoasterEntity (pointer to Coaster in store)
+**Components to keep:**
+- Node (UI position, selection, ID reference)
+- CoasterReference (links entity to Coaster)
+- CorePointBuffer (rendering output)
+- Tags for rendering/visual state
 
 **Acceptance:**
 - ECS is minimal derived view
-- Rendering/physics still work
 - Memory usage reduced
-- Tests pass
+- Rendering/physics still work
 
-### Phase 12: Undo System Migration
+### Phase 8: Dirty Tracking (Optional Optimization)
 
-Serialize Coaster instead of ECS graph.
+Add incremental evaluation for performance.
 
 **Files to modify:**
-- `Assets/Runtime/Legacy/Persistence/SerializationSystem.cs` - serialize Coaster struct
-- `Assets/Runtime/Persistence/CoasterSerializer.cs` - ensure complete serialization
+- `Assets/Runtime/Coaster/Coaster.cs` - add `NativeHashSet<uint> DirtyNodes`
+- `Assets/Runtime/Coaster/CoasterEvaluator.cs` - add `EvaluateIncremental()` overload
+
+**Behavior:**
+- When node modified, mark nodeId dirty
+- Dirty propagates to downstream nodes via graph edges
+- `EvaluateIncremental()` only re-evaluates dirty subgraph
+- Clean nodes retain cached results
+
+**Acceptance:**
+- Partial evaluation produces same results as full
+- Performance improved for local edits
+
+### Phase 9: Undo System Migration
+
+Serialize Coaster for undo/redo.
+
+**Files to modify:**
+- `Assets/Runtime/Legacy/Persistence/SerializationSystem.cs`
+- `Assets/Runtime/Persistence/CoasterSerializer.cs`
 
 **Strategy:**
 - Undo.Record() captures Coaster state (not ECS)
-- Restore deserializes Coaster and triggers full re-sync
+- Restore deserializes Coaster and triggers full sync
+- Much simpler than ECS entity graph serialization
 
 **Acceptance:**
 - Undo/redo works correctly
 - State fully restored
-- Tests pass
 
-### Phase 13: Cleanup
+### Phase 10: Cleanup
 
 Remove scaffolding and update documentation.
 
 **Tasks:**
 - Remove validation/comparison code
-- Remove feature flags
+- Remove any feature flags
 - Update context.md files
-- Update CLAUDE.md if needed
-- Delete this PLAN.md (migration complete)
+- Delete this PLAN.md
 
 ## Key Files Reference
 
@@ -288,11 +242,31 @@ Remove scaffolding and update documentation.
 |------|-------|
 | Coaster aggregate | `Assets/Runtime/Coaster/Coaster.cs` |
 | Coaster evaluator | `Assets/Runtime/Coaster/CoasterEvaluator.cs` |
-| ECS coaster storage | `Assets/Runtime/Legacy/Persistence/Components/CoasterStore.cs` (new) |
-| Sync system | `Assets/Runtime/Legacy/Track/Systems/CoasterToEcsSyncSystem.cs` (new) |
+| Sync system (new) | `Assets/Runtime/Legacy/Track/Systems/CoasterSyncSystem.cs` |
+| Entity reference (new) | `Assets/Runtime/Legacy/Track/Components/CoasterReference.cs` |
 | UI control | `Assets/Scripts/UI/NodeGraph/Systems/NodeGraphControlSystem.cs` |
 | Graph extensions | `Assets/Runtime/NodeGraph/TypedGraphExtensions.cs` |
 | Point buffer | `Assets/Runtime/Legacy/Track/Components/CorePointBuffer.cs` |
+
+## Data Flow Diagram
+
+```
+Current (Legacy):
+  ECS Entities → Build*Systems → CorePointBuffer → Rendering
+       ↑
+  UI Modifications
+
+Target:
+  Coaster (authoritative)
+       ↓
+  CoasterEvaluator.Evaluate()
+       ↓
+  CoasterSyncSystem → CorePointBuffer → Rendering
+       ↑
+  UI Modifications (via Coaster)
+       ↑
+  ECS Entities (derived view, UI position/selection)
+```
 
 ## Validation
 
