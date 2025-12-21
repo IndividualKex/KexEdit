@@ -41,6 +41,7 @@
   <Project Path="Unity.PerformanceTesting.csproj" />
   <Project Path="Unity.Scenes.Editor.csproj" />
   <Project Path="Unity.InternalAPIEngineBridge.013.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="glTFast.Export.csproj" />
   <Project Path="Unity.Serialization.csproj" />
   <Project Path="Unity.Numerics.Linear.Dense.csproj" />
