@@ -18,7 +18,7 @@ namespace Tests {
         [Test]
         public void RustMatchesBurst_SimpleTimeSection() {
             var anchor = Point.Create(
-                spinePosition: new float3(0f, 3f, 0f),
+                heartPosition: new float3(0f, 3f, 0f),
                 direction: math.back(),
                 roll: 0f,
                 velocity: 10f,
@@ -62,7 +62,7 @@ namespace Tests {
         [Test]
         public void RustMatchesBurst_SimpleDistanceSection() {
             var anchor = Point.Create(
-                spinePosition: new float3(0f, 3f, 0f),
+                heartPosition: new float3(0f, 3f, 0f),
                 direction: math.back(),
                 roll: 0f,
                 velocity: 10f,
@@ -141,7 +141,7 @@ namespace Tests {
         private void AssertPointsMatch(Point burst, Point rust, int index) {
             float tolerance = BASE_TOLERANCE + TOLERANCE_PER_STEP * index;
 
-            AssertFloat3Match(burst.SpinePosition, rust.SpinePosition, "SpinePosition", index, tolerance);
+            AssertFloat3Match(burst.HeartPosition, rust.HeartPosition, "HeartPosition", index, tolerance);
             AssertFloat3Match(burst.Direction, rust.Direction, "Direction", index, tolerance);
             AssertFloat3Match(burst.Normal, rust.Normal, "Normal", index, tolerance);
             AssertFloat3Match(burst.Lateral, rust.Lateral, "Lateral", index, tolerance);

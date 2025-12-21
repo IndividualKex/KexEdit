@@ -169,17 +169,17 @@ namespace Tests {
         }
 
         [Test]
-        public void HeartPosition_OffsetsAlongNormal() {
+        public void SpinePosition_OffsetsAlongNormal() {
             Frame frame = Frame.Default;
-            float3 spinePos = new float3(10, 5, -20);
+            float3 heartPos = new float3(10, 5, -20);
             float offset = 1.1f;
 
-            float3 heartPos = frame.HeartPosition(spinePos, offset);
-            float3 expected = spinePos + frame.Normal * offset;
+            float3 spinePos = frame.SpinePosition(heartPos, offset);
+            float3 expected = heartPos + frame.Normal * offset;
 
-            Assert.AreEqual(expected.x, heartPos.x, TOLERANCE);
-            Assert.AreEqual(expected.y, heartPos.y, TOLERANCE);
-            Assert.AreEqual(expected.z, heartPos.z, TOLERANCE);
+            Assert.AreEqual(expected.x, spinePos.x, TOLERANCE);
+            Assert.AreEqual(expected.y, spinePos.y, TOLERANCE);
+            Assert.AreEqual(expected.z, spinePos.z, TOLERANCE);
         }
 
         [Test]

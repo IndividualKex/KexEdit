@@ -79,7 +79,7 @@ namespace KexEdit.Core {
             return new Frame(newDirection, newNormal, newLateral);
         }
 
-        public float3 HeartPosition(in float3 spinePosition, float offset) => spinePosition + Normal * offset;
+        public float3 SpinePosition(in float3 heartPosition, float offset) => heartPosition + Normal * offset;
 
         public static Frame Default => new(math.back(), math.down(), math.right());
     }

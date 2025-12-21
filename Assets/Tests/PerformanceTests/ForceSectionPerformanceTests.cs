@@ -36,7 +36,7 @@ namespace Tests.Performance {
                 lateralForce: 0f,
                 heartArc: 0f,
                 spineArc: 0f,
-                spineAdvance: 0f,
+                heartAdvance: 0f,
                 frictionOrigin: 0f,
                 rollSpeed: 0f,
                 heartOffset: 1f,

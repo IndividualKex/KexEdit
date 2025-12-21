@@ -204,12 +204,12 @@ namespace KexEdit.Nodes.Geometric {
         ) {
             Frame prevFrame = prev.Frame;
             float3 prevDirection = prev.Direction;
-            float3 prevSpinePosition = prev.SpinePosition;
+            float3 prevHeartPosition = prev.HeartPosition;
 
             float3 currDirection;
             float3 currLateral;
             float3 currNormal;
-            float3 currSpinePosition;
+            float3 currHeartPosition;
 
             if (steering) {
                 Frame unrolledFrame = prevFrame;
@@ -225,7 +225,7 @@ namespace KexEdit.Nodes.Geometric {
                 float3 normalUnrolled = rotated.Normal;
 
                 float halfStepDistance = prev.Velocity / (2f * Sim.HZ);
-                currSpinePosition = prevSpinePosition
+                currHeartPosition = prevHeartPosition
                     + currDirection * halfStepDistance
                     + prevDirection * halfStepDistance;
 
@@ -248,13 +248,13 @@ namespace KexEdit.Nodes.Geometric {
                 currLateral = rotated.Lateral;
 
                 float halfStepDistance = prev.Velocity / (2f * Sim.HZ);
-                float3 prevHeartPos = prev.HeartPosition(heartOffsetVal);
-                float3 currHeartPosIfSpineStatic = prevSpinePosition + currNormal * heartOffsetVal;
+                float3 prevSpinePos = prev.SpinePosition(heartOffsetVal);
+                float3 currSpinePosIfHeartStatic = prevHeartPosition + currNormal * heartOffsetVal;
 
-                currSpinePosition = prevSpinePosition
+                currHeartPosition = prevHeartPosition
                     + currDirection * halfStepDistance
                     + prevDirection * halfStepDistance
-                    + (prevHeartPos - currHeartPosIfSpineStatic);
+                    + (prevSpinePos - currSpinePosIfHeartStatic);
 
                 Frame rolled = rotated.WithRoll(deltaRoll);
                 currLateral = rolled.Lateral;
@@ -262,18 +262,18 @@ namespace KexEdit.Nodes.Geometric {
             }
 
             float heartAdvance = math.distance(
-                currSpinePosition + currNormal * heartOffsetVal,
-                prev.HeartPosition(heartOffsetVal)
+                currHeartPosition + currNormal * heartOffsetVal,
+                prev.SpinePosition(heartOffsetVal)
             );
             float newHeartArc = prev.HeartArc + heartAdvance;
-            float spineAdvance = math.distance(currSpinePosition, prevSpinePosition);
+            float spineAdvance = math.distance(currHeartPosition, prevHeartPosition);
             float newSpineArc = prev.SpineArc + spineAdvance;
 
             float newEnergy = prev.Energy;
             float newVelocity = prev.Velocity;
 
             if (!driven) {
-                float centerY = (currSpinePosition + 0.9f * heartOffsetVal * currNormal).y;
+                float centerY = (currHeartPosition + 0.9f * heartOffsetVal * currNormal).y;
                 float frictionDistance = newHeartArc - prev.FrictionOrigin;
                 Sim.UpdateEnergy(
                     prev.Energy, prev.Velocity, centerY,
@@ -287,7 +287,7 @@ namespace KexEdit.Nodes.Geometric {
             Forces forces = Forces.Compute(in curvature, in currFrame, newVelocity, spineAdvance);
 
             result = new Point(
-                spinePosition: currSpinePosition,
+                heartPosition: currHeartPosition,
                 direction: currDirection,
                 normal: currNormal,
                 lateral: currLateral,
@@ -297,7 +297,7 @@ namespace KexEdit.Nodes.Geometric {
                 lateralForce: forces.Lateral,
                 heartArc: newHeartArc,
                 spineArc: newSpineArc,
-                spineAdvance: spineAdvance,
+                heartAdvance: spineAdvance,
                 frictionOrigin: prev.FrictionOrigin,
                 rollSpeed: rollSpeedVal,
                 heartOffset: heartOffsetVal,

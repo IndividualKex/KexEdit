@@ -146,13 +146,13 @@ namespace KexEdit.Nodes.Curved {
             }
 
             float halfStepDistance = prev.Velocity / (2f * Sim.HZ);
-            float3 prevHeartPos = prev.HeartPosition(heartOffsetVal);
-            float3 currHeartPosIfSpineStatic = prev.SpinePosition + currNormal * heartOffsetVal;
+            float3 prevSpinePos = prev.SpinePosition(heartOffsetVal);
+            float3 currSpinePosIfHeartStatic = prev.HeartPosition + currNormal * heartOffsetVal;
 
-            float3 currSpinePosition = prev.SpinePosition
+            float3 currHeartPosition = prev.HeartPosition
                 + currDirection * halfStepDistance
                 + prev.Direction * halfStepDistance
-                + (prevHeartPos - currHeartPosIfSpineStatic);
+                + (prevSpinePos - currSpinePosIfHeartStatic);
 
             float deltaRoll = rollSpeedVal / Sim.HZ;
             quaternion rollQuat = quaternion.AxisAngle(currDirection, -deltaRoll);
@@ -160,18 +160,18 @@ namespace KexEdit.Nodes.Curved {
             currNormal = math.normalize(math.cross(currDirection, currLateral));
 
             float heartAdvance = math.distance(
-                currSpinePosition + currNormal * heartOffsetVal,
-                prev.HeartPosition(heartOffsetVal)
+                currHeartPosition + currNormal * heartOffsetVal,
+                prev.SpinePosition(heartOffsetVal)
             );
             float newHeartArc = prev.HeartArc + heartAdvance;
-            float spineAdvance = math.distance(currSpinePosition, prev.SpinePosition);
+            float spineAdvance = math.distance(currHeartPosition, prev.HeartPosition);
             float newSpineArc = prev.SpineArc + spineAdvance;
 
             float newEnergy = prev.Energy;
             float newVelocity = prev.Velocity;
 
             if (!driven) {
-                float centerY = (currSpinePosition + 0.9f * heartOffsetVal * currNormal).y;
+                float centerY = (currHeartPosition + 0.9f * heartOffsetVal * currNormal).y;
                 float frictionDistance = newHeartArc - prev.FrictionOrigin;
                 Sim.UpdateEnergy(
                     prev.Energy, prev.Velocity, centerY,
@@ -185,7 +185,7 @@ namespace KexEdit.Nodes.Curved {
             Forces forces = Forces.Compute(in curvature, in currFrame, newVelocity, spineAdvance);
 
             result = new Point(
-                spinePosition: currSpinePosition,
+                heartPosition: currHeartPosition,
                 direction: currDirection,
                 normal: currNormal,
                 lateral: currLateral,
@@ -195,7 +195,7 @@ namespace KexEdit.Nodes.Curved {
                 lateralForce: forces.Lateral,
                 heartArc: newHeartArc,
                 spineArc: newSpineArc,
-                spineAdvance: spineAdvance,
+                heartAdvance: spineAdvance,
                 frictionOrigin: prev.FrictionOrigin,
                 rollSpeed: rollSpeedVal,
                 heartOffset: heartOffsetVal,

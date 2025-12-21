@@ -40,7 +40,7 @@ namespace Tests {
         [Test]
         public void Point_ToPoint_PreservesAllFields() {
             var point = new Point(
-                spinePosition: new float3(1, 2, 3),
+                heartPosition: new float3(1, 2, 3),
                 direction: math.normalize(new float3(0, 0, -1)),
                 normal: math.normalize(new float3(0, -1, 0)),
                 lateral: math.normalize(new float3(1, 0, 0)),
@@ -50,13 +50,13 @@ namespace Tests {
                 lateralForce: 0.3f,
                 heartArc: 100f,
                 spineArc: 95f,
-                spineAdvance: 0.25f,
+                heartAdvance: 0.25f,
                 frictionOrigin: 10f
             );
 
-            Assert.AreEqual(1f, point.SpinePosition.x, TOLERANCE);
-            Assert.AreEqual(2f, point.SpinePosition.y, TOLERANCE);
-            Assert.AreEqual(3f, point.SpinePosition.z, TOLERANCE);
+            Assert.AreEqual(1f, point.HeartPosition.x, TOLERANCE);
+            Assert.AreEqual(2f, point.HeartPosition.y, TOLERANCE);
+            Assert.AreEqual(3f, point.HeartPosition.z, TOLERANCE);
             Assert.AreEqual(25f, point.Velocity, TOLERANCE);
             Assert.AreEqual(500f, point.Energy, TOLERANCE);
             Assert.AreEqual(1.5f, point.NormalForce, TOLERANCE);
@@ -68,7 +68,7 @@ namespace Tests {
         [Test]
         public void Point_Construction_StoresAllFields() {
             var point = new Point(
-                spinePosition: new float3(5, 10, -20),
+                heartPosition: new float3(5, 10, -20),
                 direction: math.normalize(new float3(0.5f, 0.1f, -1)),
                 normal: math.normalize(new float3(0, -1, 0)),
                 lateral: math.normalize(new float3(1, 0, 0)),
@@ -78,16 +78,16 @@ namespace Tests {
                 lateralForce: 0.5f,
                 heartArc: 150f,
                 spineArc: 145f,
-                spineAdvance: 0.3f,
+                heartAdvance: 0.3f,
                 frictionOrigin: 20f
             );
 
-            Assert.AreEqual(5f, point.SpinePosition.x, TOLERANCE);
-            Assert.AreEqual(10f, point.SpinePosition.y, TOLERANCE);
-            Assert.AreEqual(-20f, point.SpinePosition.z, TOLERANCE);
+            Assert.AreEqual(5f, point.HeartPosition.x, TOLERANCE);
+            Assert.AreEqual(10f, point.HeartPosition.y, TOLERANCE);
+            Assert.AreEqual(-20f, point.HeartPosition.z, TOLERANCE);
             Assert.AreEqual(30f, point.Velocity, TOLERANCE);
             Assert.AreEqual(600f, point.Energy, TOLERANCE);
-            Assert.AreEqual(0.3f, point.SpineAdvance, TOLERANCE);
+            Assert.AreEqual(0.3f, point.HeartAdvance, TOLERANCE);
             Assert.AreEqual(20f, point.FrictionOrigin, TOLERANCE);
         }
     }

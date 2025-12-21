@@ -38,7 +38,7 @@ namespace KexEdit.Nodes.CopyPath {
             float3x3 pathBasis = new(pathStart.Lateral, pathStart.Normal, pathStart.Direction);
             float3x3 anchorBasis = new(anchor.Lateral, anchor.Normal, anchor.Direction);
             float3x3 rotation = math.mul(anchorBasis, math.transpose(pathBasis));
-            float3 translation = anchor.SpinePosition - math.mul(rotation, pathStart.SpinePosition);
+            float3 translation = anchor.HeartPosition - math.mul(rotation, pathStart.HeartPosition);
             float4x4 transform = new(
                 new float4(rotation.c0, 0f),
                 new float4(rotation.c1, 0f),
@@ -56,10 +56,10 @@ namespace KexEdit.Nodes.CopyPath {
             float prevFriction = anchorFriction;
 
             if (!driven && anchor.Velocity < Sim.MIN_VELOCITY && anchor.Frame.Pitch < 0f) {
-                float centerY = anchor.Frame.HeartPosition(anchor.SpinePosition, prevHeartOffset * 0.9f).y;
+                float centerY = anchor.Frame.SpinePosition(anchor.HeartPosition, prevHeartOffset * 0.9f).y;
                 float energy = 0.5f * Sim.MIN_VELOCITY * Sim.MIN_VELOCITY + Sim.G * centerY;
                 state = new Point(
-                    spinePosition: anchor.SpinePosition,
+                    heartPosition: anchor.HeartPosition,
                     direction: anchor.Direction,
                     normal: anchor.Normal,
                     lateral: anchor.Lateral,
@@ -69,7 +69,7 @@ namespace KexEdit.Nodes.CopyPath {
                     lateralForce: anchor.LateralForce,
                     heartArc: anchor.HeartArc,
                     spineArc: anchor.SpineArc,
-                    spineAdvance: anchor.SpineAdvance,
+                    heartAdvance: anchor.HeartAdvance,
                     frictionOrigin: anchor.HeartArc
                 );
             }
@@ -107,13 +107,13 @@ namespace KexEdit.Nodes.CopyPath {
 
                 float3 position, direction, lateral, normal;
                 if (interpT < 0f) {
-                    position = end_.SpinePosition;
+                    position = end_.HeartPosition;
                     direction = end_.Direction;
                     lateral = end_.Lateral;
                     normal = end_.Normal;
                 }
                 else {
-                    position = math.lerp(start_.SpinePosition, end_.SpinePosition, interpT);
+                    position = math.lerp(start_.HeartPosition, end_.HeartPosition, interpT);
                     direction = math.normalize(math.lerp(start_.Direction, end_.Direction, interpT));
                     lateral = math.normalize(math.lerp(start_.Lateral, end_.Lateral, interpT));
                     normal = math.normalize(math.lerp(start_.Normal, end_.Normal, interpT));
@@ -125,22 +125,22 @@ namespace KexEdit.Nodes.CopyPath {
                 normal = math.mul(rotation, normal);
 
                 Frame currFrame = new(direction, normal, lateral);
-                float3 currHeartPos = currFrame.HeartPosition(position, heartOffsetVal);
-                float3 prevHeartPos = prev.Frame.HeartPosition(prev.SpinePosition, prevHeartOffset);
-                float spineAdvance = math.distance(currHeartPos, prevHeartPos);
-                float heartAdvance = math.distance(position, prev.SpinePosition);
-                float heartArc = prev.HeartArc + spineAdvance;
-                float spineArc = prev.SpineArc + heartAdvance;
+                float3 currSpinePos = currFrame.SpinePosition(position, heartOffsetVal);
+                float3 prevSpinePos = prev.Frame.SpinePosition(prev.HeartPosition, prevHeartOffset);
+                float heartAdvance = math.distance(currSpinePos, prevSpinePos);
+                float spineAdvance = math.distance(position, prev.HeartPosition);
+                float heartArc = prev.HeartArc + heartAdvance;
+                float spineArc = prev.SpineArc + spineAdvance;
 
                 distance += expectedAdvancement;
 
-                float centerY = currFrame.HeartPosition(position, heartOffsetVal * 0.9f).y;
+                float centerY = currFrame.SpinePosition(position, heartOffsetVal * 0.9f).y;
                 float frictionDistance = heartArc - state.FrictionOrigin;
 
                 float newEnergy, newVelocity;
                 if (driven) {
                     newVelocity = KeyframeEvaluator.Evaluate(in drivenVelocity, t, prev.Velocity);
-                    float prevCenterY = prev.Frame.HeartPosition(prev.SpinePosition, prevHeartOffset * 0.9f).y;
+                    float prevCenterY = prev.Frame.SpinePosition(prev.HeartPosition, prevHeartOffset * 0.9f).y;
                     newEnergy = 0.5f * newVelocity * newVelocity + Sim.G * prevCenterY;
                 }
                 else {
@@ -148,12 +148,12 @@ namespace KexEdit.Nodes.CopyPath {
                         out newEnergy, out newVelocity);
                 }
 
-                ComputeForceVector(in prev, in currFrame, in position, heartAdvance, newVelocity, out float3 forceVec);
+                ComputeForceVector(in prev, in currFrame, in position, spineAdvance, newVelocity, out float3 forceVec);
                 float normalForce = -math.dot(forceVec, normal);
                 float lateralForce = -math.dot(forceVec, lateral);
 
                 state = new Point(
-                    spinePosition: position,
+                    heartPosition: position,
                     direction: direction,
                     normal: normal,
                     lateral: lateral,
@@ -163,7 +163,7 @@ namespace KexEdit.Nodes.CopyPath {
                     lateralForce: lateralForce,
                     heartArc: heartArc,
                     spineArc: spineArc,
-                    spineAdvance: spineAdvance,
+                    heartAdvance: spineAdvance,
                     frictionOrigin: prev.FrictionOrigin,
                     rollSpeed: anchor.RollSpeed,
                     heartOffset: heartOffsetVal,

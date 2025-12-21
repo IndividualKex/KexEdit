@@ -130,7 +130,7 @@ public class CoasterTests {
             var anchor = Point.Default;
             coaster.Anchors[nodeId] = anchor;
 
-            Assert.AreEqual(anchor.SpinePosition, coaster.Anchors[nodeId].SpinePosition);
+            Assert.AreEqual(anchor.HeartPosition, coaster.Anchors[nodeId].HeartPosition);
             Assert.AreEqual(anchor.Velocity, coaster.Anchors[nodeId].Velocity);
         } finally {
             coaster.Dispose();

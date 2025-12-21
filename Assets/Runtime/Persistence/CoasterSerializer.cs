@@ -358,7 +358,7 @@ namespace KexEdit.Persistence {
         }
 
         static void WritePoint(ref ChunkWriter writer, in Point p) {
-            writer.WriteFloat3(p.SpinePosition);
+            writer.WriteFloat3(p.HeartPosition);
             writer.WriteFloat3(p.Direction);
             writer.WriteFloat3(p.Normal);
             writer.WriteFloat3(p.Lateral);
@@ -368,7 +368,7 @@ namespace KexEdit.Persistence {
             writer.WriteFloat(p.LateralForce);
             writer.WriteFloat(p.HeartArc);
             writer.WriteFloat(p.SpineArc);
-            writer.WriteFloat(p.SpineAdvance);
+            writer.WriteFloat(p.HeartAdvance);
             writer.WriteFloat(p.FrictionOrigin);
             writer.WriteFloat(p.RollSpeed);
             writer.WriteFloat(p.HeartOffset);
@@ -386,7 +386,7 @@ namespace KexEdit.Persistence {
 
         static Point ReadPoint(ref ChunkReader reader) {
             return new Point(
-                spinePosition: reader.ReadFloat3(),
+                heartPosition: reader.ReadFloat3(),
                 direction: reader.ReadFloat3(),
                 normal: reader.ReadFloat3(),
                 lateral: reader.ReadFloat3(),
@@ -396,7 +396,7 @@ namespace KexEdit.Persistence {
                 lateralForce: reader.ReadFloat(),
                 heartArc: reader.ReadFloat(),
                 spineArc: reader.ReadFloat(),
-                spineAdvance: reader.ReadFloat(),
+                heartAdvance: reader.ReadFloat(),
                 frictionOrigin: reader.ReadFloat(),
                 rollSpeed: reader.ReadFloat(),
                 heartOffset: reader.ReadFloat(),

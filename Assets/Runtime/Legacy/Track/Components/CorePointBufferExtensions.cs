@@ -5,7 +5,7 @@ using static KexEdit.Legacy.Constants;
 namespace KexEdit.Legacy {
     [BurstCompile]
     public static class CorePointBufferExtensions {
-        public static float3 Position(this in CorePointBuffer p) => p.Point.SpinePosition;
+        public static float3 Position(this in CorePointBuffer p) => p.Point.HeartPosition;
         public static float3 Direction(this in CorePointBuffer p) => p.Point.Direction;
         public static float3 Lateral(this in CorePointBuffer p) => p.Point.Lateral;
         public static float3 Normal(this in CorePointBuffer p) => p.Point.Normal;
@@ -39,7 +39,7 @@ namespace KexEdit.Legacy {
         public static float GetCenter(this in CorePointBuffer p) => p.Point.HeartOffset * 0.9f;
 
         public static float3 GetHeartPosition(this in CorePointBuffer p, float heart) {
-            return p.Point.SpinePosition + p.Point.Normal * heart;
+            return p.Point.HeartPosition + p.Point.Normal * heart;
         }
 
         public static float ComputeEnergy(this in CorePointBuffer p) {
@@ -65,9 +65,10 @@ namespace KexEdit.Legacy {
             return math.normalize(p.Point.Lateral + deviation);
         }
 
+        // Legacy PointData uses inverted naming: Position = heart, TotalHeartLength = spine
         public static PointData ToPointData(this in CorePointBuffer p) {
             return new PointData {
-                Position = p.Point.SpinePosition,
+                Position = p.Point.HeartPosition,
                 Direction = p.Point.Direction,
                 Lateral = p.Point.Lateral,
                 Normal = p.Point.Normal,

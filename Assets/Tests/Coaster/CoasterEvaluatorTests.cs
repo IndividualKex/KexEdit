@@ -39,9 +39,9 @@ public class CoasterEvaluatorTests {
                 Assert.IsTrue(result.OutputAnchors.ContainsKey(nodeId));
 
                 var anchor = result.OutputAnchors[nodeId];
-                Assert.AreEqual(10f, anchor.SpinePosition.x, 0.001f);
-                Assert.AreEqual(20f, anchor.SpinePosition.y, 0.001f);
-                Assert.AreEqual(30f, anchor.SpinePosition.z, 0.001f);
+                Assert.AreEqual(10f, anchor.HeartPosition.x, 0.001f);
+                Assert.AreEqual(20f, anchor.HeartPosition.y, 0.001f);
+                Assert.AreEqual(30f, anchor.HeartPosition.z, 0.001f);
             } finally {
                 result.Dispose();
             }
@@ -75,7 +75,7 @@ public class CoasterEvaluatorTests {
                 Assert.Greater(path.Length, 1, "Path should have multiple points");
 
                 var outputAnchor = result.OutputAnchors[forceId];
-                Assert.AreNotEqual(0f, outputAnchor.SpinePosition.z, "Output anchor should have moved from start");
+                Assert.AreNotEqual(0f, outputAnchor.HeartPosition.z, "Output anchor should have moved from start");
             } finally {
                 result.Dispose();
             }
@@ -207,7 +207,7 @@ public class CoasterEvaluatorTests {
                 var reversedPath = result.Paths[reversePathId];
 
                 Assert.AreEqual(originalPath.Length, reversedPath.Length);
-                Assert.AreEqual(originalPath[0].SpinePosition.x, reversedPath[reversedPath.Length - 1].SpinePosition.x, 0.001f);
+                Assert.AreEqual(originalPath[0].HeartPosition.x, reversedPath[reversedPath.Length - 1].HeartPosition.x, 0.001f);
             } finally {
                 result.Dispose();
             }

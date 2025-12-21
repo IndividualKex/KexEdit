@@ -219,7 +219,7 @@ namespace Tests {
             var nodeId = original.Graph.AddNode((uint)NodeType.Anchor, float2.zero);
 
             var anchor = new Point(
-                spinePosition: new float3(10, 20, 30),
+                heartPosition: new float3(10, 20, 30),
                 direction: new float3(1, 0, 0),
                 normal: new float3(0, 1, 0),
                 lateral: new float3(0, 0, 1),
@@ -229,7 +229,7 @@ namespace Tests {
                 lateralForce: 0f,
                 heartArc: 100f,
                 spineArc: 100f,
-                spineAdvance: 0.1f,
+                heartAdvance: 0.1f,
                 frictionOrigin: 0f,
                 rollSpeed: 0f,
                 heartOffset: 1.2f,
@@ -246,9 +246,9 @@ namespace Tests {
             var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Anchors.TryGetValue(nodeId, out Point loadedAnchor));
-            Assert.AreEqual(10f, loadedAnchor.SpinePosition.x, 0.001f);
-            Assert.AreEqual(20f, loadedAnchor.SpinePosition.y, 0.001f);
-            Assert.AreEqual(30f, loadedAnchor.SpinePosition.z, 0.001f);
+            Assert.AreEqual(10f, loadedAnchor.HeartPosition.x, 0.001f);
+            Assert.AreEqual(20f, loadedAnchor.HeartPosition.y, 0.001f);
+            Assert.AreEqual(30f, loadedAnchor.HeartPosition.z, 0.001f);
             Assert.AreEqual(15f, loadedAnchor.Velocity, 0.001f);
 
             loaded.Dispose();

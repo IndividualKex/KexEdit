@@ -27,7 +27,7 @@ namespace KexEdit.Nodes.Bridge {
             result.Clear();
             result.Add(anchor);
 
-            float3 vector = targetAnchor.SpinePosition - anchor.SpinePosition;
+            float3 vector = targetAnchor.HeartPosition - anchor.HeartPosition;
             float length = math.length(vector);
 
             if (length < Sim.EPSILON) return;
@@ -107,20 +107,20 @@ namespace KexEdit.Nodes.Bridge {
                 }
 
                 Frame currFrame = new(direction, normal, lateral);
-                float3 currHeartPos = currFrame.HeartPosition(position, heartOffsetVal);
-                float3 prevHeartPos = prev.Frame.HeartPosition(prev.SpinePosition, prevHeartOffset);
-                float spineAdvance = math.distance(currHeartPos, prevHeartPos);
-                float heartAdvance = math.distance(position, prev.SpinePosition);
-                float heartArc = prev.HeartArc + spineAdvance;
-                float spineArc = prev.SpineArc + heartAdvance;
+                float3 currSpinePos = currFrame.SpinePosition(position, heartOffsetVal);
+                float3 prevSpinePos = prev.Frame.SpinePosition(prev.HeartPosition, prevHeartOffset);
+                float heartAdvance = math.distance(currSpinePos, prevSpinePos);
+                float spineAdvance = math.distance(position, prev.HeartPosition);
+                float heartArc = prev.HeartArc + heartAdvance;
+                float spineArc = prev.SpineArc + spineAdvance;
 
-                float centerY = currFrame.HeartPosition(position, heartOffsetVal * 0.9f).y;
+                float centerY = currFrame.SpinePosition(position, heartOffsetVal * 0.9f).y;
                 float frictionDistance = heartArc - state.FrictionOrigin;
 
                 float newEnergy, newVelocity;
                 if (driven) {
                     newVelocity = KeyframeEvaluator.Evaluate(in drivenVelocity, t, prev.Velocity);
-                    float prevCenterY = prev.Frame.HeartPosition(prev.SpinePosition, prevHeartOffset * 0.9f).y;
+                    float prevCenterY = prev.Frame.SpinePosition(prev.HeartPosition, prevHeartOffset * 0.9f).y;
                     newEnergy = 0.5f * newVelocity * newVelocity + Sim.G * prevCenterY;
                 }
                 else {
@@ -128,12 +128,12 @@ namespace KexEdit.Nodes.Bridge {
                         out newEnergy, out newVelocity);
                 }
 
-                ComputeForceVector(in prev, in currFrame, heartAdvance, newVelocity, out float3 forceVec);
+                ComputeForceVector(in prev, in currFrame, spineAdvance, newVelocity, out float3 forceVec);
                 float normalForce = -math.dot(forceVec, normal);
                 float lateralForce = -math.dot(forceVec, lateral);
 
                 state = new Point(
-                    spinePosition: position,
+                    heartPosition: position,
                     direction: direction,
                     normal: normal,
                     lateral: lateral,
@@ -143,7 +143,7 @@ namespace KexEdit.Nodes.Bridge {
                     lateralForce: lateralForce,
                     heartArc: heartArc,
                     spineArc: spineArc,
-                    spineAdvance: spineAdvance,
+                    heartAdvance: spineAdvance,
                     frictionOrigin: state.FrictionOrigin,
                     rollSpeed: anchor.RollSpeed,
                     heartOffset: heartOffsetVal,
@@ -179,10 +179,10 @@ namespace KexEdit.Nodes.Bridge {
         ) {
             int pathPoints = math.max(10, (int)(length * 2f));
 
-            float3 p0 = source.SpinePosition;
-            float3 p1 = source.SpinePosition + source.Direction * (length * outWeight);
-            float3 p2 = target.SpinePosition - target.Direction * (length * inWeight);
-            float3 p3 = target.SpinePosition;
+            float3 p0 = source.HeartPosition;
+            float3 p1 = source.HeartPosition + source.Direction * (length * outWeight);
+            float3 p2 = target.HeartPosition - target.Direction * (length * inWeight);
+            float3 p3 = target.HeartPosition;
 
             float sourceRoll = source.Frame.Roll;
             float targetRoll = target.Frame.Roll;

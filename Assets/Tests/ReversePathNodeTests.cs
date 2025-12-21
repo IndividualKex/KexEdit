@@ -55,9 +55,9 @@ namespace Tests {
                 ReversePathNode.Build(in path, ref result);
 
                 Assert.AreEqual(3, result.Length);
-                Assert.AreEqual(path[2].SpinePosition.z, result[0].SpinePosition.z, 1e-5f);
-                Assert.AreEqual(path[1].SpinePosition.z, result[1].SpinePosition.z, 1e-5f);
-                Assert.AreEqual(path[0].SpinePosition.z, result[2].SpinePosition.z, 1e-5f);
+                Assert.AreEqual(path[2].HeartPosition.z, result[0].HeartPosition.z, 1e-5f);
+                Assert.AreEqual(path[1].HeartPosition.z, result[1].HeartPosition.z, 1e-5f);
+                Assert.AreEqual(path[0].HeartPosition.z, result[2].HeartPosition.z, 1e-5f);
             }
             finally {
                 path.Dispose();
@@ -90,14 +90,14 @@ namespace Tests {
                 direction: new float3(0f, 0f, 1f),
                 lateral: new float3(1f, 0f, 0f),
                 normal: new float3(0f, 1f, 0f),
-                spinePosition: new float3(0f, 0f, index * 10f),
+                heartPosition: new float3(0f, 0f, index * 10f),
                 velocity: 10f,
                 energy: 100f,
                 normalForce: 1f,
                 lateralForce: 0.1f,
                 heartArc: index * 10f,
                 spineArc: index * 11f,
-                spineAdvance: 10f,
+                heartAdvance: 10f,
                 frictionOrigin: 0f,
                 rollSpeed: 0f,
                 heartOffset: 1.1f,

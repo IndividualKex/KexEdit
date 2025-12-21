@@ -18,14 +18,14 @@ namespace KexEdit.Nodes.ReversePath {
             for (int i = path.Length - 1; i >= 0; i--) {
                 Point p = path[i];
 
-                float spineAdvance = 0f;
+                float heartAdvance = 0f;
                 if (i > 0) {
                     Point next = path[i - 1];
-                    spineAdvance = math.distance(p.SpinePosition, next.SpinePosition);
+                    heartAdvance = math.distance(p.HeartPosition, next.HeartPosition);
                 }
 
                 result.Add(new Point(
-                    spinePosition: p.SpinePosition,
+                    heartPosition: p.HeartPosition,
                     direction: -p.Direction,
                     normal: p.Normal,
                     lateral: -p.Lateral,
@@ -35,7 +35,7 @@ namespace KexEdit.Nodes.ReversePath {
                     lateralForce: -p.LateralForce,
                     heartArc: heartArc,
                     spineArc: spineArc,
-                    spineAdvance: spineAdvance,
+                    heartAdvance: heartAdvance,
                     frictionOrigin: 0f,
                     rollSpeed: p.RollSpeed,
                     heartOffset: p.HeartOffset,
@@ -43,8 +43,8 @@ namespace KexEdit.Nodes.ReversePath {
                     resistance: p.Resistance
                 ));
 
-                heartArc += spineAdvance;
-                spineArc += spineAdvance;
+                heartArc += heartAdvance;
+                spineArc += heartAdvance;
             }
         }
     }

@@ -14,7 +14,7 @@ namespace KexEdit.Nodes.Anchor {
         ) {
             Frame frame = Frame.FromEuler(pitch, yaw, roll);
             result = new Point(
-                spinePosition: position,
+                heartPosition: position,
                 direction: frame.Direction,
                 normal: frame.Normal,
                 lateral: frame.Lateral,
@@ -24,7 +24,7 @@ namespace KexEdit.Nodes.Anchor {
                 lateralForce: 0f,
                 heartArc: 0f,
                 spineArc: 0f,
-                spineAdvance: 0f,
+                heartAdvance: 0f,
                 frictionOrigin: 0f,
                 rollSpeed: 0f,
                 heartOffset: heartOffset,

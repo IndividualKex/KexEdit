@@ -7,17 +7,17 @@ namespace KexEdit.Nodes.Reverse {
         [BurstCompile]
         public static void Build(in Point anchor, out Point result) {
             result = new Point(
-                spinePosition: anchor.SpinePosition,
+                heartPosition: anchor.HeartPosition,
                 direction: -anchor.Direction,
                 normal: anchor.Normal,
                 lateral: -anchor.Lateral,
                 velocity: anchor.Velocity,
                 energy: anchor.Energy,
                 normalForce: anchor.NormalForce,
-                lateralForce: -anchor.LateralForce,
+                lateralForce: anchor.LateralForce,
                 heartArc: anchor.HeartArc,
                 spineArc: anchor.SpineArc,
-                spineAdvance: anchor.SpineAdvance,
+                heartAdvance: anchor.HeartAdvance,
                 frictionOrigin: anchor.FrictionOrigin,
                 rollSpeed: anchor.RollSpeed,
                 heartOffset: anchor.HeartOffset,

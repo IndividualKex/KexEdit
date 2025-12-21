@@ -4,7 +4,7 @@ using CorePoint = KexEdit.Core.Point;
 namespace KexEdit.Native.RustCore {
     [StructLayout(LayoutKind.Sequential)]
     public struct RustPoint {
-        public RustFloat3 SpinePosition;
+        public RustFloat3 HeartPosition;
         public RustFloat3 Direction;
         public RustFloat3 Normal;
         public RustFloat3 Lateral;
@@ -14,7 +14,7 @@ namespace KexEdit.Native.RustCore {
         public float LateralForce;
         public float HeartArc;
         public float SpineArc;
-        public float SpineAdvance;
+        public float HeartAdvance;
         public float FrictionOrigin;
         public float RollSpeed;
         public float HeartOffset;
@@ -23,7 +23,7 @@ namespace KexEdit.Native.RustCore {
 
         public static RustPoint FromCore(in CorePoint point) {
             return new RustPoint {
-                SpinePosition = RustFloat3.FromUnity(point.SpinePosition),
+                HeartPosition = RustFloat3.FromUnity(point.HeartPosition),
                 Direction = RustFloat3.FromUnity(point.Direction),
                 Normal = RustFloat3.FromUnity(point.Normal),
                 Lateral = RustFloat3.FromUnity(point.Lateral),
@@ -33,7 +33,7 @@ namespace KexEdit.Native.RustCore {
                 LateralForce = point.LateralForce,
                 HeartArc = point.HeartArc,
                 SpineArc = point.SpineArc,
-                SpineAdvance = point.SpineAdvance,
+                HeartAdvance = point.HeartAdvance,
                 FrictionOrigin = point.FrictionOrigin,
                 RollSpeed = point.RollSpeed,
                 HeartOffset = point.HeartOffset,
@@ -44,7 +44,7 @@ namespace KexEdit.Native.RustCore {
 
         public CorePoint ToCore() {
             return new CorePoint(
-                spinePosition: SpinePosition.ToUnity(),
+                heartPosition: HeartPosition.ToUnity(),
                 direction: Direction.ToUnity(),
                 normal: Normal.ToUnity(),
                 lateral: Lateral.ToUnity(),
@@ -54,7 +54,7 @@ namespace KexEdit.Native.RustCore {
                 lateralForce: LateralForce,
                 heartArc: HeartArc,
                 spineArc: SpineArc,
-                spineAdvance: SpineAdvance,
+                heartAdvance: HeartAdvance,
                 frictionOrigin: FrictionOrigin,
                 rollSpeed: RollSpeed,
                 heartOffset: HeartOffset,

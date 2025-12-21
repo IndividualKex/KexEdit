@@ -62,19 +62,20 @@ namespace Tests {
             };
         }
 
+        // Gold data uses legacy inverted naming: position = heart position, totalHeartLength = spine arc
         public static Point ToPoint(GoldPointData p) {
             return new Point(
                 direction: new float3(p.direction.x, p.direction.y, p.direction.z),
                 lateral: new float3(p.lateral.x, p.lateral.y, p.lateral.z),
                 normal: new float3(p.normal.x, p.normal.y, p.normal.z),
-                spinePosition: new float3(p.position.x, p.position.y, p.position.z),
+                heartPosition: new float3(p.position.x, p.position.y, p.position.z),
                 velocity: p.velocity,
                 energy: p.energy,
                 normalForce: p.normalForce,
                 lateralForce: p.lateralForce,
                 heartArc: p.totalLength,
                 spineArc: p.totalHeartLength,
-                spineAdvance: p.heartDistanceFromLast,
+                heartAdvance: p.heartDistanceFromLast,
                 frictionOrigin: p.frictionCompensation,
                 rollSpeed: p.rollSpeed,
                 heartOffset: p.heart,

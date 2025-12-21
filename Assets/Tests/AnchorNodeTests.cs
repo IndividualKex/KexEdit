@@ -14,9 +14,9 @@ namespace Tests {
 
             AnchorNode.Build(in position, 0f, 0f, 0f, velocity, energy, 1.1f, 0f, 0f, out Point result);
 
-            Assert.AreEqual(position.x, result.SpinePosition.x, 1e-5f);
-            Assert.AreEqual(position.y, result.SpinePosition.y, 1e-5f);
-            Assert.AreEqual(position.z, result.SpinePosition.z, 1e-5f);
+            Assert.AreEqual(position.x, result.HeartPosition.x, 1e-5f);
+            Assert.AreEqual(position.y, result.HeartPosition.y, 1e-5f);
+            Assert.AreEqual(position.z, result.HeartPosition.z, 1e-5f);
             Assert.AreEqual(velocity, result.Velocity, 1e-5f);
             Assert.AreEqual(energy, result.Energy, 1e-5f);
         }

@@ -45,9 +45,9 @@ namespace Tests {
 
             ReverseNode.Build(in anchor, out Point result);
 
-            Assert.AreEqual(anchor.SpinePosition.x, result.SpinePosition.x, 1e-5f);
-            Assert.AreEqual(anchor.SpinePosition.y, result.SpinePosition.y, 1e-5f);
-            Assert.AreEqual(anchor.SpinePosition.z, result.SpinePosition.z, 1e-5f);
+            Assert.AreEqual(anchor.HeartPosition.x, result.HeartPosition.x, 1e-5f);
+            Assert.AreEqual(anchor.HeartPosition.y, result.HeartPosition.y, 1e-5f);
+            Assert.AreEqual(anchor.HeartPosition.z, result.HeartPosition.z, 1e-5f);
         }
 
         [Test]
@@ -61,17 +61,17 @@ namespace Tests {
         }
 
         [Test]
-        public void Build_ReversesLateralForce() {
+        public void Build_PreservesLateralForce() {
             Point anchor = CreateTestPoint();
 
             ReverseNode.Build(in anchor, out Point result);
 
-            Assert.AreEqual(-anchor.LateralForce, result.LateralForce, 1e-5f);
+            Assert.AreEqual(anchor.LateralForce, result.LateralForce, 1e-5f);
         }
 
         private static Point CreateTestPoint() {
             return new Point(
-                spinePosition: new float3(1f, 2f, 3f),
+                heartPosition: new float3(1f, 2f, 3f),
                 direction: new float3(0f, 0f, 1f),
                 normal: new float3(0f, 1f, 0f),
                 lateral: new float3(1f, 0f, 0f),
@@ -81,7 +81,7 @@ namespace Tests {
                 lateralForce: 0.5f,
                 heartArc: 50f,
                 spineArc: 55f,
-                spineAdvance: 0.1f,
+                heartAdvance: 0.1f,
                 frictionOrigin: 10f
             );
         }
