@@ -74,7 +74,7 @@ namespace KexEdit.Legacy {
                     else if (type == PortType.Position) {
                         float3 position = SystemAPI.GetComponent<PositionPort>(inputPort);
                         if (node.Type == NodeType.Mesh) {
-                            anchorRef.Value.Position = position;
+                            anchorRef.Value.HeartPosition = position;
                         }
                         else {
                             anchorRef.Value.SetPosition(position);

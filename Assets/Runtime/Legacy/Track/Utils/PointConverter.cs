@@ -11,9 +11,8 @@ namespace KexEdit.Legacy {
     public static class PointConverter {
         [BurstCompile]
         public static void ToPoint(in PointData p, out CorePoint result) {
-            // Legacy PointData uses inverted naming: Position = heart, TotalHeartLength = spine
             result = new CorePoint(
-                heartPosition: p.Position,
+                heartPosition: p.HeartPosition,
                 direction: p.Direction,
                 normal: p.Normal,
                 lateral: p.Lateral,
@@ -21,12 +20,12 @@ namespace KexEdit.Legacy {
                 energy: p.Energy,
                 normalForce: p.NormalForce,
                 lateralForce: p.LateralForce,
-                heartArc: p.TotalLength,
-                spineArc: p.TotalHeartLength,
-                heartAdvance: p.HeartDistanceFromLast,
-                frictionOrigin: p.FrictionCompensation,
+                heartArc: p.HeartArc,
+                spineArc: p.SpineArc,
+                heartAdvance: p.HeartAdvance,
+                frictionOrigin: p.FrictionOrigin,
                 rollSpeed: p.RollSpeed,
-                heartOffset: p.Heart,
+                heartOffset: p.HeartOffset,
                 friction: p.Friction,
                 resistance: p.Resistance
             );
@@ -56,15 +55,14 @@ namespace KexEdit.Legacy {
                 + pitchFromLast * pitchFromLast
             );
 
-            float heartDistanceFromLast = math.distance(p.HeartPosition, prev.Position);
+            float heartDistanceFromLast = math.distance(p.HeartPosition, prev.HeartPosition);
             float distanceFromLast = math.distance(
                 p.HeartPosition + p.Normal * p.HeartOffset,
-                prev.Position + prev.Normal * prev.Heart
+                prev.HeartPosition + prev.Normal * prev.HeartOffset
             );
 
-            // Legacy PointData uses inverted naming: Position = heart, TotalHeartLength = spine
             result = new PointData {
-                Position = p.HeartPosition,
+                HeartPosition = p.HeartPosition,
                 Direction = p.Direction,
                 Lateral = p.Lateral,
                 Normal = p.Normal,
@@ -73,16 +71,16 @@ namespace KexEdit.Legacy {
                 Energy = p.Energy,
                 NormalForce = p.NormalForce,
                 LateralForce = p.LateralForce,
-                DistanceFromLast = distanceFromLast,
-                HeartDistanceFromLast = heartDistanceFromLast,
+                SpineAdvance = distanceFromLast,
+                HeartAdvance = heartDistanceFromLast,
                 AngleFromLast = angleFromLast,
                 PitchFromLast = pitchFromLast,
                 YawFromLast = yawFromLast,
                 RollSpeed = p.RollSpeed,
-                TotalLength = p.HeartArc,
-                TotalHeartLength = p.SpineArc,
-                FrictionCompensation = p.FrictionOrigin,
-                Heart = p.HeartOffset,
+                HeartArc = p.HeartArc,
+                SpineArc = p.SpineArc,
+                FrictionOrigin = p.FrictionOrigin,
+                HeartOffset = p.HeartOffset,
                 Friction = p.Friction,
                 Resistance = p.Resistance,
                 Facing = prev.Facing,
@@ -94,9 +92,8 @@ namespace KexEdit.Legacy {
             float roll = math.degrees(math.atan2(p.Lateral.y, -p.Normal.y));
             roll = (roll + 540) % 360 - 180;
 
-            // Legacy PointData uses inverted naming: Position = heart, TotalHeartLength = spine
             result = new PointData {
-                Position = p.HeartPosition,
+                HeartPosition = p.HeartPosition,
                 Direction = p.Direction,
                 Lateral = p.Lateral,
                 Normal = p.Normal,
@@ -105,16 +102,16 @@ namespace KexEdit.Legacy {
                 Energy = p.Energy,
                 NormalForce = p.NormalForce,
                 LateralForce = p.LateralForce,
-                DistanceFromLast = 0f,
-                HeartDistanceFromLast = 0f,
+                SpineAdvance = 0f,
+                HeartAdvance = 0f,
                 AngleFromLast = 0f,
                 PitchFromLast = 0f,
                 YawFromLast = 0f,
                 RollSpeed = p.RollSpeed,
-                TotalLength = p.HeartArc,
-                TotalHeartLength = p.SpineArc,
-                FrictionCompensation = 0f,
-                Heart = p.HeartOffset,
+                HeartArc = p.HeartArc,
+                SpineArc = p.SpineArc,
+                FrictionOrigin = 0f,
+                HeartOffset = p.HeartOffset,
                 Friction = p.Friction,
                 Resistance = p.Resistance,
                 Facing = anchor.Facing,
@@ -126,9 +123,8 @@ namespace KexEdit.Legacy {
             float roll = math.degrees(math.atan2(s.Lateral.y, -s.Normal.y));
             roll = (roll + 540) % 360 - 180;
 
-            // Legacy PointData uses inverted naming: Position = heart, TotalHeartLength = spine
             result = new PointData {
-                Position = s.HeartPosition,
+                HeartPosition = s.HeartPosition,
                 Direction = s.Direction,
                 Lateral = s.Lateral,
                 Normal = s.Normal,
@@ -137,16 +133,16 @@ namespace KexEdit.Legacy {
                 Energy = s.Energy,
                 NormalForce = s.NormalForce,
                 LateralForce = s.LateralForce,
-                DistanceFromLast = prev.DistanceFromLast,
-                HeartDistanceFromLast = prev.HeartDistanceFromLast,
+                SpineAdvance = prev.SpineAdvance,
+                HeartAdvance = prev.HeartAdvance,
                 AngleFromLast = prev.AngleFromLast,
                 PitchFromLast = prev.PitchFromLast,
                 YawFromLast = prev.YawFromLast,
                 RollSpeed = s.RollSpeed,
-                TotalLength = s.HeartArc,
-                TotalHeartLength = s.SpineArc,
-                FrictionCompensation = s.FrictionOrigin,
-                Heart = s.HeartOffset,
+                HeartArc = s.HeartArc,
+                SpineArc = s.SpineArc,
+                FrictionOrigin = s.FrictionOrigin,
+                HeartOffset = s.HeartOffset,
                 Friction = s.Friction,
                 Resistance = s.Resistance,
                 Facing = prev.Facing,
@@ -187,22 +183,21 @@ namespace KexEdit.Legacy {
             var result = new NativeArray<CorePoint>(buffer.Length, allocator);
             for (int i = 0; i < buffer.Length; i++) {
                 PointData p = buffer[i].Value;
-                // Legacy PointData uses inverted naming: Position = heart, TotalHeartLength = spine
                 result[i] = new CorePoint(
                     direction: p.Direction,
                     lateral: p.Lateral,
                     normal: p.Normal,
-                    heartPosition: p.Position,
+                    heartPosition: p.HeartPosition,
                     velocity: p.Velocity,
                     energy: p.Energy,
                     normalForce: p.NormalForce,
                     lateralForce: p.LateralForce,
-                    heartArc: p.TotalLength,
-                    spineArc: p.TotalHeartLength,
-                    heartAdvance: p.HeartDistanceFromLast,
-                    frictionOrigin: p.FrictionCompensation,
+                    heartArc: p.HeartArc,
+                    spineArc: p.SpineArc,
+                    heartAdvance: p.HeartAdvance,
+                    frictionOrigin: p.FrictionOrigin,
                     rollSpeed: p.RollSpeed,
-                    heartOffset: p.Heart,
+                    heartOffset: p.HeartOffset,
                     friction: p.Friction,
                     resistance: p.Resistance
                 );

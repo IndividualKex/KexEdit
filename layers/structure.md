@@ -107,38 +107,6 @@ KexEdit/
 - Systems: PascalCase with "System" suffix (e.g., `MeshGenerationSystem`)
 - UI Classes: PascalCase with context suffix (e.g., `NodeGraphView`, `TimelineController`)
 
-## Heart/Spine Coordinate System
-
-**CRITICAL: Legacy code had INVERTED naming. Gold data uses legacy names. Modern code uses correct names.**
-
-**Modern (correct) semantics - used everywhere in modern code:**
-
-| Term | Definition |
-|------|------------|
-| `HeartPosition` | Rider heart position (fundamental, primary coordinate) |
-| `SpinePosition` | Track centerline = `HeartPosition + Normal * HeartOffset` |
-| `HeartArc` | Cumulative distance along heart path |
-| `SpineArc` | Cumulative distance along spine path |
-| `HeartAdvance` | Per-step distance along heart path |
-| `FrictionOrigin` | HeartArc position where friction was last reset |
-
-**Gold JSON uses legacy names - remapped on load:**
-
-| Gold JSON (legacy) | Modern Field | Notes |
-|--------------------|--------------|-------|
-| `position` | `HeartPosition` | Correct |
-| `totalLength` | `HeartArc` | INVERTED in legacy |
-| `totalHeartLength` | `SpineArc` | INVERTED in legacy |
-| `heart` | `HeartOffset` | Correct |
-| `frictionCompensation` | `FrictionOrigin` | Correct |
-
-**Why "inverted":** Legacy `GetHeartPosition(offset)` returned spine position. Legacy `TotalLength` accumulated spine distances. Legacy `TotalHeartLength` accumulated heart distances. The names were backwards.
-
-**Conversion points:**
-- `LegacyImporter`: .kex import
-- `SimPointComparer`: gold data comparison
-- See `Tests/context.md` for detailed explanation
-
 ## Configuration
 
 - Project Settings: `ProjectSettings/` (Unity project configuration)

@@ -88,15 +88,15 @@ namespace KexEdit.UI {
             PointData first = allPoints[0];
             PointData last = allPoints[^1];
 
-            float totalLength = last.TotalHeartLength - first.TotalHeartLength;
+            float totalLength = last.SpineArc - first.SpineArc;
             int numPoints = math.max(2, (int)math.round(totalLength / metersPerNode));
             float adjustedSpacing = totalLength / (numPoints - 1);
 
-            float startLength = first.TotalHeartLength;
+            float startLength = first.SpineArc;
             float nextLength = startLength;
 
             sampledPoints.Add(new SampledPoint {
-                Position = first.Position,
+                Position = first.HeartPosition,
                 Direction = first.Direction,
                 Lateral = first.Lateral,
                 Normal = first.Normal,
@@ -108,14 +108,14 @@ namespace KexEdit.UI {
                 PointData p0 = allPoints[i];
                 PointData p1 = allPoints[i + 1];
 
-                float start = p0.TotalHeartLength;
-                float end = p1.TotalHeartLength;
+                float start = p0.SpineArc;
+                float end = p1.SpineArc;
 
                 while (nextLength <= end) {
                     float t = math.saturate((nextLength - start) / (end - start));
 
                     var sampledPoint = new SampledPoint {
-                        Position = math.lerp(p0.Position, p1.Position, t),
+                        Position = math.lerp(p0.HeartPosition, p1.HeartPosition, t),
                         Direction = math.normalize(math.lerp(p0.Direction, p1.Direction, t)),
                         Lateral = math.normalize(math.lerp(p0.Lateral, p1.Lateral, t)),
                         Normal = math.normalize(math.lerp(p0.Normal, p1.Normal, t)),
@@ -129,7 +129,7 @@ namespace KexEdit.UI {
             }
 
             sampledPoints.Add(new SampledPoint {
-                Position = last.Position,
+                Position = last.HeartPosition,
                 Direction = last.Direction,
                 Lateral = last.Lateral,
                 Normal = last.Normal,

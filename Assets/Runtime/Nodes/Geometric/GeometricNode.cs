@@ -261,12 +261,12 @@ namespace KexEdit.Nodes.Geometric {
                 currNormal = rolled.Normal;
             }
 
-            float heartAdvance = math.distance(
+            float spineAdvance = math.distance(
                 currHeartPosition + currNormal * heartOffsetVal,
                 prev.SpinePosition(heartOffsetVal)
             );
+            float heartAdvance = math.distance(currHeartPosition, prevHeartPosition);
             float newHeartArc = prev.HeartArc + heartAdvance;
-            float spineAdvance = math.distance(currHeartPosition, prevHeartPosition);
             float newSpineArc = prev.SpineArc + spineAdvance;
 
             float newEnergy = prev.Energy;
@@ -297,7 +297,7 @@ namespace KexEdit.Nodes.Geometric {
                 lateralForce: forces.Lateral,
                 heartArc: newHeartArc,
                 spineArc: newSpineArc,
-                heartAdvance: spineAdvance,
+                heartAdvance: heartAdvance,
                 frictionOrigin: prev.FrictionOrigin,
                 rollSpeed: rollSpeedVal,
                 heartOffset: heartOffsetVal,

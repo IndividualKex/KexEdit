@@ -66,9 +66,9 @@ namespace KexEdit.Nodes.Force {
             currLateral = rolledFrame.Lateral;
             currNormal = rolledFrame.Normal;
 
-            float heartAdvance = math.distance(currHeartPosition + currNormal * physics.HeartOffset, prev.SpinePosition(physics.HeartOffset));
+            float spineAdvance = math.distance(currHeartPosition + currNormal * physics.HeartOffset, prev.SpinePosition(physics.HeartOffset));
+            float heartAdvance = math.distance(currHeartPosition, prev.HeartPosition);
             float newHeartArc = prev.HeartArc + heartAdvance;
-            float spineAdvance = math.distance(currHeartPosition, prev.HeartPosition);
             float newSpineArc = prev.SpineArc + spineAdvance;
 
             float newEnergy = prev.Energy;
@@ -99,7 +99,7 @@ namespace KexEdit.Nodes.Force {
                 lateralForce: forces.Lateral,
                 heartArc: newHeartArc,
                 spineArc: newSpineArc,
-                heartAdvance: spineAdvance,
+                heartAdvance: heartAdvance,
                 frictionOrigin: prev.FrictionOrigin,
                 rollSpeed: rollSpeedVal,
                 heartOffset: physics.HeartOffset,

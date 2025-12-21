@@ -74,7 +74,7 @@ namespace KexEdit.Legacy {
                     heartOffsetKf,
                     frictionKf,
                     resistanceKf,
-                    anchor.Value.Heart,
+                    anchor.Value.HeartOffset,
                     anchor.Value.Friction,
                     anchor.Value.Resistance,
                     ref result

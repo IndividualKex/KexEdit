@@ -64,8 +64,8 @@ namespace KexEdit.Legacy {
                     return GetCurrentNode(entity, targetDistance);
                 }
 
-                float trackStart = firstPoints[0].TotalLength();
-                float trackEnd = lastPoints[^1].TotalLength();
+                float trackStart = firstPoints[0].HeartArc();
+                float trackEnd = lastPoints[^1].HeartArc();
 
                 if (targetDistance < trackStart) {
                     projectionDistance = trackStart - targetDistance;
@@ -97,7 +97,7 @@ namespace KexEdit.Legacy {
                     return GetCurrentNode(node.Next, targetDistance);
                 }
 
-                float endLength = points[^1].TotalLength();
+                float endLength = points[^1].HeartArc();
                 if (targetDistance < endLength) {
                     return entity;
                 }
@@ -124,13 +124,13 @@ namespace KexEdit.Legacy {
                     return 0f;
                 }
 
-                if (targetDistance < points[0].TotalLength()) {
+                if (targetDistance < points[0].HeartArc()) {
                     return 0f;
                 }
 
                 for (int i = 0; i < points.Length - 1; i++) {
-                    float startLength = points[i].TotalLength();
-                    float endLength = points[i + 1].TotalLength();
+                    float startLength = points[i].HeartArc();
+                    float endLength = points[i + 1].HeartArc();
                     if (targetDistance >= startLength && targetDistance < endLength) {
                         float t = (endLength - startLength) > 0 ?
                             (targetDistance - startLength) / (endLength - startLength) : 0f;

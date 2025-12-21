@@ -129,6 +129,17 @@ namespace Tests {
         public float resistance;
         public int facing;
 
+        // Semantic accessors - legacy naming was inverted:
+        // - HeartPosition/HeartArc/HeartAdvance = primary coordinate (legacy Position/TotalLength/DistanceFromLast)
+        // - SpinePosition/SpineArc/SpineAdvance = derived coordinate (legacy GetHeartPosition/TotalHeartLength/HeartDistanceFromLast)
+        public GoldVec3 HeartPosition => position;
+        public float HeartArc => totalLength;
+        public float HeartAdvance => distanceFromLast;
+        public float SpineArc => totalHeartLength;
+        public float SpineAdvance => heartDistanceFromLast;
+        public float HeartOffset => heart;
+        public float FrictionOrigin => frictionCompensation;
+
         // Derived energy fields for analysis
         public float effectiveFrictionDistance;
         public float kineticEnergy;

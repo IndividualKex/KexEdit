@@ -5,7 +5,7 @@ using static KexEdit.Legacy.Constants;
 namespace KexEdit.Legacy {
     [BurstCompile]
     public static class CorePointBufferExtensions {
-        public static float3 Position(this in CorePointBuffer p) => p.Point.HeartPosition;
+        public static float3 HeartPosition(this in CorePointBuffer p) => p.Point.HeartPosition;
         public static float3 Direction(this in CorePointBuffer p) => p.Point.Direction;
         public static float3 Lateral(this in CorePointBuffer p) => p.Point.Lateral;
         public static float3 Normal(this in CorePointBuffer p) => p.Point.Normal;
@@ -21,12 +21,13 @@ namespace KexEdit.Legacy {
         public static float LateralForce(this in CorePointBuffer p) => p.Point.LateralForce;
         public static float RollSpeed(this in CorePointBuffer p) => p.Point.RollSpeed;
 
-        public static float TotalLength(this in CorePointBuffer p) => p.Point.HeartArc;
-        public static float TotalHeartLength(this in CorePointBuffer p) => p.Point.SpineArc;
-        public static float HeartDistanceFromLast(this in CorePointBuffer p) => p.SpineDistanceFromLast;
-        public static float FrictionCompensation(this in CorePointBuffer p) => p.Point.FrictionOrigin;
+        public static float HeartArc(this in CorePointBuffer p) => p.Point.HeartArc;
+        public static float SpineArc(this in CorePointBuffer p) => p.Point.SpineArc;
+        public static float SpineAdvance(this in CorePointBuffer p) => p.SpineDistanceFromLast;
+        public static float HeartAdvance(this in CorePointBuffer p) => p.DistanceFromLast;
+        public static float FrictionOrigin(this in CorePointBuffer p) => p.Point.FrictionOrigin;
 
-        public static float Heart(this in CorePointBuffer p) => p.Point.HeartOffset;
+        public static float HeartOffset(this in CorePointBuffer p) => p.Point.HeartOffset;
         public static float Friction(this in CorePointBuffer p) => p.Point.Friction;
         public static float Resistance(this in CorePointBuffer p) => p.Point.Resistance;
 
@@ -38,37 +39,36 @@ namespace KexEdit.Legacy {
 
         public static float GetCenter(this in CorePointBuffer p) => p.Point.HeartOffset * 0.9f;
 
-        public static float3 GetHeartPosition(this in CorePointBuffer p, float heart) {
-            return p.Point.HeartPosition + p.Point.Normal * heart;
+        public static float3 GetSpinePosition(this in CorePointBuffer p, float heartOffset) {
+            return p.Point.HeartPosition + p.Point.Normal * heartOffset;
         }
 
         public static float ComputeEnergy(this in CorePointBuffer p) {
-            float3 centerPos = p.GetHeartPosition(p.GetCenter());
+            float3 centerPos = p.GetSpinePosition(p.GetCenter());
             float energy = 0.5f * p.Point.Velocity * p.Point.Velocity + G * centerPos.y;
             energy += G * (p.Point.HeartArc - p.Point.FrictionOrigin) * p.Point.Friction;
             return energy;
         }
 
-        public static float3 GetHeartDirection(this in CorePointBuffer p, float heart) {
+        public static float3 GetSpineDirection(this in CorePointBuffer p, float heartOffset) {
             float dist = p.AngleFromLast < 1e-3f ? p.SpineDistanceFromLast : p.Point.Velocity / HZ;
             float rollSpeed = dist > 0f ? p.Point.RollSpeed / HZ / dist : 0f;
             if (float.IsNaN(rollSpeed)) rollSpeed = 0f;
-            float3 deviation = p.Point.Lateral * math.radians(rollSpeed * heart);
+            float3 deviation = p.Point.Lateral * math.radians(rollSpeed * heartOffset);
             return math.normalize(p.Point.Direction + deviation);
         }
 
-        public static float3 GetHeartLateral(this in CorePointBuffer p, float heart) {
+        public static float3 GetSpineLateral(this in CorePointBuffer p, float heartOffset) {
             float dist = p.AngleFromLast < 1e-3f ? p.SpineDistanceFromLast : p.Point.Velocity / HZ;
             float rollSpeed = dist > 0f ? p.Point.RollSpeed / HZ / dist : 0f;
             if (float.IsNaN(rollSpeed)) rollSpeed = 0f;
-            float3 deviation = -p.Point.Direction * math.radians(rollSpeed * heart);
+            float3 deviation = -p.Point.Direction * math.radians(rollSpeed * heartOffset);
             return math.normalize(p.Point.Lateral + deviation);
         }
 
-        // Legacy PointData uses inverted naming: Position = heart, TotalHeartLength = spine
         public static PointData ToPointData(this in CorePointBuffer p) {
             return new PointData {
-                Position = p.Point.HeartPosition,
+                HeartPosition = p.Point.HeartPosition,
                 Direction = p.Point.Direction,
                 Lateral = p.Point.Lateral,
                 Normal = p.Point.Normal,
@@ -77,16 +77,16 @@ namespace KexEdit.Legacy {
                 Energy = p.Point.Energy,
                 NormalForce = p.Point.NormalForce,
                 LateralForce = p.Point.LateralForce,
-                DistanceFromLast = p.DistanceFromLast,
-                HeartDistanceFromLast = p.SpineDistanceFromLast,
+                SpineAdvance = p.DistanceFromLast,
+                HeartAdvance = p.SpineDistanceFromLast,
                 AngleFromLast = p.AngleFromLast,
                 PitchFromLast = p.PitchFromLast,
                 YawFromLast = p.YawFromLast,
                 RollSpeed = p.Point.RollSpeed,
-                TotalLength = p.Point.HeartArc,
-                TotalHeartLength = p.Point.SpineArc,
-                FrictionCompensation = p.Point.FrictionOrigin,
-                Heart = p.Point.HeartOffset,
+                HeartArc = p.Point.HeartArc,
+                SpineArc = p.Point.SpineArc,
+                FrictionOrigin = p.Point.FrictionOrigin,
+                HeartOffset = p.Point.HeartOffset,
                 Friction = p.Point.Friction,
                 Resistance = p.Point.Resistance,
                 Facing = p.Facing

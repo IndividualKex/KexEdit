@@ -117,13 +117,13 @@ namespace KexEdit.Legacy {
                     return points[currentIndex].ToPointData();
                 }
 
-                float currentLength = points[currentIndex].TotalLength();
+                float currentLength = points[currentIndex].HeartArc();
                 float targetLength = currentLength + offset;
 
                 if (targetLength <= 0) {
                     return points[0].ToPointData();
                 }
-                if (targetLength >= points[^1].TotalLength()) {
+                if (targetLength >= points[^1].HeartArc()) {
                     return points[^1].ToPointData();
                 }
 
@@ -132,7 +132,7 @@ namespace KexEdit.Legacy {
 
                 while (endIndex - startIndex > 1) {
                     int midIndex = (startIndex + endIndex) / 2;
-                    if (points[midIndex].TotalLength() <= targetLength) {
+                    if (points[midIndex].HeartArc() <= targetLength) {
                         startIndex = midIndex;
                     } else {
                         endIndex = midIndex;
@@ -141,13 +141,13 @@ namespace KexEdit.Legacy {
 
                 var p0 = points[startIndex].ToPointData();
                 var p1 = points[endIndex].ToPointData();
-                float segmentLength = p1.TotalLength - p0.TotalLength;
+                float segmentLength = p1.HeartArc - p0.HeartArc;
 
                 if (segmentLength < 0.001f) {
                     return p0;
                 }
 
-                float t = (targetLength - p0.TotalLength) / segmentLength;
+                float t = (targetLength - p0.HeartArc) / segmentLength;
                 return PointData.Lerp(p0, p1, t);
             }
         }

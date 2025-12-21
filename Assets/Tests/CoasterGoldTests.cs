@@ -197,9 +197,8 @@ namespace Tests {
                 for (int i = 0; i < debugCount; i++) {
                     var p = path[i];
                     var g = section.outputs.points[i];
-                    // Gold data uses legacy inverted naming: position = heart position
                     UnityEngine.Debug.Log($"[{i}] actual: pos=({p.HeartPosition.x:F3},{p.HeartPosition.y:F3},{p.HeartPosition.z:F3}) dir=({p.Direction.x:F3},{p.Direction.y:F3},{p.Direction.z:F3}) vel={p.Velocity:F4}");
-                    UnityEngine.Debug.Log($"[{i}] gold:   pos=({g.position.x:F3},{g.position.y:F3},{g.position.z:F3}) dir=({g.direction.x:F3},{g.direction.y:F3},{g.direction.z:F3}) vel={g.velocity:F4}");
+                    UnityEngine.Debug.Log($"[{i}] gold:   pos=({g.HeartPosition.x:F3},{g.HeartPosition.y:F3},{g.HeartPosition.z:F3}) dir=({g.direction.x:F3},{g.direction.y:F3},{g.direction.z:F3}) vel={g.velocity:F4}");
                 }
 
                 SimPointComparer.AssertMatchesGold(path, section.outputs.points, cumulativePoints);

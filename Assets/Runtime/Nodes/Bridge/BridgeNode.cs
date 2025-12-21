@@ -109,8 +109,8 @@ namespace KexEdit.Nodes.Bridge {
                 Frame currFrame = new(direction, normal, lateral);
                 float3 currSpinePos = currFrame.SpinePosition(position, heartOffsetVal);
                 float3 prevSpinePos = prev.Frame.SpinePosition(prev.HeartPosition, prevHeartOffset);
-                float heartAdvance = math.distance(currSpinePos, prevSpinePos);
-                float spineAdvance = math.distance(position, prev.HeartPosition);
+                float spineAdvance = math.distance(currSpinePos, prevSpinePos);
+                float heartAdvance = math.distance(position, prev.HeartPosition);
                 float heartArc = prev.HeartArc + heartAdvance;
                 float spineArc = prev.SpineArc + spineAdvance;
 
@@ -143,7 +143,7 @@ namespace KexEdit.Nodes.Bridge {
                     lateralForce: lateralForce,
                     heartArc: heartArc,
                     spineArc: spineArc,
-                    heartAdvance: spineAdvance,
+                    heartAdvance: heartAdvance,
                     frictionOrigin: state.FrictionOrigin,
                     rollSpeed: anchor.RollSpeed,
                     heartOffset: heartOffsetVal,

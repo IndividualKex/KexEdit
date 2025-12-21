@@ -56,29 +56,28 @@ namespace Tests {
                 HeartOffset = ToKeyframeArray(section.inputs.keyframes?.heart, allocator),
                 Friction = ToKeyframeArray(section.inputs.keyframes?.friction, allocator),
                 Resistance = ToKeyframeArray(section.inputs.keyframes?.resistance, allocator),
-                AnchorHeart = anchorData.heart,
+                AnchorHeart = anchorData.HeartOffset,
                 AnchorFriction = anchorData.friction,
                 AnchorResistance = anchorData.resistance,
             };
         }
 
-        // Gold data uses legacy inverted naming: position = heart position, totalHeartLength = spine arc
         public static Point ToPoint(GoldPointData p) {
             return new Point(
                 direction: new float3(p.direction.x, p.direction.y, p.direction.z),
                 lateral: new float3(p.lateral.x, p.lateral.y, p.lateral.z),
                 normal: new float3(p.normal.x, p.normal.y, p.normal.z),
-                heartPosition: new float3(p.position.x, p.position.y, p.position.z),
+                heartPosition: new float3(p.HeartPosition.x, p.HeartPosition.y, p.HeartPosition.z),
                 velocity: p.velocity,
                 energy: p.energy,
                 normalForce: p.normalForce,
                 lateralForce: p.lateralForce,
-                heartArc: p.totalLength,
-                spineArc: p.totalHeartLength,
-                heartAdvance: p.heartDistanceFromLast,
-                frictionOrigin: p.frictionCompensation,
+                heartArc: p.HeartArc,
+                spineArc: p.SpineArc,
+                heartAdvance: p.HeartAdvance,
+                frictionOrigin: p.FrictionOrigin,
                 rollSpeed: p.rollSpeed,
-                heartOffset: p.heart,
+                heartOffset: p.HeartOffset,
                 friction: p.friction,
                 resistance: p.resistance
             );

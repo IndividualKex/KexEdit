@@ -281,10 +281,10 @@ namespace KexEdit.Legacy {
 
                 int startIndex = math.clamp((int)math.round(segment.StartTime * HZ), 0, Points.Length - 1);
                 float segmentStartTime = segment.StartTime;
-                float segmentStartLength = Points[startIndex].TotalLength();
+                float segmentStartLength = Points[startIndex].HeartArc();
 
                 for (int i = startIndex; i < Points.Length - 1; i++) {
-                    float currentLength = Points[i].TotalLength();
+                    float currentLength = Points[i].HeartArc();
                     float currentSegmentLength = currentLength - segmentStartLength;
 
                     if (currentSegmentLength >= MAX_SEGMENT_LENGTH) {
@@ -315,8 +315,8 @@ namespace KexEdit.Legacy {
 
                 if (startIndex >= endIndex) return 0f;
 
-                float startLength = Points[startIndex].TotalLength();
-                float endLength = Points[endIndex].TotalLength();
+                float startLength = Points[startIndex].HeartArc();
+                float endLength = Points[endIndex].HeartArc();
 
                 return endLength - startLength;
             }
@@ -357,7 +357,7 @@ namespace KexEdit.Legacy {
 
                 int currentStyleIndex = SelectStyleByStress(windowSum / windowSize);
                 float segmentStartTime = 0f;
-                float segmentStartLength = Points[0].TotalLength();
+                float segmentStartLength = Points[0].HeartArc();
 
                 int lastWindowStart = 0;
                 int lastWindowEnd = windowSize - 1;
@@ -389,7 +389,7 @@ namespace KexEdit.Legacy {
                     float avgStress = windowSum / actualWindowSize;
                     int newStyleIndex = SelectStyleByStress(avgStress);
 
-                    float currentLength = Points[center].TotalLength();
+                    float currentLength = Points[center].HeartArc();
                     float segmentLength = currentLength - segmentStartLength;
 
                     bool styleChanged = newStyleIndex != currentStyleIndex;
@@ -414,7 +414,7 @@ namespace KexEdit.Legacy {
 
                 allStress.Dispose();
 
-                var finalSegmentLength = Points[^1].TotalLength() - segmentStartLength;
+                var finalSegmentLength = Points[^1].HeartArc() - segmentStartLength;
                 if (finalSegmentLength > MAX_SEGMENT_LENGTH) {
                     var segmentCount = (int)math.ceil(finalSegmentLength / MAX_SEGMENT_LENGTH);
                     var segmentLengthStep = finalSegmentLength / segmentCount;
@@ -442,7 +442,7 @@ namespace KexEdit.Legacy {
 
             private int FindPointIndexByLength(float targetLength) {
                 for (int i = 0; i < Points.Length; i++) {
-                    if (Points[i].TotalLength() >= targetLength) {
+                    if (Points[i].HeartArc() >= targetLength) {
                         return i;
                     }
                 }
@@ -548,10 +548,10 @@ namespace KexEdit.Legacy {
 
                 int startIndex = math.clamp((int)math.round(segment.StartTime * HZ), 0, Points.Length - 1);
                 float segmentStartTime = segment.StartTime;
-                float segmentStartLength = Points[startIndex].TotalLength();
+                float segmentStartLength = Points[startIndex].HeartArc();
 
                 for (int i = startIndex; i < Points.Length - 1; i++) {
-                    float currentLength = Points[i].TotalLength();
+                    float currentLength = Points[i].HeartArc();
                     float currentSegmentLength = currentLength - segmentStartLength;
 
                     if (currentSegmentLength >= MAX_SEGMENT_LENGTH) {
@@ -582,8 +582,8 @@ namespace KexEdit.Legacy {
 
                 if (startIndex >= endIndex) return 0f;
 
-                float startLength = Points[startIndex].TotalLength();
-                float endLength = Points[endIndex].TotalLength();
+                float startLength = Points[startIndex].HeartArc();
+                float endLength = Points[endIndex].HeartArc();
 
                 return endLength - startLength;
             }

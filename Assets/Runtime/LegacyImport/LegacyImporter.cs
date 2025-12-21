@@ -207,11 +207,10 @@ namespace KexEdit.LegacyImport {
             coaster.Anchors[nodeId] = anchor;
         }
 
-        // Legacy PointData uses inverted naming: Position = heart, TotalHeartLength = spine
         [BurstCompile]
         private static void ConvertPointDataToPoint(in PointData pointData, out Point point) {
             point = new Point(
-                heartPosition: pointData.Position,
+                heartPosition: pointData.HeartPosition,
                 direction: pointData.Direction,
                 normal: pointData.Normal,
                 lateral: pointData.Lateral,
@@ -219,12 +218,12 @@ namespace KexEdit.LegacyImport {
                 energy: pointData.Energy,
                 normalForce: pointData.NormalForce,
                 lateralForce: pointData.LateralForce,
-                heartArc: pointData.TotalHeartLength,
-                spineArc: pointData.TotalLength,
-                heartAdvance: pointData.DistanceFromLast,
-                frictionOrigin: pointData.FrictionCompensation,
+                heartArc: pointData.HeartArc,
+                spineArc: pointData.SpineArc,
+                heartAdvance: pointData.HeartAdvance,
+                frictionOrigin: pointData.FrictionOrigin,
                 rollSpeed: pointData.RollSpeed,
-                heartOffset: pointData.Heart,
+                heartOffset: pointData.HeartOffset,
                 friction: pointData.Friction,
                 resistance: pointData.Resistance
             );

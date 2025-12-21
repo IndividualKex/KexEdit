@@ -97,8 +97,8 @@ namespace KexEdit.Legacy {
                 var point = points[index];
                 var next = points[index + 1];
                 return math.lerp(
-                    point.TotalLength(),
-                    next.TotalLength(),
+                    point.HeartArc(),
+                    next.HeartArc(),
                     t
                 );
             }

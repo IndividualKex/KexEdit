@@ -27,6 +27,55 @@
 
 ## Migration Phases
 
+### Phase 0: Naming Convention Cleanup
+
+**Status: In Progress**
+
+Migrate from legacy inverted naming to modern semantic naming where heart is the primary coordinate and spine is derived.
+
+**Completed:**
+- ✅ Renamed `PointData` struct fields to modern conventions
+- ✅ Renamed `PointData` extension methods (`GetSpinePosition`, `GetSpineDirection`, `GetSpineLateral`)
+- ✅ Renamed `CorePointBuffer` extension methods (`HeartPosition()`, `HeartArc()`, `SpineArc()`, etc.)
+- ✅ Updated all Runtime/Legacy systems (Physics, Track, Trains, Visualization, Persistence)
+- ✅ Updated Node implementations and test builders
+- ✅ Fixed gold data test comparisons in `PointComparer.cs` and `SimPointComparer.cs`
+
+**Remaining:**
+- ⏳ Update UI layer extension method calls (5 files, ~207 references):
+  - `Assets/Scripts/UI/Timeline/Systems/TimelineControlSystem.cs` (~90 errors)
+  - `Assets/Scripts/UI/Systems/StatsOverlaySystem.cs` (~81 errors)
+  - `Assets/Scripts/UI/Systems/KeyframeGizmoUpdateSystem.cs` (~18 errors)
+  - `Assets/Scripts/UI/NodeGraph/Systems/NodeGraphControlSystem.cs` (~12 errors)
+  - `Assets/Scripts/UI/Systems/GameViewControlSystem.cs` (~6 errors)
+
+**Required changes in UI files:**
+- `.Position()` → `.HeartPosition()`
+- `.TotalLength()` → `.HeartArc()`
+- `.TotalHeartLength()` → `.SpineArc()`
+- `.Heart()` → `.HeartOffset()`
+- `.GetHeartPosition()` → `.GetSpinePosition()`
+- `.GetHeartDirection()` → `.GetSpineDirection()`
+- `.GetHeartLateral()` → `.GetSpineLateral()`
+
+**Naming reference:**
+
+| Legacy (Inverted) | Modern (Semantic) | Meaning |
+|-------------------|-------------------|---------|
+| Position | HeartPosition | Primary coordinate (heart line) |
+| TotalLength | HeartArc | Cumulative arc length along heart |
+| DistanceFromLast | SpineAdvance | Distance between spine points |
+| HeartDistanceFromLast | HeartAdvance | Distance between heart points |
+| TotalHeartLength | SpineArc | Cumulative arc length along spine |
+| FrictionCompensation | FrictionOrigin | Arc length where friction starts |
+| Heart | HeartOffset | Perpendicular offset from heart to spine |
+
+**Acceptance criteria:**
+- All compiler errors resolved
+- All tests pass
+- No direct access to `GoldPointData` legacy fields outside `GoldDataTypes.cs`
+- Modern accessor pattern used throughout codebase
+
 ### Phase 1: Parity Tests (Test-First Foundation)
 
 **Status: In Progress**
@@ -38,38 +87,9 @@
 - ✅ Fixed CurvedSection scalar port values
 - ✅ Fixed ReversePathNode arc recalculation
 
-**Next step: Verify Heart/Spine naming consistency**
-
-Before fixing remaining issues, verify naming is correct and consistent everywhere:
-
-1. **Verify modern code uses correct semantics:**
-   - `HeartPosition` = rider heart position (fundamental, primary coordinate)
-   - `SpinePosition` = track centerline = `HeartPosition + Normal * HeartOffset`
-   - `HeartArc` = cumulative distance along heart path
-   - `SpineArc` = cumulative distance along spine path
-   - `HeartAdvance` = per-step distance along heart path
-   - `FrictionOrigin` = arc position where friction was last reset
-
-2. **Verify gold data loading corrects legacy naming:**
-   - Legacy code had INVERTED naming (GetHeartPosition returned spine position)
-   - Gold JSON uses legacy field names but stores correct semantic values
-   - `GoldDataLoader` / `SimPointComparer` must map legacy names to correct modern names
-   - Document this mapping explicitly in `Tests/context.md`
-
-3. **Audit all node types for consistent naming:**
-   - CopyPathNode, ForceNode, GeometricNode, BridgeNode, etc.
-   - Ensure `heartAdvance` vs `spineAdvance` are calculated and used correctly
-
-**Remaining issues (blocked on naming verification):**
-
 #### 1. CopyPath velocity divergence (AllTypes test)
-- Evaluator produces 371 points, gold expects 359 points
-- Likely caused by naming confusion in arc/advance calculations
-- Verify friction uses correct arc type after naming audit
 
 #### 2. Veloci test - cumulative drift
-- First 5 sections pass, ForceSection 2 begins drifting
-- Blocked pending naming verification and CopyPath fix
 
 #### 3. Bridge lateral force calculation
 - Separate bug in Bridge section physics

@@ -19,12 +19,12 @@ namespace KexEdit.Legacy {
         }
 
         public static float GetCenter(this PointData p) {
-            return p.Heart * 0.9f;
+            return p.HeartOffset * 0.9f;
         }
 
         public static float ComputeEnergy(this PointData p) {
-            float energy = 0.5f * p.Velocity * p.Velocity + G * p.GetHeartPosition(p.GetCenter()).y;
-            energy += G * (p.TotalLength - p.FrictionCompensation) * p.Friction;
+            float energy = 0.5f * p.Velocity * p.Velocity + G * p.GetSpinePosition(p.GetCenter()).y;
+            energy += G * (p.HeartArc - p.FrictionOrigin) * p.Friction;
             return energy;
         }
 
@@ -37,21 +37,21 @@ namespace KexEdit.Legacy {
             return math.degrees(math.atan2(-p.Direction.x, -p.Direction.z));
         }
 
-        public static float3 GetHeartPosition(this PointData p, float heart) {
-            return p.Position + p.Normal * heart;
+        public static float3 GetSpinePosition(this PointData p, float heartOffset) {
+            return p.HeartPosition + p.Normal * heartOffset;
         }
 
         public static float3 GetRelativePosition(this PointData p, float3 position) {
-            return p.Position
+            return p.HeartPosition
                 - position.y * p.Normal
-                + position.x * p.GetHeartLateral(position.y)
-                + position.z * p.GetHeartDirection(position.y);
+                + position.x * p.GetSpineLateral(position.y)
+                + position.z * p.GetSpineDirection(position.y);
         }
 
-        public static float3 GetHeartDirection(this PointData p, float heart) {
+        public static float3 GetSpineDirection(this PointData p, float heartOffset) {
             float dist;
             if (p.AngleFromLast < 1e-3f) {
-                dist = p.HeartDistanceFromLast;
+                dist = p.HeartAdvance;
             }
             else {
                 dist = p.Velocity / HZ;
@@ -60,14 +60,14 @@ namespace KexEdit.Legacy {
             if (float.IsNaN(rollSpeed)) {
                 rollSpeed = 0f;
             }
-            float3 deviation = p.Lateral * math.radians(rollSpeed * heart);
+            float3 deviation = p.Lateral * math.radians(rollSpeed * heartOffset);
             return math.normalize(p.Direction + deviation);
         }
 
-        public static float3 GetHeartLateral(this PointData p, float heart) {
+        public static float3 GetSpineLateral(this PointData p, float heartOffset) {
             float dist;
             if (p.AngleFromLast < 1e-3f) {
-                dist = p.HeartDistanceFromLast;
+                dist = p.HeartAdvance;
             }
             else {
                 dist = p.Velocity / HZ;
@@ -76,7 +76,7 @@ namespace KexEdit.Legacy {
             if (float.IsNaN(rollSpeed)) {
                 rollSpeed = 0f;
             }
-            float3 deviation = -p.Direction * math.radians(rollSpeed * heart);
+            float3 deviation = -p.Direction * math.radians(rollSpeed * heartOffset);
             return math.normalize(p.Lateral + deviation);
         }
 
@@ -379,7 +379,7 @@ namespace KexEdit.Legacy {
                 PropertyType.PitchSpeed => 0f,
                 PropertyType.YawSpeed => 0f,
                 PropertyType.FixedVelocity => defaultPoint.Velocity,
-                PropertyType.Heart => defaultPoint.Heart,
+                PropertyType.Heart => defaultPoint.HeartOffset,
                 PropertyType.Friction => defaultPoint.Friction,
                 PropertyType.Resistance => defaultPoint.Resistance,
                 PropertyType.TrackStyle => 0f,
@@ -395,7 +395,7 @@ namespace KexEdit.Legacy {
                 PropertyType.PitchSpeed => math.radians(anchor.PitchFromLast * HZ),
                 PropertyType.YawSpeed => math.radians(anchor.YawFromLast * HZ),
                 PropertyType.FixedVelocity => anchor.Velocity,
-                PropertyType.Heart => anchor.Heart,
+                PropertyType.Heart => anchor.HeartOffset,
                 PropertyType.Friction => anchor.Friction,
                 PropertyType.Resistance => anchor.Resistance,
                 PropertyType.TrackStyle => 0f,
@@ -415,7 +415,7 @@ namespace KexEdit.Legacy {
                     ? math.radians(anchor.YawFromLast * HZ) / math.max(anchor.Velocity, MIN_VELOCITY)
                     : math.radians(anchor.YawFromLast * HZ),
                 PropertyType.FixedVelocity => anchor.Velocity,
-                PropertyType.Heart => anchor.Heart,
+                PropertyType.Heart => anchor.HeartOffset,
                 PropertyType.Friction => anchor.Friction,
                 PropertyType.Resistance => anchor.Resistance,
                 PropertyType.TrackStyle => 0f,

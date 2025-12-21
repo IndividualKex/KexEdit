@@ -5,7 +5,7 @@ using Unity.Mathematics;
 namespace KexEdit.Legacy {
     [Serializable]
     public struct PointData {
-        public float3 Position;
+        public float3 HeartPosition;
         public float3 Direction;
         public float3 Lateral;
         public float3 Normal;
@@ -14,16 +14,16 @@ namespace KexEdit.Legacy {
         public float Energy;
         public float NormalForce;
         public float LateralForce;
-        public float DistanceFromLast;
-        public float HeartDistanceFromLast;
+        public float SpineAdvance;
+        public float HeartAdvance;
         public float AngleFromLast;
         public float PitchFromLast;
         public float YawFromLast;
         public float RollSpeed;
-        public float TotalLength;
-        public float TotalHeartLength;
-        public float FrictionCompensation;
-        public float Heart;
+        public float HeartArc;
+        public float SpineArc;
+        public float FrictionOrigin;
+        public float HeartOffset;
         public float Friction;
         public float Resistance;
         public int Facing;
@@ -34,7 +34,7 @@ namespace KexEdit.Legacy {
 
         public static PointData Create(float3 position, float velocity = 10f) {
             PointData point = new() {
-                Position = position,
+                HeartPosition = position,
                 Direction = math.back(),
                 Lateral = math.right(),
                 Normal = math.down(),
@@ -43,16 +43,16 @@ namespace KexEdit.Legacy {
                 Energy = 0f,
                 NormalForce = 1f,
                 LateralForce = 0f,
-                DistanceFromLast = 0f,
-                HeartDistanceFromLast = 0f,
+                SpineAdvance = 0f,
+                HeartAdvance = 0f,
                 AngleFromLast = 0f,
                 PitchFromLast = 0f,
                 YawFromLast = 0f,
                 RollSpeed = 0f,
-                TotalLength = 0f,
-                TotalHeartLength = 0f,
-                FrictionCompensation = 0f,
-                Heart = Constants.HEART_BASE,
+                HeartArc = 0f,
+                SpineArc = 0f,
+                FrictionOrigin = 0f,
+                HeartOffset = Constants.HEART_BASE,
                 Friction = Constants.FRICTION_BASE,
                 Resistance = Constants.RESISTANCE_BASE,
                 Facing = 1,
@@ -62,7 +62,7 @@ namespace KexEdit.Legacy {
         }
 
         public void SetPosition(float3 position) {
-            Position = position;
+            HeartPosition = position;
             Energy = this.ComputeEnergy();
         }
 
@@ -121,13 +121,13 @@ namespace KexEdit.Legacy {
         public void SetVelocity(float velocity, bool resetFriction = false) {
             Velocity = velocity;
             if (resetFriction) {
-                FrictionCompensation = TotalLength;
+                FrictionOrigin = HeartArc;
             }
             Energy = this.ComputeEnergy();
         }
 
         public void SetHeart(float heart) {
-            Heart = heart;
+            HeartOffset = heart;
             Energy = this.ComputeEnergy();
         }
 
@@ -143,7 +143,7 @@ namespace KexEdit.Legacy {
 
         public static PointData Lerp(PointData p0, PointData p1, float t) {
             PointData result = new() {
-                Position = math.lerp(p0.Position, p1.Position, t),
+                HeartPosition = math.lerp(p0.HeartPosition, p1.HeartPosition, t),
                 Direction = math.lerp(p0.Direction, p1.Direction, t),
                 Lateral = math.lerp(p0.Lateral, p1.Lateral, t),
                 Normal = math.lerp(p0.Normal, p1.Normal, t),
@@ -152,16 +152,16 @@ namespace KexEdit.Legacy {
                 Energy = math.lerp(p0.Energy, p1.Energy, t),
                 NormalForce = math.lerp(p0.NormalForce, p1.NormalForce, t),
                 LateralForce = math.lerp(p0.LateralForce, p1.LateralForce, t),
-                DistanceFromLast = math.lerp(p0.DistanceFromLast, p1.DistanceFromLast, t),
-                HeartDistanceFromLast = math.lerp(p0.HeartDistanceFromLast, p1.HeartDistanceFromLast, t),
+                SpineAdvance = math.lerp(p0.SpineAdvance, p1.SpineAdvance, t),
+                HeartAdvance = math.lerp(p0.HeartAdvance, p1.HeartAdvance, t),
                 AngleFromLast = math.lerp(p0.AngleFromLast, p1.AngleFromLast, t),
                 PitchFromLast = math.lerp(p0.PitchFromLast, p1.PitchFromLast, t),
                 YawFromLast = math.lerp(p0.YawFromLast, p1.YawFromLast, t),
                 RollSpeed = math.lerp(p0.RollSpeed, p1.RollSpeed, t),
-                TotalLength = math.lerp(p0.TotalLength, p1.TotalLength, t),
-                TotalHeartLength = math.lerp(p0.TotalHeartLength, p1.TotalHeartLength, t),
-                FrictionCompensation = math.lerp(p0.FrictionCompensation, p1.FrictionCompensation, t),
-                Heart = math.lerp(p0.Heart, p1.Heart, t),
+                HeartArc = math.lerp(p0.HeartArc, p1.HeartArc, t),
+                SpineArc = math.lerp(p0.SpineArc, p1.SpineArc, t),
+                FrictionOrigin = math.lerp(p0.FrictionOrigin, p1.FrictionOrigin, t),
+                HeartOffset = math.lerp(p0.HeartOffset, p1.HeartOffset, t),
                 Friction = math.lerp(p0.Friction, p1.Friction, t),
                 Resistance = math.lerp(p0.Resistance, p1.Resistance, t),
                 Facing = p0.Facing,
@@ -171,7 +171,7 @@ namespace KexEdit.Legacy {
 
         public override string ToString() {
             StringBuilder sb = new();
-            sb.AppendLine($"Position: {Position}");
+            sb.AppendLine($"HeartPosition: {HeartPosition}");
             sb.AppendLine($"Direction: {Direction}");
             sb.AppendLine($"Lateral: {Lateral}");
             sb.AppendLine($"Normal: {Normal}");
@@ -180,16 +180,16 @@ namespace KexEdit.Legacy {
             sb.AppendLine($"Energy: {Energy}");
             sb.AppendLine($"NormalForce: {NormalForce}");
             sb.AppendLine($"LateralForce: {LateralForce}");
-            sb.AppendLine($"DistanceFromLast: {DistanceFromLast}");
-            sb.AppendLine($"HeartDistanceFromLast: {HeartDistanceFromLast}");
+            sb.AppendLine($"SpineAdvance: {SpineAdvance}");
+            sb.AppendLine($"HeartAdvance: {HeartAdvance}");
             sb.AppendLine($"AngleFromLast: {AngleFromLast}");
             sb.AppendLine($"PitchFromLast: {PitchFromLast}");
             sb.AppendLine($"YawFromLast: {YawFromLast}");
             sb.AppendLine($"RollSpeed: {RollSpeed}");
-            sb.AppendLine($"TotalLength: {TotalLength}");
-            sb.AppendLine($"TotalHeartLength: {TotalHeartLength}");
-            sb.AppendLine($"FrictionCompensation: {FrictionCompensation}");
-            sb.AppendLine($"Heart: {Heart}");
+            sb.AppendLine($"HeartArc: {HeartArc}");
+            sb.AppendLine($"SpineArc: {SpineArc}");
+            sb.AppendLine($"FrictionOrigin: {FrictionOrigin}");
+            sb.AppendLine($"HeartOffset: {HeartOffset}");
             sb.AppendLine($"Friction: {Friction}");
             sb.AppendLine($"Resistance: {Resistance}");
             sb.AppendLine($"Facing: {Facing}");

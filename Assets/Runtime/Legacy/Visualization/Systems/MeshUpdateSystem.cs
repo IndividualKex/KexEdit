@@ -28,7 +28,7 @@ namespace KexEdit.Legacy {
 
                 SystemAPI.SetComponentEnabled<Dirty>(mesh.Value, false);
 
-                float3 position = anchor.Value.Position;
+                float3 position = anchor.Value.HeartPosition;
                 quaternion rotation = quaternion.Euler(
                     math.radians(anchor.Value.Roll),
                     math.radians(anchor.Value.Velocity),

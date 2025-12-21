@@ -54,8 +54,8 @@ namespace KexEdit.Legacy {
                 var point = points[index];
                 var next = points[index + 1];
                 return math.lerp(
-                    point.GetHeartPosition(point.Heart()),
-                    next.GetHeartPosition(next.Heart()),
+                    point.GetSpinePosition(point.HeartOffset()),
+                    next.GetSpinePosition(next.HeartOffset()),
                     t
                 );
             }
@@ -65,13 +65,13 @@ namespace KexEdit.Legacy {
                 var next = points[index + 1];
                 int facing = point.Facing;
                 float3 direction = math.normalize(math.lerp(
-                    point.GetHeartDirection(point.Heart()),
-                    next.GetHeartDirection(next.Heart()),
+                    point.GetSpineDirection(point.HeartOffset()),
+                    next.GetSpineDirection(next.HeartOffset()),
                     t
                 ));
                 float3 lateral = math.normalize(math.lerp(
-                    point.GetHeartLateral(point.Heart()),
-                    next.GetHeartLateral(next.Heart()),
+                    point.GetSpineLateral(point.HeartOffset()),
+                    next.GetSpineLateral(next.HeartOffset()),
                     t
                 ));
                 float3 normal = math.normalize(math.cross(direction, lateral));
@@ -86,18 +86,18 @@ namespace KexEdit.Legacy {
 
                 if (follower.Index <= 0f) {
                     edgePoint = points[0];
-                    projectionDirection = -math.normalize(edgePoint.GetHeartDirection(edgePoint.Heart()));
+                    projectionDirection = -math.normalize(edgePoint.GetSpineDirection(edgePoint.HeartOffset()));
                 }
                 else {
                     edgePoint = points[^1];
-                    projectionDirection = math.normalize(edgePoint.GetHeartDirection(edgePoint.Heart()));
+                    projectionDirection = math.normalize(edgePoint.GetSpineDirection(edgePoint.HeartOffset()));
                 }
 
-                float3 edgePosition = edgePoint.GetHeartPosition(edgePoint.Heart());
+                float3 edgePosition = edgePoint.GetSpinePosition(edgePoint.HeartOffset());
                 float3 position = edgePosition + projectionDirection * follower.ProjectionDistance;
 
-                float3 direction = math.normalize(edgePoint.GetHeartDirection(edgePoint.Heart()));
-                float3 lateral = math.normalize(edgePoint.GetHeartLateral(edgePoint.Heart()));
+                float3 direction = math.normalize(edgePoint.GetSpineDirection(edgePoint.HeartOffset()));
+                float3 lateral = math.normalize(edgePoint.GetSpineLateral(edgePoint.HeartOffset()));
                 float3 normal = math.normalize(math.cross(direction, lateral));
 
                 float3 finalDirection = edgePoint.Facing > 0 ? -direction : direction;

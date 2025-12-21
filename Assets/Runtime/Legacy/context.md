@@ -5,8 +5,8 @@ Monolithic ECS runtime being hollowed out. Systems here call into clean Core/Nod
 ## Purpose
 
 - Unity DOTS ECS systems for track processing
-- Being migrated to use clean node implementations
-- Will eventually become thin adapters
+- Adapters between modern Core layer and Unity ECS
+- Uses modern naming: `HeartPosition`, `HeartArc`, `SpineArc`, `HeartOffset`
 
 ## Layout
 

@@ -67,11 +67,10 @@ namespace Tests {
         }
 
         private static float ComputeDrift(Point actual, GoldPointData expected) {
-            // Gold data uses legacy naming: position = heart position
             float maxDrift = 0f;
-            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.x - expected.position.x));
-            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.y - expected.position.y));
-            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.z - expected.position.z));
+            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.x - expected.HeartPosition.x));
+            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.y - expected.HeartPosition.y));
+            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.z - expected.HeartPosition.z));
             maxDrift = math.max(maxDrift, math.abs(actual.Velocity - expected.velocity));
             maxDrift = math.max(maxDrift, math.abs(actual.Energy - expected.energy));
             return maxDrift;
@@ -79,10 +78,10 @@ namespace Tests {
 
         private static void LogPointComparison(Point actual, GoldPointData expected, int index, int cumulativeOffset) {
             var marker = ComputeDrift(actual, expected) > BaseTolerance + TolerancePerStep * (cumulativeOffset + index) ? ">>> " : "    ";
-            UnityEngine.Debug.Log($"{marker}[{index}] Pos: ({actual.HeartPosition.x:F6}, {actual.HeartPosition.y:F6}, {actual.HeartPosition.z:F6}) vs ({expected.position.x:F6}, {expected.position.y:F6}, {expected.position.z:F6})");
+            UnityEngine.Debug.Log($"{marker}[{index}] Pos: ({actual.HeartPosition.x:F6}, {actual.HeartPosition.y:F6}, {actual.HeartPosition.z:F6}) vs ({expected.HeartPosition.x:F6}, {expected.HeartPosition.y:F6}, {expected.HeartPosition.z:F6})");
             UnityEngine.Debug.Log($"{marker}[{index}] Vel: {actual.Velocity:F6} vs {expected.velocity:F6}, diff={math.abs(actual.Velocity - expected.velocity):G6}");
             UnityEngine.Debug.Log($"{marker}[{index}] Energy: {actual.Energy:F6} vs {expected.energy:F6}, diff={math.abs(actual.Energy - expected.energy):G6}");
-            UnityEngine.Debug.Log($"{marker}[{index}] HeartArc: {actual.HeartArc:F6} vs {expected.totalLength:F6}");
+            UnityEngine.Debug.Log($"{marker}[{index}] HeartArc: {actual.HeartArc:F6} vs {expected.HeartArc:F6}");
         }
 
         private static IEnumerable<int> GetSampleIndices(int count) {
@@ -101,14 +100,13 @@ namespace Tests {
             }
         }
 
-        // Gold data uses legacy naming: position = heart position, totalHeartLength = spine arc
         public static void AssertPointMatchesGold(
             Point actual,
             GoldPointData expected,
             int index,
             float tolerance
         ) {
-            AssertFloat3(actual.HeartPosition, expected.position, "HeartPosition", index, tolerance);
+            AssertFloat3(actual.HeartPosition, expected.HeartPosition, "HeartPosition", index, tolerance);
             AssertFloat3(actual.Direction, expected.direction, "Direction", index, tolerance);
             AssertFloat3(actual.Lateral, expected.lateral, "Lateral", index, tolerance);
             AssertFloat3(actual.Normal, expected.normal, "Normal", index, tolerance);
@@ -119,11 +117,11 @@ namespace Tests {
             AssertFloat(actual.NormalForce, expected.normalForce, "NormalForce", index, tolerance);
             AssertFloat(actual.LateralForce, expected.lateralForce, "LateralForce", index, tolerance);
 
-            AssertFloat(actual.HeartArc, expected.totalLength, "HeartArc", index, tolerance);
-            AssertFloat(actual.SpineArc, expected.totalHeartLength, "SpineArc", index, tolerance);
+            AssertFloat(actual.HeartArc, expected.HeartArc, "HeartArc", index, tolerance);
+            AssertFloat(actual.SpineArc, expected.SpineArc, "SpineArc", index, tolerance);
 
             AssertFloat(actual.RollSpeed, expected.rollSpeed, "RollSpeed", index, tolerance);
-            AssertFloat(actual.HeartOffset, expected.heart, "HeartOffset", index, tolerance);
+            AssertFloat(actual.HeartOffset, expected.HeartOffset, "HeartOffset", index, tolerance);
             AssertFloat(actual.Friction, expected.friction, "Friction", index, tolerance);
             AssertFloat(actual.Resistance, expected.resistance, "Resistance", index, tolerance);
         }

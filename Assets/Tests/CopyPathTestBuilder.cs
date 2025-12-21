@@ -46,7 +46,7 @@ namespace Tests {
                 HeartOffset = ToKeyframeArray(section.inputs.keyframes?.heart, allocator),
                 Friction = ToKeyframeArray(section.inputs.keyframes?.friction, allocator),
                 Resistance = ToKeyframeArray(section.inputs.keyframes?.resistance, allocator),
-                AnchorHeart = anchorData.heart,
+                AnchorHeart = anchorData.HeartOffset,
                 AnchorFriction = anchorData.friction,
                 AnchorResistance = anchorData.resistance,
             };
