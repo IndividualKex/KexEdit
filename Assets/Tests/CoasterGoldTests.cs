@@ -184,14 +184,6 @@ namespace Tests {
                     continue;
                 }
 
-                // Skip sections with known issues (see PLAN.md Phase 1)
-                if (section.nodeType == "CopyPathSection" || section.nodeType == "ReversePathSection" ||
-                    section.nodeType == "CurvedSection" || section.nodeType == "Bridge") {
-                    UnityEngine.Debug.Log($"Skipping {section.nodeType} nodeId={section.nodeId} (needs investigation)");
-                    cumulativePoints += sectionPoints;
-                    continue;
-                }
-
                 uint nodeId = section.nodeId;
                 Assert.IsTrue(result.Paths.TryGetValue(nodeId, out var path),
                     $"No path found for nodeId {nodeId} ({section.nodeType})");

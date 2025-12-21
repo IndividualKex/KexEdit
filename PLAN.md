@@ -45,23 +45,7 @@ Before changing anything, establish tests that validate the critical integration
 
 **Remaining work:**
 
-1. **Cumulative drift investigation** - NEXT PRIORITY
-   - AllTypes: Energy drift 0.026 at index 2420 (barely exceeds tolerance 0.025)
-   - Veloci: Drift 1.02 at index 3173 (after ~8000 cumulative points)
-   - Energy = 0.5*v² + g*y, so drift from velocity or position height
-   - Investigate: Is this FP accumulation or a bug in arc/advance calculations?
-   - Key files: `ForceNode.cs` (Advance method), `Sim.cs` (UpdateEnergy)
-   - Check if heartAdvance/spineAdvance swap introduced calculation error
-
-2. **Bridge** - Skipped (known lateral force bug)
-   - Skipped via `[Ignore]` and nodeType check in gold tests
-   - LateralForce magnitude error at final point (not sign issue)
-
-3. **CurvedSection, CopyPathSection, ReversePathSection** - Skipped in test
-
-4. **Heart/Spine Naming** - Complete
-   - Renamed: SpinePosition→HeartPosition, SpineAdvance→HeartAdvance
-   - Fixed: ReverseNode preserves LateralForce (not negated)
+Address failing tests.
 
 **Test strategy:**
 ```csharp

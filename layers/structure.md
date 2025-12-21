@@ -107,6 +107,28 @@ KexEdit/
 - Systems: PascalCase with "System" suffix (e.g., `MeshGenerationSystem`)
 - UI Classes: PascalCase with context suffix (e.g., `NodeGraphView`, `TimelineController`)
 
+## Heart/Spine Coordinate System
+
+**Modern (correct) semantics:**
+- **Heart** = rider heart position (fundamental, primary coordinate)
+- **Spine** = track centerline (derived: `HeartPosition + Normal * HeartOffset`)
+
+**Gold JSON field mapping:**
+
+| Gold JSON Field       | Modern Field      | Description                        |
+|-----------------------|-------------------|------------------------------------|
+| `position`            | `HeartPosition`   | Rider heart position (fundamental) |
+| `totalLength`         | `HeartArc`        | Arc length along heart path        |
+| `totalHeartLength`    | `SpineArc`        | Arc length along spine/track       |
+| `heart`               | `HeartOffset`     | Offset from heart to spine         |
+| `frictionCompensation`| `FrictionOrigin`  | Arc where friction resets          |
+
+**Why legacy naming is "inverted":** The legacy function `GetHeartPosition(offset)` returns `Position + Normal * offset` (the SPINE position). The `position` field stores heart coordinates; the function "GetHeartPosition" computes spine coordinates.
+
+Gold test data uses legacy field names. Conversion:
+- `LegacyImporter`: converts on .kex import
+- `SimPointComparer`: maps field names when comparing test results
+
 ## Configuration
 
 - Project Settings: `ProjectSettings/` (Unity project configuration)

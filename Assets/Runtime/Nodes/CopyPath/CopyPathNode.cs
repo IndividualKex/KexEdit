@@ -55,25 +55,6 @@ namespace KexEdit.Nodes.CopyPath {
             float prevHeartOffset = anchorHeart;
             float prevFriction = anchorFriction;
 
-            if (!driven && anchor.Velocity < Sim.MIN_VELOCITY && anchor.Frame.Pitch < 0f) {
-                float centerY = anchor.Frame.SpinePosition(anchor.HeartPosition, prevHeartOffset * 0.9f).y;
-                float energy = 0.5f * Sim.MIN_VELOCITY * Sim.MIN_VELOCITY + Sim.G * centerY;
-                state = new Point(
-                    heartPosition: anchor.HeartPosition,
-                    direction: anchor.Direction,
-                    normal: anchor.Normal,
-                    lateral: anchor.Lateral,
-                    velocity: Sim.MIN_VELOCITY,
-                    energy: energy,
-                    normalForce: anchor.NormalForce,
-                    lateralForce: anchor.LateralForce,
-                    heartArc: anchor.HeartArc,
-                    spineArc: anchor.SpineArc,
-                    heartAdvance: anchor.HeartAdvance,
-                    frictionOrigin: anchor.HeartArc
-                );
-            }
-
             while (distance < endDistance) {
                 if (iters++ > MAX_ITERATIONS) break;
 
@@ -135,7 +116,7 @@ namespace KexEdit.Nodes.CopyPath {
                 distance += expectedAdvancement;
 
                 float centerY = currFrame.SpinePosition(position, heartOffsetVal * 0.9f).y;
-                float frictionDistance = heartArc - state.FrictionOrigin;
+                float frictionDistance = heartArc - prev.FrictionOrigin;
 
                 float newEnergy, newVelocity;
                 if (driven) {
