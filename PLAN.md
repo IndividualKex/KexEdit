@@ -38,50 +38,38 @@
 - ✅ Fixed CurvedSection scalar port values
 - ✅ Fixed ReversePathNode arc recalculation
 
-**Remaining issues:**
+**Next step: Verify Heart/Spine naming consistency**
+
+Before fixing remaining issues, verify naming is correct and consistent everywhere:
+
+1. **Verify modern code uses correct semantics:**
+   - `HeartPosition` = rider heart position (fundamental, primary coordinate)
+   - `SpinePosition` = track centerline = `HeartPosition + Normal * HeartOffset`
+   - `HeartArc` = cumulative distance along heart path
+   - `SpineArc` = cumulative distance along spine path
+   - `HeartAdvance` = per-step distance along heart path
+   - `FrictionOrigin` = arc position where friction was last reset
+
+2. **Verify gold data loading corrects legacy naming:**
+   - Legacy code had INVERTED naming (GetHeartPosition returned spine position)
+   - Gold JSON uses legacy field names but stores correct semantic values
+   - `GoldDataLoader` / `SimPointComparer` must map legacy names to correct modern names
+   - Document this mapping explicitly in `Tests/context.md`
+
+3. **Audit all node types for consistent naming:**
+   - CopyPathNode, ForceNode, GeometricNode, BridgeNode, etc.
+   - Ensure `heartAdvance` vs `spineAdvance` are calculated and used correctly
+
+**Remaining issues (blocked on naming verification):**
 
 #### 1. CopyPath velocity divergence (AllTypes test)
-- **Symptom**: Evaluator produces 371 points, gold expects 359 points (section nodeId=1143449546)
-- **Root cause**: Legacy friction origin reset behavior when velocity drops to 0 on downhill
-
-**Legacy behavior (BuildCopyPathSectionSystem.cs):**
-```csharp
-else if (prev.Velocity < MIN_VELOCITY) {
-    if (pitch < -EPSILON) {
-        prev.SetVelocity(MIN_VELOCITY, true);  // resetFriction=true
-    }
-}
-```
-
-When `SetVelocity(velocity, resetFriction=true)`:
-1. `FrictionCompensation = TotalLength` (reset to current arc position)
-2. `Energy = ComputeEnergy()` (recalculates with friction distance = 0)
-
-**Energy formula:**
-```csharp
-energy = 0.5f * velocity² + G * centerY + G * (TotalLength - FrictionCompensation) * friction
-```
-
-After friction reset, `TotalLength - FrictionCompensation = 0`, so friction PE is lost.
-
-**Gold data example (section 2, CopyPath with anchor velocity=0):**
-- Point 0: vel=0, energy=775.43, frictionComp=83.35
-- Point 1: vel=0, energy=764.91, frictionComp=134.44 (ENERGY DROP - friction reset happened)
-- Points 2+: velocity climbs from 0.011 to 0.121 as track descends
-
-**Current CopyPathNode.cs behavior:**
-- Lines 71-79: Calls `prev.WithVelocity(MIN_VELOCITY, ..., true)` which should reset friction
-- Line 148: Uses `prev.FrictionOrigin` when creating new state
-
-**Investigation needed:**
-- Verify `Point.WithVelocity()` correctly sets `newFrictionOrigin = HeartArc` (line 135)
-- Trace energy calculation through `Sim.UpdateEnergy()`
-- Compare point-by-point velocity progression
+- Evaluator produces 371 points, gold expects 359 points
+- Likely caused by naming confusion in arc/advance calculations
+- Verify friction uses correct arc type after naming audit
 
 #### 2. Veloci test - cumulative drift
-- First 5 sections pass
-- ForceSection 2 begins drifting
-- Blocked pending CopyPath fix
+- First 5 sections pass, ForceSection 2 begins drifting
+- Blocked pending naming verification and CopyPath fix
 
 #### 3. Bridge lateral force calculation
 - Separate bug in Bridge section physics

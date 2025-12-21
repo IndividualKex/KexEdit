@@ -39,30 +39,47 @@ Tests/
 **Rust backend**: `./run-tests.sh --rust-backend`
 **Unity Editor**: Window → General → Test Runner
 
-## Legacy vs Modern Naming Convention
+## Heart/Spine Naming Convention
 
-The legacy implementation (origin/dev) uses inverted naming for heart/spine concepts.
+**CRITICAL: Legacy code had INVERTED naming. Gold data uses legacy names. Modern code uses correct names.**
 
-**Modern (correct) semantics:**
-- **Heart** = rider heart position (fundamental, primary coordinate)
-- **Spine** = track centerline (derived: `HeartPosition + Normal * HeartOffset`)
+### Modern (correct) semantics - used everywhere in modern code:
 
-**Gold JSON field mapping:**
+| Term | Definition |
+|------|------------|
+| `HeartPosition` | Rider heart position (fundamental, primary coordinate) |
+| `SpinePosition` | Track centerline = `HeartPosition + Normal * HeartOffset` |
+| `HeartArc` | Cumulative distance along heart path |
+| `SpineArc` | Cumulative distance along spine path |
+| `HeartAdvance` | Per-step distance along heart path |
+| `FrictionOrigin` | HeartArc position where friction was last reset |
 
-| Gold JSON Field      | Modern Field      | Description                           |
-|----------------------|-------------------|---------------------------------------|
-| `position`           | `HeartPosition`   | Rider heart position (fundamental)    |
-| `totalLength`        | `HeartArc`        | Arc length along heart path           |
-| `totalHeartLength`   | `SpineArc`        | Arc length along spine/track path     |
-| `heart`              | `HeartOffset`     | Offset from heart to spine            |
-| `frictionCompensation`| `FrictionOrigin` | Arc position where friction resets    |
+### Gold JSON uses legacy names - MUST be remapped on load:
 
-**Why "inverted":** The legacy code's function `GetHeartPosition(offset)` confusingly returns `Position + Normal * offset`, which is actually the SPINE position. The field named `position` stores heart coordinates; the function named "GetHeartPosition" computes spine coordinates.
+| Gold JSON Field (legacy) | Modern Field | Why confusing |
+|--------------------------|--------------|---------------|
+| `position` | `HeartPosition` | Correct - stores heart position |
+| `totalLength` | `HeartArc` | INVERTED - legacy `TotalLength` was calculated from GetHeartPosition (which returned spine!) |
+| `totalHeartLength` | `SpineArc` | INVERTED - legacy `TotalHeartLength` was calculated from Position (which was heart!) |
+| `heart` | `HeartOffset` | Correct |
+| `frictionCompensation` | `FrictionOrigin` | Correct |
 
-**Gold data conversion:**
-- Gold JSON `position` field IS the heart position (no conversion needed for position)
-- `SimPointComparer` maps field names when comparing (e.g., `totalLength` → `HeartArc`)
-- `LegacyImporter` handles naming at .kex import time
+### Why legacy naming was inverted:
+
+Legacy function `GetHeartPosition(offset)` returned `Position + Normal * offset` = SPINE position.
+Legacy field `Position` stored heart coordinates.
+So legacy `TotalLength` (accumulated from GetHeartPosition distances) was actually SPINE arc.
+And legacy `TotalHeartLength` (accumulated from Position distances) was actually HEART arc.
+
+### Where conversion happens:
+
+- `GoldDataLoader.cs` - Loads JSON with legacy field names
+- `SimPointComparer.cs` - Maps legacy JSON fields to modern Point fields for comparison
+- `LegacyImporter.cs` - Handles naming at .kex import time
+
+### Verification:
+
+Modern code must use correct semantics consistently. The ONLY place legacy naming should appear is when loading gold data or legacy files.
 
 ## Dependencies
 

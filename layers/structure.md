@@ -109,25 +109,35 @@ KexEdit/
 
 ## Heart/Spine Coordinate System
 
-**Modern (correct) semantics:**
-- **Heart** = rider heart position (fundamental, primary coordinate)
-- **Spine** = track centerline (derived: `HeartPosition + Normal * HeartOffset`)
+**CRITICAL: Legacy code had INVERTED naming. Gold data uses legacy names. Modern code uses correct names.**
 
-**Gold JSON field mapping:**
+**Modern (correct) semantics - used everywhere in modern code:**
 
-| Gold JSON Field       | Modern Field      | Description                        |
-|-----------------------|-------------------|------------------------------------|
-| `position`            | `HeartPosition`   | Rider heart position (fundamental) |
-| `totalLength`         | `HeartArc`        | Arc length along heart path        |
-| `totalHeartLength`    | `SpineArc`        | Arc length along spine/track       |
-| `heart`               | `HeartOffset`     | Offset from heart to spine         |
-| `frictionCompensation`| `FrictionOrigin`  | Arc where friction resets          |
+| Term | Definition |
+|------|------------|
+| `HeartPosition` | Rider heart position (fundamental, primary coordinate) |
+| `SpinePosition` | Track centerline = `HeartPosition + Normal * HeartOffset` |
+| `HeartArc` | Cumulative distance along heart path |
+| `SpineArc` | Cumulative distance along spine path |
+| `HeartAdvance` | Per-step distance along heart path |
+| `FrictionOrigin` | HeartArc position where friction was last reset |
 
-**Why legacy naming is "inverted":** The legacy function `GetHeartPosition(offset)` returns `Position + Normal * offset` (the SPINE position). The `position` field stores heart coordinates; the function "GetHeartPosition" computes spine coordinates.
+**Gold JSON uses legacy names - remapped on load:**
 
-Gold test data uses legacy field names. Conversion:
-- `LegacyImporter`: converts on .kex import
-- `SimPointComparer`: maps field names when comparing test results
+| Gold JSON (legacy) | Modern Field | Notes |
+|--------------------|--------------|-------|
+| `position` | `HeartPosition` | Correct |
+| `totalLength` | `HeartArc` | INVERTED in legacy |
+| `totalHeartLength` | `SpineArc` | INVERTED in legacy |
+| `heart` | `HeartOffset` | Correct |
+| `frictionCompensation` | `FrictionOrigin` | Correct |
+
+**Why "inverted":** Legacy `GetHeartPosition(offset)` returned spine position. Legacy `TotalLength` accumulated spine distances. Legacy `TotalHeartLength` accumulated heart distances. The names were backwards.
+
+**Conversion points:**
+- `LegacyImporter`: .kex import
+- `SimPointComparer`: gold data comparison
+- See `Tests/context.md` for detailed explanation
 
 ## Configuration
 
