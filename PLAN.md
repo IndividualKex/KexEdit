@@ -29,43 +29,65 @@
 
 ### Phase 1: Parity Tests (Test-First Foundation)
 
-Before changing anything, establish tests that validate the critical integration point.
-
 **Status: In Progress**
 
 **Completed:**
+- ✅ `Shuttle_LoadAndEvaluate_MatchesGoldData` passes (2725 points)
 - ✅ Extended `CoasterGoldTests.cs` with point-by-point parity checking using `SimPointComparer`
 - ✅ Fixed driven velocity mode
 - ✅ Fixed CurvedSection scalar port values
 - ✅ Fixed ReversePathNode arc recalculation
-- ✅ Verified naming convention mapping (gold→modern) is correct in test infrastructure
 
-**Failing tests:**
-- `AllTypes_LoadAndEvaluate_MatchesGoldData` - CopyPath point count mismatch (463 vs 359)
-- `Shuttle_LoadAndEvaluate_MatchesGoldData` - CopyPath point count mismatch (317 vs 320)
+**Remaining issues:**
 
-**Investigation findings:**
-- Node-level CopyPath tests pass (`CopyPathNodeTests`) - the node logic is correct
-- Integration tests fail because CoasterEvaluator provides a different source path
-- Gold data includes pre-computed `sourcePath` from legacy system
-- CoasterEvaluator uses evaluated upstream node output as source path
-- The evaluated source path differs from gold's expected source path
+#### 1. CopyPath velocity divergence (AllTypes test)
+- **Symptom**: Evaluator produces 371 points, gold expects 359 points (section nodeId=1143449546)
+- **Root cause**: Legacy friction origin reset behavior when velocity drops to 0 on downhill
 
-**Next steps:**
-1. Compare CoasterEvaluator's evaluated source path length vs gold's `sourcePath` length
-2. Determine if upstream node (ReversePath?) produces different output
-3. Check if graph wiring/port resolution in CoasterEvaluator matches legacy
-
-**Test strategy:**
+**Legacy behavior (BuildCopyPathSectionSystem.cs):**
 ```csharp
-// For each gold coaster:
-// 1. Load .kex → LegacyImport → Coaster
-// 2. Run CoasterEvaluator.Evaluate()
-// 3. Compare against gold JSON point data
-// 4. Assert physics parity (position, velocity, forces within epsilon)
+else if (prev.Velocity < MIN_VELOCITY) {
+    if (pitch < -EPSILON) {
+        prev.SetVelocity(MIN_VELOCITY, true);  // resetFriction=true
+    }
+}
 ```
 
-**Acceptance:**
+When `SetVelocity(velocity, resetFriction=true)`:
+1. `FrictionCompensation = TotalLength` (reset to current arc position)
+2. `Energy = ComputeEnergy()` (recalculates with friction distance = 0)
+
+**Energy formula:**
+```csharp
+energy = 0.5f * velocity² + G * centerY + G * (TotalLength - FrictionCompensation) * friction
+```
+
+After friction reset, `TotalLength - FrictionCompensation = 0`, so friction PE is lost.
+
+**Gold data example (section 2, CopyPath with anchor velocity=0):**
+- Point 0: vel=0, energy=775.43, frictionComp=83.35
+- Point 1: vel=0, energy=764.91, frictionComp=134.44 (ENERGY DROP - friction reset happened)
+- Points 2+: velocity climbs from 0.011 to 0.121 as track descends
+
+**Current CopyPathNode.cs behavior:**
+- Lines 71-79: Calls `prev.WithVelocity(MIN_VELOCITY, ..., true)` which should reset friction
+- Line 148: Uses `prev.FrictionOrigin` when creating new state
+
+**Investigation needed:**
+- Verify `Point.WithVelocity()` correctly sets `newFrictionOrigin = HeartArc` (line 135)
+- Trace energy calculation through `Sim.UpdateEnergy()`
+- Compare point-by-point velocity progression
+
+#### 2. Veloci test - cumulative drift
+- First 5 sections pass
+- ForceSection 2 begins drifting
+- Blocked pending CopyPath fix
+
+#### 3. Bridge lateral force calculation
+- Separate bug in Bridge section physics
+- Blocked pending other fixes
+
+**Acceptance criteria:**
 - All gold coasters pass point-by-point parity check
 - CoasterEvaluator output matches Build*System output for same inputs
 
@@ -259,11 +281,14 @@ Remove scaffolding and update documentation.
 |------|-------|
 | Coaster aggregate | `Assets/Runtime/Coaster/Coaster.cs` |
 | Coaster evaluator | `Assets/Runtime/Coaster/CoasterEvaluator.cs` |
-| Sync system (new) | `Assets/Runtime/Legacy/Track/Systems/CoasterSyncSystem.cs` |
-| Entity reference (new) | `Assets/Runtime/Legacy/Track/Components/CoasterReference.cs` |
-| UI control | `Assets/Scripts/UI/NodeGraph/Systems/NodeGraphControlSystem.cs` |
-| Graph extensions | `Assets/Runtime/NodeGraph/TypedGraphExtensions.cs` |
-| Point buffer | `Assets/Runtime/Legacy/Track/Components/CorePointBuffer.cs` |
+| CopyPath node | `Assets/Runtime/Nodes/CopyPath/CopyPathNode.cs` |
+| Point struct | `Assets/Runtime/Core/Point.cs` |
+| Sim utilities | `Assets/Runtime/Core/Sim.cs` |
+| Gold tests | `Assets/Tests/CoasterGoldTests.cs` |
+| Point comparer | `Assets/Tests/SimPointComparer.cs` |
+| Legacy CopyPath | `origin/dev:Assets/Runtime/Scripts/Track/Systems/BuildCopyPathSectionSystem.cs` |
+| Legacy PointData | `origin/dev:Assets/Runtime/Scripts/Track/Components/PointData.cs` |
+| Legacy Extensions | `origin/dev:Assets/Runtime/Scripts/Core/Extensions.cs` (ComputeEnergy) |
 
 ## Data Flow Diagram
 
