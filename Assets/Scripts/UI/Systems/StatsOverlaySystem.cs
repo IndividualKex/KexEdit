@@ -367,9 +367,9 @@ namespace KexEdit.UI {
         }
 
         private void UpdateLabels(PointData point) {
-            UpdateLabelIfChanged("pos_x", StatsFormatter.FormatPositionX(point.Position.x));
-            UpdateLabelIfChanged("pos_y", StatsFormatter.FormatPositionY(point.Position.y));
-            UpdateLabelIfChanged("pos_z", StatsFormatter.FormatPositionZ(point.Position.z));
+            UpdateLabelIfChanged("pos_x", StatsFormatter.FormatPositionX(point.HeartPosition.x));
+            UpdateLabelIfChanged("pos_y", StatsFormatter.FormatPositionY(point.HeartPosition.y));
+            UpdateLabelIfChanged("pos_z", StatsFormatter.FormatPositionZ(point.HeartPosition.z));
 
             UpdateLabelIfChanged("roll", StatsFormatter.FormatRoll(point.Roll));
             UpdateLabelIfChanged("pitch", StatsFormatter.FormatPitch(point.GetPitch()));
@@ -519,7 +519,7 @@ namespace KexEdit.UI {
             PointData frontPoint = points[frontIndex].ToPointData();
             PointData backPoint = points[frontIndex + 1].ToPointData();
 
-            result.Position = math.lerp(frontPoint.Position, backPoint.Position, t);
+            result.HeartPosition = math.lerp(frontPoint.HeartPosition, backPoint.HeartPosition, t);
             result.Direction = math.normalize(math.lerp(frontPoint.Direction, backPoint.Direction, t));
             result.Lateral = math.normalize(math.lerp(frontPoint.Lateral, backPoint.Lateral, t));
             result.Normal = math.normalize(math.lerp(frontPoint.Normal, backPoint.Normal, t));
@@ -531,7 +531,7 @@ namespace KexEdit.UI {
             result.PitchFromLast = math.lerp(frontPoint.PitchFromLast, backPoint.PitchFromLast, t);
             result.YawFromLast = math.lerp(frontPoint.YawFromLast, backPoint.YawFromLast, t);
             result.Energy = math.lerp(frontPoint.Energy, backPoint.Energy, t);
-            result.Heart = math.lerp(frontPoint.Heart, backPoint.Heart, t);
+            result.HeartOffset = math.lerp(frontPoint.HeartOffset, backPoint.HeartOffset, t);
             result.Friction = math.lerp(frontPoint.Friction, backPoint.Friction, t);
             result.Resistance = math.lerp(frontPoint.Resistance, backPoint.Resistance, t);
             result.Facing = frontPoint.Facing;
@@ -594,7 +594,7 @@ namespace KexEdit.UI {
                 }
             }
 
-            result.Position = math.lerp(frontPoint.Position, backPoint.Position, t);
+            result.HeartPosition = math.lerp(frontPoint.HeartPosition, backPoint.HeartPosition, t);
             result.Direction = math.normalize(math.lerp(frontPoint.Direction, backPoint.Direction, t));
             result.Lateral = math.normalize(math.lerp(frontPoint.Lateral, backPoint.Lateral, t));
             result.Normal = math.normalize(math.lerp(frontPoint.Normal, backPoint.Normal, t));
@@ -606,16 +606,16 @@ namespace KexEdit.UI {
             result.PitchFromLast = math.lerp(frontPoint.PitchFromLast, backPoint.PitchFromLast, t);
             result.YawFromLast = math.lerp(frontPoint.YawFromLast, backPoint.YawFromLast, t);
             result.Energy = math.lerp(frontPoint.Energy, backPoint.Energy, t);
-            result.Heart = math.lerp(frontPoint.Heart, backPoint.Heart, t);
+            result.HeartOffset = math.lerp(frontPoint.HeartOffset, backPoint.HeartOffset, t);
             result.Friction = math.lerp(frontPoint.Friction, backPoint.Friction, t);
             result.Resistance = math.lerp(frontPoint.Resistance, backPoint.Resistance, t);
             result.Facing = frontPoint.Facing;
         }
 
         private bool PointsEqual(PointData a, PointData b) {
-            return math.abs(a.Position.x - b.Position.x) < 0.01f &&
-                   math.abs(a.Position.y - b.Position.y) < 0.01f &&
-                   math.abs(a.Position.z - b.Position.z) < 0.01f &&
+            return math.abs(a.HeartPosition.x - b.HeartPosition.x) < 0.01f &&
+                   math.abs(a.HeartPosition.y - b.HeartPosition.y) < 0.01f &&
+                   math.abs(a.HeartPosition.z - b.HeartPosition.z) < 0.01f &&
                    math.abs(a.Roll - b.Roll) < 0.1f &&
                    math.abs(a.Velocity - b.Velocity) < 0.01f &&
                    math.abs(a.NormalForce - b.NormalForce) < 0.001f &&

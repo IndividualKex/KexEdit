@@ -135,7 +135,7 @@ namespace KexEdit.UI {
                 };
 
                 foreach (var idx in indices) {
-                    var pos = pointBuffer[idx].Position();
+                    var pos = pointBuffer[idx].HeartPosition();
                     if (pos.x < minX) minX = pos.x;
                     if (pos.x > maxX) maxX = pos.x;
                     if (pos.y < minY) minY = pos.y;

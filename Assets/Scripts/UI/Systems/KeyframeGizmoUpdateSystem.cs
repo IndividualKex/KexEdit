@@ -389,12 +389,12 @@ namespace KexEdit.UI {
                 float4 visualizationData = new(propertyColor.x, propertyColor.y, propertyColor.z, selected ? 1f : 0f);
 
                 if (index == nextIndex) {
-                    worldPosition = points[index].Position();
+                    worldPosition = points[index].HeartPosition();
                 }
                 else {
                     float t = position - index;
-                    float3 p0 = points[index].Position();
-                    float3 p1 = points[nextIndex].Position();
+                    float3 p0 = points[index].HeartPosition();
+                    float3 p1 = points[nextIndex].HeartPosition();
                     worldPosition = math.lerp(p0, p1, t);
                 }
 
@@ -418,11 +418,11 @@ namespace KexEdit.UI {
                 var pointBuffer = PointLookup[section];
                 if (pointBuffer.Length < 2) return 0f;
 
-                float targetDistance = anchor.Value.TotalLength + time;
+                float targetDistance = anchor.Value.HeartArc + time;
 
                 for (int i = 0; i < pointBuffer.Length - 1; i++) {
-                    float currentDistance = pointBuffer[i].TotalLength();
-                    float nextDistance = pointBuffer[i + 1].TotalLength();
+                    float currentDistance = pointBuffer[i].HeartArc();
+                    float nextDistance = pointBuffer[i + 1].HeartArc();
                     if (targetDistance >= currentDistance && targetDistance <= nextDistance) {
                         float t = (nextDistance - currentDistance) > 0 ?
                             (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;

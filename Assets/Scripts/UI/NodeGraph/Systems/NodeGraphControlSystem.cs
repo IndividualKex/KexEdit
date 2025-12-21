@@ -539,7 +539,7 @@ namespace KexEdit.UI.NodeGraph {
             var anchorInputBuffer = SystemAPI.GetBuffer<InputPortReference>(node);
 
             ref var positionPort = ref SystemAPI.GetComponentRW<PositionPort>(anchorInputBuffer[0].Value).ValueRW;
-            positionPort.Value = anchor.Position;
+            positionPort.Value = anchor.HeartPosition;
 
             ref var rollPort = ref SystemAPI.GetComponentRW<RollPort>(anchorInputBuffer[1].Value).ValueRW;
             rollPort.Value = anchor.Roll;
@@ -554,7 +554,7 @@ namespace KexEdit.UI.NodeGraph {
             velocityPortRW.Value = anchor.Velocity;
 
             ref var heartPortRW = ref SystemAPI.GetComponentRW<HeartPort>(anchorInputBuffer[5].Value).ValueRW;
-            heartPortRW.Value = anchor.Heart;
+            heartPortRW.Value = anchor.HeartOffset;
 
             ref var frictionPortRW = ref SystemAPI.GetComponentRW<FrictionPort>(anchorInputBuffer[6].Value).ValueRW;
             frictionPortRW.Value = anchor.Friction;

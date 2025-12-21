@@ -232,11 +232,11 @@ namespace KexEdit.UI.Timeline {
                     return;
                 }
                 else {
-                    float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
+                    float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.HeartArc;
                     float targetDistance = anchorLength + _data.Time;
                     for (int i = 0; i < pointBuffer.Length - 1; i++) {
-                        float currentDistance = pointBuffer[i].TotalLength();
-                        float nextDistance = pointBuffer[i + 1].TotalLength();
+                        float currentDistance = pointBuffer[i].HeartArc();
+                        float nextDistance = pointBuffer[i + 1].HeartArc();
                         if (targetDistance >= currentDistance && targetDistance < nextDistance) {
                             float t = (nextDistance - currentDistance) > 0 ?
                                 (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;
@@ -432,13 +432,13 @@ namespace KexEdit.UI.Timeline {
                 if (Points.Length == 0) return;
                 Times.Clear();
                 Times.ResizeUninitialized(Points.Length);
-                float startLength = Points[0].TotalLength();
+                float startLength = Points[0].HeartArc();
                 for (int i = 0; i < Points.Length; i++) {
                     if (DurationType == DurationType.Time) {
                         Times[i] = i / HZ;
                     }
                     else {
-                        Times[i] = Points[i].TotalLength() - startLength;
+                        Times[i] = Points[i].HeartArc() - startLength;
                     }
                 }
             }
@@ -969,7 +969,7 @@ namespace KexEdit.UI.Timeline {
                 return time * HZ;
             }
 
-            float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
+            float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.HeartArc;
             return DistanceToTrainPosition(anchorLength + time);
         }
 
@@ -988,8 +988,8 @@ namespace KexEdit.UI.Timeline {
             int index = math.clamp((int)math.floor(trainPosition), 0, pointBuffer.Length - 2);
             float t = trainPosition - index;
 
-            float distance = math.lerp(pointBuffer[index].TotalLength(), pointBuffer[index + 1].TotalLength(), t);
-            float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
+            float distance = math.lerp(pointBuffer[index].HeartArc(), pointBuffer[index + 1].HeartArc(), t);
+            float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.HeartArc;
             return distance - anchorLength;
         }
 
@@ -1001,13 +1001,13 @@ namespace KexEdit.UI.Timeline {
             var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (pointBuffer.Length < 2) return 0f;
 
-            if (targetDistance < pointBuffer[0].TotalLength()) {
+            if (targetDistance < pointBuffer[0].HeartArc()) {
                 return 0f;
             }
 
             for (int i = 0; i < pointBuffer.Length - 1; i++) {
-                float currentDistance = pointBuffer[i].TotalLength();
-                float nextDistance = pointBuffer[i + 1].TotalLength();
+                float currentDistance = pointBuffer[i].HeartArc();
+                float nextDistance = pointBuffer[i + 1].HeartArc();
                 if (targetDistance >= currentDistance && targetDistance < nextDistance) {
                     float t = (nextDistance - currentDistance) > 0 ?
                         (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;
@@ -1613,9 +1613,9 @@ namespace KexEdit.UI.Timeline {
                         TargetValueType.Roll => timelinePoint.Roll,
                         TargetValueType.Pitch => timelinePoint.GetPitch(),
                         TargetValueType.Yaw => timelinePoint.GetYaw(),
-                        TargetValueType.X => timelinePoint.Position.x,
-                        TargetValueType.Y => timelinePoint.Position.y,
-                        TargetValueType.Z => timelinePoint.Position.z,
+                        TargetValueType.X => timelinePoint.HeartPosition.x,
+                        TargetValueType.Y => timelinePoint.HeartPosition.y,
+                        TargetValueType.Z => timelinePoint.HeartPosition.z,
                         TargetValueType.NormalForce => timelinePoint.NormalForce,
                         TargetValueType.LateralForce => timelinePoint.LateralForce,
                         _ => throw new NotImplementedException()
@@ -1670,7 +1670,7 @@ namespace KexEdit.UI.Timeline {
                     position = time * HZ;
                 }
                 else {
-                    float targetDistance = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength + time;
+                    float targetDistance = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.HeartArc + time;
                     position = DistanceToTrainPosition(targetDistance);
                 }
             }

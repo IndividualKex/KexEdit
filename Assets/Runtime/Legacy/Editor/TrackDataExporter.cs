@@ -185,7 +185,7 @@ namespace KexEdit.Legacy.Editor {
                 }
                 section.Outputs.PointCount = points.Length;
                 if (points.Length > 0) {
-                    section.Outputs.TotalLength = points[^1].TotalLength();
+                    section.Outputs.TotalLength = points[^1].HeartArc();
                 }
             }
 
@@ -374,15 +374,15 @@ namespace KexEdit.Legacy.Editor {
         }
 
         private static TrackDataPoint ToPointDataDto(PointData p) {
-            float effectiveFrictionDistance = p.TotalLength - p.FrictionCompensation;
-            float center = p.Heart * 0.9f;
-            float centerY = p.Position.y + p.Normal.y * center;
+            float effectiveFrictionDistance = p.HeartArc - p.FrictionOrigin;
+            float center = p.HeartOffset * 0.9f;
+            float centerY = p.HeartPosition.y + p.Normal.y * center;
             float kineticEnergy = 0.5f * p.Velocity * p.Velocity;
             float gravitationalPE = Constants.G * centerY;
             float frictionPE = Constants.G * effectiveFrictionDistance * p.Friction;
 
             return new TrackDataPoint {
-                Position = ToVec3(p.Position),
+                Position = ToVec3(p.HeartPosition),
                 Direction = ToVec3(p.Direction),
                 Lateral = ToVec3(p.Lateral),
                 Normal = ToVec3(p.Normal),
@@ -391,16 +391,16 @@ namespace KexEdit.Legacy.Editor {
                 Energy = p.Energy,
                 NormalForce = p.NormalForce,
                 LateralForce = p.LateralForce,
-                DistanceFromLast = p.DistanceFromLast,
-                HeartDistanceFromLast = p.HeartDistanceFromLast,
+                DistanceFromLast = p.HeartAdvance,
+                HeartDistanceFromLast = p.SpineAdvance,
                 AngleFromLast = p.AngleFromLast,
                 PitchFromLast = p.PitchFromLast,
                 YawFromLast = p.YawFromLast,
                 RollSpeed = p.RollSpeed,
-                TotalLength = p.TotalLength,
-                TotalHeartLength = p.TotalHeartLength,
-                FrictionCompensation = p.FrictionCompensation,
-                Heart = p.Heart,
+                TotalLength = p.HeartArc,
+                TotalHeartLength = p.SpineArc,
+                FrictionCompensation = p.FrictionOrigin,
+                Heart = p.HeartOffset,
                 Friction = p.Friction,
                 Resistance = p.Resistance,
                 Facing = p.Facing,
