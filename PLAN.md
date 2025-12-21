@@ -64,8 +64,8 @@ Migrate from legacy inverted naming to modern semantic naming where heart is the
 |-------------------|-------------------|---------|
 | Position | HeartPosition | Primary coordinate (heart line) |
 | TotalLength | HeartArc | Cumulative arc length along heart |
-| DistanceFromLast | SpineAdvance | Distance between spine points |
-| HeartDistanceFromLast | HeartAdvance | Distance between heart points |
+| HeartDistanceFromLast | SpineAdvance | Distance between spine points |
+| DistanceFromLast | HeartAdvance | Distance between heart points |
 | TotalHeartLength | SpineArc | Cumulative arc length along spine |
 | FrictionCompensation | FrictionOrigin | Arc length where friction starts |
 | Heart | HeartOffset | Perpendicular offset from heart to spine |
