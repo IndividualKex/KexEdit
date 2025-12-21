@@ -27,43 +27,6 @@
 
 ## Migration Phases
 
-### Phase 0: Naming Convention Cleanup
-
-**Status: ✅ Complete**
-
-Migrate from legacy inverted naming to modern semantic naming where heart is the primary coordinate and spine is derived.
-
-**Completed:**
-- ✅ Renamed `PointData` struct fields to modern conventions
-- ✅ Renamed `PointData` extension methods (`GetSpinePosition`, `GetSpineDirection`, `GetSpineLateral`)
-- ✅ Renamed `CorePointBuffer` extension methods (`HeartPosition()`, `HeartArc()`, `SpineArc()`, etc.)
-- ✅ Updated all Runtime/Legacy systems (Physics, Track, Trains, Visualization, Persistence)
-- ✅ Updated Node implementations and test builders
-- ✅ Fixed gold data test comparisons in `PointComparer.cs` and `SimPointComparer.cs`
-- ✅ Updated UI layer (TimelineControlSystem, StatsOverlaySystem, KeyframeGizmoUpdateSystem, NodeGraphControlSystem, GameViewControlSystem)
-- ✅ Updated TrackDataExporter for legacy .kex export
-- ✅ Updated test helpers (ForceSectionEntityBuilder)
-- ✅ All compiler errors resolved
-- ✅ Modern accessor pattern used consistently throughout codebase
-
-**Naming reference:**
-
-| Legacy (Inverted) | Modern (Semantic) | Meaning |
-|-------------------|-------------------|---------|
-| Position | HeartPosition | Primary coordinate (heart line) |
-| TotalLength | HeartArc | Cumulative arc length along heart |
-| HeartDistanceFromLast | SpineAdvance | Distance between spine points |
-| DistanceFromLast | HeartAdvance | Distance between heart points |
-| TotalHeartLength | SpineArc | Cumulative arc length along spine |
-| FrictionCompensation | FrictionOrigin | Arc length where friction starts |
-| Heart | HeartOffset | Perpendicular offset from heart to spine |
-
-**Acceptance criteria:**
-- All compiler errors resolved
-- All tests pass
-- No direct access to `GoldPointData` legacy fields outside `GoldDataTypes.cs`
-- Modern accessor pattern used throughout codebase
-
 ### Phase 1: Parity Tests (Test-First Foundation)
 
 **Status: In Progress**

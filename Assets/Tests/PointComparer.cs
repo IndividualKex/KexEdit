@@ -40,9 +40,9 @@ namespace Tests {
 
         private static float ComputeDrift(PointData actual, GoldPointData expected) {
             float maxDrift = 0f;
-            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.x - expected.HeartPosition.x));
-            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.y - expected.HeartPosition.y));
-            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.z - expected.HeartPosition.z));
+            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.x - expected.heartPosition.x));
+            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.y - expected.heartPosition.y));
+            maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.z - expected.heartPosition.z));
             maxDrift = math.max(maxDrift, math.abs(actual.Velocity - expected.velocity));
             maxDrift = math.max(maxDrift, math.abs(actual.Energy - expected.energy));
             return maxDrift;
@@ -73,7 +73,7 @@ namespace Tests {
             int index,
             float tolerance = BaseTolerance
         ) {
-            AssertFloat3(actual.HeartPosition, expected.HeartPosition, "HeartPosition", index, tolerance);
+            AssertFloat3(actual.HeartPosition, expected.heartPosition, "HeartPosition", index, tolerance);
             AssertFloat3(actual.Direction, expected.direction, "Direction", index, tolerance);
             AssertFloat3(actual.Lateral, expected.lateral, "Lateral", index, tolerance);
             AssertFloat3(actual.Normal, expected.normal, "Normal", index, tolerance);
@@ -83,18 +83,18 @@ namespace Tests {
             AssertFloat(actual.NormalForce, expected.normalForce, "NormalForce", index, tolerance);
             AssertFloat(actual.LateralForce, expected.lateralForce, "LateralForce", index, tolerance);
 
-            AssertFloat(actual.HeartAdvance, expected.HeartAdvance, "HeartAdvance", index, tolerance);
-            AssertFloat(actual.SpineAdvance, expected.SpineAdvance, "SpineAdvance", index, tolerance);
+            AssertFloat(actual.HeartAdvance, expected.heartAdvance, "HeartAdvance", index, tolerance);
+            AssertFloat(actual.SpineAdvance, expected.spineAdvance, "SpineAdvance", index, tolerance);
             AssertFloat(actual.AngleFromLast, expected.angleFromLast, "AngleFromLast", index, tolerance);
             AssertFloat(actual.PitchFromLast, expected.pitchFromLast, "PitchFromLast", index, tolerance);
             AssertFloat(actual.YawFromLast, expected.yawFromLast, "YawFromLast", index, tolerance);
             AssertFloat(actual.RollSpeed, expected.rollSpeed, "RollSpeed", index, tolerance);
 
-            AssertFloat(actual.HeartArc, expected.HeartArc, "HeartArc", index, tolerance);
-            AssertFloat(actual.SpineArc, expected.SpineArc, "SpineArc", index, tolerance);
-            AssertFloat(actual.FrictionOrigin, expected.FrictionOrigin, "FrictionOrigin", index, tolerance);
+            AssertFloat(actual.HeartArc, expected.heartArc, "HeartArc", index, tolerance);
+            AssertFloat(actual.SpineArc, expected.spineArc, "SpineArc", index, tolerance);
+            AssertFloat(actual.FrictionOrigin, expected.frictionOrigin, "FrictionOrigin", index, tolerance);
 
-            AssertFloat(actual.HeartOffset, expected.HeartOffset, "HeartOffset", index, tolerance);
+            AssertFloat(actual.HeartOffset, expected.heartOffset, "HeartOffset", index, tolerance);
             AssertFloat(actual.Friction, expected.friction, "Friction", index, tolerance);
             AssertFloat(actual.Resistance, expected.resistance, "Resistance", index, tolerance);
 

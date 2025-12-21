@@ -41,45 +41,16 @@ Tests/
 
 ## Heart/Spine Naming Convention
 
-**CRITICAL: Legacy code had INVERTED naming. Gold data uses legacy names. Modern code uses correct names.**
-
-### Modern (correct) semantics - used everywhere in modern code:
-
 | Term | Definition |
 |------|------------|
-| `HeartPosition` | Rider heart position (fundamental, primary coordinate) |
+| `HeartPosition` | Rider heart position (primary coordinate) |
 | `SpinePosition` | Track centerline = `HeartPosition + Normal * HeartOffset` |
 | `HeartArc` | Cumulative distance along heart path |
 | `SpineArc` | Cumulative distance along spine path |
 | `HeartAdvance` | Per-step distance along heart path |
 | `FrictionOrigin` | HeartArc position where friction was last reset |
 
-### Gold JSON uses legacy names - MUST be remapped on load:
-
-| Gold JSON Field (legacy) | Modern Field | Why confusing |
-|--------------------------|--------------|---------------|
-| `position` | `HeartPosition` | Correct - stores heart position |
-| `totalLength` | `HeartArc` | INVERTED - legacy `TotalLength` was calculated from GetHeartPosition (which returned spine!) |
-| `totalHeartLength` | `SpineArc` | INVERTED - legacy `TotalHeartLength` was calculated from Position (which was heart!) |
-| `heart` | `HeartOffset` | Correct |
-| `frictionCompensation` | `FrictionOrigin` | Correct |
-
-### Why legacy naming was inverted:
-
-Legacy function `GetHeartPosition(offset)` returned `Position + Normal * offset` = SPINE position.
-Legacy field `Position` stored heart coordinates.
-So legacy `TotalLength` (accumulated from GetHeartPosition distances) was actually SPINE arc.
-And legacy `TotalHeartLength` (accumulated from Position distances) was actually HEART arc.
-
-### Where conversion happens:
-
-- `GoldDataLoader.cs` - Loads JSON with legacy field names
-- `SimPointComparer.cs` - Maps legacy JSON fields to modern Point fields for comparison
-- `LegacyImporter.cs` - Handles naming at .kex import time
-
-### Verification:
-
-Modern code must use correct semantics consistently. The ONLY place legacy naming should appear is when loading gold data or legacy files.
+Gold test fixtures use modern camelCase naming (e.g., `heartPosition`, `heartArc`, `spineArc`).
 
 ## Dependencies
 

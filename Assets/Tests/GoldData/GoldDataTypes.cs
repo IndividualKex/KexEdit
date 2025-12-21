@@ -106,7 +106,7 @@ namespace Tests {
 
     [Serializable]
     public class GoldPointData {
-        public GoldVec3 position;
+        public GoldVec3 heartPosition;
         public GoldVec3 direction;
         public GoldVec3 lateral;
         public GoldVec3 normal;
@@ -115,30 +115,19 @@ namespace Tests {
         public float energy;
         public float normalForce;
         public float lateralForce;
-        public float distanceFromLast;
-        public float heartDistanceFromLast;
+        public float heartAdvance;
+        public float spineAdvance;
         public float angleFromLast;
         public float pitchFromLast;
         public float yawFromLast;
         public float rollSpeed;
-        public float totalLength;
-        public float totalHeartLength;
-        public float frictionCompensation;
-        public float heart;
+        public float heartArc;
+        public float spineArc;
+        public float frictionOrigin;
+        public float heartOffset;
         public float friction;
         public float resistance;
         public int facing;
-
-        // Semantic accessors - legacy naming was inverted:
-        // - HeartPosition/HeartArc/HeartAdvance = primary coordinate (legacy Position/TotalLength/DistanceFromLast)
-        // - SpinePosition/SpineArc/SpineAdvance = derived coordinate (legacy GetHeartPosition/TotalHeartLength/HeartDistanceFromLast)
-        public GoldVec3 HeartPosition => position;
-        public float HeartArc => totalLength;
-        public float HeartAdvance => distanceFromLast;
-        public float SpineArc => totalHeartLength;
-        public float SpineAdvance => heartDistanceFromLast;
-        public float HeartOffset => heart;
-        public float FrictionOrigin => frictionCompensation;
 
         // Derived energy fields for analysis
         public float effectiveFrictionDistance;

@@ -138,7 +138,7 @@ namespace Tests {
             var firstGoldAnc = gold.sections[0].inputs?.anchor;
             if (firstGoldAnc != null) {
                 UnityEngine.Debug.Log($"=== GOLD FIRST SECTION INPUT ANCHOR ===");
-                UnityEngine.Debug.Log($"  vel={firstGoldAnc.velocity:F4} frictionOrig={firstGoldAnc.frictionCompensation:F4} dir=({firstGoldAnc.direction.x:F3},{firstGoldAnc.direction.y:F3},{firstGoldAnc.direction.z:F3})");
+                UnityEngine.Debug.Log($"  vel={firstGoldAnc.velocity:F4} frictionOrig={firstGoldAnc.frictionOrigin:F4} dir=({firstGoldAnc.direction.x:F3},{firstGoldAnc.direction.y:F3},{firstGoldAnc.direction.z:F3})");
             }
         }
 
@@ -198,7 +198,7 @@ namespace Tests {
                     var p = path[i];
                     var g = section.outputs.points[i];
                     UnityEngine.Debug.Log($"[{i}] actual: pos=({p.HeartPosition.x:F3},{p.HeartPosition.y:F3},{p.HeartPosition.z:F3}) dir=({p.Direction.x:F3},{p.Direction.y:F3},{p.Direction.z:F3}) vel={p.Velocity:F4}");
-                    UnityEngine.Debug.Log($"[{i}] gold:   pos=({g.HeartPosition.x:F3},{g.HeartPosition.y:F3},{g.HeartPosition.z:F3}) dir=({g.direction.x:F3},{g.direction.y:F3},{g.direction.z:F3}) vel={g.velocity:F4}");
+                    UnityEngine.Debug.Log($"[{i}] gold:   pos=({g.heartPosition.x:F3},{g.heartPosition.y:F3},{g.heartPosition.z:F3}) dir=({g.direction.x:F3},{g.direction.y:F3},{g.direction.z:F3}) vel={g.velocity:F4}");
                 }
 
                 SimPointComparer.AssertMatchesGold(path, section.outputs.points, cumulativePoints);

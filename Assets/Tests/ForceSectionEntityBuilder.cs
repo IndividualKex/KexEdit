@@ -85,7 +85,7 @@ namespace Tests {
 
         public static PointData ToPointData(GoldPointData p) {
             return new PointData {
-                HeartPosition = new float3(p.HeartPosition.x, p.HeartPosition.y, p.HeartPosition.z),
+                HeartPosition = new float3(p.heartPosition.x, p.heartPosition.y, p.heartPosition.z),
                 Direction = new float3(p.direction.x, p.direction.y, p.direction.z),
                 Lateral = new float3(p.lateral.x, p.lateral.y, p.lateral.z),
                 Normal = new float3(p.normal.x, p.normal.y, p.normal.z),
@@ -94,16 +94,16 @@ namespace Tests {
                 Energy = p.energy,
                 NormalForce = p.normalForce,
                 LateralForce = p.lateralForce,
-                HeartAdvance = p.HeartAdvance,
-                SpineAdvance = p.SpineAdvance,
+                HeartAdvance = p.heartAdvance,
+                SpineAdvance = p.spineAdvance,
                 AngleFromLast = p.angleFromLast,
                 PitchFromLast = p.pitchFromLast,
                 YawFromLast = p.yawFromLast,
                 RollSpeed = p.rollSpeed,
-                HeartArc = p.HeartArc,
-                SpineArc = p.SpineArc,
-                FrictionOrigin = p.FrictionOrigin,
-                HeartOffset = p.HeartOffset,
+                HeartArc = p.heartArc,
+                SpineArc = p.spineArc,
+                FrictionOrigin = p.frictionOrigin,
+                HeartOffset = p.heartOffset,
                 Friction = p.friction,
                 Resistance = p.resistance,
                 Facing = p.facing
