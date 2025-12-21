@@ -5,6 +5,7 @@ using KexEdit.Legacy.Serialization;
 using KexEdit.LegacyImport;
 using KexEdit.Nodes;
 using NUnit.Framework;
+using System.IO;
 using Unity.Collections;
 using Unity.Mathematics;
 
@@ -214,6 +215,66 @@ namespace Tests {
             finally {
                 node.Dispose();
                 serializedGraph.Dispose();
+            }
+        }
+
+        [Test]
+        [Category("Golden")]
+        public void Deserialize_AllTypes_AnchorMatchesGold() {
+            var gold = GoldDataLoader.Load("Assets/Tests/TrackData/all_types.json");
+            var kexPath = "Assets/Tests/Assets/all_types.kex";
+
+            Assert.IsTrue(File.Exists(kexPath), $"Test file not found: {kexPath}");
+
+            byte[] kexData = File.ReadAllBytes(kexPath);
+            var buffer = new NativeArray<byte>(kexData, Allocator.Temp);
+
+            try {
+                var serializedGraph = new SerializedGraph();
+                GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
+
+                try {
+                    // Use section 1 which has non-zero advance/arc values
+                    var section = gold.sections[1];
+                    var goldAnchor = section.inputs.anchor;
+                    uint nodeId = section.nodeId;
+
+                    // Find matching node in deserialized graph
+                    SerializedNode? matchingNode = null;
+                    for (int i = 0; i < serializedGraph.Nodes.Length; i++) {
+                        if (serializedGraph.Nodes[i].Node.Id == nodeId) {
+                            matchingNode = serializedGraph.Nodes[i];
+                            break;
+                        }
+                    }
+
+                    Assert.IsTrue(matchingNode.HasValue, $"Node {nodeId} not found in deserialized graph");
+                    var deserializedAnchor = matchingNode.Value.Anchor;
+
+                    // Log values for debugging
+                    UnityEngine.Debug.Log($"=== DESERIALIZATION TEST: Node {nodeId} ({section.nodeType}) ===");
+                    UnityEngine.Debug.Log($"Gold heartAdvance: {goldAnchor.heartAdvance}, spineAdvance: {goldAnchor.spineAdvance}");
+                    UnityEngine.Debug.Log($"Deser HeartAdvance: {deserializedAnchor.HeartAdvance}, SpineAdvance: {deserializedAnchor.SpineAdvance}");
+                    UnityEngine.Debug.Log($"Gold heartArc: {goldAnchor.heartArc}, spineArc: {goldAnchor.spineArc}");
+                    UnityEngine.Debug.Log($"Deser HeartArc: {deserializedAnchor.HeartArc}, SpineArc: {deserializedAnchor.SpineArc}");
+                    UnityEngine.Debug.Log($"Gold heartOffset: {goldAnchor.heartOffset}");
+                    UnityEngine.Debug.Log($"Deser HeartOffset: {deserializedAnchor.HeartOffset}");
+
+                    // Assert key fields match
+                    Assert.AreEqual(goldAnchor.velocity, deserializedAnchor.Velocity, 0.0001f, "Velocity mismatch");
+                    Assert.AreEqual(goldAnchor.heartAdvance, deserializedAnchor.HeartAdvance, 0.0001f, "HeartAdvance mismatch");
+                    Assert.AreEqual(goldAnchor.spineAdvance, deserializedAnchor.SpineAdvance, 0.0001f, "SpineAdvance mismatch");
+                    Assert.AreEqual(goldAnchor.heartArc, deserializedAnchor.HeartArc, 0.0001f, "HeartArc mismatch");
+                    Assert.AreEqual(goldAnchor.spineArc, deserializedAnchor.SpineArc, 0.0001f, "SpineArc mismatch");
+                    Assert.AreEqual(goldAnchor.heartOffset, deserializedAnchor.HeartOffset, 0.0001f, "HeartOffset mismatch");
+                    Assert.AreEqual(goldAnchor.frictionOrigin, deserializedAnchor.FrictionOrigin, 0.0001f, "FrictionOrigin mismatch");
+                }
+                finally {
+                    serializedGraph.Dispose();
+                }
+            }
+            finally {
+                buffer.Dispose();
             }
         }
     }

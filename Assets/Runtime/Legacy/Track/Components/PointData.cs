@@ -14,8 +14,8 @@ namespace KexEdit.Legacy {
         public float Energy;
         public float NormalForce;
         public float LateralForce;
-        public float SpineAdvance;
         public float HeartAdvance;
+        public float SpineAdvance;
         public float AngleFromLast;
         public float PitchFromLast;
         public float YawFromLast;
