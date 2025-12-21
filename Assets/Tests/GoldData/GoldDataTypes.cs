@@ -124,7 +124,7 @@ namespace Tests {
         public float heartArc;
         public float spineArc;
         public float frictionOrigin;
-        public float heartOffset;
+        public float heartOffset = 1.1f;
         public float friction;
         public float resistance;
         public int facing;

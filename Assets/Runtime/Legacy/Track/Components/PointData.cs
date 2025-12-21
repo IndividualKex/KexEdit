@@ -14,14 +14,14 @@ namespace KexEdit.Legacy {
         public float Energy;
         public float NormalForce;
         public float LateralForce;
-        public float HeartAdvance;
         public float SpineAdvance;
+        public float HeartAdvance;
         public float AngleFromLast;
         public float PitchFromLast;
         public float YawFromLast;
         public float RollSpeed;
-        public float HeartArc;
         public float SpineArc;
+        public float HeartArc;
         public float FrictionOrigin;
         public float HeartOffset;
         public float Friction;
