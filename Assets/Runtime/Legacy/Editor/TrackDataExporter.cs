@@ -546,7 +546,7 @@ namespace KexEdit.Legacy.Editor {
             if (kf.PitchSpeed?.Count > 0) entries.Add($"{ind}  \"pitchSpeed\": {KeyframeArrayJson(kf.PitchSpeed)}");
             if (kf.YawSpeed?.Count > 0) entries.Add($"{ind}  \"yawSpeed\": {KeyframeArrayJson(kf.YawSpeed)}");
             if (kf.FixedVelocity?.Count > 0) entries.Add($"{ind}  \"fixedVelocity\": {KeyframeArrayJson(kf.FixedVelocity)}");
-            if (kf.Heart?.Count > 0) entries.Add($"{ind}  \"heart\": {KeyframeArrayJson(kf.Heart)}");
+            if (kf.Heart?.Count > 0) entries.Add($"{ind}  \"heartOffset\": {KeyframeArrayJson(kf.Heart)}");
             if (kf.Friction?.Count > 0) entries.Add($"{ind}  \"friction\": {KeyframeArrayJson(kf.Friction)}");
             if (kf.Resistance?.Count > 0) entries.Add($"{ind}  \"resistance\": {KeyframeArrayJson(kf.Resistance)}");
 
@@ -576,7 +576,7 @@ namespace KexEdit.Legacy.Editor {
         }
 
         private static string PointDataJson(TrackDataPoint p) {
-            return $"{{ \"heartPosition\": {Vec3Json(p.HeartPosition)}, \"direction\": {Vec3Json(p.Direction)}, \"lateral\": {Vec3Json(p.Lateral)}, \"normal\": {Vec3Json(p.Normal)}, \"roll\": {F(p.Roll)}, \"velocity\": {F(p.Velocity)}, \"energy\": {F(p.Energy)}, \"normalForce\": {F(p.NormalForce)}, \"lateralForce\": {F(p.LateralForce)}, \"spineAdvance\": {F(p.SpineAdvance)}, \"heartAdvance\": {F(p.HeartAdvance)}, \"angleFromLast\": {F(p.AngleFromLast)}, \"pitchFromLast\": {F(p.PitchFromLast)}, \"yawFromLast\": {F(p.YawFromLast)}, \"rollSpeed\": {F(p.RollSpeed)}, \"spineArc\": {F(p.SpineArc)}, \"heartArc\": {F(p.HeartArc)}, \"frictionCompensation\": {F(p.FrictionCompensation)}, \"heart\": {F(p.Heart)}, \"friction\": {F(p.Friction)}, \"resistance\": {F(p.Resistance)}, \"facing\": {p.Facing}, \"effectiveFrictionDistance\": {F(p.EffectiveFrictionDistance)}, \"kineticEnergy\": {F(p.KineticEnergy)}, \"gravitationalPE\": {F(p.GravitationalPE)}, \"frictionPE\": {F(p.FrictionPE)}, \"centerY\": {F(p.CenterY)} }}";
+            return $"{{ \"heartPosition\": {Vec3Json(p.HeartPosition)}, \"direction\": {Vec3Json(p.Direction)}, \"lateral\": {Vec3Json(p.Lateral)}, \"normal\": {Vec3Json(p.Normal)}, \"roll\": {F(p.Roll)}, \"velocity\": {F(p.Velocity)}, \"energy\": {F(p.Energy)}, \"normalForce\": {F(p.NormalForce)}, \"lateralForce\": {F(p.LateralForce)}, \"spineAdvance\": {F(p.SpineAdvance)}, \"heartAdvance\": {F(p.HeartAdvance)}, \"angleFromLast\": {F(p.AngleFromLast)}, \"pitchFromLast\": {F(p.PitchFromLast)}, \"yawFromLast\": {F(p.YawFromLast)}, \"rollSpeed\": {F(p.RollSpeed)}, \"spineArc\": {F(p.SpineArc)}, \"heartArc\": {F(p.HeartArc)}, \"frictionOrigin\": {F(p.FrictionCompensation)}, \"heartOffset\": {F(p.Heart)}, \"friction\": {F(p.Friction)}, \"resistance\": {F(p.Resistance)}, \"facing\": {p.Facing}, \"effectiveFrictionDistance\": {F(p.EffectiveFrictionDistance)}, \"kineticEnergy\": {F(p.KineticEnergy)}, \"gravitationalPE\": {F(p.GravitationalPE)}, \"frictionPE\": {F(p.FrictionPE)}, \"centerY\": {F(p.CenterY)} }}";
         }
 
         private static string KeyframeArrayJson(List<TrackDataKeyframe> keyframes) {
