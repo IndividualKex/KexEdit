@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<test-run id="2" testcasecount="1" result="Failed(Child)" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-12-21 03:51:12Z" end-time="2025-12-21 03:51:13Z" duration="0.5627315">
-  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3280" result="Failed" site="Child" start-time="2025-12-21 03:51:12Z" end-time="2025-12-21 03:51:13Z" duration="0.562732" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+<test-run id="2" testcasecount="17" result="Failed(Child)" total="17" passed="15" failed="1" inconclusive="0" skipped="1" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:22Z" duration="1.6285503">
+  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3280" result="Failed" site="Child" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:22Z" duration="1.628550" total="17" passed="15" failed="1" inconclusive="0" skipped="1" asserts="0">
     <properties>
       <property name="platform" value="EditMode" />
     </properties>
     <failure>
       <message><![CDATA[One or more child tests had errors]]></message>
     </failure>
-    <test-suite type="Assembly" id="1467" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="415" result="Failed" site="Child" start-time="2025-12-21 03:51:12Z" end-time="2025-12-21 03:51:13Z" duration="0.533469" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+    <test-suite type="Assembly" id="1467" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="415" result="Failed" site="Child" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:22Z" duration="1.588436" total="17" passed="15" failed="1" inconclusive="0" skipped="1" asserts="0">
       <properties>
-        <property name="_PID" value="28936" />
+        <property name="_PID" value="30056" />
         <property name="_APPDOMAIN" value="Unity Child Domain" />
         <property name="platform" value="EditMode" />
         <property name="EditorOnly" value="True" />
@@ -17,19 +17,212 @@
       <failure>
         <message><![CDATA[One or more child tests had errors]]></message>
       </failure>
-      <test-suite type="TestSuite" id="1477" name="Tests" fullname="Tests" runstate="Runnable" testcasecount="264" result="Failed" site="Child" start-time="2025-12-21 03:51:12Z" end-time="2025-12-21 03:51:13Z" duration="0.530122" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <test-suite type="TestSuite" id="1477" name="Tests" fullname="Tests" runstate="Runnable" testcasecount="264" result="Failed" site="Child" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:22Z" duration="1.585164" total="17" passed="15" failed="1" inconclusive="0" skipped="1" asserts="0">
         <properties />
         <failure>
           <message><![CDATA[One or more child tests had errors]]></message>
         </failure>
-        <test-suite type="TestFixture" id="1230" name="CoasterGoldTests" fullname="Tests.CoasterGoldTests" classname="Tests.CoasterGoldTests" runstate="Runnable" testcasecount="4" result="Failed" site="Child" start-time="2025-12-21 03:51:12Z" end-time="2025-12-21 03:51:13Z" duration="0.526758" total="1" passed="0" failed="1" inconclusive="0" skipped="0" asserts="0">
+        <test-suite type="TestFixture" id="1197" name="BridgeNodeTests" fullname="Tests.BridgeNodeTests" classname="Tests.BridgeNodeTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:21Z" duration="0.117371" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties>
+            <property name="Category" value="Golden" />
+          </properties>
+          <test-case id="1198" name="AllTypes_BridgeSection1_MatchesGoldData" fullname="Tests.BridgeNodeTests.AllTypes_BridgeSection1_MatchesGoldData" methodname="AllTypes_BridgeSection1_MatchesGoldData" classname="Tests.BridgeNodeTests" runstate="Runnable" seed="1430942765" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:21Z" duration="0.105593" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[=== DRIFT ANALYSIS (offset=0) ===
+First divergence at index -1
+Max drift 1.52587891E-05 at index 145
+=== FIRST 20 POINTS ===
+    [0] Pos: (8.697273, 0.944589, -115.689600) vs (8.697273, 0.944589, -115.689600)
+    [0] Vel: 19.147040 vs 19.147040, diff=0
+    [0] Energy: 195.120500 vs 195.120500, diff=0
+    [0] HeartArc: 457.585300 vs 457.585300
+    [1] Pos: (8.735906, 1.042622, -115.849500) vs (8.735906, 1.042622, -115.849500)
+    [1] Vel: 19.094480 vs 19.094480, diff=0
+    [1] Energy: 195.119100 vs 195.119100, diff=0
+    [1] HeartArc: 457.779500 vs 457.779500
+    [2] Pos: (8.774432, 1.140386, -116.008900) vs (8.774432, 1.140386, -116.008900)
+    [2] Vel: 19.041930 vs 19.041930, diff=0
+    [2] Energy: 195.117700 vs 195.117700, diff=0
+    [2] HeartArc: 457.973300 vs 457.973300
+    [3] Pos: (8.812853, 1.237881, -116.167900) vs (8.812853, 1.237881, -116.167900)
+    [3] Vel: 18.989370 vs 18.989370, diff=0
+    [3] Energy: 195.116300 vs 195.116300, diff=0
+    [3] HeartArc: 458.166500 vs 458.166500
+    [4] Pos: (8.851167, 1.335107, -116.326400) vs (8.851167, 1.335107, -116.326400)
+    [4] Vel: 18.936800 vs 18.936800, diff=0
+    [4] Energy: 195.114900 vs 195.114900, diff=0
+    [4] HeartArc: 458.359200 vs 458.359200
+    [5] Pos: (8.888081, 1.432206, -116.484800) vs (8.888081, 1.432206, -116.484800)
+    [5] Vel: 18.884170 vs 18.884170, diff=0
+    [5] Energy: 195.113600 vs 195.113600, diff=0
+    [5] HeartArc: 458.551400 vs 458.551400
+    [6] Pos: (8.922554, 1.529292, -116.643000) vs (8.922554, 1.529292, -116.643000)
+    [6] Vel: 18.831440 vs 18.831440, diff=0
+    [6] Energy: 195.112200 vs 195.112200, diff=0
+    [6] HeartArc: 458.743200 vs 458.743200
+    [7] Pos: (8.956930, 1.626106, -116.800800) vs (8.956930, 1.626106, -116.800800)
+    [7] Vel: 18.778690 vs 18.778690, diff=0
+    [7] Energy: 195.110900 vs 195.110900, diff=0
+    [7] HeartArc: 458.934400 vs 458.934400
+    [8] Pos: (8.991210, 1.722649, -116.958200) vs (8.991210, 1.722649, -116.958200)
+    [8] Vel: 18.725950 vs 18.725950, diff=0
+    [8] Energy: 195.109600 vs 195.109600, diff=0
+    [8] HeartArc: 459.125200 vs 459.125200
+    [9] Pos: (9.025394, 1.818921, -117.115200) vs (9.025394, 1.818921, -117.115200)
+    [9] Vel: 18.673200 vs 18.673200, diff=0
+    [9] Energy: 195.108200 vs 195.108200, diff=0
+    [9] HeartArc: 459.315400 vs 459.315400
+    [10] Pos: (9.056398, 1.915206, -117.272100) vs (9.056398, 1.915206, -117.272100)
+    [10] Vel: 18.620340 vs 18.620340, diff=0
+    [10] Energy: 195.106900 vs 195.106900, diff=0
+    [10] HeartArc: 459.505200 vs 459.505200
+    [11] Pos: (9.086620, 2.011281, -117.428700) vs (9.086620, 2.011281, -117.428700)
+    [11] Vel: 18.567450 vs 18.567450, diff=0
+    [11] Energy: 195.105700 vs 195.105700, diff=0
+    [11] HeartArc: 459.694400 vs 459.694400
+    [12] Pos: (9.116756, 2.107084, -117.584900) vs (9.116756, 2.107084, -117.584900)
+    [12] Vel: 18.514550 vs 18.514550, diff=0
+    [12] Energy: 195.104400 vs 195.104400, diff=0
+    [12] HeartArc: 459.883200 vs 459.883200
+    [13] Pos: (9.146806, 2.202613, -117.740600) vs (9.146806, 2.202613, -117.740600)
+    [13] Vel: 18.461650 vs 18.461650, diff=0
+    [13] Energy: 195.103100 vs 195.103100, diff=0
+    [13] HeartArc: 460.071400 vs 460.071400
+    [14] Pos: (9.175283, 2.297979, -117.896100) vs (9.175283, 2.297979, -117.896100)
+    [14] Vel: 18.408710 vs 18.408710, diff=0
+    [14] Energy: 195.101900 vs 195.101900, diff=0
+    [14] HeartArc: 460.259100 vs 460.259100
+    [15] Pos: (9.201238, 2.393249, -118.051500) vs (9.201238, 2.393249, -118.051500)
+    [15] Vel: 18.355700 vs 18.355700, diff=0
+    [15] Energy: 195.100600 vs 195.100600, diff=0
+    [15] HeartArc: 460.446400 vs 460.446400
+    [16] Pos: (9.227118, 2.488245, -118.206400) vs (9.227118, 2.488245, -118.206400)
+    [16] Vel: 18.302690 vs 18.302690, diff=0
+    [16] Energy: 195.099400 vs 195.099400, diff=0
+    [16] HeartArc: 460.633100 vs 460.633100
+    [17] Pos: (9.252922, 2.582967, -118.360900) vs (9.252922, 2.582967, -118.360900)
+    [17] Vel: 18.249670 vs 18.249670, diff=0
+    [17] Energy: 195.098100 vs 195.098100, diff=0
+    [17] HeartArc: 460.819400 vs 460.819400
+    [18] Pos: (9.278483, 2.677424, -118.514900) vs (9.278483, 2.677424, -118.514900)
+    [18] Vel: 18.196640 vs 18.196640, diff=0
+    [18] Energy: 195.096900 vs 195.096900, diff=0
+    [18] HeartArc: 461.005000 vs 461.005000
+    [19] Pos: (9.300059, 2.771819, -118.669000) vs (9.300059, 2.771819, -118.669000)
+    [19] Vel: 18.143560 vs 18.143560, diff=0
+    [19] Energy: 195.095700 vs 195.095700, diff=0
+    [19] HeartArc: 461.190300 vs 461.190300
+=== SAMPLE POINTS ===
+    [50] Pos: (9.444733, 5.556315, -123.255300) vs (9.444733, 5.556315, -123.255300)
+    [50] Vel: 16.508210 vs 16.508210, diff=0
+    [50] Energy: 195.063200 vs 195.063200, diff=0
+    [50] HeartArc: 466.679000 vs 466.678900
+    [100] Pos: (6.799067, 8.925363, -129.493500) vs (6.799067, 8.925363, -129.493500)
+    [100] Vel: 14.333690 vs 14.333690, diff=9.53674E-07
+    [100] Energy: 195.026900 vs 195.026900, diff=0
+    [100] HeartArc: 474.411700 vs 474.411700
+    [200] Pos: (-3.390436, 9.511836, -138.404200) vs (-3.390439, 9.511835, -138.404200)
+    [200] Vel: 13.802070 vs 13.802070, diff=3.8147E-06
+    [200] Energy: 194.975400 vs 194.975400, diff=0
+    [200] HeartArc: 487.681000 vs 487.680800
+]]></output>
+          </test-case>
+        </test-suite>
+        <test-suite type="TestFixture" id="1199" name="BuildBridgeSectionSystemTests" fullname="Tests.BuildBridgeSectionSystemTests" classname="Tests.BuildBridgeSectionSystemTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:21Z" duration="0.301045" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties>
+            <property name="Category" value="Golden" />
+          </properties>
+          <test-case id="1200" name="AllTypes_BridgeSection1_MatchesGoldData" fullname="Tests.BuildBridgeSectionSystemTests.AllTypes_BridgeSection1_MatchesGoldData" methodname="AllTypes_BridgeSection1_MatchesGoldData" classname="Tests.BuildBridgeSectionSystemTests" runstate="Runnable" seed="1276662938" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:21Z" duration="0.299605" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[[PointComparer] Max drift 1.52587891E-05 at index 145
+]]></output>
+          </test-case>
+        </test-suite>
+        <test-suite type="TestFixture" id="1201" name="BuildCopyPathSectionSystemTests" fullname="Tests.BuildCopyPathSectionSystemTests" classname="Tests.BuildCopyPathSectionSystemTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:21Z" duration="0.161222" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties>
+            <property name="Category" value="Golden" />
+          </properties>
+          <test-case id="1202" name="AllTypes_CopyPathSection1_MatchesGoldData" fullname="Tests.BuildCopyPathSectionSystemTests.AllTypes_CopyPathSection1_MatchesGoldData" methodname="AllTypes_CopyPathSection1_MatchesGoldData" classname="Tests.BuildCopyPathSectionSystemTests" runstate="Runnable" seed="1822300686" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:21Z" duration="0.057169" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[[PointComparer] Max drift 0 at index 0
+]]></output>
+          </test-case>
+          <test-case id="1203" name="AllTypes_CopyPathSection2_MatchesGoldData" fullname="Tests.BuildCopyPathSectionSystemTests.AllTypes_CopyPathSection2_MatchesGoldData" methodname="AllTypes_CopyPathSection2_MatchesGoldData" classname="Tests.BuildCopyPathSectionSystemTests" runstate="Runnable" seed="479809819" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:21Z" duration="0.050815" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[[PointComparer] Max drift 0.000152587891 at index 176
+]]></output>
+          </test-case>
+          <test-case id="1204" name="AllTypes_CopyPathSection3_MatchesGoldData" fullname="Tests.BuildCopyPathSectionSystemTests.AllTypes_CopyPathSection3_MatchesGoldData" methodname="AllTypes_CopyPathSection3_MatchesGoldData" classname="Tests.BuildCopyPathSectionSystemTests" runstate="Runnable" seed="1141955653" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:21Z" duration="0.051515" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[[PointComparer] Max drift 0 at index 0
+]]></output>
+          </test-case>
+        </test-suite>
+        <test-suite type="TestFixture" id="1207" name="BuildForceSectionSystemTests" fullname="Tests.BuildForceSectionSystemTests" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:21Z" duration="0.061383" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties>
+            <property name="Category" value="Golden" />
+          </properties>
+          <test-case id="1211" name="AllTypes_ForceSection_MatchesGoldData" fullname="Tests.BuildForceSectionSystemTests.AllTypes_ForceSection_MatchesGoldData" methodname="AllTypes_ForceSection_MatchesGoldData" classname="Tests.BuildForceSectionSystemTests" runstate="Runnable" seed="234938361" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:21Z" duration="0.060079" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[[PointComparer] Max drift 4.76837158E-06 at index 138
+]]></output>
+          </test-case>
+        </test-suite>
+        <test-suite type="TestFixture" id="1212" name="BuildGeometricSectionSystemTests" fullname="Tests.BuildGeometricSectionSystemTests" classname="Tests.BuildGeometricSectionSystemTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:22Z" duration="0.163971" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties>
+            <property name="Category" value="Golden" />
+          </properties>
+          <test-case id="1219" name="AllTypes_GeometricSection1_MatchesGoldData" fullname="Tests.BuildGeometricSectionSystemTests.AllTypes_GeometricSection1_MatchesGoldData" methodname="AllTypes_GeometricSection1_MatchesGoldData" classname="Tests.BuildGeometricSectionSystemTests" runstate="Runnable" seed="2010379435" result="Passed" start-time="2025-12-21 04:02:21Z" end-time="2025-12-21 04:02:22Z" duration="0.059824" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[[PointComparer] Max drift 0.000244140625 at index 356
+]]></output>
+          </test-case>
+          <test-case id="1220" name="AllTypes_GeometricSection2_MatchesGoldData" fullname="Tests.BuildGeometricSectionSystemTests.AllTypes_GeometricSection2_MatchesGoldData" methodname="AllTypes_GeometricSection2_MatchesGoldData" classname="Tests.BuildGeometricSectionSystemTests" runstate="Runnable" seed="1925981285" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.102246" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[[PointComparer] Max drift 0.00328332931 at index 323
+]]></output>
+          </test-case>
+        </test-suite>
+        <test-suite type="TestFixture" id="1230" name="CoasterGoldTests" fullname="Tests.CoasterGoldTests" classname="Tests.CoasterGoldTests" runstate="Runnable" testcasecount="4" result="Failed" site="Child" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.158691" total="2" passed="0" failed="1" inconclusive="0" skipped="1" asserts="0">
           <properties>
             <property name="Category" value="Golden" />
           </properties>
           <failure>
             <message><![CDATA[One or more child tests had errors]]></message>
           </failure>
-          <test-case id="1233" name="AllTypes_LoadAndEvaluate_MatchesGoldData" fullname="Tests.CoasterGoldTests.AllTypes_LoadAndEvaluate_MatchesGoldData" methodname="AllTypes_LoadAndEvaluate_MatchesGoldData" classname="Tests.CoasterGoldTests" runstate="Runnable" seed="1022077659" result="Failed" start-time="2025-12-21 03:51:12Z" end-time="2025-12-21 03:51:13Z" duration="0.514405" asserts="0">
+          <test-case id="1234" name="AllTypes_BridgeSectionsOnly_MatchesGoldData" fullname="Tests.CoasterGoldTests.AllTypes_BridgeSectionsOnly_MatchesGoldData" methodname="AllTypes_BridgeSectionsOnly_MatchesGoldData" classname="Tests.CoasterGoldTests" runstate="Ignored" seed="1152815720" result="Skipped" label="Ignored" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.000224" asserts="0">
+            <properties>
+              <property name="_SKIPREASON" value="Blocked: Bridge lateral force calculation bug - see PLAN.md Phase 1" />
+            </properties>
+            <reason>
+              <message><![CDATA[Blocked: Bridge lateral force calculation bug - see PLAN.md Phase 1]]></message>
+            </reason>
+          </test-case>
+          <test-case id="1233" name="AllTypes_LoadAndEvaluate_MatchesGoldData" fullname="Tests.CoasterGoldTests.AllTypes_LoadAndEvaluate_MatchesGoldData" methodname="AllTypes_LoadAndEvaluate_MatchesGoldData" classname="Tests.CoasterGoldTests" runstate="Runnable" seed="147176338" result="Failed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.157040" asserts="0">
             <properties>
               <property name="retryIteration" value="0" />
               <property name="repeatIteration" value="0" />
@@ -40,63 +233,12 @@
   But was:  463
 ]]></message>
               <stack-trace><![CDATA[at Tests.SimPointComparer.AssertMatchesGold (Unity.Collections.NativeList`1[T] actual, System.Collections.Generic.List`1[T] expected, System.Int32 cumulativeOffset) [0x00000] in C:\Users\dylan\Documents\Games\KexEdit\Assets\Tests\SimPointComparer.cs:19
-at Tests.CoasterGoldTests.AssertAllSectionsMatch (Tests.GoldTrackData gold, KexEdit.Coaster.EvaluationResult result) [0x00321] in C:\Users\dylan\Documents\Games\KexEdit\Assets\Tests\CoasterGoldTests.cs:212
+at Tests.CoasterGoldTests.AssertAllSectionsMatch (Tests.GoldTrackData gold, KexEdit.Coaster.EvaluationResult result) [0x002c1] in C:\Users\dylan\Documents\Games\KexEdit\Assets\Tests\CoasterGoldTests.cs:204
 at Tests.CoasterGoldTests.RunParityTest (System.String name) [0x0009c] in C:\Users\dylan\Documents\Games\KexEdit\Assets\Tests\CoasterGoldTests.cs:97
 at Tests.CoasterGoldTests.AllTypes_LoadAndEvaluate_MatchesGoldData () [0x00000] in C:\Users\dylan\Documents\Games\KexEdit\Assets\Tests\CoasterGoldTests.cs:25
 ]]></stack-trace>
             </failure>
-            <output><![CDATA[[CopyPath] anchor.Vel=0 Pitch=-1.37166 driven=False
-[CopyPath] sourcePath.Length=325 anchor.HeartArc=134.437
-[CopyPath] distance=0 endDistance=49.7436 startIdx=0 endIdx=324
-[CopyPath] srcPath[0].HeartArc=0 srcPath[1].HeartArc=0.00315723 spacing=0.00315723
-[CopyPath] iter=1 prev.Vel=0 prev.Energy=775.426 distance=0
-[CopyPath] iter=1 elseif: G=9.80665016 centerY=77.9987869 G*centerY=764.906799 expectedE=764.906799 actualE=764.906799
-[CopyPath] iter=1 prevPos.y=77.8202896 currPos.y=77.8202972 diff=-7.62939E-06 distance=1E-05 newVel=0
-[CopyPath] iter=2 prev.Vel=0 prev.Energy=764.907 distance=1E-05
-[CopyPath] iter=2 elseif: G=9.80665016 centerY=77.9987869 G*centerY=764.906799 expectedE=764.906799 actualE=764.906799
-[CopyPath] iter=2 prevPos.y=77.8202972 currPos.y=77.8203049 diff=-7.62939E-06 distance=2E-05 newVel=0
-[CopyPath] iter=3 prev.Vel=0 prev.Energy=764.907 distance=2E-05
-[CopyPath] iter=3 elseif: G=9.80665016 centerY=77.9987869 G*centerY=764.906799 expectedE=764.906799 actualE=764.906799
-[CopyPath] iter=3 prevPos.y=77.8203049 currPos.y=77.8203125 diff=-7.62939E-06 distance=3E-05 newVel=0
-[CopyPath] iter=4 prev.Vel=0 prev.Energy=764.907 distance=3E-05
-[CopyPath] iter=4 elseif: G=9.80665016 centerY=77.9987869 G*centerY=764.906799 expectedE=764.906799 actualE=764.906799
-[CopyPath] iter=4 prevPos.y=77.8203125 currPos.y=77.8203201 diff=-7.62939E-06 distance=4E-05 newVel=0
-[CopyPath] iter=5 prev.Vel=0 prev.Energy=764.907 distance=4E-05
-[CopyPath] iter=5 elseif: G=9.80665016 centerY=77.9987869 G*centerY=764.906799 expectedE=764.906799 actualE=764.906799
-[CopyPath] iter=5 prevPos.y=77.8203201 currPos.y=77.8203278 diff=-7.62939E-06 distance=5E-05 newVel=0
-[CopyPath] anchor.Vel=29.1878 Pitch=-0.798 driven=True
-[CopyPath] sourcePath.Length=390 anchor.HeartArc=185.216
-[CopyPath] distance=0 endDistance=82.8 startIdx=0 endIdx=389
-[CopyPath] srcPath[0].HeartArc=0 srcPath[1].HeartArc=0.299998 spacing=0.299998
-[CopyPath] iter=1 prev.Vel=29.1878 prev.Energy=764.454 distance=0
-[CopyPath] iter=2 prev.Vel=29.1876 prev.Energy=753.991 distance=0.291876
-[CopyPath] iter=3 prev.Vel=29.1876 prev.Energy=751.924 distance=0.583753
-[CopyPath] iter=4 prev.Vel=29.1873 prev.Energy=749.853 distance=0.875626
-[CopyPath] iter=5 prev.Vel=29.1863 prev.Energy=747.769 distance=1.16749
-[CopyPath] anchor.Vel=15.622 Pitch=-0.0802851 driven=False
-[CopyPath] sourcePath.Length=355 anchor.HeartArc=510.541
-[CopyPath] distance=457.584 endDistance=510.541 startIdx=0 endIdx=354
-[CopyPath] srcPath[0].HeartArc=457.584 srcPath[1].HeartArc=457.778 spacing=0.194305
-[CopyPath] iter=1 prev.Vel=15.622 prev.Energy=194.898 distance=457.584
-[CopyPath] iter=1 prevPos.y=6.30999994 currPos.y=6.29858398 diff=0.011416 distance=457.74 newVel=15.6271
-[CopyPath] iter=2 prev.Vel=15.6271 prev.Energy=194.897 distance=457.74
-[CopyPath] iter=2 prevPos.y=6.29858398 currPos.y=6.28717041 diff=0.0114136 distance=457.896 newVel=15.6322
-[CopyPath] iter=3 prev.Vel=15.6322 prev.Energy=194.896 distance=457.896
-[CopyPath] iter=3 prevPos.y=6.28717041 currPos.y=6.27574921 diff=0.0114212 distance=458.053 newVel=15.6373
-[CopyPath] iter=4 prev.Vel=15.6373 prev.Energy=194.895 distance=458.053
-[CopyPath] iter=4 prevPos.y=6.27574921 currPos.y=6.26432419 diff=0.011425 distance=458.209 newVel=15.6424
-[CopyPath] iter=5 prev.Vel=15.6424 prev.Energy=194.895 distance=458.209
-[CopyPath] iter=5 prevPos.y=6.26432419 currPos.y=6.25292969 diff=0.0113945 distance=458.365 newVel=15.6475
-[CopyPath] anchor.Vel=20 Pitch=0 driven=True
-[CopyPath] sourcePath.Length=176 anchor.HeartArc=590.031
-[CopyPath] distance=563.498 endDistance=590.031 startIdx=0 endIdx=175
-[CopyPath] srcPath[0].HeartArc=563.498 srcPath[1].HeartArc=563.566 spacing=0.0675659
-[CopyPath] iter=1 prev.Vel=20 prev.Energy=181.172 distance=563.498
-[CopyPath] iter=2 prev.Vel=20 prev.Energy=181.171 distance=563.698
-[CopyPath] iter=3 prev.Vel=19.9939 prev.Energy=181.061 distance=563.898
-[CopyPath] iter=4 prev.Vel=19.9623 prev.Energy=180.44 distance=564.098
-[CopyPath] iter=5 prev.Vel=19.904 prev.Energy=179.303 distance=564.297
-=== COASTER DIAGNOSTICS ===
+            <output><![CDATA[=== COASTER DIAGNOSTICS ===
 Graph: 21 nodes, 24 edges
 === ALL NODES IN GRAPH ===
   [0] id=1088972794 type=Force dur=3.2 vel=4.23 e=28.66 h=1.10 f=0.0210 r=0.0000
@@ -337,7 +479,662 @@ Checking CopyPathSection nodeId=1143449546: 463 points (gold expects 359, gold d
 [1] gold:   pos=(37.075,77.820,-84.959) dir=(0.189,-0.980,-0.057) vel=0.0000
 [2] actual: pos=(37.076,77.820,-84.959) dir=(0.189,-0.980,-0.057) vel=0.0000
 [2] gold:   pos=(37.075,77.820,-84.959) dir=(0.189,-0.980,-0.057) vel=0.0110
-Saving results to: C:/Users/dylan/AppData/LocalLow/IndividualKex/KexEdit\TestResults.xml
+]]></output>
+          </test-case>
+        </test-suite>
+        <test-suite type="TestFixture" id="1248" name="CopyPathNodeTests" fullname="Tests.CopyPathNodeTests" classname="Tests.CopyPathNodeTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.247522" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties>
+            <property name="Category" value="Golden" />
+          </properties>
+          <test-case id="1249" name="AllTypes_CopyPathSection1_MatchesGoldData" fullname="Tests.CopyPathNodeTests.AllTypes_CopyPathSection1_MatchesGoldData" methodname="AllTypes_CopyPathSection1_MatchesGoldData" classname="Tests.CopyPathNodeTests" runstate="Runnable" seed="2110840366" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.084115" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[=== DRIFT ANALYSIS (offset=0) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (37.075470, 77.820320, -84.959260) vs (37.075470, 77.820320, -84.959260)
+    [0] Vel: 0.000000 vs 0.000000, diff=0
+    [0] Energy: 775.426900 vs 775.426900, diff=0
+    [0] HeartArc: 134.436700 vs 134.436700
+    [1] Pos: (37.075470, 77.820340, -84.959240) vs (37.075470, 77.820340, -84.959240)
+    [1] Vel: 0.000000 vs 0.000000, diff=0
+    [1] Energy: 764.907100 vs 764.907100, diff=0
+    [1] HeartArc: 134.436700 vs 134.436700
+    [2] Pos: (37.075480, 77.820360, -84.959230) vs (37.075480, 77.820360, -84.959230)
+    [2] Vel: 0.011049 vs 0.011049, diff=0
+    [2] Energy: 764.907200 vs 764.907200, diff=0
+    [2] HeartArc: 134.436700 vs 134.436700
+    [3] Pos: (37.075570, 77.820570, -84.959080) vs (37.075570, 77.820570, -84.959080)
+    [3] Vel: 0.019137 vs 0.019137, diff=0
+    [3] Energy: 764.907200 vs 764.907200, diff=0
+    [3] HeartArc: 134.436800 vs 134.436800
+    [4] Pos: (37.075720, 77.820950, -84.958800) vs (37.075720, 77.820950, -84.958800)
+    [4] Vel: 0.027063 vs 0.027063, diff=0
+    [4] Energy: 764.907200 vs 764.907200, diff=0
+    [4] HeartArc: 134.437000 vs 134.437000
+    [5] Pos: (37.075940, 77.821460, -84.958410) vs (37.075940, 77.821460, -84.958410)
+    [5] Vel: 0.038273 vs 0.038273, diff=0
+    [5] Energy: 764.907200 vs 764.907200, diff=0
+    [5] HeartArc: 134.437300 vs 134.437300
+    [6] Pos: (37.076240, 77.822200, -84.957870) vs (37.076240, 77.822200, -84.957870)
+    [6] Vel: 0.049411 vs 0.049411, diff=0
+    [6] Energy: 764.907200 vs 764.907200, diff=0
+    [6] HeartArc: 134.437700 vs 134.437700
+    [7] Pos: (37.076640, 77.823280, -84.957120) vs (37.076640, 77.823280, -84.957120)
+    [7] Vel: 0.049411 vs 0.049411, diff=0
+    [7] Energy: 764.907200 vs 764.907200, diff=0
+    [7] HeartArc: 134.438200 vs 134.438200
+    [8] Pos: (37.077050, 77.824500, -84.956340) vs (37.077050, 77.824500, -84.956340)
+    [8] Vel: 0.029232 vs 0.029232, diff=0
+    [8] Energy: 764.907200 vs 764.907200, diff=0
+    [8] HeartArc: 134.438700 vs 134.438700
+    [9] Pos: (37.077290, 77.825230, -84.955870) vs (37.077290, 77.825230, -84.955870)
+    [9] Vel: 0.000000 vs 0.000000, diff=0
+    [9] Energy: 764.907200 vs 764.907200, diff=0
+    [9] HeartArc: 134.439000 vs 134.439000
+    [10] Pos: (37.077300, 77.825250, -84.955860) vs (37.077300, 77.825250, -84.955860)
+    [10] Vel: 0.000000 vs 0.000000, diff=0
+    [10] Energy: 764.906800 vs 764.906800, diff=0
+    [10] HeartArc: 134.439000 vs 134.439000
+    [11] Pos: (37.077300, 77.825270, -84.955840) vs (37.077300, 77.825270, -84.955840)
+    [11] Vel: 0.000000 vs 0.000000, diff=0
+    [11] Energy: 764.906800 vs 764.906800, diff=0
+    [11] HeartArc: 134.439000 vs 134.439000
+    [12] Pos: (37.077310, 77.825290, -84.955820) vs (37.077310, 77.825290, -84.955820)
+    [12] Vel: 0.000000 vs 0.000000, diff=0
+    [12] Energy: 764.906800 vs 764.906800, diff=0
+    [12] HeartArc: 134.439000 vs 134.439000
+    [13] Pos: (37.077320, 77.825330, -84.955800) vs (37.077320, 77.825330, -84.955800)
+    [13] Vel: 0.000000 vs 0.000000, diff=0
+    [13] Energy: 764.906800 vs 764.906800, diff=0
+    [13] HeartArc: 134.439000 vs 134.439000
+    [14] Pos: (37.077330, 77.825350, -84.955790) vs (37.077330, 77.825350, -84.955790)
+    [14] Vel: 0.000000 vs 0.000000, diff=0
+    [14] Energy: 764.906900 vs 764.906900, diff=0
+    [14] HeartArc: 134.439100 vs 134.439100
+    [15] Pos: (37.077340, 77.825370, -84.955770) vs (37.077340, 77.825370, -84.955770)
+    [15] Vel: 0.000000 vs 0.000000, diff=0
+    [15] Energy: 764.906900 vs 764.906900, diff=0
+    [15] HeartArc: 134.439100 vs 134.439100
+    [16] Pos: (37.077350, 77.825390, -84.955760) vs (37.077350, 77.825390, -84.955760)
+    [16] Vel: 0.000000 vs 0.000000, diff=0
+    [16] Energy: 764.906900 vs 764.906900, diff=0
+    [16] HeartArc: 134.439100 vs 134.439100
+    [17] Pos: (37.077350, 77.825420, -84.955740) vs (37.077350, 77.825420, -84.955740)
+    [17] Vel: 0.000000 vs 0.000000, diff=0
+    [17] Energy: 764.906900 vs 764.906900, diff=0
+    [17] HeartArc: 134.439100 vs 134.439100
+    [18] Pos: (37.077360, 77.825450, -84.955730) vs (37.077360, 77.825450, -84.955730)
+    [18] Vel: 0.000000 vs 0.000000, diff=0
+    [18] Energy: 764.906900 vs 764.906900, diff=0
+    [18] HeartArc: 134.439100 vs 134.439100
+    [19] Pos: (37.077370, 77.825460, -84.955710) vs (37.077370, 77.825460, -84.955710)
+    [19] Vel: 0.000000 vs 0.000000, diff=0
+    [19] Energy: 764.907000 vs 764.907000, diff=0
+    [19] HeartArc: 134.439100 vs 134.439100
+=== SAMPLE POINTS ===
+    [50] Pos: (37.144480, 77.588820, -84.928370) vs (37.144480, 77.588820, -84.928370)
+    [50] Vel: 2.395598 vs 2.395598, diff=0
+    [50] Energy: 764.907000 vs 764.907000, diff=0
+    [50] HeartArc: 134.752100 vs 134.752100
+    [100] Pos: (37.293980, 75.395690, -84.882840) vs (37.293980, 75.395690, -84.882840)
+    [100] Vel: 7.096262 vs 7.096262, diff=0
+    [100] Energy: 764.905900 vs 764.905900, diff=0
+    [100] HeartArc: 137.096000 vs 137.096000
+    [200] Pos: (35.670450, 64.173260, -83.588830) vs (35.670450, 64.173260, -83.588830)
+    [200] Vel: 16.460050 vs 16.460050, diff=0
+    [200] Energy: 764.868200 vs 764.868200, diff=0
+    [200] HeartArc: 148.862000 vs 148.862000
+]]></output>
+          </test-case>
+          <test-case id="1250" name="AllTypes_CopyPathSection2_MatchesGoldData" fullname="Tests.CopyPathNodeTests.AllTypes_CopyPathSection2_MatchesGoldData" methodname="AllTypes_CopyPathSection2_MatchesGoldData" classname="Tests.CopyPathNodeTests" runstate="Runnable" seed="103957518" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.081117" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[=== DRIFT ANALYSIS (offset=0) ===
+First divergence at index -1
+Max drift 0.000152587891 at index 176
+=== FIRST 20 POINTS ===
+    [0] Pos: (23.002330, 34.137720, -69.554530) vs (23.002330, 34.137720, -69.554530)
+    [0] Vel: 29.187640 vs 29.187640, diff=0
+    [0] Energy: 764.448400 vs 764.448400, diff=0
+    [0] HeartArc: 185.215100 vs 185.215100
+    [1] Pos: (22.883870, 33.931420, -69.391200) vs (22.883870, 33.931420, -69.391200)
+    [1] Vel: 29.187640 vs 29.187640, diff=0
+    [1] Energy: 753.991600 vs 753.991600, diff=0
+    [1] HeartArc: 185.506900 vs 185.506900
+    [2] Pos: (22.765370, 33.725690, -69.227150) vs (22.765370, 33.725690, -69.227150)
+    [2] Vel: 29.187640 vs 29.187640, diff=0
+    [2] Energy: 751.947900 vs 751.947900, diff=0
+    [2] HeartArc: 185.798800 vs 185.798800
+    [3] Pos: (22.646840, 33.520560, -69.062410) vs (22.646840, 33.520560, -69.062410)
+    [3] Vel: 29.187300 vs 29.187300, diff=0
+    [3] Energy: 749.900100 vs 749.900100, diff=0
+    [3] HeartArc: 186.090700 vs 186.090700
+    [4] Pos: (22.528290, 33.316020, -68.896960) vs (22.528290, 33.316020, -68.896960)
+    [4] Vel: 29.186310 vs 29.186310, diff=0
+    [4] Energy: 747.839100 vs 747.839100, diff=0
+    [4] HeartArc: 186.382600 vs 186.382600
+    [5] Pos: (22.409720, 33.112080, -68.730800) vs (22.409720, 33.112080, -68.730800)
+    [5] Vel: 29.184650 vs 29.184650, diff=0
+    [5] Energy: 745.764300 vs 745.764300, diff=0
+    [5] HeartArc: 186.674400 vs 186.674400
+    [6] Pos: (22.291140, 32.908730, -68.563960) vs (22.291140, 32.908730, -68.563960)
+    [6] Vel: 29.182320 vs 29.182320, diff=0
+    [6] Energy: 743.676100 vs 743.676100, diff=0
+    [6] HeartArc: 186.966200 vs 186.966200
+    [7] Pos: (22.172550, 32.706000, -68.396430) vs (22.172550, 32.706000, -68.396430)
+    [7] Vel: 29.179340 vs 29.179340, diff=0
+    [7] Energy: 741.574800 vs 741.574800, diff=0
+    [7] HeartArc: 187.258000 vs 187.258000
+    [8] Pos: (22.053970, 32.503890, -68.228230) vs (22.053970, 32.503890, -68.228230)
+    [8] Vel: 29.175700 vs 29.175700, diff=0
+    [8] Energy: 739.460100 vs 739.460100, diff=0
+    [8] HeartArc: 187.549800 vs 187.549800
+    [9] Pos: (21.935390, 32.302400, -68.059330) vs (21.935390, 32.302400, -68.059330)
+    [9] Vel: 29.171390 vs 29.171390, diff=0
+    [9] Energy: 737.332400 vs 737.332400, diff=0
+    [9] HeartArc: 187.841500 vs 187.841500
+    [10] Pos: (21.816830, 32.101540, -67.889770) vs (21.816830, 32.101540, -67.889770)
+    [10] Vel: 29.166430 vs 29.166430, diff=0
+    [10] Energy: 735.191500 vs 735.191500, diff=0
+    [10] HeartArc: 188.133100 vs 188.133100
+    [11] Pos: (21.698280, 31.901310, -67.719540) vs (21.698280, 31.901310, -67.719540)
+    [11] Vel: 29.160810 vs 29.160810, diff=0
+    [11] Energy: 733.038000 vs 733.038000, diff=0
+    [11] HeartArc: 188.424800 vs 188.424800
+    [12] Pos: (21.579760, 31.701720, -67.548640) vs (21.579760, 31.701720, -67.548640)
+    [12] Vel: 29.154540 vs 29.154540, diff=0
+    [12] Energy: 730.871300 vs 730.871300, diff=0
+    [12] HeartArc: 188.716300 vs 188.716300
+    [13] Pos: (21.461260, 31.502780, -67.377080) vs (21.461260, 31.502780, -67.377080)
+    [13] Vel: 29.147600 vs 29.147600, diff=0
+    [13] Energy: 728.692100 vs 728.692100, diff=0
+    [13] HeartArc: 189.007800 vs 189.007800
+    [14] Pos: (21.342800, 31.304490, -67.204870) vs (21.342800, 31.304490, -67.204870)
+    [14] Vel: 29.140020 vs 29.140020, diff=0
+    [14] Energy: 726.500200 vs 726.500200, diff=0
+    [14] HeartArc: 189.299200 vs 189.299200
+    [15] Pos: (21.224390, 31.106860, -67.032010) vs (21.224390, 31.106860, -67.032010)
+    [15] Vel: 29.131780 vs 29.131780, diff=0
+    [15] Energy: 724.295800 vs 724.295800, diff=0
+    [15] HeartArc: 189.590500 vs 189.590500
+    [16] Pos: (21.106020, 30.909890, -66.858510) vs (21.106020, 30.909890, -66.858510)
+    [16] Vel: 29.122890 vs 29.122890, diff=0
+    [16] Energy: 722.079100 vs 722.079100, diff=0
+    [16] HeartArc: 189.881700 vs 189.881700
+    [17] Pos: (20.987700, 30.713590, -66.684380) vs (20.987700, 30.713590, -66.684380)
+    [17] Vel: 29.113340 vs 29.113340, diff=0
+    [17] Energy: 719.849900 vs 719.849900, diff=0
+    [17] HeartArc: 190.172900 vs 190.172900
+    [18] Pos: (20.869450, 30.517970, -66.509610) vs (20.869450, 30.517970, -66.509610)
+    [18] Vel: 29.103160 vs 29.103160, diff=0
+    [18] Energy: 717.608800 vs 717.608800, diff=0
+    [18] HeartArc: 190.463900 vs 190.463900
+    [19] Pos: (20.751260, 30.323020, -66.334210) vs (20.751260, 30.323020, -66.334210)
+    [19] Vel: 29.092320 vs 29.092320, diff=0
+    [19] Energy: 715.355400 vs 715.355400, diff=0
+    [19] HeartArc: 190.754800 vs 190.754800
+=== SAMPLE POINTS ===
+    [50] Pos: (17.147710, 24.638040, -60.614010) vs (17.147710, 24.638040, -60.614010)
+    [50] Vel: 28.501880 vs 28.501880, diff=0
+    [50] Energy: 641.811100 vs 641.811100, diff=0
+    [50] HeartArc: 199.691600 vs 199.691600
+    [100] Pos: (11.844720, 17.072270, -50.592820) vs (11.844720, 17.072270, -50.592820)
+    [100] Vel: 26.544680 vs 26.544680, diff=0
+    [100] Energy: 512.616000 vs 512.616000, diff=0
+    [100] HeartArc: 213.484100 vs 213.484100
+    [200] Pos: (4.402135, 7.783138, -30.670000) vs (4.402135, 7.783138, -30.670000)
+    [200] Vel: 20.119400 vs 20.119400, diff=0
+    [200] Energy: 270.061700 vs 270.061700, diff=0
+    [200] HeartArc: 236.998100 vs 236.998100
+    [500] Pos: (0.000307, 3.000294, -0.242099) vs (0.000307, 3.000294, -0.242099)
+    [500] Vel: 4.310170 vs 4.310170, diff=0
+    [500] Energy: 29.004150 vs 29.004150, diff=0
+    [500] HeartArc: 268.628400 vs 268.628400
+]]></output>
+          </test-case>
+          <test-case id="1251" name="AllTypes_CopyPathSection3_MatchesGoldData" fullname="Tests.CopyPathNodeTests.AllTypes_CopyPathSection3_MatchesGoldData" methodname="AllTypes_CopyPathSection3_MatchesGoldData" classname="Tests.CopyPathNodeTests" runstate="Runnable" seed="1446852890" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.080625" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[=== DRIFT ANALYSIS (offset=0) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (-6.230000, 6.310000, -159.960000) vs (-6.230000, 6.310000, -159.960000)
+    [0] Vel: 15.620270 vs 15.620270, diff=0
+    [0] Energy: 194.874400 vs 194.874400, diff=0
+    [0] HeartArc: 510.557600 vs 510.557600
+    [1] Pos: (-6.197281, 6.298588, -160.110000) vs (-6.197281, 6.298588, -160.110000)
+    [1] Vel: 15.625390 vs 15.625390, diff=0
+    [1] Energy: 194.873600 vs 194.873600, diff=0
+    [1] HeartArc: 510.713800 vs 510.713800
+    [2] Pos: (-6.164551, 6.287178, -160.260000) vs (-6.164551, 6.287178, -160.260000)
+    [2] Vel: 15.630500 vs 15.630500, diff=0
+    [2] Energy: 194.872900 vs 194.872900, diff=0
+    [2] HeartArc: 510.870000 vs 510.870000
+    [3] Pos: (-6.131809, 6.275757, -160.410100) vs (-6.131809, 6.275757, -160.410100)
+    [3] Vel: 15.635600 vs 15.635600, diff=0
+    [3] Energy: 194.872100 vs 194.872100, diff=0
+    [3] HeartArc: 511.026400 vs 511.026400
+    [4] Pos: (-6.099060, 6.264328, -160.560200) vs (-6.099060, 6.264328, -160.560200)
+    [4] Vel: 15.640710 vs 15.640710, diff=0
+    [4] Energy: 194.871400 vs 194.871400, diff=0
+    [4] HeartArc: 511.182700 vs 511.182700
+    [5] Pos: (-6.066338, 6.252941, -160.710400) vs (-6.066338, 6.252941, -160.710400)
+    [5] Vel: 15.645780 vs 15.645780, diff=0
+    [5] Energy: 194.870600 vs 194.870600, diff=0
+    [5] HeartArc: 511.339100 vs 511.339100
+    [6] Pos: (-6.034370, 6.242195, -160.860900) vs (-6.034370, 6.242195, -160.860900)
+    [6] Vel: 15.650440 vs 15.650440, diff=0
+    [6] Energy: 194.869800 vs 194.869800, diff=0
+    [6] HeartArc: 511.495600 vs 511.495600
+    [7] Pos: (-6.003595, 6.232479, -161.011500) vs (-6.003595, 6.232479, -161.011500)
+    [7] Vel: 15.654450 vs 15.654450, diff=0
+    [7] Energy: 194.869100 vs 194.869100, diff=0
+    [7] HeartArc: 511.652100 vs 511.652100
+    [8] Pos: (-5.973072, 6.222984, -161.162300) vs (-5.973072, 6.222984, -161.162300)
+    [8] Vel: 15.658310 vs 15.658310, diff=0
+    [8] Energy: 194.868300 vs 194.868300, diff=0
+    [8] HeartArc: 511.808700 vs 511.808700
+    [9] Pos: (-5.942541, 6.213490, -161.313100) vs (-5.942541, 6.213490, -161.313100)
+    [9] Vel: 15.662160 vs 15.662160, diff=0
+    [9] Energy: 194.867500 vs 194.867500, diff=0
+    [9] HeartArc: 511.965200 vs 511.965200
+    [10] Pos: (-5.912006, 6.203991, -161.464000) vs (-5.912006, 6.203991, -161.464000)
+    [10] Vel: 15.666000 vs 15.666000, diff=0
+    [10] Energy: 194.866800 vs 194.866800, diff=0
+    [10] HeartArc: 512.121800 vs 512.121800
+    [11] Pos: (-5.881464, 6.194489, -161.614900) vs (-5.881464, 6.194489, -161.614900)
+    [11] Vel: 15.669840 vs 15.669840, diff=0
+    [11] Energy: 194.866000 vs 194.866000, diff=0
+    [11] HeartArc: 512.278400 vs 512.278400
+    [12] Pos: (-5.852757, 6.186539, -161.766200) vs (-5.852757, 6.186539, -161.766200)
+    [12] Vel: 15.672700 vs 15.672700, diff=0
+    [12] Energy: 194.865200 vs 194.865200, diff=0
+    [12] HeartArc: 512.435200 vs 512.435200
+    [13] Pos: (-5.824480, 6.178951, -161.917600) vs (-5.824480, 6.178951, -161.917600)
+    [13] Vel: 15.675320 vs 15.675320, diff=0
+    [13] Energy: 194.864500 vs 194.864500, diff=0
+    [13] HeartArc: 512.591900 vs 512.591900
+    [14] Pos: (-5.796326, 6.171467, -162.069000) vs (-5.796326, 6.171467, -162.069000)
+    [14] Vel: 15.677870 vs 15.677870, diff=0
+    [14] Energy: 194.863700 vs 194.863700, diff=0
+    [14] HeartArc: 512.748700 vs 512.748700
+    [15] Pos: (-5.768166, 6.163982, -162.220400) vs (-5.768166, 6.163982, -162.220400)
+    [15] Vel: 15.680400 vs 15.680400, diff=0
+    [15] Energy: 194.862900 vs 194.862900, diff=0
+    [15] HeartArc: 512.905400 vs 512.905400
+    [16] Pos: (-5.740116, 6.156590, -162.371900) vs (-5.740116, 6.156590, -162.371900)
+    [16] Vel: 15.682880 vs 15.682880, diff=0
+    [16] Energy: 194.862200 vs 194.862200, diff=0
+    [16] HeartArc: 513.062200 vs 513.062200
+    [17] Pos: (-5.712906, 6.149891, -162.523600) vs (-5.712906, 6.149891, -162.523600)
+    [17] Vel: 15.684900 vs 15.684900, diff=0
+    [17] Energy: 194.861400 vs 194.861400, diff=0
+    [17] HeartArc: 513.219100 vs 513.219100
+    [18] Pos: (-5.687157, 6.144394, -162.675500) vs (-5.687157, 6.144394, -162.675500)
+    [18] Vel: 15.686160 vs 15.686160, diff=0
+    [18] Energy: 194.860600 vs 194.860600, diff=0
+    [18] HeartArc: 513.375900 vs 513.375900
+    [19] Pos: (-5.661531, 6.139008, -162.827400) vs (-5.661531, 6.139008, -162.827400)
+    [19] Vel: 15.687340 vs 15.687340, diff=0
+    [19] Energy: 194.859800 vs 194.859800, diff=0
+    [19] HeartArc: 513.532800 vs 513.532800
+=== SAMPLE POINTS ===
+    [50] Pos: (-5.160263, 6.198799, -167.554500) vs (-5.160263, 6.198799, -167.554500)
+    [50] Vel: 15.573260 vs 15.573260, diff=0
+    [50] Energy: 194.836000 vs 194.836000, diff=0
+    [50] HeartArc: 518.387300 vs 518.387300
+    [100] Pos: (-6.387268, 7.602440, -174.701000) vs (-6.387268, 7.602440, -174.701000)
+    [100] Vel: 14.475750 vs 14.475750, diff=0
+    [100] Energy: 194.801200 vs 194.801200, diff=0
+    [100] HeartArc: 525.958900 vs 525.958900
+    [200] Pos: (-15.415640, 11.586440, -182.997100) vs (-15.415640, 11.586440, -182.997100)
+    [200] Vel: 11.190340 vs 11.190340, diff=0
+    [200] Energy: 194.759700 vs 194.759700, diff=0
+    [200] HeartArc: 538.643100 vs 538.643100
+]]></output>
+          </test-case>
+        </test-suite>
+        <test-suite type="TestFixture" id="1339" name="ForceNodeTests" fullname="Tests.ForceNodeTests" classname="Tests.ForceNodeTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.081838" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties>
+            <property name="Category" value="Golden" />
+          </properties>
+          <test-case id="1343" name="AllTypes_ForceSection_MatchesGoldData" fullname="Tests.ForceNodeTests.AllTypes_ForceSection_MatchesGoldData" methodname="AllTypes_ForceSection_MatchesGoldData" classname="Tests.ForceNodeTests" runstate="Runnable" seed="931692495" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.080640" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[=== DRIFT ANALYSIS (offset=0) ===
+First divergence at index -1
+Max drift 4.76837158E-06 at index 138
+=== FIRST 20 POINTS ===
+    [0] Pos: (0.000002, 2.999989, 0.000000) vs (0.000002, 2.999989, 0.000000)
+    [0] Vel: 4.231463 vs 4.231463, diff=0
+    [0] Energy: 28.664050 vs 28.664050, diff=0
+    [0] HeartArc: 268.873100 vs 268.873100
+    [1] Pos: (-0.000095, 2.999995, 0.041975) vs (-0.000095, 2.999995, 0.041975)
+    [1] Vel: 4.227893 vs 4.227892, diff=4.76837E-07
+    [1] Energy: 28.664040 vs 28.664040, diff=0
+    [1] HeartArc: 268.915500 vs 268.915500
+    [2] Pos: (-0.000385, 3.000013, 0.084003) vs (-0.000385, 3.000013, 0.084003)
+    [2] Vel: 4.225771 vs 4.225770, diff=9.53674E-07
+    [2] Energy: 28.664020 vs 28.664020, diff=0
+    [2] HeartArc: 268.957800 vs 268.957800
+    [3] Pos: (-0.000868, 3.000041, 0.126010) vs (-0.000868, 3.000041, 0.126010)
+    [3] Vel: 4.223617 vs 4.223617, diff=4.76837E-07
+    [3] Energy: 28.664010 vs 28.664010, diff=0
+    [3] HeartArc: 269.000100 vs 269.000100
+    [4] Pos: (-0.001540, 3.000080, 0.167995) vs (-0.001540, 3.000080, 0.167995)
+    [4] Vel: 4.221428 vs 4.221428, diff=4.76837E-07
+    [4] Energy: 28.663990 vs 28.663990, diff=0
+    [4] HeartArc: 269.042400 vs 269.042400
+    [5] Pos: (-0.002400, 3.000129, 0.209955) vs (-0.002400, 3.000129, 0.209955)
+    [5] Vel: 4.219206 vs 4.219206, diff=0
+    [5] Energy: 28.663970 vs 28.663970, diff=0
+    [5] HeartArc: 269.084700 vs 269.084700
+    [6] Pos: (-0.003446, 3.000189, 0.251892) vs (-0.003446, 3.000189, 0.251892)
+    [6] Vel: 4.216950 vs 4.216950, diff=4.76837E-07
+    [6] Energy: 28.663960 vs 28.663960, diff=0
+    [6] HeartArc: 269.126900 vs 269.126900
+    [7] Pos: (-0.004675, 3.000260, 0.293803) vs (-0.004675, 3.000260, 0.293803)
+    [7] Vel: 4.214657 vs 4.214657, diff=4.76837E-07
+    [7] Energy: 28.663940 vs 28.663940, diff=0
+    [7] HeartArc: 269.169200 vs 269.169200
+    [8] Pos: (-0.006086, 3.000342, 0.335689) vs (-0.006086, 3.000343, 0.335689)
+    [8] Vel: 4.212329 vs 4.212328, diff=9.53674E-07
+    [8] Energy: 28.663930 vs 28.663930, diff=0
+    [8] HeartArc: 269.211400 vs 269.211400
+    [9] Pos: (-0.007677, 3.000437, 0.377549) vs (-0.007677, 3.000437, 0.377549)
+    [9] Vel: 4.209964 vs 4.209963, diff=4.76837E-07
+    [9] Energy: 28.663910 vs 28.663910, diff=0
+    [9] HeartArc: 269.253500 vs 269.253500
+    [10] Pos: (-0.009444, 3.000543, 0.419381) vs (-0.009444, 3.000543, 0.419381)
+    [10] Vel: 4.207561 vs 4.207561, diff=4.76837E-07
+    [10] Energy: 28.663900 vs 28.663900, diff=0
+    [10] HeartArc: 269.295700 vs 269.295700
+    [11] Pos: (-0.011387, 3.000661, 0.461186) vs (-0.011387, 3.000661, 0.461186)
+    [11] Vel: 4.205123 vs 4.205123, diff=4.76837E-07
+    [11] Energy: 28.663880 vs 28.663880, diff=0
+    [11] HeartArc: 269.337800 vs 269.337800
+    [12] Pos: (-0.013504, 3.000791, 0.502963) vs (-0.013504, 3.000791, 0.502963)
+    [12] Vel: 4.202646 vs 4.202645, diff=9.53674E-07
+    [12] Energy: 28.663870 vs 28.663870, diff=0
+    [12] HeartArc: 269.379900 vs 269.379900
+    [13] Pos: (-0.015791, 3.000933, 0.544710) vs (-0.015791, 3.000933, 0.544710)
+    [13] Vel: 4.200131 vs 4.200130, diff=4.76837E-07
+    [13] Energy: 28.663850 vs 28.663850, diff=0
+    [13] HeartArc: 269.422000 vs 269.422000
+    [14] Pos: (-0.018248, 3.001087, 0.586428) vs (-0.018248, 3.001088, 0.586428)
+    [14] Vel: 4.197578 vs 4.197577, diff=9.53674E-07
+    [14] Energy: 28.663840 vs 28.663840, diff=0
+    [14] HeartArc: 269.464100 vs 269.464100
+    [15] Pos: (-0.020872, 3.001254, 0.628117) vs (-0.020872, 3.001255, 0.628116)
+    [15] Vel: 4.194986 vs 4.194985, diff=9.53674E-07
+    [15] Energy: 28.663820 vs 28.663820, diff=0
+    [15] HeartArc: 269.506100 vs 269.506100
+    [16] Pos: (-0.023661, 3.001434, 0.669774) vs (-0.023661, 3.001434, 0.669774)
+    [16] Vel: 4.192357 vs 4.192357, diff=4.76837E-07
+    [16] Energy: 28.663810 vs 28.663810, diff=0
+    [16] HeartArc: 269.548100 vs 269.548100
+    [17] Pos: (-0.026613, 3.001625, 0.711400) vs (-0.026613, 3.001625, 0.711400)
+    [17] Vel: 4.189690 vs 4.189690, diff=0
+    [17] Energy: 28.663790 vs 28.663790, diff=0
+    [17] HeartArc: 269.590000 vs 269.590000
+    [18] Pos: (-0.029726, 3.001829, 0.752995) vs (-0.029726, 3.001829, 0.752995)
+    [18] Vel: 4.186982 vs 4.186981, diff=4.76837E-07
+    [18] Energy: 28.663780 vs 28.663780, diff=0
+    [18] HeartArc: 269.632000 vs 269.632000
+    [19] Pos: (-0.032998, 3.002046, 0.794558) vs (-0.032998, 3.002046, 0.794557)
+    [19] Vel: 4.184234 vs 4.184234, diff=0
+    [19] Energy: 28.663760 vs 28.663760, diff=0
+    [19] HeartArc: 269.673900 vs 269.673900
+=== SAMPLE POINTS ===
+    [50] Pos: (-0.202308, 3.013868, 2.065197) vs (-0.202308, 3.013868, 2.065196)
+    [50] Vel: 4.082153 vs 4.082152, diff=9.53674E-07
+    [50] Energy: 28.663320 vs 28.663320, diff=0
+    [50] HeartArc: 270.958200 vs 270.958200
+    [100] Pos: (-0.647344, 3.025226, 4.045179) vs (-0.647345, 3.025226, 4.045177)
+    [100] Vel: 3.915482 vs 3.915482, diff=4.76837E-07
+    [100] Energy: 28.662690 vs 28.662690, diff=0
+    [100] HeartArc: 272.958100 vs 272.958100
+    [200] Pos: (-1.416055, 2.696408, 8.052828) vs (-1.416056, 2.696408, 8.052828)
+    [200] Vel: 4.347153 vs 4.347153, diff=0
+    [200] Energy: 28.661420 vs 28.661420, diff=0
+    [200] HeartArc: 276.973100 vs 276.973100
+]]></output>
+          </test-case>
+        </test-suite>
+        <test-suite type="TestFixture" id="1344" name="GeometricNodeTests" fullname="Tests.GeometricNodeTests" classname="Tests.GeometricNodeTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.163089" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties>
+            <property name="Category" value="Golden" />
+          </properties>
+          <test-case id="1351" name="AllTypes_GeometricSection1_MatchesGoldData" fullname="Tests.GeometricNodeTests.AllTypes_GeometricSection1_MatchesGoldData" methodname="AllTypes_GeometricSection1_MatchesGoldData" classname="Tests.GeometricNodeTests" runstate="Runnable" seed="1731478656" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.082184" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[=== DRIFT ANALYSIS (offset=0) ===
+First divergence at index -1
+Max drift 0.000244140625 at index 356
+=== FIRST 20 POINTS ===
+    [0] Pos: (0.000000, 3.000000, 0.000000) vs (0.000000, 3.000000, 0.000000)
+    [0] Vel: 10.000000 vs 10.000000, diff=0
+    [0] Energy: 69.711360 vs 69.711360, diff=0
+    [0] HeartArc: 0.000000 vs 0.000000
+    [1] Pos: (0.000050, 3.000050, -0.100004) vs (0.000050, 3.000050, -0.100004)
+    [1] Vel: 10.000450 vs 10.000450, diff=0
+    [1] Energy: 69.715820 vs 69.715820, diff=0
+    [1] HeartArc: 0.101110 vs 0.101110
+    [2] Pos: (0.000200, 3.000200, -0.200022) vs (0.000200, 3.000200, -0.200022)
+    [2] Vel: 10.001780 vs 10.001780, diff=0
+    [2] Energy: 69.729640 vs 69.729640, diff=0
+    [2] HeartArc: 0.202232 vs 0.202232
+    [3] Pos: (0.000450, 3.000451, -0.300061) vs (0.000450, 3.000450, -0.300061)
+    [3] Vel: 10.004000 vs 10.004000, diff=0
+    [3] Energy: 69.753340 vs 69.753340, diff=0
+    [3] HeartArc: 0.303376 vs 0.303376
+    [4] Pos: (0.000800, 3.000801, -0.400131) vs (0.000800, 3.000800, -0.400131)
+    [4] Vel: 10.007100 vs 10.007100, diff=0
+    [4] Energy: 69.786910 vs 69.786900, diff=7.6294E-06
+    [4] HeartArc: 0.404550 vs 0.404550
+    [5] Pos: (0.001251, 3.001252, -0.500240) vs (0.001251, 3.001251, -0.500240)
+    [5] Vel: 10.011090 vs 10.011090, diff=0
+    [5] Energy: 69.830320 vs 69.830310, diff=7.6294E-06
+    [5] HeartArc: 0.505763 vs 0.505763
+    [6] Pos: (0.001802, 3.001803, -0.600396) vs (0.001802, 3.001802, -0.600396)
+    [6] Vel: 10.015960 vs 10.015960, diff=0
+    [6] Energy: 69.883610 vs 69.883610, diff=0
+    [6] HeartArc: 0.607024 vs 0.607024
+    [7] Pos: (0.002454, 3.002455, -0.700609) vs (0.002454, 3.002454, -0.700609)
+    [7] Vel: 10.021710 vs 10.021710, diff=0
+    [7] Energy: 69.946710 vs 69.946700, diff=7.6294E-06
+    [7] HeartArc: 0.708341 vs 0.708341
+    [8] Pos: (0.003206, 3.003207, -0.800887) vs (0.003206, 3.003207, -0.800887)
+    [8] Vel: 10.028330 vs 10.028330, diff=0
+    [8] Energy: 70.019660 vs 70.019650, diff=7.6294E-06
+    [8] HeartArc: 0.809725 vs 0.809725
+    [9] Pos: (0.004060, 3.004061, -0.901238) vs (0.004060, 3.004061, -0.901238)
+    [9] Vel: 10.035840 vs 10.035840, diff=0
+    [9] Energy: 70.102460 vs 70.102460, diff=7.6294E-06
+    [9] HeartArc: 0.911183 vs 0.911183
+    [10] Pos: (0.005015, 3.005017, -1.001671) vs (0.005015, 3.005016, -1.001671)
+    [10] Vel: 10.044210 vs 10.044210, diff=0
+    [10] Energy: 70.195100 vs 70.195090, diff=7.6294E-06
+    [10] HeartArc: 1.012725 vs 1.012725
+    [11] Pos: (0.006072, 3.006074, -1.102194) vs (0.006072, 3.006073, -1.102194)
+    [11] Vel: 10.053460 vs 10.053460, diff=0
+    [11] Energy: 70.297580 vs 70.297580, diff=0
+    [11] HeartArc: 1.114359 vs 1.114359
+    [12] Pos: (0.007231, 3.007233, -1.202817) vs (0.007231, 3.007233, -1.202817)
+    [12] Vel: 10.063580 vs 10.063580, diff=0
+    [12] Energy: 70.409900 vs 70.409900, diff=0
+    [12] HeartArc: 1.216094 vs 1.216094
+    [13] Pos: (0.008492, 3.008495, -1.303547) vs (0.008492, 3.008495, -1.303547)
+    [13] Vel: 10.074560 vs 10.074560, diff=0
+    [13] Energy: 70.532120 vs 70.532110, diff=7.6294E-06
+    [13] HeartArc: 1.317939 vs 1.317939
+    [14] Pos: (0.009856, 3.009860, -1.404392) vs (0.009856, 3.009860, -1.404392)
+    [14] Vel: 10.086420 vs 10.086420, diff=0
+    [14] Energy: 70.664200 vs 70.664200, diff=0
+    [14] HeartArc: 1.419902 vs 1.419902
+    [15] Pos: (0.011324, 3.011329, -1.505362) vs (0.011324, 3.011329, -1.505362)
+    [15] Vel: 10.099130 vs 10.099130, diff=0
+    [15] Energy: 70.806170 vs 70.806170, diff=0
+    [15] HeartArc: 1.521992 vs 1.521992
+    [16] Pos: (0.012895, 3.012901, -1.606465) vs (0.012895, 3.012901, -1.606465)
+    [16] Vel: 10.112710 vs 10.112710, diff=0
+    [16] Energy: 70.958050 vs 70.958050, diff=0
+    [16] HeartArc: 1.624218 vs 1.624218
+    [17] Pos: (0.014570, 3.014578, -1.707708) vs (0.014570, 3.014578, -1.707708)
+    [17] Vel: 10.127140 vs 10.127140, diff=0
+    [17] Energy: 71.119840 vs 71.119840, diff=0
+    [17] HeartArc: 1.726589 vs 1.726589
+    [18] Pos: (0.016350, 3.016361, -1.809101) vs (0.016350, 3.016361, -1.809101)
+    [18] Vel: 10.142430 vs 10.142430, diff=0
+    [18] Energy: 71.291560 vs 71.291560, diff=0
+    [18] HeartArc: 1.829113 vs 1.829113
+    [19] Pos: (0.018236, 3.018248, -1.910652) vs (0.018236, 3.018248, -1.910652)
+    [19] Vel: 10.158570 vs 10.158570, diff=0
+    [19] Energy: 71.473260 vs 71.473260, diff=0
+    [19] HeartArc: 1.931798 vs 1.931799
+=== SAMPLE POINTS ===
+    [50] Pos: (0.133418, 3.134028, -5.180913) vs (0.133418, 3.134028, -5.180914)
+    [50] Vel: 11.067990 vs 11.067990, diff=0
+    [50] Energy: 82.243480 vs 82.243480, diff=0
+    [50] HeartArc: 5.241100 vs 5.241101
+    [100] Pos: (0.630589, 3.642294, -11.353180) vs (0.630589, 3.642295, -11.353180)
+    [100] Vel: 14.000140 vs 14.000140, diff=9.53674E-07
+    [100] Energy: 123.950300 vs 123.950300, diff=7.6294E-06
+    [100] HeartArc: 11.518170 vs 11.518170
+    [200] Pos: (3.927125, 7.238939, -28.928950) vs (3.927125, 7.238939, -28.928940)
+    [200] Vel: 22.722560 vs 22.722560, diff=0
+    [200] Energy: 319.226400 vs 319.226400, diff=0
+    [200] HeartArc: 29.972060 vs 29.972050
+]]></output>
+          </test-case>
+          <test-case id="1352" name="AllTypes_GeometricSection2_MatchesGoldData" fullname="Tests.GeometricNodeTests.AllTypes_GeometricSection2_MatchesGoldData" methodname="AllTypes_GeometricSection2_MatchesGoldData" classname="Tests.GeometricNodeTests" runstate="Runnable" seed="1498471491" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.079369" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[=== DRIFT ANALYSIS (offset=0) ===
+First divergence at index -1
+Max drift 0.00328332931 at index 323
+=== FIRST 20 POINTS ===
+    [0] Pos: (23.002330, 34.137720, -69.554530) vs (23.002330, 34.137720, -69.554530)
+    [0] Vel: 30.000000 vs 30.000000, diff=0
+    [0] Energy: 775.908000 vs 775.908000, diff=0
+    [0] HeartArc: 83.658290 vs 83.658290
+    [1] Pos: (23.122700, 34.350470, -69.722470) vs (23.122700, 34.350470, -69.722470)
+    [1] Vel: 29.854240 vs 29.854240, diff=0
+    [1] Energy: 775.902600 vs 775.902600, diff=0
+    [1] HeartArc: 83.958290 vs 83.958290
+    [2] Pos: (23.242430, 34.562790, -69.888820) vs (23.242430, 34.562790, -69.888820)
+    [2] Vel: 29.781450 vs 29.781450, diff=0
+    [2] Energy: 775.897300 vs 775.897300, diff=0
+    [2] HeartArc: 84.256840 vs 84.256840
+    [3] Pos: (23.361810, 34.775200, -70.054020) vs (23.361810, 34.775200, -70.054020)
+    [3] Vel: 29.708450 vs 29.708460, diff=1.90735E-06
+    [3] Energy: 775.892000 vs 775.892000, diff=0
+    [3] HeartArc: 84.554660 vs 84.554660
+    [4] Pos: (23.480830, 34.987700, -70.218080) vs (23.480830, 34.987690, -70.218070)
+    [4] Vel: 29.635260 vs 29.635260, diff=1.90735E-06
+    [4] Energy: 775.886700 vs 775.886700, diff=0
+    [4] HeartArc: 84.851750 vs 84.851750
+    [5] Pos: (23.599500, 35.200270, -70.380970) vs (23.599500, 35.200260, -70.380960)
+    [5] Vel: 29.561860 vs 29.561860, diff=0
+    [5] Energy: 775.881500 vs 775.881500, diff=0
+    [5] HeartArc: 85.148100 vs 85.148100
+    [6] Pos: (23.717810, 35.412910, -70.542710) vs (23.717810, 35.412900, -70.542690)
+    [6] Vel: 29.488260 vs 29.488260, diff=0
+    [6] Energy: 775.876300 vs 775.876300, diff=0
+    [6] HeartArc: 85.443730 vs 85.443730
+    [7] Pos: (23.835760, 35.625610, -70.703290) vs (23.835760, 35.625610, -70.703280)
+    [7] Vel: 29.414450 vs 29.414450, diff=1.90735E-06
+    [7] Energy: 775.871200 vs 775.871200, diff=0
+    [7] HeartArc: 85.738610 vs 85.738610
+    [8] Pos: (23.953330, 35.838380, -70.862730) vs (23.953330, 35.838380, -70.862720)
+    [8] Vel: 29.340450 vs 29.340450, diff=0
+    [8] Energy: 775.866100 vs 775.866100, diff=0
+    [8] HeartArc: 86.032760 vs 86.032760
+    [9] Pos: (24.070540, 36.051190, -71.021030) vs (24.070540, 36.051190, -71.021010)
+    [9] Vel: 29.266240 vs 29.266240, diff=0
+    [9] Energy: 775.861100 vs 775.861100, diff=0
+    [9] HeartArc: 86.326170 vs 86.326170
+    [10] Pos: (24.187360, 36.264050, -71.178160) vs (24.187360, 36.264050, -71.178150)
+    [10] Vel: 29.191840 vs 29.191840, diff=0
+    [10] Energy: 775.856100 vs 775.856100, diff=0
+    [10] HeartArc: 86.618840 vs 86.618840
+    [11] Pos: (24.303800, 36.476940, -71.334170) vs (24.303800, 36.476940, -71.334150)
+    [11] Vel: 29.117240 vs 29.117240, diff=0
+    [11] Energy: 775.851100 vs 775.851100, diff=0
+    [11] HeartArc: 86.910760 vs 86.910760
+    [12] Pos: (24.419860, 36.689880, -71.489030) vs (24.419860, 36.689880, -71.489010)
+    [12] Vel: 29.042440 vs 29.042440, diff=1.90735E-06
+    [12] Energy: 775.846100 vs 775.846100, diff=0
+    [12] HeartArc: 87.201930 vs 87.201930
+    [13] Pos: (24.535530, 36.902840, -71.642750) vs (24.535530, 36.902830, -71.642730)
+    [13] Vel: 28.967440 vs 28.967440, diff=3.8147E-06
+    [13] Energy: 775.841200 vs 775.841200, diff=0
+    [13] HeartArc: 87.492360 vs 87.492360
+    [14] Pos: (24.650810, 37.115810, -71.795330) vs (24.650810, 37.115800, -71.795320)
+    [14] Vel: 28.892240 vs 28.892250, diff=3.8147E-06
+    [14] Energy: 775.836400 vs 775.836400, diff=0
+    [14] HeartArc: 87.782040 vs 87.782040
+    [15] Pos: (24.765690, 37.328800, -71.946780) vs (24.765690, 37.328790, -71.946770)
+    [15] Vel: 28.816860 vs 28.816860, diff=3.8147E-06
+    [15] Energy: 775.831500 vs 775.831500, diff=0
+    [15] HeartArc: 88.070960 vs 88.070960
+    [16] Pos: (24.880170, 37.541790, -72.097100) vs (24.880170, 37.541790, -72.097100)
+    [16] Vel: 28.741270 vs 28.741270, diff=1.90735E-06
+    [16] Energy: 775.826800 vs 775.826800, diff=0
+    [16] HeartArc: 88.359120 vs 88.359130
+    [17] Pos: (24.994250, 37.754790, -72.246290) vs (24.994240, 37.754780, -72.246290)
+    [17] Vel: 28.665490 vs 28.665490, diff=1.90735E-06
+    [17] Energy: 775.822000 vs 775.822000, diff=0
+    [17] HeartArc: 88.646540 vs 88.646550
+    [18] Pos: (25.107910, 37.967780, -72.394360) vs (25.107910, 37.967770, -72.394360)
+    [18] Vel: 28.589520 vs 28.589520, diff=3.8147E-06
+    [18] Energy: 775.817300 vs 775.817300, diff=0
+    [18] HeartArc: 88.933200 vs 88.933200
+    [19] Pos: (25.221170, 38.180760, -72.541310) vs (25.221170, 38.180750, -72.541310)
+    [19] Vel: 28.513350 vs 28.513350, diff=1.90735E-06
+    [19] Energy: 775.812600 vs 775.812600, diff=0
+    [19] HeartArc: 89.219090 vs 89.219100
+=== SAMPLE POINTS ===
+    [50] Pos: (28.508960, 44.742300, -76.555630) vs (28.508960, 44.742280, -76.555630)
+    [50] Vel: 26.059930 vs 26.059940, diff=9.53674E-06
+    [50] Energy: 775.685600 vs 775.685600, diff=0
+    [50] HeartArc: 97.694820 vs 97.694820
+    [100] Pos: (32.751590, 54.818840, -81.019710) vs (32.751590, 54.818820, -81.019650)
+    [100] Vel: 21.765430 vs 21.765450, diff=1.14441E-05
+    [100] Energy: 775.546300 vs 775.546300, diff=0
+    [100] HeartArc: 109.688700 vs 109.688700
+    [200] Pos: (36.941040, 70.640530, -84.566150) vs (36.941060, 70.640500, -84.566120)
+    [200] Vel: 12.274510 vs 12.274540, diff=2.47955E-05
+    [200] Energy: 775.437800 vs 775.437800, diff=0
+    [200] HeartArc: 126.834300 vs 126.834300
+]]></output>
+          </test-case>
+        </test-suite>
+        <test-suite type="TestFixture" id="1457" name="RustForceNodeValidationTests" fullname="Tests.RustForceNodeValidationTests" classname="Tests.RustForceNodeValidationTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.124710" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties>
+            <property name="Category" value="Validation" />
+          </properties>
+          <test-case id="1460" name="RustMatchesBurst_AllTypes_ForceSection" fullname="Tests.RustForceNodeValidationTests.RustMatchesBurst_AllTypes_ForceSection" methodname="RustMatchesBurst_AllTypes_ForceSection" classname="Tests.RustForceNodeValidationTests" runstate="Runnable" seed="1949381227" result="Passed" start-time="2025-12-21 04:02:22Z" end-time="2025-12-21 04:02:22Z" duration="0.123501" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[Saving results to: C:/Users/dylan/AppData/LocalLow/IndividualKex/KexEdit\TestResults.xml
 ]]></output>
           </test-case>
         </test-suite>

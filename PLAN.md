@@ -31,21 +31,30 @@
 
 Before changing anything, establish tests that validate the critical integration point.
 
-**Status: Complete**
+**Status: In Progress**
 
 **Completed:**
 - ✅ Extended `CoasterGoldTests.cs` with point-by-point parity checking using `SimPointComparer`
 - ✅ Fixed driven velocity mode
 - ✅ Fixed CurvedSection scalar port values
 - ✅ Fixed ReversePathNode arc recalculation
-  - `ReversePathNode.Build` now recalculates `heartArc` and `spineArc` for reversed paths
-  - Arc values start at 0 and accumulate along the reversed path direction
-  - CopyPath nodes can now correctly iterate through reversed source paths
-- ✅ Shuttle test passes with full parity
+- ✅ Verified naming convention mapping (gold→modern) is correct in test infrastructure
 
-**Remaining work:**
+**Failing tests:**
+- `AllTypes_LoadAndEvaluate_MatchesGoldData` - CopyPath point count mismatch (463 vs 359)
+- `Shuttle_LoadAndEvaluate_MatchesGoldData` - CopyPath point count mismatch (317 vs 320)
 
-Address failing tests.
+**Investigation findings:**
+- Node-level CopyPath tests pass (`CopyPathNodeTests`) - the node logic is correct
+- Integration tests fail because CoasterEvaluator provides a different source path
+- Gold data includes pre-computed `sourcePath` from legacy system
+- CoasterEvaluator uses evaluated upstream node output as source path
+- The evaluated source path differs from gold's expected source path
+
+**Next steps:**
+1. Compare CoasterEvaluator's evaluated source path length vs gold's `sourcePath` length
+2. Determine if upstream node (ReversePath?) produces different output
+3. Check if graph wiring/port resolution in CoasterEvaluator matches legacy
 
 **Test strategy:**
 ```csharp
