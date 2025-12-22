@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class DurationTypeField : VisualElement {
         private static readonly Dictionary<DurationType, string> s_StringCache = new() {

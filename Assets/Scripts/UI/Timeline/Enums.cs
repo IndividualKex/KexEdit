@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public enum TimelineViewMode {
         DopeSheet,

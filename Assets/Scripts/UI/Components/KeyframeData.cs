@@ -1,5 +1,6 @@
 using System;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [Serializable]
     public struct KeyframeData {

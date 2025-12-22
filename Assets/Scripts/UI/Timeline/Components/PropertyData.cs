@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Unity.Collections;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public class PropertyData : IDisposable {
         public List<Keyframe> Keyframes = new();

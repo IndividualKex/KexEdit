@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [Serializable]
     public class TrackStyleConfig {

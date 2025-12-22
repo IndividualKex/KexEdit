@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup), OrderLast = true)]
     public partial class VideoControlSystem : SystemBase {
@@ -80,8 +81,8 @@ namespace KexEdit.UI {
             }
 
             if (_data.IsPlaying && !KexTime.IsPaused) {
-                if (SystemAPI.HasBuffer<Point>(follower.Section)) {
-                    var points = SystemAPI.GetBuffer<Point>(follower.Section);
+                if (SystemAPI.HasBuffer<CorePointBuffer>(follower.Section)) {
+                    var points = SystemAPI.GetBuffer<CorePointBuffer>(follower.Section);
                     if (follower.Index >= points.Length - 1) {
                         bool hasNext = SystemAPI.HasComponent<Node>(follower.Section) &&
                                       SystemAPI.GetComponent<Node>(follower.Section).Next != Entity.Null;
@@ -172,8 +173,8 @@ namespace KexEdit.UI {
             while (currentEntity != Entity.Null && !processedEntities.Contains(currentEntity)) {
                 processedEntities.Add(currentEntity);
 
-                if (SystemAPI.HasBuffer<Point>(currentEntity)) {
-                    _data.TotalLength += SystemAPI.GetBuffer<Point>(currentEntity).Length;
+                if (SystemAPI.HasBuffer<CorePointBuffer>(currentEntity)) {
+                    _data.TotalLength += SystemAPI.GetBuffer<CorePointBuffer>(currentEntity).Length;
                 }
 
                 currentEntity = SystemAPI.HasComponent<Node>(currentEntity)
@@ -192,8 +193,8 @@ namespace KexEdit.UI {
 
                 if (currentEntity == targetSection) return distance;
 
-                if (SystemAPI.HasBuffer<Point>(currentEntity)) {
-                    distance += SystemAPI.GetBuffer<Point>(currentEntity).Length;
+                if (SystemAPI.HasBuffer<CorePointBuffer>(currentEntity)) {
+                    distance += SystemAPI.GetBuffer<CorePointBuffer>(currentEntity).Length;
                 }
 
                 currentEntity = SystemAPI.HasComponent<Node>(currentEntity)
@@ -252,8 +253,8 @@ namespace KexEdit.UI {
             while (current != Entity.Null && !processedEntities.Contains(current)) {
                 processedEntities.Add(current);
 
-                if (SystemAPI.HasBuffer<Point>(current)) {
-                    var points = SystemAPI.GetBuffer<Point>(current);
+                if (SystemAPI.HasBuffer<CorePointBuffer>(current)) {
+                    var points = SystemAPI.GetBuffer<CorePointBuffer>(current);
                     float sectionLength = points.Length;
 
                     if (currentDistance + sectionLength >= targetDistance) {
@@ -277,8 +278,8 @@ namespace KexEdit.UI {
 
             processedEntities.Dispose();
 
-            if (follower.Section != Entity.Null && SystemAPI.HasBuffer<Point>(follower.Section)) {
-                var points = SystemAPI.GetBuffer<Point>(follower.Section);
+            if (follower.Section != Entity.Null && SystemAPI.HasBuffer<CorePointBuffer>(follower.Section)) {
+                var points = SystemAPI.GetBuffer<CorePointBuffer>(follower.Section);
                 follower.Index = points.Length - 1f;
             }
         }

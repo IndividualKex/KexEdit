@@ -3,9 +3,10 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System;
 using System.Collections.Generic;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class VideoControls : VisualElement {
         private static readonly string s_TimeString = new('\0', 32);

@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Timeline.Constants;
 
+using KexEdit.Legacy;
+using Keyframe = KexEdit.Legacy.Keyframe;
 namespace KexEdit.UI.Timeline {
     public class CurveView : VisualElement {
         private SelectionBox _selectionBox;

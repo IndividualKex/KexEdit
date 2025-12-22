@@ -4,6 +4,7 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class RecoverySystem : SystemBase {

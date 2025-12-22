@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class NotificationOverlay : Label {
         private NotificationData _data;

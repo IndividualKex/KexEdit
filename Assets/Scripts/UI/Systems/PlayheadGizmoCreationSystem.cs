@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class PlayheadGizmoCreationSystem : SystemBase {

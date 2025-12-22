@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class InputThumbEdge : VisualElement {
         private InputThumb _thumb;

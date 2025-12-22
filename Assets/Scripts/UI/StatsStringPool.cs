@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Unity.Mathematics;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class StatsStringPool {
         private static readonly Dictionary<int, string> s_IntegerStrings = new();

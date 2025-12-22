@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class NodeGraphData : IComponentData {
         public Entity Coaster;
