@@ -1,6 +1,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class PortData {
         public Entity Entity;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class NodeGraphNodePool {
         private static readonly Dictionary<NodeType, int> s_PrewarmCounts = new() {

@@ -5,6 +5,7 @@ using Unity.Mathematics;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.Timeline.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public class TimelineView : VisualElement {
         private Label _tip;

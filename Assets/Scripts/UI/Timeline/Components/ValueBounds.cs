@@ -1,5 +1,6 @@
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public struct ValueBounds {
         public float Min;

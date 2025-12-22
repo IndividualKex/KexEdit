@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UxmlElement]
     public partial class GameView : VisualElement {

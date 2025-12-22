@@ -1,6 +1,7 @@
 using System;
-using KexEdit.Serialization;
+using KexEdit.Legacy.Serialization;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class Undo {
         public static bool CanUndo => SerializationSystem.Instance.CanUndo;

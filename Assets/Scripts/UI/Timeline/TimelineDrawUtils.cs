@@ -4,6 +4,7 @@ using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.Timeline.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public static class TimelineDrawUtils {
         private const float BASE_VALUE_LABEL_FONT_SIZE = 10f;

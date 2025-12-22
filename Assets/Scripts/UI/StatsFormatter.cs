@@ -1,5 +1,6 @@
 using Unity.Mathematics;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class StatsFormatter {
 

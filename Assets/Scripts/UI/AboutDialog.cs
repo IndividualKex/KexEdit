@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class AboutDialog : VisualElement {
         private Action _onClose;

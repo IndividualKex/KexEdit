@@ -1,47 +1,37 @@
 # Runtime Context
 
-Core runtime package for KexEdit containing all track computation, physics, and rendering logic
+Core runtime package with hexagonal architecture for track computation, physics, and rendering.
 
 ## Purpose
 
-- Provides high-performance track building and simulation using Unity DOTS
-- Contains ECS components, systems, and authoring tools
-- Manages track serialization and compute shader operations
+- High-performance track building and simulation using Unity DOTS
+- Hexagonal architecture: Core → Nodes → Adapters → Legacy ECS
+- Portable core designed for Rust/WASM migration
 
 ## Layout
 
 ```
 Runtime/
-├── context.md  # This file, folder context (Tier 2)
-├── package.json  # Unity package definition
-├── Scripts/  # Main source code
-│   ├── context.md  # Scripts context
-│   ├── Authoring/  # Track authoring components
-│   ├── Components/  # ECS components
-│   ├── Systems/  # ECS systems
-│   ├── Serialization/  # Save/load
-│   ├── Utils/  # Utilities
-│   └── KexEditManager.cs  # Main manager
-├── Shaders/  # Compute and rendering shaders
+├── Core/       # (KexEdit.Core) Pure physics/math, no dependencies
+├── Nodes/      # (KexEdit.Nodes.*) Node type implementations
+├── Legacy/     # (KexEdit) Monolithic runtime being hollowed out
+├── Shaders/    # Compute and rendering shaders
 └── Resources/  # Runtime assets
-    └── FallbackRail.asset  # Default rail asset
 ```
 
-## Scope
+## Assembly Dependencies
 
-- In-scope: Track computation, physics simulation, mesh generation, ECS architecture
-- Out-of-scope: UI implementation, editor tools, user preferences
+```
+Legacy (KexEdit) ──► Nodes.* ──► Nodes ──► Core
+                     (node types cannot depend on each other)
+```
 
 ## Entrypoints
 
-- `KexEditManager.cs` - Main runtime initialization
-- `Track.cs` - Core track data structure
-- `CoasterLoader.cs` - Track file loading system
+- `Legacy/Core/KexEditManager.cs` - Main runtime initialization
+- `Legacy/Track/Track.cs` - Core track data structure
+- `Legacy/Persistence/CoasterLoader.cs` - Track file loading
 
 ## Dependencies
 
-- Unity.Entities 1.3.14 - ECS framework
-- Unity.Physics - Physics simulation
-- Unity.Mathematics - Math library
-- Unity.Burst - High-performance compiler
-- Unity.Collections - Native collections
+- Unity.Entities, Unity.Physics, Unity.Mathematics, Unity.Burst, Unity.Collections

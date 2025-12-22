@@ -4,6 +4,7 @@ using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.Extensions;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public class KeyframeEditor : VisualElement {
         private VisualElement _inEasingButtonContainer;

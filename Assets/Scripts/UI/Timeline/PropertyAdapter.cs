@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Unity.Entities;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public abstract class PropertyAdapter {
         public abstract PropertyType Type { get; }

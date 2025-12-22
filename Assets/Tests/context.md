@@ -1,40 +1,62 @@
 # Tests Context
 
-Unit and integration tests for KexEdit functionality
+Unit and integration tests for KexEdit functionality.
 
 ## Purpose
 
-- Contains test suites for track computation, UI, and systems
-- Ensures correctness of physics calculations and track generation
-- Validates UI interactions and file operations
+- Unit tests for KexGraph library (nodes, ports, edges)
+- Unit tests for Core primitives and node types
+- Unit tests for LegacyImporter (SerializedGraph → Coaster)
+- Validation tests for Coaster aggregate integrity (Phase B-1)
+- Golden fixture tests validating physics against exported ground truth
+- Performance benchmarks comparing Burst vs Rust implementations
 
 ## Layout
 
 ```
 Tests/
-├── context.md  # This file, folder context (Tier 2)
-├── Editor/  # Editor-only tests
-│   └── [Various]Tests.cs  # UI and editor tests
-├── Runtime/  # Runtime tests
-│   └── [Various]Tests.cs  # ECS and computation tests
-├── PlayMode/  # Play mode tests
-│   └── [Various]Tests.cs  # Integration tests
-└── Tests.asmdef  # Test assembly definition
+├── context.md
+├── Tests.asmdef
+├── Graph*Tests.cs              # Unit tests for KexGraph library
+├── Core*Tests.cs               # Unit tests for Core layer
+├── LegacyImporterTests.cs      # Unit tests for legacy import
+├── CoasterSerializerTests.cs   # Chunk-based serialization tests
+├── CoasterValidationTests.cs   # Phase B-1: round-trip validation, Python export
+├── CoasterGoldTests.cs         # Integration tests: .kex → evaluate
+├── *NodeTests.cs               # Golden tests for node types
+├── *TestBuilder.cs             # Test data builders from gold fixtures
+├── SimPointComparer.cs         # KexEdit.Core.Point comparison
+├── PointComparer.cs            # ECS Point comparison
+├── PerformanceTests/           # Burst vs Rust benchmarks
+├── GoldData/                   # Gold data loading
+├── Storage/                    # Storage layer tests
+├── Coaster/                    # Coaster aggregate tests
+├── TrackData/                  # Gold test fixtures (JSON)
+└── Assets/                     # Test .kex files (veloci, shuttle, all_types)
 ```
 
-## Scope
+## Running Tests
 
-- In-scope: All unit tests, integration tests, test utilities
-- Out-of-scope: Production code, build scripts, documentation
+**Headless (CLI)**: `./run-tests.sh` (Burst backend, default)
+**Rust backend**: `./run-tests.sh --rust-backend`
+**Unity Editor**: Window → General → Test Runner
 
-## Entrypoints
+## Heart/Spine Naming Convention
 
-- Unity Test Runner (Window → General → Test Runner)
-- Tests run in Edit Mode or Play Mode depending on type
-- CI/CD pipelines can invoke tests via command line
+| Term | Definition |
+|------|------------|
+| `HeartPosition` | Rider heart position (primary coordinate) |
+| `SpinePosition` | Track centerline = `HeartPosition + Normal * HeartOffset` |
+| `HeartArc` | Cumulative distance along heart path |
+| `SpineArc` | Cumulative distance along spine path |
+| `HeartAdvance` | Per-step distance along heart path |
+| `FrictionOrigin` | HeartArc position where friction was last reset |
+
+Gold test fixtures use modern camelCase naming (e.g., `heartPosition`, `heartArc`, `spineArc`).
 
 ## Dependencies
 
-- Unity Test Framework - Test infrastructure
-- NUnit - Assertion framework
-- Runtime and UI assemblies - Code under test
+- KexGraph
+- KexEdit.Core, KexEdit.Nodes.*, KexEdit.Coaster, KexEdit.LegacyImport
+- KexEdit (ECS), KexEdit.Native.RustCore
+- Unity.Entities.Tests, Unity.PerformanceTesting, NUnit

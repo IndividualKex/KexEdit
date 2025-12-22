@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 using System.IO;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -5,7 +6,6 @@ using Unity.Mathematics;
 using UnityEngine;
 using NUnit.Framework;
 using Unity.Jobs;
-using KexEdit;
 using KexEdit.UI;
 using System.Diagnostics;
 using System;

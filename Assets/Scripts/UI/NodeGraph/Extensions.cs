@@ -1,5 +1,6 @@
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public static class Extensions {
         public static PortBounds GetPortBounds(this PortType portType) {

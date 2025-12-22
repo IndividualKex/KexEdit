@@ -1,6 +1,7 @@
 using System;
 using Unity.Collections;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     [Serializable]
     public class ReadOnlyPropertyData : IDisposable {

@@ -2,6 +2,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class Preferences {
         private const string PREF_DISTANCE_UNITS = "DistanceUnits";

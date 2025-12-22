@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class MenuBarItem : Label {
         private readonly Action<ContextMenu> _configureMenu;

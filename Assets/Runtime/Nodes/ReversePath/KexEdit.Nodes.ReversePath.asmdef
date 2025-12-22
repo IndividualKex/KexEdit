@@ -1,0 +1,20 @@
+{
+    "name": "KexEdit.Nodes.ReversePath",
+    "rootNamespace": "KexEdit.Nodes.ReversePath",
+    "references": [
+        "KexEdit.Nodes",
+        "KexEdit.Core",
+        "Unity.Mathematics",
+        "Unity.Burst",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

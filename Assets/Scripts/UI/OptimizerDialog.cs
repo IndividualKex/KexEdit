@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class OptimizerDialog : VisualElement {
         private static readonly Dictionary<TargetValueType, string> _targetValueTypeLabels = new() {

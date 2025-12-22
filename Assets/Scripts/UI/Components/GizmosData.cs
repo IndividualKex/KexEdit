@@ -1,5 +1,6 @@
 using UnityEngine;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     [System.Serializable]
     public class DuplicationGizmoData {

@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public static class Constants {
         public const float NORMAL_WIDTH = 2f;

@@ -2,7 +2,7 @@ using NUnit.Framework;
 using UnityEngine;
 using Unity.Collections;
 using Unity.Mathematics;
-using KexEdit.Serialization;
+using KexEdit.Legacy.Serialization;
 
 public class SerializationTests {
     [Test]
@@ -273,9 +273,9 @@ public class SerializationTests {
     [Test]
     public void TestMigrationFromVersion1() {
         // Test migration of a pre-HandleType file
-        string testFilePath = "Assets/Tests/Assets/shuttle.kex";
+        string testFilePath = "Assets/Tests/Assets/shuttle_v1.kex";
 
-        Assert.IsTrue(System.IO.File.Exists(testFilePath), "Test file shuttle.kex not found");
+        Assert.IsTrue(System.IO.File.Exists(testFilePath), "Test file shuttle_v1.kex not found");
 
         byte[] fileData = System.IO.File.ReadAllBytes(testFilePath);
         Assert.IsTrue(fileData.Length > 0, "Test file is empty");
@@ -411,7 +411,7 @@ public class SerializationTests {
 
     [Test]
     public void TestKeyframeLockingFlags() {
-        var keyframe = KexEdit.Keyframe.Default;
+        var keyframe = KexEdit.Legacy.Keyframe.Default;
 
         Assert.IsFalse(keyframe.IsTimeLocked);
         Assert.IsFalse(keyframe.IsValueLocked);

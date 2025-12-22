@@ -4,6 +4,7 @@ using System.IO;
 using System;
 using System.Globalization;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class TrackStyleResourceLoader {
         public static TrackStyleConfig LoadConfig(string configPath) {

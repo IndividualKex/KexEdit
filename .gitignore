@@ -88,3 +88,7 @@ crashlytics-build.properties
 
 # IDE
 .claude/settings.local.json
+
+# Test artifacts (Phase B-1 validation)
+*.expected.json
+*.actual.json

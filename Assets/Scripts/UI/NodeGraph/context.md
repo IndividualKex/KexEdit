@@ -25,8 +25,8 @@ NodeGraph/
 
 ## Scope
 
-- In-scope: Node graph visualization, connections, property editing, user interactions
-- Out-of-scope: Track computation, physics calculations, file I/O
+- In-scope: Node graph visualization, connections, property editing, user interactions, writes to Coaster aggregate
+- Out-of-scope: Track computation, physics calculations, file I/O, ECS component management
 
 ## Entrypoints
 
@@ -38,4 +38,5 @@ NodeGraph/
 
 - Unity UI Toolkit - Graph rendering
 - Parent UI layer - Integration with main editor
-- Runtime Components - Node data structures
+- Coaster aggregate - Source of truth for all node/port data
+- ECS components - Node (UI position/selection), Port (topology), Connection (edges)

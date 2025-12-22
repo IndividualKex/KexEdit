@@ -6,6 +6,10 @@ Advanced Unity-based roller coaster editor using Force Vector Design (FVD) with 
 
 **Required**: Read [layers/structure.md](layers/structure.md) before proceeding with any task
 
+## Testing
+
+**Headless (CLI)**: `./run-tests.sh`
+
 ## Context Management System
 
 - **Tier 0 — global**: `CLAUDE.md` (root). Global standards and system overview
@@ -25,6 +29,7 @@ Advanced Unity-based roller coaster editor using Force Vector Design (FVD) with 
 - **Data**: Favor data-driven/declarative design
 - **Fail Fast**: Make bugs immediately visible rather than hiding them; favor simplicity over defensive patterns
 - **Backwards Compatibility**: Unless stated otherwise, favor simplicity over backwards compatibility; the design rules above should make breaking changes easy to trace and fix
+- **Fast Iteration**: Use Python scripts in `tools/` to validate binary formats, data assumptions, or debug issues outside the Unity editor
 
 ## Security
 

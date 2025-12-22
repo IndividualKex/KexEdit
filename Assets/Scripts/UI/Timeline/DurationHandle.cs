@@ -3,6 +3,7 @@ using UnityEngine.UIElements;
 using Unity.Properties;
 using static KexEdit.UI.Timeline.Constants;
 
+using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public class DurationHandle : VisualElement {
         private TimelineData _data;
