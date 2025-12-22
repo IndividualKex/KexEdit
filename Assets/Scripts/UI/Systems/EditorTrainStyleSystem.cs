@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Collections;
 using Unity.Entities;
+using LegacyCoaster = KexEdit.Legacy.Coaster;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIInitializationSystemGroup))]
@@ -19,7 +21,7 @@ namespace KexEdit.UI {
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
             if (SystemAPI.HasComponent<TrainStyle>(singleton.Style)) {
-                foreach (var (_, coaster) in SystemAPI.Query<Coaster>().WithAll<EditorCoasterTag>().WithEntityAccess()) {
+                foreach (var (_, coaster) in SystemAPI.Query<LegacyCoaster>().WithAll<EditorCoasterTag>().WithEntityAccess()) {
                     if (SystemAPI.HasComponent<TrainStyleReference>(coaster)) {
                         var settings = SystemAPI.GetComponent<TrainStyleReference>(coaster);
                         if (settings.Value.Equals(singleton.Style)) continue;

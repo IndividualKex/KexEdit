@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -7,8 +8,19 @@ using static KexEdit.UI.Timeline.Constants;
 
 namespace KexEdit.UI.Timeline {
     public class DopeSheetView : VisualElement {
+        private readonly struct RenderedKeyframe {
+            public readonly KeyframeData Data;
+            public readonly Vector2 Position;
+
+            public RenderedKeyframe(KeyframeData data, Vector2 position) {
+                Data = data;
+                Position = position;
+            }
+        }
+
         private SelectionBox _selectionBox;
 
+        private List<RenderedKeyframe> _renderedKeyframes = new();
         private List<KeyframeData> _selected = new();
         private Dictionary<uint, float> _startTimes = new();
         private Vector2 _startMousePosition;
@@ -73,6 +85,8 @@ namespace KexEdit.UI.Timeline {
             const float size = KEYFRAME_SIZE;
             const float halfSize = size / 2f;
 
+            _renderedKeyframes.Clear();
+
             int i = 0;
             foreach (var type in data.OrderedProperties) {
                 var propertyData = data.Properties[type];
@@ -82,6 +96,11 @@ namespace KexEdit.UI.Timeline {
                 float y = top + ROW_HEIGHT / 2f;
                 foreach (var keyframe in propertyData.Keyframes) {
                     float x = data.TimeToPixel(keyframe.Time);
+
+                    _renderedKeyframes.Add(new RenderedKeyframe(
+                        new KeyframeData(type, keyframe),
+                        new Vector2(x, y)
+                    ));
 
                     Color keyframeColor = keyframe.Selected ? s_BlueOutline : s_TextColor;
                     painter.fillColor = keyframeColor;
@@ -121,7 +140,7 @@ namespace KexEdit.UI.Timeline {
             Focus();
             _lastMouseDownPosition = evt.localMousePosition;
 
-            bool hasKeyframe = TryGetKeyframeAtPosition(evt.localMousePosition, out KeyframeData keyframe);
+            bool hasKeyframe = TryGetKeyframeAtPosition(_lastMouseDownPosition, out KeyframeData keyframe);
             if (evt.button == 0) {
                 if (hasKeyframe) {
                     _draggedKeyframe = keyframe;
@@ -131,10 +150,10 @@ namespace KexEdit.UI.Timeline {
                 }
                 else {
                     var e = this.GetPooled<ViewClickEvent>();
-                    e.MousePosition = evt.localMousePosition;
+                    e.MousePosition = _lastMouseDownPosition;
                     e.ShiftKey = evt.shiftKey;
                     this.Send(e);
-                    _selectionBox.Begin(evt.localMousePosition);
+                    _selectionBox.Begin(_lastMouseDownPosition);
                     _boxSelecting = true;
                 }
                 this.CaptureMouse();
@@ -147,9 +166,9 @@ namespace KexEdit.UI.Timeline {
                     selectEvent.ShiftKey = false;
                     this.Send(selectEvent);
                 }
-                
+
                 var e = this.GetPooled<ViewRightClickEvent>();
-                e.MousePosition = evt.localMousePosition;
+                e.MousePosition = _lastMouseDownPosition;
                 this.Send(e);
                 evt.StopPropagation();
             }
@@ -237,15 +256,6 @@ namespace KexEdit.UI.Timeline {
             }
         }
 
-        private void ClickKeyframe(KeyframeData keyframe, bool shiftKey) {
-            if (shiftKey && keyframe.Value.Selected) return;
-
-            var e = this.GetPooled<KeyframeClickEvent>();
-            e.Keyframe = keyframe;
-            e.ShiftKey = shiftKey;
-            this.Send(e);
-        }
-
         private void StoreKeyframes() {
             _startTimes.Clear();
             foreach (var (type, propertyData) in _data.Properties) {
@@ -257,62 +267,33 @@ namespace KexEdit.UI.Timeline {
         }
 
         private bool TryGetKeyframeAtPosition(Vector2 pos, out KeyframeData result) {
-            result = default;
-
             const float tolerance = KEYFRAME_SIZE * 1.5f;
 
-            int i = 0;
-            foreach (var (type, propertyData) in _data.Properties) {
-                if (!propertyData.Visible) continue;
-
-                float top = ROW_HEIGHT * i++;
-                float bottom = top + ROW_HEIGHT;
-                float y = (top + bottom) / 2f;
-
-                if (pos.y < top || pos.y > bottom) continue;
-
-                foreach (var keyframe in propertyData.Keyframes) {
-                    float x = _data.TimeToPixel(keyframe.Time);
-                    Vector2 keyframePos = new(x, y);
-                    if (Vector2.Distance(pos, keyframePos) < tolerance) {
-                        result = new KeyframeData(type, keyframe);
-                        return true;
-                    }
+            foreach (var rendered in _renderedKeyframes) {
+                if (Vector2.Distance(pos, rendered.Position) < tolerance) {
+                    result = rendered.Data;
+                    return true;
                 }
             }
 
+            result = default;
             return false;
         }
 
         private void BoxSelect(Rect rect) {
-            const float size = KEYFRAME_SIZE;
-            const float halfSize = size / 2f;
+            const float halfSize = KEYFRAME_SIZE / 2f;
 
-            int i = 0;
             _selected.Clear();
-            foreach (var type in _data.OrderedProperties) {
-                var propertyData = _data.Properties[type];
-                if (!propertyData.Visible) continue;
+            foreach (var rendered in _renderedKeyframes) {
+                Rect keyframeBounds = new(
+                    rendered.Position.x - halfSize,
+                    rendered.Position.y - halfSize,
+                    KEYFRAME_SIZE,
+                    KEYFRAME_SIZE
+                );
 
-                float top = ROW_HEIGHT * i++;
-                float bottom = top + ROW_HEIGHT;
-                float y = (top + bottom) / 2f;
-
-                if (rect.y + rect.height <= top || rect.y >= bottom) continue;
-
-                foreach (var keyframe in propertyData.Keyframes) {
-                    float x = _data.TimeToPixel(keyframe.Time);
-
-                    Rect keyframeBounds = new(
-                        x - halfSize,
-                        y - halfSize,
-                        size,
-                        size
-                    );
-
-                    if (rect.Overlaps(keyframeBounds)) {
-                        _selected.Add(new KeyframeData(type, keyframe));
-                    }
+                if (rect.Overlaps(keyframeBounds)) {
+                    _selected.Add(rendered.Data);
                 }
             }
 

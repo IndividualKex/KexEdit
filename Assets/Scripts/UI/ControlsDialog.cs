@@ -99,12 +99,9 @@ namespace KexEdit.UI {
                 }),
                 ("Visualization", new[] {
                     ("Ctrl+1".ToPlatformShortcut(), "Velocity Visualization"),
-                    ("Ctrl+2".ToPlatformShortcut(), "Curvature Visualization"),
-                    ("Ctrl+3".ToPlatformShortcut(), "Normal Force Visualization"),
-                    ("Ctrl+4".ToPlatformShortcut(), "Lateral Force Visualization"),
-                    ("Ctrl+5".ToPlatformShortcut(), "Roll Speed Visualization"),
-                    ("Ctrl+6".ToPlatformShortcut(), "Pitch Speed Visualization"),
-                    ("Ctrl+7".ToPlatformShortcut(), "Yaw Speed Visualization"),
+                    ("Ctrl+2".ToPlatformShortcut(), "Normal Force Visualization"),
+                    ("Ctrl+3".ToPlatformShortcut(), "Lateral Force Visualization"),
+                    ("Ctrl+4".ToPlatformShortcut(), "Roll Speed Visualization"),
                 }),
                 ("General", new[] {
                     ("Space", "Pause/Unpause"),

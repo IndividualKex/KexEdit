@@ -1,8 +1,5 @@
-using Unity.Mathematics;
-
 namespace KexEdit.UI {
     public static class StatsFormatter {
-
         public static string FormatPositionX(float x) {
             float displayValue = Units.DistanceToDisplay(x);
             return StatsStringPool.GetDecimalTwo(displayValue);

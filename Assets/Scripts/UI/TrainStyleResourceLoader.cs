@@ -1,6 +1,6 @@
-using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 namespace KexEdit.UI {
     public static class TrainStyleResourceLoader {

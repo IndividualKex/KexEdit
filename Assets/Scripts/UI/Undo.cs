@@ -1,5 +1,5 @@
 using System;
-using KexEdit.Serialization;
+using KexEdit.Legacy.Serialization;
 
 namespace KexEdit.UI {
     public static class Undo {

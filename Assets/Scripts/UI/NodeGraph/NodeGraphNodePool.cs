@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KexEdit.Legacy;
 
 namespace KexEdit.UI.NodeGraph {
     public class NodeGraphNodePool {
@@ -36,7 +37,7 @@ namespace KexEdit.UI.NodeGraph {
                 stack = new Stack<NodeGraphNode>();
                 _pools[type] = stack;
             }
-            
+
 
             if (stack.Count > 0) {
                 return stack.Pop();

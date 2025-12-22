@@ -1,0 +1,24 @@
+{
+    "name": "KexEdit.Legacy.Editor",
+    "rootNamespace": "KexEdit.Legacy.Editor",
+    "references": [
+        "Unity.Mathematics",
+        "Unity.Collections",
+        "KexEdit.Legacy",
+        "KexEdit.Sim",
+        "Unity.Entities",
+        "Unity.Burst",
+        "KexEdit.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

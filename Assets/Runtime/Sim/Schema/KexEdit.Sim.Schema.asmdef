@@ -1,0 +1,19 @@
+{
+    "name": "KexEdit.Sim.Schema",
+    "rootNamespace": "KexEdit.Sim.Schema",
+    "references": [
+        "KexEdit.Sim",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Burst"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

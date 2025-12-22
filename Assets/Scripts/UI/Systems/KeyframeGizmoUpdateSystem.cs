@@ -1,12 +1,17 @@
-using Unity.Entities;
+using KexEdit.Legacy;
+using KexEdit.Sim.Schema;
+using KexEdit.Sim.Schema;
+using Unity.Burst;
 using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
-using Unity.Jobs;
-using Unity.Burst;
 using UnityEngine.UIElements;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
+using static KexEdit.Sim.Sim;
 using static KexEdit.UI.Constants;
+using Keyframe = KexEdit.Legacy.Keyframe;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
@@ -55,27 +60,19 @@ namespace KexEdit.UI {
             _gizmoMaterial = Resources.Load<Material>("KeyframeGizmo");
             _matProps = new MaterialPropertyBlock();
 
-            RequireForUpdate<KexEdit.Preferences>();
+            RequireForUpdate<KexEdit.Legacy.Preferences>();
             RequireForUpdate<GameViewData>();
         }
 
         protected override void OnDestroy() {
-            if (_matrixBuffer != null) {
-                _matrixBuffer.Release();
-                _matrixBuffer = null;
-            }
-            if (_visualizationDataBuffer != null) {
-                _visualizationDataBuffer.Release();
-                _visualizationDataBuffer = null;
-            }
-            if (_visualizationIndicesBuffer != null) {
-                _visualizationIndicesBuffer.Release();
-                _visualizationIndicesBuffer = null;
-            }
-            if (_indirectArgsBuffer != null) {
-                _indirectArgsBuffer.Release();
-                _indirectArgsBuffer = null;
-            }
+            _matrixBuffer?.Release();
+            _matrixBuffer = null;
+            _visualizationDataBuffer?.Release();
+            _visualizationDataBuffer = null;
+            _visualizationIndicesBuffer?.Release();
+            _visualizationIndicesBuffer = null;
+            _indirectArgsBuffer?.Release();
+            _indirectArgsBuffer = null;
             _propertyTypes.Dispose();
             _propertyColors.Dispose();
             _keyframes.Dispose();
@@ -91,7 +88,7 @@ namespace KexEdit.UI {
         }
 
         protected override void OnUpdate() {
-            var gizmos = SystemAPI.GetSingleton<KexEdit.Preferences>();
+            var gizmos = SystemAPI.GetSingleton<KexEdit.Legacy.Preferences>();
             ref var gameViewData = ref SystemAPI.GetSingletonRW<GameViewData>().ValueRW;
             if (!gizmos.DrawGizmos) {
                 gameViewData.IntersectionKeyframe = default;
@@ -100,18 +97,14 @@ namespace KexEdit.UI {
 
             var keyframes = new NativeList<KeyframeReference>(Allocator.TempJob);
 
+            if (!SystemAPI.TryGetSingleton<CoasterData>(out var coasterData)) {
+                keyframes.Dispose();
+                return;
+            }
+
             new GatherKeyframesJob {
                 PropertyTypes = _propertyTypes,
-                RollSpeedLookup = SystemAPI.GetBufferLookup<RollSpeedKeyframe>(true),
-                NormalForceLookup = SystemAPI.GetBufferLookup<NormalForceKeyframe>(true),
-                LateralForceLookup = SystemAPI.GetBufferLookup<LateralForceKeyframe>(true),
-                PitchSpeedLookup = SystemAPI.GetBufferLookup<PitchSpeedKeyframe>(true),
-                YawSpeedLookup = SystemAPI.GetBufferLookup<YawSpeedKeyframe>(true),
-                FixedVelocityLookup = SystemAPI.GetBufferLookup<FixedVelocityKeyframe>(true),
-                HeartLookup = SystemAPI.GetBufferLookup<HeartKeyframe>(true),
-                FrictionLookup = SystemAPI.GetBufferLookup<FrictionKeyframe>(true),
-                ResistanceLookup = SystemAPI.GetBufferLookup<ResistanceKeyframe>(true),
-                TrackStyleLookup = SystemAPI.GetBufferLookup<TrackStyleKeyframe>(true),
+                KeyframeStore = coasterData.Value.Keyframes,
                 Keyframes = keyframes
             }.Run();
 
@@ -139,7 +132,7 @@ namespace KexEdit.UI {
                 DurationLookup = SystemAPI.GetComponentLookup<Duration>(true),
                 AnchorLookup = SystemAPI.GetComponentLookup<Anchor>(true),
                 NodeLookup = SystemAPI.GetComponentLookup<Node>(true),
-                PointLookup = SystemAPI.GetBufferLookup<Point>(true),
+                PointLookup = SystemAPI.GetBufferLookup<CorePointBuffer>(true),
                 Matrices = matrices,
                 VisualizationData = visualizationData
             }.Schedule(count, 16).Complete();
@@ -177,7 +170,7 @@ namespace KexEdit.UI {
                     _matrixBuffer = new ComputeBuffer(count, sizeof(float) * 16);
                     _visualizationDataBuffer = new ComputeBuffer(count, sizeof(float) * 4);
                     _visualizationIndicesBuffer = new ComputeBuffer(count, sizeof(uint));
-                    
+
                     var indices = new NativeArray<uint>(count, Allocator.Temp);
                     for (int i = 0; i < count; i++) {
                         indices[i] = (uint)i;
@@ -235,125 +228,40 @@ namespace KexEdit.UI {
         [BurstCompile]
         private partial struct GatherKeyframesJob : IJobEntity {
             [ReadOnly] public NativeArray<PropertyType> PropertyTypes;
-            [ReadOnly] public BufferLookup<RollSpeedKeyframe> RollSpeedLookup;
-            [ReadOnly] public BufferLookup<NormalForceKeyframe> NormalForceLookup;
-            [ReadOnly] public BufferLookup<LateralForceKeyframe> LateralForceLookup;
-            [ReadOnly] public BufferLookup<PitchSpeedKeyframe> PitchSpeedLookup;
-            [ReadOnly] public BufferLookup<YawSpeedKeyframe> YawSpeedLookup;
-            [ReadOnly] public BufferLookup<FixedVelocityKeyframe> FixedVelocityLookup;
-            [ReadOnly] public BufferLookup<HeartKeyframe> HeartLookup;
-            [ReadOnly] public BufferLookup<FrictionKeyframe> FrictionLookup;
-            [ReadOnly] public BufferLookup<ResistanceKeyframe> ResistanceLookup;
-            [ReadOnly] public BufferLookup<TrackStyleKeyframe> TrackStyleLookup;
+            [ReadOnly] public KeyframeStore KeyframeStore;
             [WriteOnly] public NativeList<KeyframeReference> Keyframes;
 
             public void Execute(Entity entity, in Node node, in Render render) {
                 if (!render) return;
 
                 foreach (var propertyType in PropertyTypes) {
-                    switch (propertyType) {
-                        case PropertyType.RollSpeed:
-                            if (!RollSpeedLookup.TryGetBuffer(entity, out var rollSpeedBuffer)) continue;
-                            for (int i = 0; i < rollSpeedBuffer.Length; i++) {
-                                Keyframes.Add(new KeyframeReference {
-                                    Node = entity,
-                                    Keyframe = new KeyframeData(propertyType, rollSpeedBuffer[i].Value)
-                                });
-                            }
-                            break;
-                        case PropertyType.NormalForce:
-                            if (!NormalForceLookup.TryGetBuffer(entity, out var normalForceBuffer)) continue;
-                            for (int i = 0; i < normalForceBuffer.Length; i++) {
-                                Keyframes.Add(new KeyframeReference {
-                                    Node = entity,
-                                    Keyframe = new KeyframeData(propertyType, normalForceBuffer[i].Value)
-                                });
-                            }
-                            break;
-                        case PropertyType.LateralForce:
-                            if (!LateralForceLookup.TryGetBuffer(entity, out var lateralForceBuffer)) continue;
-                            for (int i = 0; i < lateralForceBuffer.Length; i++) {
-                                Keyframes.Add(new KeyframeReference {
-                                    Node = entity,
-                                    Keyframe = new KeyframeData(propertyType, lateralForceBuffer[i].Value)
-                                });
-                            }
-                            break;
-                        case PropertyType.PitchSpeed:
-                            if (!PitchSpeedLookup.TryGetBuffer(entity, out var pitchSpeedBuffer)) continue;
-                            for (int i = 0; i < pitchSpeedBuffer.Length; i++) {
-                                Keyframes.Add(new KeyframeReference {
-                                    Node = entity,
-                                    Keyframe = new KeyframeData(propertyType, pitchSpeedBuffer[i].Value)
-                                });
-                            }
-                            break;
-                        case PropertyType.YawSpeed:
-                            if (!YawSpeedLookup.TryGetBuffer(entity, out var yawSpeedBuffer)) continue;
-                            for (int i = 0; i < yawSpeedBuffer.Length; i++) {
-                                Keyframes.Add(new KeyframeReference {
-                                    Node = entity,
-                                    Keyframe = new KeyframeData(propertyType, yawSpeedBuffer[i].Value)
-                                });
-                            }
-                            break;
-                        case PropertyType.FixedVelocity:
-                            if (!FixedVelocityLookup.TryGetBuffer(entity, out var fixedVelocityBuffer)) continue;
-                            for (int i = 0; i < fixedVelocityBuffer.Length; i++) {
-                                Keyframes.Add(new KeyframeReference {
-                                    Node = entity,
-                                    Keyframe = new KeyframeData(propertyType, fixedVelocityBuffer[i].Value)
-                                });
-                            }
-                            break;
-                        case PropertyType.Heart:
-                            if (!HeartLookup.TryGetBuffer(entity, out var heartBuffer)) continue;
-                            for (int i = 0; i < heartBuffer.Length; i++) {
-                                Keyframes.Add(new KeyframeReference {
-                                    Node = entity,
-                                    Keyframe = new KeyframeData(propertyType, heartBuffer[i].Value)
-                                });
-                            }
-                            break;
-                        case PropertyType.Friction:
-                            if (!FrictionLookup.TryGetBuffer(entity, out var frictionBuffer)) continue;
-                            for (int i = 0; i < frictionBuffer.Length; i++) {
-                                Keyframes.Add(new KeyframeReference {
-                                    Node = entity,
-                                    Keyframe = new KeyframeData(propertyType, frictionBuffer[i].Value)
-                                });
-                            }
-                            break;
-                        case PropertyType.Resistance:
-                            if (!ResistanceLookup.TryGetBuffer(entity, out var resistanceBuffer)) continue;
-                            for (int i = 0; i < resistanceBuffer.Length; i++) {
-                                Keyframes.Add(new KeyframeReference {
-                                    Node = entity,
-                                    Keyframe = new KeyframeData(propertyType, resistanceBuffer[i].Value)
-                                });
-                            }
-                            break;
-                        case PropertyType.TrackStyle:
-                            if (!TrackStyleLookup.TryGetBuffer(entity, out var trackStyleBuffer)) continue;
-                            for (int i = 0; i < trackStyleBuffer.Length; i++) {
-                                Keyframes.Add(new KeyframeReference {
-                                    Node = entity,
-                                    Keyframe = new KeyframeData(propertyType, trackStyleBuffer[i].Value)
-                                });
-                            }
-                            break;
-                        // Read-only properties don't have keyframes, skip them
-                        case PropertyType.ReadNormalForce:
-                        case PropertyType.ReadLateralForce:
-                        case PropertyType.ReadPitchSpeed:
-                        case PropertyType.ReadYawSpeed:
-                        case PropertyType.ReadRollSpeed:
-                            break;
-                        default:
-                            throw new System.NotImplementedException($"GatherKeyframesJob not implemented for PropertyType: {propertyType}");
+                    var propertyId = PropertyTypeToPropertyId(propertyType);
+                    if (propertyId == PropertyId.RollSpeed && propertyType != PropertyType.RollSpeed) continue;
+
+                    if (!KeyframeStore.TryGet(node.Id, propertyId, out var slice)) continue;
+
+                    for (int i = 0; i < slice.Length; i++) {
+                        Keyframes.Add(new KeyframeReference {
+                            Node = entity,
+                            Keyframe = new KeyframeData(propertyType, slice[i])
+                        });
                     }
                 }
             }
+
+            private static PropertyId PropertyTypeToPropertyId(PropertyType type) => type switch {
+                PropertyType.RollSpeed => PropertyId.RollSpeed,
+                PropertyType.NormalForce => PropertyId.NormalForce,
+                PropertyType.LateralForce => PropertyId.LateralForce,
+                PropertyType.PitchSpeed => PropertyId.PitchSpeed,
+                PropertyType.YawSpeed => PropertyId.YawSpeed,
+                PropertyType.FixedVelocity => PropertyId.DrivenVelocity,
+                PropertyType.Heart => PropertyId.HeartOffset,
+                PropertyType.Friction => PropertyId.Friction,
+                PropertyType.Resistance => PropertyId.Resistance,
+                PropertyType.TrackStyle => PropertyId.TrackStyle,
+                _ => PropertyId.RollSpeed
+            };
         }
 
         [BurstCompile]
@@ -363,7 +271,7 @@ namespace KexEdit.UI {
             [ReadOnly] public ComponentLookup<Duration> DurationLookup;
             [ReadOnly] public ComponentLookup<Anchor> AnchorLookup;
             [ReadOnly] public ComponentLookup<Node> NodeLookup;
-            [ReadOnly] public BufferLookup<Point> PointLookup;
+            [ReadOnly] public BufferLookup<CorePointBuffer> PointLookup;
             [WriteOnly] public NativeArray<float4x4> Matrices;
             [WriteOnly] public NativeArray<float4> VisualizationData;
 
@@ -387,13 +295,13 @@ namespace KexEdit.UI {
                 float4 visualizationData = new(propertyColor.x, propertyColor.y, propertyColor.z, selected ? 1f : 0f);
 
                 if (index == nextIndex) {
-                    worldPosition = points[index].Value.Position;
+                    worldPosition = points[index].HeartPosition();
                 }
                 else {
                     float t = position - index;
-                    PointData p0 = points[index].Value;
-                    PointData p1 = points[nextIndex].Value;
-                    worldPosition = math.lerp(p0.Position, p1.Position, t);
+                    float3 p0 = points[index].HeartPosition();
+                    float3 p1 = points[nextIndex].HeartPosition();
+                    worldPosition = math.lerp(p0, p1, t);
                 }
 
                 Matrices[i] = float4x4.TRS(worldPosition, quaternion.identity, new float3(0.3f));
@@ -405,7 +313,7 @@ namespace KexEdit.UI {
                     return time * HZ;
                 }
 
-                if (duration.Type == DurationType.Time) {
+                if (duration.Type == Legacy.DurationType.Time) {
                     return time * HZ;
                 }
 
@@ -416,11 +324,11 @@ namespace KexEdit.UI {
                 var pointBuffer = PointLookup[section];
                 if (pointBuffer.Length < 2) return 0f;
 
-                float targetDistance = anchor.Value.TotalLength + time;
+                float targetDistance = anchor.Value.HeartArc + time;
 
                 for (int i = 0; i < pointBuffer.Length - 1; i++) {
-                    float currentDistance = pointBuffer[i].Value.TotalLength;
-                    float nextDistance = pointBuffer[i + 1].Value.TotalLength;
+                    float currentDistance = pointBuffer[i].HeartArc();
+                    float nextDistance = pointBuffer[i + 1].HeartArc();
                     if (targetDistance >= currentDistance && targetDistance <= nextDistance) {
                         float t = (nextDistance - currentDistance) > 0 ?
                             (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;

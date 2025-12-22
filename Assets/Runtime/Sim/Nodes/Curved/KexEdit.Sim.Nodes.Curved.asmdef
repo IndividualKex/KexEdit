@@ -1,0 +1,20 @@
+{
+    "name": "KexEdit.Sim.Nodes.Curved",
+    "rootNamespace": "KexEdit.Sim.Nodes.Curved",
+    "references": [
+        "KexEdit.Sim.Schema",
+        "KexEdit.Sim",
+        "Unity.Mathematics",
+        "Unity.Burst",
+        "Unity.Collections"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

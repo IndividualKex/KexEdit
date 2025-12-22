@@ -1,12 +1,13 @@
+using KexEdit.Legacy;
+using KexEdit.UI.NodeGraph;
+using KexEdit.UI.Timeline;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
-using KexEdit.UI.NodeGraph;
-using KexEdit.UI.Timeline;
-using UnityEngine;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
@@ -120,10 +121,10 @@ namespace KexEdit.UI {
             float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
             bool foundAny = false;
 
-            foreach (var node in SystemAPI.Query<NodeAspect>().WithAll<Point>()) {
+            foreach (var (node, entity) in SystemAPI.Query<Node>().WithAll<CorePointBuffer>().WithEntityAccess()) {
                 if (!node.Selected) continue;
 
-                var pointBuffer = SystemAPI.GetBuffer<Point>(node.Self);
+                var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(entity);
                 if (pointBuffer.Length < 2) continue;
 
                 int midIndex = pointBuffer.Length / 2;
@@ -134,8 +135,7 @@ namespace KexEdit.UI {
                 };
 
                 foreach (var idx in indices) {
-                    PointData point = pointBuffer[idx];
-                    var pos = point.Position;
+                    var pos = pointBuffer[idx].HeartPosition();
                     if (pos.x < minX) minX = pos.x;
                     if (pos.x > maxX) maxX = pos.x;
                     if (pos.y < minY) minY = pos.y;

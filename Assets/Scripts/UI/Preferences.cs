@@ -1,3 +1,5 @@
+using KexEdit.Legacy;
+using KexEdit.Sim.Schema;
 using Unity.Mathematics;
 using UnityEngine;
 using static KexEdit.UI.Constants;
@@ -33,12 +35,6 @@ namespace KexEdit.UI {
         private const string PREF_VIS_LATERAL_FORCE_MAX = "VisLateralForceMax";
         private const string PREF_VIS_ROLL_SPEED_MIN = "VisRollSpeedMin";
         private const string PREF_VIS_ROLL_SPEED_MAX = "VisRollSpeedMax";
-        private const string PREF_VIS_PITCH_SPEED_MIN = "VisPitchSpeedMin";
-        private const string PREF_VIS_PITCH_SPEED_MAX = "VisPitchSpeedMax";
-        private const string PREF_VIS_YAW_SPEED_MIN = "VisYawSpeedMin";
-        private const string PREF_VIS_YAW_SPEED_MAX = "VisYawSpeedMax";
-        private const string PREF_VIS_CURVATURE_MIN = "VisCurvatureMin";
-        private const string PREF_VIS_CURVATURE_MAX = "VisCurvatureMax";
         private const string PREF_VIS_MODE = "VisMode";
 
         private const string PREF_SCROLL_INVERT = "ScrollInvert";
@@ -386,18 +382,6 @@ namespace KexEdit.UI {
                     PlayerPrefs.GetFloat(PREF_VIS_ROLL_SPEED_MIN, -3f),
                     PlayerPrefs.GetFloat(PREF_VIS_ROLL_SPEED_MAX, 3f)
                 ),
-                VisualizationMode.PitchSpeed => new float2(
-                    PlayerPrefs.GetFloat(PREF_VIS_PITCH_SPEED_MIN, -1f),
-                    PlayerPrefs.GetFloat(PREF_VIS_PITCH_SPEED_MAX, 1f)
-                ),
-                VisualizationMode.YawSpeed => new float2(
-                    PlayerPrefs.GetFloat(PREF_VIS_YAW_SPEED_MIN, -1f),
-                    PlayerPrefs.GetFloat(PREF_VIS_YAW_SPEED_MAX, 1f)
-                ),
-                VisualizationMode.Curvature => new float2(
-                    PlayerPrefs.GetFloat(PREF_VIS_CURVATURE_MIN, 0f),
-                    PlayerPrefs.GetFloat(PREF_VIS_CURVATURE_MAX, 1f)
-                ),
                 _ => new float2(0f, 1f)
             };
         }
@@ -420,18 +404,6 @@ namespace KexEdit.UI {
                     PlayerPrefs.SetFloat(PREF_VIS_ROLL_SPEED_MIN, min);
                     PlayerPrefs.SetFloat(PREF_VIS_ROLL_SPEED_MAX, max);
                     break;
-                case VisualizationMode.PitchSpeed:
-                    PlayerPrefs.SetFloat(PREF_VIS_PITCH_SPEED_MIN, min);
-                    PlayerPrefs.SetFloat(PREF_VIS_PITCH_SPEED_MAX, max);
-                    break;
-                case VisualizationMode.YawSpeed:
-                    PlayerPrefs.SetFloat(PREF_VIS_YAW_SPEED_MIN, min);
-                    PlayerPrefs.SetFloat(PREF_VIS_YAW_SPEED_MAX, max);
-                    break;
-                case VisualizationMode.Curvature:
-                    PlayerPrefs.SetFloat(PREF_VIS_CURVATURE_MIN, min);
-                    PlayerPrefs.SetFloat(PREF_VIS_CURVATURE_MAX, max);
-                    break;
             }
             PlayerPrefs.Save();
         }
@@ -445,12 +417,6 @@ namespace KexEdit.UI {
             PlayerPrefs.DeleteKey(PREF_VIS_LATERAL_FORCE_MAX);
             PlayerPrefs.DeleteKey(PREF_VIS_ROLL_SPEED_MIN);
             PlayerPrefs.DeleteKey(PREF_VIS_ROLL_SPEED_MAX);
-            PlayerPrefs.DeleteKey(PREF_VIS_PITCH_SPEED_MIN);
-            PlayerPrefs.DeleteKey(PREF_VIS_PITCH_SPEED_MAX);
-            PlayerPrefs.DeleteKey(PREF_VIS_YAW_SPEED_MIN);
-            PlayerPrefs.DeleteKey(PREF_VIS_YAW_SPEED_MAX);
-            PlayerPrefs.DeleteKey(PREF_VIS_CURVATURE_MIN);
-            PlayerPrefs.DeleteKey(PREF_VIS_CURVATURE_MAX);
             PlayerPrefs.Save();
         }
     }

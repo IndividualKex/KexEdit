@@ -1,3 +1,5 @@
+using KexEdit.Legacy;
+using KexEdit.Sim.Schema;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -67,24 +69,6 @@ namespace KexEdit.UI {
                     _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
                     _data.NeutralOffset = 0f;
                     break;
-                case VisualizationMode.PitchSpeed:
-                    _data.IsVisible = true;
-                    _data.VisualizationName = "Pitch Speed";
-                    _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
-                    _data.NeutralOffset = 0f;
-                    break;
-                case VisualizationMode.YawSpeed:
-                    _data.IsVisible = true;
-                    _data.VisualizationName = "Yaw Speed";
-                    _data.GradientType = VisualizationGradientType.ThreeColorCrossesZero;
-                    _data.NeutralOffset = 0f;
-                    break;
-                case VisualizationMode.Curvature:
-                    _data.IsVisible = true;
-                    _data.VisualizationName = "Curvature";
-                    _data.GradientType = VisualizationGradientType.TwoColorPositive;
-                    _data.NeutralOffset = 0f;
-                    break;
             }
         }
 
@@ -98,9 +82,6 @@ namespace KexEdit.UI {
                     _data.UnitsString = "G";
                     break;
                 case VisualizationMode.RollSpeed:
-                case VisualizationMode.PitchSpeed:
-                case VisualizationMode.YawSpeed:
-                case VisualizationMode.Curvature:
                     _data.UnitsString = Units.GetAnglePerTimeString();
                     break;
             }
@@ -114,9 +95,6 @@ namespace KexEdit.UI {
                     _data.MaxValue = Units.SpeedToDisplay(maxValue);
                     break;
                 case VisualizationMode.RollSpeed:
-                case VisualizationMode.PitchSpeed:
-                case VisualizationMode.YawSpeed:
-                case VisualizationMode.Curvature:
                     _data.MinValue = Units.AnglePerTimeToDisplay(minValue);
                     _data.MaxValue = Units.AnglePerTimeToDisplay(maxValue);
                     break;

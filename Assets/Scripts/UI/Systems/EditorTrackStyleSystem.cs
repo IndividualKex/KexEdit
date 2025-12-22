@@ -1,37 +1,19 @@
-using System.Collections.Generic;
+using KexEdit.Legacy;
+using KexEdit.Spline.Rendering;
 using Unity.Collections;
 using Unity.Entities;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class EditorTrackStyleSystem : SystemBase {
+        private int _pieceStyleVersion;
+
         protected override void OnCreate() {
             RequireForUpdate<EditorTrackStyleSettingsSingleton>();
         }
 
         protected override void OnUpdate() {
-            UpdateAssignments();
             UpdateSettings();
-        }
-
-        private void UpdateAssignments() {
-            var singleton = SystemAPI.GetSingleton<EditorTrackStyleSettingsSingleton>();
-
-            using var ecb = new EntityCommandBuffer(Allocator.Temp);
-            if (SystemAPI.HasComponent<TrackStyleSettings>(singleton.Settings)) {
-                foreach (var (_, coaster) in SystemAPI.Query<Coaster>().WithAll<EditorCoasterTag>().WithEntityAccess()) {
-                    if (SystemAPI.HasComponent<TrackStyleSettingsReference>(coaster)) {
-                        var settings = SystemAPI.GetComponent<TrackStyleSettingsReference>(coaster);
-                        if (settings.Value.Equals(singleton.Settings)) continue;
-                        var settingsRW = SystemAPI.GetComponentRW<TrackStyleSettingsReference>(coaster);
-                        settingsRW.ValueRW.Value = singleton.Settings;
-                    }
-                    else {
-                        ecb.AddComponent<TrackStyleSettingsReference>(coaster, singleton.Settings);
-                    }
-                }
-            }
-            ecb.Playback(EntityManager);
         }
 
         private void UpdateSettings() {
@@ -40,74 +22,67 @@ namespace KexEdit.UI {
             if (!singletonRW.ValueRO.Dirty) return;
             singletonRW.ValueRW.Dirty = false;
 
-            using var ecb = new EntityCommandBuffer(Allocator.Temp);
-
-            int version = 0;
-            if (SystemAPI.HasComponent<TrackStyleSettings>(singletonRW.ValueRO.Settings)) {
-                var settings = SystemAPI.GetComponent<TrackStyleSettings>(singletonRW.ValueRO.Settings);
-                version = settings.Version + 1;
-                ecb.DestroyEntity(singletonRW.ValueRO.Settings);
-                singletonRW.ValueRW.Settings = Entity.Null;
-            }
-
-            var settingsEntity = EntityManager.CreateEntity();
-            singletonRW.ValueRW.Settings = settingsEntity;
-
             var config = TrackStyleResourceLoader.LoadConfig(Preferences.CurrentTrackStyle);
-            var data = ConvertConfigToData(config, version);
-            ecb.AddComponent(settingsEntity, new LoadTrackStyleSettingsEvent {
-                Data = data
-            });
-            ecb.SetName(settingsEntity, "Track Style Settings");
-
-            ecb.Playback(EntityManager);
+            UpdateRenderStyle(config);
+            UpdatePieceStyle(config);
         }
 
-        private TrackStyleSettingsData ConvertConfigToData(TrackStyleConfig config, int version) {
-            var globalSettings = SystemAPI.ManagedAPI.GetSingleton<GlobalSettings>();
-            var styles = new List<TrackStyleData>();
+        private void UpdateRenderStyle(TrackStyleConfig config) {
+            var style = new RenderStyle {
+                PrimaryColor = config.GetColor(0),
+                SecondaryColor = config.GetColor(1),
+                TertiaryColor = config.GetColor(2)
+            };
 
-            foreach (var styleConfig in config.Styles) {
-                var duplicationMeshes = TrackStyleResourceLoader.LoadDuplicationMeshes(
-                    styleConfig.DuplicationMeshes,
-                    globalSettings.DuplicationMaterial,
-                    config
-                );
+            if (SystemAPI.TryGetSingletonRW<RenderStyleSingleton>(out var singletonRW)) {
+                singletonRW.ValueRW.Style = style;
+            } else {
+                var entity = EntityManager.CreateEntity();
+                EntityManager.AddComponentData(entity, new RenderStyleSingleton { Style = style });
+                EntityManager.SetName(entity, "Render Style");
+            }
+        }
 
-                var extrusionMeshes = TrackStyleResourceLoader.LoadExtrusionMeshes(
-                    styleConfig.ExtrusionMeshes,
-                    globalSettings.ExtrusionMaterial,
-                    config
-                );
+        private void UpdatePieceStyle(TrackStyleConfig config) {
+            _pieceStyleVersion++;
 
-                var startCapMeshes = TrackStyleResourceLoader.LoadCapMeshes(
-                    styleConfig.StartCapMeshes,
-                    globalSettings.DuplicationMaterial,
-                    config
-                );
+            TrackStyleResourceLoader.LoadStylePieces(
+                config,
+                out var allPieces,
+                out var trackPieces,
+                out var styleRanges,
+                Allocator.Persistent);
 
-                var endCapMeshes = TrackStyleResourceLoader.LoadCapMeshes(
-                    styleConfig.EndCapMeshes,
-                    globalSettings.DuplicationMaterial,
-                    config
-                );
+            int styleCount = config.styles.Count > 0 ? config.styles.Count : 1;
 
-                styles.Add(new TrackStyleData {
-                    DuplicationMeshes = duplicationMeshes,
-                    ExtrusionMeshes = extrusionMeshes,
-                    StartCapMeshes = startCapMeshes,
-                    EndCapMeshes = endCapMeshes,
-                    Spacing = styleConfig.Spacing,
-                    Threshold = styleConfig.Threshold
+            if (SystemAPI.ManagedAPI.TryGetSingleton<PieceStyleSingleton>(out var existing)) {
+                existing.Dispose();
+                existing.AllPieces = allPieces;
+                existing.TrackPieces = trackPieces;
+                existing.StyleRanges = styleRanges;
+            } else {
+                var entity = EntityManager.CreateEntity();
+                EntityManager.AddComponentData(entity, new PieceStyleSingleton {
+                    AllPieces = allPieces,
+                    TrackPieces = trackPieces,
+                    StyleRanges = styleRanges
                 });
+                EntityManager.SetName(entity, "Piece Style");
             }
 
-            return new TrackStyleSettingsData {
-                Styles = styles,
-                DefaultStyle = config.DefaultStyle,
-                AutoStyle = Preferences.AutoStyle,
-                Version = version
+            var styleConfig = new StyleConfigSingleton {
+                DefaultStyleIndex = config.defaultStyle,
+                StyleCount = styleCount,
+                Version = _pieceStyleVersion
             };
+
+            if (SystemAPI.TryGetSingletonRW<StyleConfigSingleton>(out var configRW)) {
+                configRW.ValueRW = styleConfig;
+            } else {
+                var entity = EntityManager.CreateEntity();
+                EntityManager.AddComponentData(entity, styleConfig);
+                EntityManager.SetName(entity, "Style Config");
+            }
         }
     }
 }

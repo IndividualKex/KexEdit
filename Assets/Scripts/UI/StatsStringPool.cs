@@ -99,7 +99,8 @@ namespace KexEdit.UI {
             if (metric) {
                 float kmh = Units.SpeedToDisplay(speed);
                 return GetSpeedMetric(kmh);
-            } else {
+            }
+            else {
                 float mph = Units.SpeedToDisplay(speed);
                 return GetSpeedImperial(mph);
             }

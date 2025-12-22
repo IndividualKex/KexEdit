@@ -1,7 +1,9 @@
+using KexEdit.Legacy;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using LegacyCoaster = KexEdit.Legacy.Coaster;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
@@ -15,7 +17,7 @@ namespace KexEdit.UI {
         [BurstCompile]
         public void OnCreate(ref SystemState state) {
             _editorCoasterQuery = SystemAPI.QueryBuilder()
-                .WithAll<Coaster, EditorCoasterTag>()
+                .WithAll<LegacyCoaster, EditorCoasterTag>()
                 .Build();
 
             _lastTrainSection = Entity.Null;
@@ -46,13 +48,13 @@ namespace KexEdit.UI {
             _lastTrainSection = editorFollower.Section;
             _lastTrainPosition = editorFollower.Index;
 
-            var editorRootNode = SystemAPI.GetComponent<Coaster>(editorCoaster).RootNode;
+            var editorRootNode = SystemAPI.GetComponent<LegacyCoaster>(editorCoaster).RootNode;
             if (editorRootNode == Entity.Null) return;
 
             float totalDistance = CalculateDistanceToSection(ref state, editorRootNode, editorFollower.Section) + editorFollower.Index;
 
             foreach (var (coaster, entity) in SystemAPI
-                .Query<RefRO<Coaster>>()
+                .Query<RefRO<LegacyCoaster>>()
                 .WithAll<AppendedCoasterTag>()
                 .WithEntityAccess()
             ) {
@@ -81,8 +83,8 @@ namespace KexEdit.UI {
 
                 if (currentEntity == targetSection) return distance;
 
-                if (SystemAPI.HasBuffer<Point>(currentEntity)) {
-                    distance += SystemAPI.GetBuffer<Point>(currentEntity).Length;
+                if (SystemAPI.HasBuffer<CorePointBuffer>(currentEntity)) {
+                    distance += SystemAPI.GetBuffer<CorePointBuffer>(currentEntity).Length;
                 }
 
                 currentEntity = SystemAPI.HasComponent<Node>(currentEntity)
@@ -103,8 +105,8 @@ namespace KexEdit.UI {
             while (current != Entity.Null && !processedEntities.Contains(current)) {
                 processedEntities.Add(current);
 
-                if (SystemAPI.HasBuffer<Point>(current)) {
-                    var points = SystemAPI.GetBuffer<Point>(current);
+                if (SystemAPI.HasBuffer<CorePointBuffer>(current)) {
+                    var points = SystemAPI.GetBuffer<CorePointBuffer>(current);
                     float sectionLength = points.Length;
 
                     lastSection = current;

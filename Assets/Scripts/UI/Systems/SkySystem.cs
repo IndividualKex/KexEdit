@@ -25,7 +25,7 @@ namespace KexEdit.UI {
 
         private void CreateProceduralSkyMaterial() {
             _proceduralSkyMaterial = new Material(Shader.Find("Skybox/Procedural"));
-            
+
             _proceduralSkyMaterial.SetFloat("_SunSize", 0.04f);
             _proceduralSkyMaterial.SetFloat("_SunSizeConvergence", 5f);
             _proceduralSkyMaterial.SetFloat("_AtmosphereThickness", 1f);
@@ -64,7 +64,8 @@ namespace KexEdit.UI {
             if (_proceduralSkyMaterial != null) {
                 if (Application.isPlaying) {
                     Object.Destroy(_proceduralSkyMaterial);
-                } else {
+                }
+                else {
                     Object.DestroyImmediate(_proceduralSkyMaterial);
                 }
             }

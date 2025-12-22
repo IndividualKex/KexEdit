@@ -1,0 +1,28 @@
+{
+    "name": "KexEdit.Legacy.Debug",
+    "rootNamespace": "KexEdit.Legacy.Debug",
+    "references": [
+        "Unity.Mathematics",
+        "Unity.Collections",
+        "Unity.Entities",
+        "KexEdit.Graph",
+        "KexEdit.Spline",
+        "KexEdit.Spline.Rendering",
+        "KexEdit.Sim",
+        "KexEdit.Sim.Schema",
+        "KexEdit.Document",
+        "KexEdit.Legacy",
+        "KexEdit.Trains",
+        "KexEdit.Trains.Sim",
+        "KexEdit.Track"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

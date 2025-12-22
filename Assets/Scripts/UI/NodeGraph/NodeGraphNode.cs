@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Properties;
@@ -290,14 +291,14 @@ namespace KexEdit.UI.NodeGraph {
             };
             _contentArea.Add(_bottomPortsContainer);
 
-            if (_type == NodeType.ForceSection
-                || _type == NodeType.GeometricSection
-                || _type == NodeType.CurvedSection
-                || _type == NodeType.CopyPathSection
-                || _type == NodeType.Reverse
-                || _type == NodeType.ReversePath
-                || _type == NodeType.Bridge
-                || _type == NodeType.Mesh) {
+            if (_type == NodeType.ForceSection ||
+                _type == NodeType.GeometricSection ||
+                _type == NodeType.CurvedSection ||
+                _type == NodeType.CopyPathSection ||
+                _type == NodeType.Reverse ||
+                _type == NodeType.ReversePath ||
+                _type == NodeType.Bridge ||
+                _type == NodeType.Mesh) {
                 _itemsContainer = new VisualElement {
                     name = "ItemsContainer",
                     style = {
@@ -319,18 +320,18 @@ namespace KexEdit.UI.NodeGraph {
                 };
                 _foldout.Add(_itemsContainer);
 
-                if (_type == NodeType.ForceSection
-                    || _type == NodeType.GeometricSection) {
+                if (_type == NodeType.ForceSection ||
+                    _type == NodeType.GeometricSection) {
                     _durationTypeField = new DurationTypeField();
                     _itemsContainer.Add(_durationTypeField);
                 }
 
-                if (_type == NodeType.ForceSection
-                    || _type == NodeType.GeometricSection
-                    || _type == NodeType.CurvedSection
-                    || _type == NodeType.CopyPathSection
-                    || _type == NodeType.Bridge
-                    || _type == NodeType.Mesh) {
+                if (_type == NodeType.ForceSection ||
+                    _type == NodeType.GeometricSection ||
+                    _type == NodeType.CurvedSection ||
+                    _type == NodeType.CopyPathSection ||
+                    _type == NodeType.Bridge ||
+                    _type == NodeType.Mesh) {
                     _renderToggle = new RenderToggle();
                     _itemsContainer.Add(_renderToggle);
                 }
@@ -454,7 +455,7 @@ namespace KexEdit.UI.NodeGraph {
         private void PositionPortsAbsolute(VisualElement container) {
             int anchorCount = 0;
             int pathCount = 0;
-            
+
             for (int i = 0; i < container.childCount; i++) {
                 if (container[i] is NodeGraphPort port) {
                     if (port.Data.Port.Type == PortType.Anchor) {
@@ -465,10 +466,10 @@ namespace KexEdit.UI.NodeGraph {
                     }
                 }
             }
-            
+
             int anchorIndex = 0;
             int pathIndex = 0;
-            
+
             for (int i = 0; i < container.childCount; i++) {
                 if (container[i] is NodeGraphPort port) {
                     port.style.position = Position.Absolute;

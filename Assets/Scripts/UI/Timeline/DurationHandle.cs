@@ -1,6 +1,6 @@
+using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Unity.Properties;
 using static KexEdit.UI.Timeline.Constants;
 
 namespace KexEdit.UI.Timeline {

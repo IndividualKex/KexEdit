@@ -1,0 +1,22 @@
+{
+    "name": "KexEdit.Trains",
+    "rootNamespace": "KexEdit.Trains",
+    "references": [
+        "KexEdit.Trains.Sim",
+        "KexEdit.Sim",
+        "KexEdit.Track",
+        "KexEdit.Spline",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Burst"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

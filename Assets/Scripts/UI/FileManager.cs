@@ -1,6 +1,6 @@
-using SFB;
-using System.IO;
 using System;
+using System.IO;
+using SFB;
 using UnityEngine;
 
 namespace KexEdit.UI {

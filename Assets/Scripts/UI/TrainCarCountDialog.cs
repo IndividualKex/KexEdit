@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -172,9 +173,10 @@ namespace KexEdit.UI {
         private void ApplyCarCountChange(int newValue) {
             if (newValue == _defaultCarCount) {
                 TrainCarCountPreferences.ResetCarCount(_currentTrainStyle);
-            } else {
-             
-              TrainCarCountPreferences.SetCarCount(_currentTrainStyle, newValue);
+            }
+            else {
+
+                TrainCarCountPreferences.SetCarCount(_currentTrainStyle, newValue);
             }
             TriggerTrainStyleReload();
         }

@@ -1,5 +1,4 @@
 using KexEdit.UI.Timeline;
-using Unity.Entities;
 using Unity.Mathematics;
 
 namespace KexEdit.UI {
@@ -17,7 +16,8 @@ namespace KexEdit.UI {
             Perturbed
         }
 
-        private Entity _entity;
+        private CoasterKeyframeManager _keyframeManager;
+        private uint _nodeId;
         private KeyframeData _keyframe;
         private OptimizerData _data;
 
@@ -32,8 +32,9 @@ namespace KexEdit.UI {
 
         public OptimizerData Data => _data;
 
-        public Optimizer(Entity entity, KeyframeData keyframe, OptimizerData data) {
-            _entity = entity;
+        public Optimizer(CoasterKeyframeManager keyframeManager, uint nodeId, KeyframeData keyframe, OptimizerData data) {
+            _keyframeManager = keyframeManager;
+            _nodeId = nodeId;
             _keyframe = keyframe;
             _data = data;
             _baselineParam = keyframe.Value.Value;
@@ -108,7 +109,7 @@ namespace KexEdit.UI {
 
         private void ApplyParam(float param) {
             var adapter = PropertyAdapter.GetAdapter(_data.PropertyType);
-            adapter.UpdateKeyframe(_entity, _keyframe.Value.WithValue(param));
+            adapter.UpdateKeyframe(_keyframeManager, _nodeId, _keyframe.Value.WithValue(param));
         }
     }
 }

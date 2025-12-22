@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -81,8 +80,8 @@ namespace KexEdit.UI {
         }
 
         private string GetTrackDisplayName() {
-            if (!string.IsNullOrEmpty(_trackConfig?.Name)) {
-                return _trackConfig.Name;
+            if (!string.IsNullOrEmpty(_trackConfig?.name)) {
+                return _trackConfig.name;
             }
             return _currentTrackStyle.Replace(".json", "");
         }
@@ -96,7 +95,7 @@ namespace KexEdit.UI {
             };
             _panel.Add(title);
 
-            if (_trackConfig?.Colors == null || _trackConfig.Colors.Length == 0) {
+            if (_trackConfig?.colors == null || _trackConfig.colors.Length == 0) {
                 var noColorsLabel = new Label("This track style has no customizable colors.") {
                     style = {
                         color = s_TextColor,
@@ -116,8 +115,8 @@ namespace KexEdit.UI {
         }
 
         private void CreateColorFields() {
-            for (int i = 0; i < _trackConfig.Colors.Length; i++) {
-                CreateColorField(i, _trackConfig.Colors[i]);
+            for (int i = 0; i < _trackConfig.colors.Length; i++) {
+                CreateColorField(i, _trackConfig.colors[i]);
             }
         }
 

@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -46,7 +47,8 @@ namespace KexEdit.UI.NodeGraph {
 
                 _connector = new Connector();
                 Add(_connector);
-            } else if (vertical) {
+            }
+            else if (vertical) {
                 style.position = Position.Relative;
                 style.flexGrow = 0f;
                 style.flexDirection = FlexDirection.Column;
@@ -78,7 +80,8 @@ namespace KexEdit.UI.NodeGraph {
                     _outputThumb = new OutputThumb(_data);
                     Add(_outputThumb);
                 }
-            } else {
+            }
+            else {
                 style.position = Position.Relative;
                 style.flexGrow = 0f;
                 style.flexDirection = data.Port.IsInput ? FlexDirection.Row : FlexDirection.RowReverse;
@@ -99,7 +102,7 @@ namespace KexEdit.UI.NodeGraph {
 
                 string name = _data.Port.Type.GetDisplayName(_data.Port.IsInput);
                 _label = new Label(name) {
-                style = {
+                    style = {
                     marginLeft = 4f,
                     marginRight = 4f,
                     marginTop = 2f,

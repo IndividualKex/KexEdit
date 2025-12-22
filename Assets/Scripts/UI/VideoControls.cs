@@ -1,9 +1,10 @@
+using System;
+using System.Collections.Generic;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System;
-using System.Collections.Generic;
-using static KexEdit.Constants;
+using static KexEdit.Sim.Sim;
+using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI {

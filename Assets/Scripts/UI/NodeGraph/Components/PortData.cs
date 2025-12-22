@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -6,6 +7,7 @@ namespace KexEdit.UI.NodeGraph {
         public Entity Entity;
         public Port Port;
         public Entity Node;
+        public int Index;
         public PointData Value;
         public PortState InteractionState;
         public UnitsType Units;
@@ -15,11 +17,12 @@ namespace KexEdit.UI.NodeGraph {
         public bool Dragging => InteractionState.HasFlag(PortState.Dragging);
         public bool Connected => InteractionState.HasFlag(PortState.Connected);
 
-        public static PortData Create(Entity entity, Port port, Entity node, UnitsType units) {
+        public static PortData Create(Entity entity, Port port, Entity node, int index, UnitsType units) {
             return new PortData {
                 Entity = entity,
                 Port = port,
                 Node = node,
+                Index = index,
                 Units = units,
             };
         }

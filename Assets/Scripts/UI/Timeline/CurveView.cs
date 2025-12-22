@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Mathematics;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Timeline.Constants;
+using Keyframe = KexEdit.Legacy.Keyframe;
 
 namespace KexEdit.UI.Timeline {
     public class CurveView : VisualElement {
@@ -140,18 +142,18 @@ namespace KexEdit.UI.Timeline {
                 }
                 else if (TryGetCurveClickPosition(_data.ValueBounds, evt.localMousePosition, out PropertyType curveType, out float curveTime, out float curveValue)) {
                     Undo.Record();
-                    
+
                     _data.Time = curveTime;
                     var timeChangeEvent = this.GetPooled<TimeChangeEvent>();
                     timeChangeEvent.Time = curveTime;
                     timeChangeEvent.Snap = false;
                     this.Send(timeChangeEvent);
-                    
+
                     var setKeyframeEvent = this.GetPooled<SetKeyframeEvent>();
                     setKeyframeEvent.Type = curveType;
                     setKeyframeEvent.Value = curveValue;
                     this.Send(setKeyframeEvent);
-                    
+
                     var mousePos = evt.localMousePosition;
                     schedule.Execute(() => {
                         if (_data.Properties.TryGetValue(curveType, out var propertyData)) {
@@ -521,12 +523,12 @@ namespace KexEdit.UI.Timeline {
                 if (!propertyData.Visible || propertyData.Hidden || propertyData.Keyframes.Count == 0) continue;
 
                 float clickTime = _data.PixelToTime(pos.x);
-                
+
                 var firstKeyframe = propertyData.Keyframes[0];
                 if (clickTime < firstKeyframe.Time) {
                     float valueY = bounds.ValueToPixel(firstKeyframe.Value, contentRect.height);
                     float distance = math.abs(pos.y - valueY);
-                    
+
                     if (distance < tolerance && distance < closestDistance) {
                         closestDistance = distance;
                         resultType = type;
@@ -534,12 +536,12 @@ namespace KexEdit.UI.Timeline {
                         resultValue = firstKeyframe.Value;
                     }
                 }
-                
+
                 var lastKeyframe = propertyData.Keyframes[^1];
                 if (clickTime > lastKeyframe.Time) {
                     float valueY = bounds.ValueToPixel(lastKeyframe.Value, contentRect.height);
                     float distance = math.abs(pos.y - valueY);
-                    
+
                     if (distance < tolerance && distance < closestDistance) {
                         closestDistance = distance;
                         resultType = type;
@@ -547,11 +549,11 @@ namespace KexEdit.UI.Timeline {
                         resultValue = lastKeyframe.Value;
                     }
                 }
-                
+
                 if (propertyData.Keyframes.Count == 1) {
                     float valueY = bounds.ValueToPixel(firstKeyframe.Value, contentRect.height);
                     float distance = math.abs(pos.y - valueY);
-                    
+
                     if (distance < tolerance && distance < closestDistance) {
                         closestDistance = distance;
                         resultType = type;
@@ -575,34 +577,34 @@ namespace KexEdit.UI.Timeline {
                     if (interpolationType == InterpolationType.Bezier) {
                         float dt = end.Time - start.Time;
                         const int samples = 50;
-                        
+
                         for (int j = 0; j <= samples; j++) {
                             float t = (float)j / samples;
-                            
+
                             float t0 = 0f;
                             float t1 = start.OutWeight;
                             float t2 = 1f - end.InWeight;
                             float t3 = 1f;
-                            
+
                             float oneMinusT = 1f - t;
                             float timeSquared = t * t;
                             float timeCubed = timeSquared * t;
                             float oneMinusTSquared = oneMinusT * oneMinusT;
                             float oneMinusTCubed = oneMinusTSquared * oneMinusT;
-                            
+
                             float bezierTimeParam = oneMinusTCubed * t0
                                 + 3f * oneMinusTSquared * t * t1
                                 + 3f * oneMinusT * timeSquared * t2
                                 + timeCubed * t3;
-                            
+
                             float sampleTime = start.Time + bezierTimeParam * dt;
                             float timeX = _data.TimeToPixel(sampleTime);
-                            
+
                             if (math.abs(timeX - pos.x) < tolerance * 2f) {
                                 float sampleValue = EvaluateBezierValueAtTime(start, end, t);
                                 float valueY = bounds.ValueToPixel(sampleValue, contentRect.height);
                                 float distance = math.abs(pos.y - valueY);
-                                
+
                                 if (distance < tolerance && distance < closestDistance) {
                                     closestDistance = distance;
                                     resultType = type;
@@ -617,7 +619,7 @@ namespace KexEdit.UI.Timeline {
                         if (t >= 0f && t <= 1f) {
                             float interpolatedValue = GetInterpolatedValue(start, end, t);
                             float pixelY = bounds.ValueToPixel(interpolatedValue, contentRect.height);
-                            
+
                             float distance = math.abs(pos.y - pixelY);
                             if (distance < tolerance && distance < closestDistance) {
                                 closestDistance = distance;

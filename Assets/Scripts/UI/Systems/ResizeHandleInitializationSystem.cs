@@ -1,6 +1,6 @@
+using KexEdit.UI.Timeline;
 using Unity.Entities;
 using UnityEngine.UIElements;
-using KexEdit.UI.Timeline;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIInitializationSystemGroup))]

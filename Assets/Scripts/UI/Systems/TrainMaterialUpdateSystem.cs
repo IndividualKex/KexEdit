@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Rendering;

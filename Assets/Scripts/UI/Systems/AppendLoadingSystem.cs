@@ -1,8 +1,9 @@
-using Unity.Entities;
 using System.IO;
-using UnityEngine;
-using KexEdit.Serialization;
+using KexEdit.Legacy;
+using KexEdit.Legacy.Serialization;
 using Unity.Collections;
+using Unity.Entities;
+using UnityEngine;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(InitializationSystemGroup))]

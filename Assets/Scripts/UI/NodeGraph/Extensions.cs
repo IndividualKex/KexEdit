@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 using UnityEngine;
 
 namespace KexEdit.UI.NodeGraph {

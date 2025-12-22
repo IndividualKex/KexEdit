@@ -1,429 +1,316 @@
-using System.IO;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using Unity.Mathematics;
-using UnityEngine;
+using KexEdit.Spline;
+using KexEdit.Spline.Rendering;
 using NUnit.Framework;
-using Unity.Jobs;
-using KexEdit;
-using KexEdit.UI;
-using System.Diagnostics;
-using System;
+using Unity.Collections;
+using Unity.Mathematics;
 
-[TestFixture]
-public class TrackMeshExporterTests {
-    private const float FLOAT_TOLERANCE = 0.000001f;
+namespace Tests {
+    [TestFixture]
+    [Category("Unit")]
+    public class TrackMeshExporterTests {
+        private const float TOLERANCE = 1e-3f;
+        private const float NOMINAL_LENGTH = 10f;
 
-    [TearDown]
-    public void TearDown() {
-        var testFiles = Directory.GetFiles(Application.temporaryCachePath, "test_*.obj");
-        foreach (var file in testFiles) {
-            try {
-                File.Delete(file);
+        private struct SimpleMesh {
+            public NativeArray<float3> Vertices;
+            public NativeArray<float3> Normals;
+
+            public void Dispose() {
+                if (Vertices.IsCreated) Vertices.Dispose();
+                if (Normals.IsCreated) Normals.Dispose();
             }
-            catch { }
         }
-    }
 
-    [Test]
-    public void BuildJob_TransformsDataCorrectly() {
-        var vertices = new NativeArray<float3>(3, Allocator.TempJob);
-        var normals = new NativeArray<float3>(3, Allocator.TempJob);
-        var uvs = new NativeArray<float2>(3, Allocator.TempJob);
-        var outputData = new NativeArray<VertexData>(3, Allocator.TempJob);
-
-        try {
-            vertices[0] = new float3(1, 0, 0);
-            vertices[1] = new float3(0, 1, 0);
-            vertices[2] = new float3(0, 0, 1);
-
-            normals[0] = new float3(1, 0, 0);
-            normals[1] = new float3(0, 1, 0);
-            normals[2] = new float3(0, 0, 1);
-
-            uvs[0] = new float2(0, 0);
-            uvs[1] = new float2(0.5f, 0.5f);
-            uvs[2] = new float2(1, 1);
-
-            var transformMatrix = float4x4.Scale(2f);
-
-            var job = CreateBuildJob(vertices, normals, uvs, transformMatrix, outputData);
-            job.Schedule(3, 1).Complete();
-
-            Assert.AreEqual(new float3(-2, 0, 0), outputData[0].Position);
-            Assert.AreEqual(new float3(0, 2, 0), outputData[1].Position);
-            Assert.AreEqual(new float3(0, 0, 2), outputData[2].Position);
-
-            Assert.AreEqual(new float3(-1, 0, 0), outputData[0].Normal);
-            Assert.AreEqual(new float3(0, 1, 0), outputData[1].Normal);
-            Assert.AreEqual(new float3(0, 0, 1), outputData[2].Normal);
-
-            Assert.AreEqual(new float2(0, 0), outputData[0].UV);
-            Assert.AreEqual(new float2(0.5f, 0.5f), outputData[1].UV);
-            Assert.AreEqual(new float2(1, 1), outputData[2].UV);
-        }
-        finally {
-            vertices.Dispose();
-            normals.Dispose();
-            uvs.Dispose();
-            outputData.Dispose();
-        }
-    }
-
-    [Test]
-    public void ObjWriter_ProducesValidObjFile() {
-        var meshes = new NativeList<MeshData>(Allocator.TempJob);
-        var vertices = new NativeArray<VertexData>(3, Allocator.TempJob);
-        var triangles = new NativeArray<int>(3, Allocator.TempJob);
-
-        try {
-            vertices[0] = new VertexData {
-                Position = new float3(0, 0, 0),
-                Normal = new float3(0, 1, 0),
-                UV = new float2(0, 0)
-            };
-            vertices[1] = new VertexData {
-                Position = new float3(1, 0, 0),
-                Normal = new float3(0, 1, 0),
-                UV = new float2(1, 0)
-            };
-            vertices[2] = new VertexData {
-                Position = new float3(0.5f, 0, 1),
-                Normal = new float3(0, 1, 0),
-                UV = new float2(0.5f, 1)
+        private SimpleMesh CreateTestSegmentMesh() {
+            var mesh = new SimpleMesh {
+                Vertices = new NativeArray<float3>(4, Allocator.Temp),
+                Normals = new NativeArray<float3>(4, Allocator.Temp)
             };
 
-            triangles[0] = 0;
-            triangles[1] = 1;
-            triangles[2] = 2;
+            mesh.Vertices[0] = new float3(-0.5f, 0f, 0f);
+            mesh.Vertices[1] = new float3(0.5f, 0f, 0f);
+            mesh.Vertices[2] = new float3(-0.5f, 0f, NOMINAL_LENGTH);
+            mesh.Vertices[3] = new float3(0.5f, 0f, NOMINAL_LENGTH);
 
-            var meshData = new MeshData {
-                Type = MeshType.StartCap,
-                SegmentId = 0,
-                Vertices = vertices,
-                Triangles = triangles,
-                VertexCount = 3,
-                TriangleCount = 3
+            for (int i = 0; i < 4; i++) {
+                mesh.Normals[i] = math.up();
+            }
+
+            return mesh;
+        }
+
+        private NativeArray<SplinePoint> CreateStraightSpline(float length, float resolution = 0.1f) {
+            int count = (int)math.ceil(length / resolution) + 1;
+            var points = new NativeArray<SplinePoint>(count, Allocator.Temp);
+
+            for (int i = 0; i < count; i++) {
+                float arc = i * resolution;
+                points[i] = new SplinePoint(
+                    arc,
+                    new float3(0f, 0f, -arc),
+                    math.back(),
+                    math.down(),
+                    math.right()
+                );
+            }
+
+            return points;
+        }
+
+        [Test]
+        public void SegmentDeformation_UsesSegmentStartArc_NotSectionArc() {
+            // Arrange: Create a 100m section with segment at arc 50-60
+            var mesh = CreateTestSegmentMesh();
+            var spline = CreateStraightSpline(110f);
+
+            // Create a segment boundary like what SegmentBuilder produces:
+            // This segment is the 6th segment (index 5) in a 100m section with 10m segments
+            var segment = new GPUSegmentBoundary {
+                StartArc = 50f,     // Segment starts at arc 50 (correct value to use)
+                Length = 10f,       // Segment length (correct value to use)
+                ArcStart = 0f,      // Section starts at arc 0 (WRONG to use for deformation)
+                ArcLength = 100f,   // Section total arc (WRONG to use for deformation)
+                SplineStartIndex = 0,
+                SplineCount = spline.Length,
+                PieceIndex = 0,
+                SectionIndex = 0
             };
 
-            meshes.Add(meshData);
+            var outputPositions = new NativeArray<float3>(mesh.Vertices.Length, Allocator.Temp);
+            var outputNormals = new NativeArray<float3>(mesh.Normals.Length, Allocator.Temp);
 
-            var testFilePath = Path.Combine(Application.temporaryCachePath, "test_output.obj");
+            // Act: Deform using CORRECT parameters (StartArc, Length)
+            Deform.Mesh(
+                mesh.Vertices,
+                mesh.Normals,
+                spline,
+                segment.StartArc,   // Correct: segment's start arc
+                segment.Length,     // Correct: segment's length
+                NOMINAL_LENGTH,
+                ref outputPositions,
+                ref outputNormals
+            );
 
-            Assert.DoesNotThrow(() => {
-                ObjWriter.WriteObjFile(testFilePath, ref meshes);
-            });
+            // Assert: Mesh should start at Z=-50 and end at Z=-60
+            float startZ = (outputPositions[0].z + outputPositions[1].z) / 2f;
+            float endZ = (outputPositions[2].z + outputPositions[3].z) / 2f;
 
-            Assert.IsTrue(File.Exists(testFilePath));
+            Assert.AreEqual(-50f, startZ, TOLERANCE, "Segment start should be at arc 50 (Z=-50)");
+            Assert.AreEqual(-60f, endZ, TOLERANCE, "Segment end should be at arc 60 (Z=-60)");
 
-            // Validate OBJ can be parsed by ImportManager
-            Mesh importedMesh = null;
-            Assert.DoesNotThrow(() => {
-                importedMesh = ObjImporter.LoadMesh(testFilePath);
-            });
-
-            Assert.IsNotNull(importedMesh, "ImportManager should successfully parse the exported OBJ");
-            Assert.AreEqual(3, importedMesh.vertexCount, "Imported mesh should have 3 vertices");
-            Assert.AreEqual(3, importedMesh.triangles.Length, "Imported mesh should have 3 triangle indices");
-            Assert.IsNotNull(importedMesh.normals, "Imported mesh should have normals");
-            Assert.IsNotNull(importedMesh.uv, "Imported mesh should have UVs");
-
-            // Verify vertex positions are correct (allowing for float precision)
-            Assert.AreEqual(new Vector3(0, 0, 0), importedMesh.vertices[0], "First vertex position");
-            Assert.AreEqual(new Vector3(1, 0, 0), importedMesh.vertices[1], "Second vertex position");
-            Assert.AreEqual(new Vector3(0.5f, 0, 1), importedMesh.vertices[2], "Third vertex position");
+            outputPositions.Dispose();
+            outputNormals.Dispose();
+            mesh.Dispose();
+            spline.Dispose();
         }
-        finally {
-            vertices.Dispose();
-            triangles.Dispose();
-            meshes.Dispose();
+
+        [Test]
+        public void SegmentDeformation_WrongParameters_WouldStartAtSectionArc() {
+            // This test documents the BUG behavior when using ArcStart/ArcLength instead of StartArc/Length
+            var mesh = CreateTestSegmentMesh();
+            var spline = CreateStraightSpline(110f);
+
+            var segment = new GPUSegmentBoundary {
+                StartArc = 50f,     // Segment starts at arc 50
+                Length = 10f,       // Segment length
+                ArcStart = 0f,      // Section starts at arc 0
+                ArcLength = 100f,   // Section total arc
+                SplineStartIndex = 0,
+                SplineCount = spline.Length,
+                PieceIndex = 0,
+                SectionIndex = 0
+            };
+
+            var outputPositions = new NativeArray<float3>(mesh.Vertices.Length, Allocator.Temp);
+            var outputNormals = new NativeArray<float3>(mesh.Normals.Length, Allocator.Temp);
+
+            // Act: Deform using WRONG parameters (ArcStart, ArcLength) - this is the bug
+            Deform.Mesh(
+                mesh.Vertices,
+                mesh.Normals,
+                spline,
+                segment.ArcStart,   // Wrong: section's start arc (0)
+                segment.ArcLength,  // Wrong: section's total length (100)
+                NOMINAL_LENGTH,
+                ref outputPositions,
+                ref outputNormals
+            );
+
+            // Assert: With wrong params, mesh would span 0 to -100 instead of -50 to -60
+            float startZ = (outputPositions[0].z + outputPositions[1].z) / 2f;
+            float endZ = (outputPositions[2].z + outputPositions[3].z) / 2f;
+
+            // This shows the buggy behavior: starts at 0 instead of -50
+            Assert.AreEqual(0f, startZ, TOLERANCE, "With ArcStart, segment incorrectly starts at section start");
+            Assert.AreEqual(-100f, endZ, TOLERANCE, "With ArcLength, segment incorrectly spans entire section");
+
+            outputPositions.Dispose();
+            outputNormals.Dispose();
+            mesh.Dispose();
+            spline.Dispose();
         }
-    }
 
-    [Test]
-    public void ObjWriter_HandlesMultipleMeshes() {
-        var meshes = new NativeList<MeshData>(Allocator.TempJob);
-        var vertices1 = new NativeArray<VertexData>(3, Allocator.TempJob);
-        var triangles1 = new NativeArray<int>(3, Allocator.TempJob);
-        var vertices2 = new NativeArray<VertexData>(3, Allocator.TempJob);
-        var triangles2 = new NativeArray<int>(3, Allocator.TempJob);
+        [Test]
+        public void SegmentDeformation_MultipleSegments_EachDeformsToCorrectRange() {
+            // Verify that multiple segments in a section each deform to their own arc range
+            var mesh = CreateTestSegmentMesh();
+            var spline = CreateStraightSpline(110f);
 
-        try {
-            // First mesh with normals and UVs
-            vertices1[0] = new VertexData { Position = new float3(0, 0, 0), Normal = new float3(0, 1, 0), UV = new float2(0, 0) };
-            vertices1[1] = new VertexData { Position = new float3(1, 0, 0), Normal = new float3(0, 1, 0), UV = new float2(1, 0) };
-            vertices1[2] = new VertexData { Position = new float3(0, 1, 0), Normal = new float3(0, 1, 0), UV = new float2(0, 1) };
-            triangles1[0] = 0; triangles1[1] = 1; triangles1[2] = 2;
+            var outputPositions = new NativeArray<float3>(mesh.Vertices.Length, Allocator.Temp);
+            var outputNormals = new NativeArray<float3>(mesh.Normals.Length, Allocator.Temp);
 
-            // Second mesh with no normals or UVs (zero values)
-            vertices2[0] = new VertexData { Position = new float3(2, 0, 0), Normal = float3.zero, UV = float2.zero };
-            vertices2[1] = new VertexData { Position = new float3(3, 0, 0), Normal = float3.zero, UV = float2.zero };
-            vertices2[2] = new VertexData { Position = new float3(2, 1, 0), Normal = float3.zero, UV = float2.zero };
-            triangles2[0] = 0; triangles2[1] = 1; triangles2[2] = 2;
+            // Test segments 0, 5, and 9 from a 10-segment section
+            int[] segmentIndices = { 0, 5, 9 };
 
-            meshes.Add(new MeshData { Type = MeshType.StartCap, SegmentId = 0, Vertices = vertices1, Triangles = triangles1, VertexCount = 3, TriangleCount = 3 });
-            meshes.Add(new MeshData { Type = MeshType.EndCap, SegmentId = 1, Vertices = vertices2, Triangles = triangles2, VertexCount = 3, TriangleCount = 3 });
-
-            var testFilePath = Path.Combine(Application.temporaryCachePath, "test_multi_mesh.obj");
-
-            Assert.DoesNotThrow(() => {
-                ObjWriter.WriteObjFile(testFilePath, ref meshes);
-            });
-
-            // Validate OBJ can be parsed
-            Mesh importedMesh = null;
-            Assert.DoesNotThrow(() => {
-                importedMesh = ObjImporter.LoadMesh(testFilePath);
-            });
-
-            Assert.IsNotNull(importedMesh, "Multi-mesh OBJ should be parseable");
-            Assert.AreEqual(6, importedMesh.vertexCount, "Should have 6 vertices total");
-            Assert.AreEqual(6, importedMesh.triangles.Length, "Should have 6 triangle indices total");
-        }
-        finally {
-            vertices1.Dispose();
-            triangles1.Dispose();
-            vertices2.Dispose();
-            triangles2.Dispose();
-            meshes.Dispose();
-        }
-    }
-
-    [Test]
-    public void ObjWriter_PerformanceWithLargeDataset() {
-        const int MESH_COUNT = 100;
-        const int VERTICES_PER_MESH = 1000;
-        const int TRIANGLES_PER_MESH = 3000;
-
-        var meshes = new NativeList<MeshData>(Allocator.TempJob);
-        var allVertexArrays = new NativeArray<VertexData>[MESH_COUNT];
-        var allTriangleArrays = new NativeArray<int>[MESH_COUNT];
-
-        var sw = new Stopwatch();
-
-        try {
-            // Setup phase - measure data preparation time
-            sw.Start();
-            for (int meshIndex = 0; meshIndex < MESH_COUNT; meshIndex++) {
-                var vertices = new NativeArray<VertexData>(VERTICES_PER_MESH, Allocator.TempJob);
-                var triangles = new NativeArray<int>(TRIANGLES_PER_MESH, Allocator.TempJob);
-
-                // Generate test data
-                for (int i = 0; i < VERTICES_PER_MESH; i++) {
-                    vertices[i] = new VertexData {
-                        Position = new float3(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value),
-                        Normal = math.normalize(new float3(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value)),
-                        UV = new float2(UnityEngine.Random.value, UnityEngine.Random.value)
-                    };
-                }
-
-                for (int i = 0; i < TRIANGLES_PER_MESH; i++) {
-                    triangles[i] = UnityEngine.Random.Range(0, VERTICES_PER_MESH);
-                }
-
-                meshes.Add(new MeshData {
-                    Type = meshIndex % 2 == 0 ? MeshType.StartCap : MeshType.EndCap,
-                    SegmentId = meshIndex / 10,
-                    Vertices = vertices,
-                    Triangles = triangles,
-                    VertexCount = VERTICES_PER_MESH,
-                    TriangleCount = TRIANGLES_PER_MESH
-                });
-
-                allVertexArrays[meshIndex] = vertices;
-                allTriangleArrays[meshIndex] = triangles;
-            }
-            sw.Stop();
-            var setupTime = sw.ElapsedMilliseconds;
-
-            // Export phase - measure string building vs file writing
-            var testFilePath = Path.Combine(Application.temporaryCachePath, "test_performance.obj");
-
-            // Measure string building time (in-memory operations)
-            sw.Restart();
-            var buffer = new System.Text.StringBuilder(1024 * 1024);
-            buffer.AppendLine("# Track meshes exported from KexEdit");
-            buffer.AppendLine($"# Export date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-            buffer.AppendLine("");
-
-            int vertexOffset = 1, normalOffset = 1, uvOffset = 1;
-
-            unsafe {
-                for (int meshIndex = 0; meshIndex < meshes.Length; meshIndex++) {
-                    var mesh = meshes[meshIndex];
-                    string meshName = mesh.Type switch {
-                        MeshType.StartCap => $"StartCap_{mesh.SegmentId}",
-                        MeshType.EndCap => $"EndCap_{mesh.SegmentId}",
-                        MeshType.Duplication => $"Duplication_{mesh.SegmentId}",
-                        MeshType.Extrusion => $"Extrusion_{mesh.SegmentId}",
-                        MeshType.Segment => $"Segment_{mesh.SegmentId}",
-                        _ => $"Unknown_{mesh.SegmentId}"
-                    };
-
-                    buffer.AppendLine($"# Mesh: {meshName}");
-                    buffer.AppendLine($"o {meshName}");
-
-                    var vertexPtr = (VertexData*)mesh.Vertices.GetUnsafeReadOnlyPtr();
-
-                    for (int i = 0; i < mesh.VertexCount; i++) {
-                        var vertexData = vertexPtr[i];
-                        buffer.AppendLine($"v {vertexData.Position.x:F6} {vertexData.Position.y:F6} {vertexData.Position.z:F6}");
-                    }
-
-                    bool hasNormals = false, hasUVs = false;
-                    for (int i = 0; i < mesh.VertexCount; i++) {
-                        if (!vertexPtr[i].Normal.Equals(float3.zero)) hasNormals = true;
-                        if (!vertexPtr[i].UV.Equals(float2.zero)) hasUVs = true;
-                        if (hasNormals && hasUVs) break;
-                    }
-
-                    if (hasNormals) {
-                        for (int i = 0; i < mesh.VertexCount; i++) {
-                            var vertexData = vertexPtr[i];
-                            buffer.AppendLine($"vn {vertexData.Normal.x:F6} {vertexData.Normal.y:F6} {vertexData.Normal.z:F6}");
-                        }
-                    }
-
-                    if (hasUVs) {
-                        for (int i = 0; i < mesh.VertexCount; i++) {
-                            var vertexData = vertexPtr[i];
-                            buffer.AppendLine($"vt {vertexData.UV.x:F6} {vertexData.UV.y:F6}");
-                        }
-                    }
-
-                    var trianglePtr = (int*)mesh.Triangles.GetUnsafeReadOnlyPtr();
-                    for (int i = 0; i < mesh.TriangleCount; i += 3) {
-                        var vi1 = trianglePtr[i] + vertexOffset;
-                        var vi2 = trianglePtr[i + 1] + vertexOffset;
-                        var vi3 = trianglePtr[i + 2] + vertexOffset;
-
-                        if (hasNormals && hasUVs) {
-                            var ni1 = trianglePtr[i] + normalOffset;
-                            var ni2 = trianglePtr[i + 1] + normalOffset;
-                            var ni3 = trianglePtr[i + 2] + normalOffset;
-                            var ui1 = trianglePtr[i] + uvOffset;
-                            var ui2 = trianglePtr[i + 1] + uvOffset;
-                            var ui3 = trianglePtr[i + 2] + uvOffset;
-                            buffer.AppendLine($"f {vi1}/{ui1}/{ni1} {vi2}/{ui2}/{ni2} {vi3}/{ui3}/{ni3}");
-                        }
-                        else if (hasNormals) {
-                            var ni1 = trianglePtr[i] + normalOffset;
-                            var ni2 = trianglePtr[i + 1] + normalOffset;
-                            var ni3 = trianglePtr[i + 2] + normalOffset;
-                            buffer.AppendLine($"f {vi1}//{ni1} {vi2}//{ni2} {vi3}//{ni3}");
-                        }
-                        else if (hasUVs) {
-                            var ui1 = trianglePtr[i] + uvOffset;
-                            var ui2 = trianglePtr[i + 1] + uvOffset;
-                            var ui3 = trianglePtr[i + 2] + uvOffset;
-                            buffer.AppendLine($"f {vi1}/{ui1} {vi2}/{ui2} {vi3}/{ui3}");
-                        }
-                        else {
-                            buffer.AppendLine($"f {vi1} {vi2} {vi3}");
-                        }
-                    }
-
-                    vertexOffset += mesh.VertexCount;
-                    if (hasNormals) normalOffset += mesh.VertexCount;
-                    if (hasUVs) uvOffset += mesh.VertexCount;
-                    buffer.AppendLine("");
-                }
-            }
-            sw.Stop();
-            var stringBuildTime = sw.ElapsedMilliseconds;
-
-            // Measure file writing time (I/O operations)
-            sw.Restart();
-            var utf8WithoutBom = new System.Text.UTF8Encoding(false);
-            File.WriteAllText(testFilePath, buffer.ToString(), utf8WithoutBom);
-            sw.Stop();
-            var fileWriteTime = sw.ElapsedMilliseconds;
-
-            var totalExportTime = stringBuildTime + fileWriteTime;
-
-            // Quick validation
-            var importedMesh = ObjImporter.LoadMesh(testFilePath);
-
-            // Performance reporting
-            UnityEngine.Debug.Log($"Performance Test Results:");
-            UnityEngine.Debug.Log($"  Setup: {setupTime}ms ({MESH_COUNT} meshes, {VERTICES_PER_MESH * MESH_COUNT:N0} vertices)");
-            UnityEngine.Debug.Log($"  String Building: {stringBuildTime}ms ({stringBuildTime / (float)MESH_COUNT:F1}ms per mesh)");
-            UnityEngine.Debug.Log($"  File Writing: {fileWriteTime}ms");
-            UnityEngine.Debug.Log($"  Total Export: {totalExportTime}ms");
-            UnityEngine.Debug.Log($"  File size: {new FileInfo(testFilePath).Length / 1024}KB");
-
-            // Performance thresholds
-            Assert.Less(totalExportTime, 5000, $"Export should complete in under 5 seconds (took {totalExportTime}ms)");
-            Assert.Less(stringBuildTime, 4000, $"String building should be under 4 seconds (took {stringBuildTime}ms)");
-            Assert.Less(fileWriteTime, 1000, $"File writing should be under 1 second (took {fileWriteTime}ms)");
-
-            // Verify correctness
-            Assert.IsNotNull(importedMesh, "Large dataset should produce valid OBJ");
-
-            // Memory efficiency check - export time should scale reasonably with data size
-            var vertexCount = VERTICES_PER_MESH * MESH_COUNT;
-            var msPerVertex = totalExportTime / (float)vertexCount;
-            Assert.Less(msPerVertex, 0.01f, $"Export should be efficient (took {msPerVertex:F4}ms per vertex)");
-        }
-        finally {
-            // Cleanup
-            for (int i = 0; i < allVertexArrays.Length; i++) {
-                if (allVertexArrays[i].IsCreated) allVertexArrays[i].Dispose();
-                if (allTriangleArrays[i].IsCreated) allTriangleArrays[i].Dispose();
-            }
-            meshes.Dispose();
-        }
-    }
-
-    [Test]
-    public void UnsafePointerAccess_DoesNotCorruptMemory() {
-        var testData = new NativeArray<VertexData>(100, Allocator.TempJob);
-
-        try {
-            for (int i = 0; i < testData.Length; i++) {
-                testData[i] = new VertexData {
-                    Position = new float3(i, i + 1, i + 2),
-                    Normal = new float3(i + 3, i + 4, i + 5),
-                    UV = new float2(i + 6, i + 7)
+            foreach (int segIdx in segmentIndices) {
+                var segment = new GPUSegmentBoundary {
+                    StartArc = segIdx * 10f,
+                    Length = 10f,
+                    ArcStart = 0f,
+                    ArcLength = 100f,
+                    SplineStartIndex = 0,
+                    SplineCount = spline.Length,
+                    PieceIndex = 0,
+                    SectionIndex = 0
                 };
+
+                Deform.Mesh(
+                    mesh.Vertices,
+                    mesh.Normals,
+                    spline,
+                    segment.StartArc,
+                    segment.Length,
+                    NOMINAL_LENGTH,
+                    ref outputPositions,
+                    ref outputNormals
+                );
+
+                float expectedStartZ = -segIdx * 10f;
+                float expectedEndZ = -(segIdx + 1) * 10f;
+
+                float startZ = (outputPositions[0].z + outputPositions[1].z) / 2f;
+                float endZ = (outputPositions[2].z + outputPositions[3].z) / 2f;
+
+                Assert.AreEqual(expectedStartZ, startZ, TOLERANCE, $"Segment {segIdx} start");
+                Assert.AreEqual(expectedEndZ, endZ, TOLERANCE, $"Segment {segIdx} end");
             }
 
-            unsafe {
-                var ptr = (VertexData*)testData.GetUnsafeReadOnlyPtr();
-
-                for (int i = 0; i < testData.Length; i++) {
-                    var data = ptr[i];
-
-                    Assert.AreEqual(new float3(i, i + 1, i + 2), data.Position);
-                    Assert.AreEqual(new float3(i + 3, i + 4, i + 5), data.Normal);
-                    Assert.AreEqual(new float2(i + 6, i + 7), data.UV);
-                }
-            }
-
-            for (int i = 0; i < testData.Length; i++) {
-                Assert.AreEqual(new float3(i, i + 1, i + 2), testData[i].Position);
-                Assert.AreEqual(new float3(i + 3, i + 4, i + 5), testData[i].Normal);
-                Assert.AreEqual(new float2(i + 6, i + 7), testData[i].UV);
-            }
+            outputPositions.Dispose();
+            outputNormals.Dispose();
+            mesh.Dispose();
+            spline.Dispose();
         }
-        finally {
-            testData.Dispose();
+
+        [Test]
+        public void DeformedMesh_VertexNormals_ConsistentWithFaceWinding() {
+            // Regression test: After deformation, vertex normals should be consistent
+            // with the geometric face normal computed from vertex positions.
+            // This catches bugs where coordinate flips or winding changes cause mismatches.
+
+            // Create a simple quad mesh with known normal
+            var mesh = CreateTestSegmentMesh();  // Has normals pointing up (0, 1, 0)
+            var spline = CreateStraightSpline(20f);
+
+            var outputPositions = new NativeArray<float3>(mesh.Vertices.Length, Allocator.Temp);
+            var outputNormals = new NativeArray<float3>(mesh.Normals.Length, Allocator.Temp);
+
+            Deform.Mesh(
+                mesh.Vertices,
+                mesh.Normals,
+                spline,
+                0f,             // startArc
+                NOMINAL_LENGTH, // segmentLength
+                NOMINAL_LENGTH, // nominalLength
+                ref outputPositions,
+                ref outputNormals
+            );
+
+            // Compute geometric face normal from first triangle (vertices 0, 1, 2)
+            // Unity winding is clockwise for front-facing
+            float3 v0 = outputPositions[0];
+            float3 v1 = outputPositions[1];
+            float3 v2 = outputPositions[2];
+
+            float3 edge1 = v1 - v0;
+            float3 edge2 = v2 - v0;
+            float3 geometricNormal = math.normalize(math.cross(edge1, edge2));
+
+            // The vertex normal should point in the same general direction as the geometric normal
+            // (dot product > 0, meaning less than 90 degrees apart)
+            float3 vertexNormal = outputNormals[0];
+            float dot = math.dot(geometricNormal, vertexNormal);
+
+            Assert.Greater(dot, 0f, $"Vertex normal should face same direction as geometric normal. " +
+                $"Geometric: ({geometricNormal.x:F3}, {geometricNormal.y:F3}, {geometricNormal.z:F3}), " +
+                $"Vertex: ({vertexNormal.x:F3}, {vertexNormal.y:F3}, {vertexNormal.z:F3}), Dot: {dot:F3}");
+
+            outputPositions.Dispose();
+            outputNormals.Dispose();
+            mesh.Dispose();
+            spline.Dispose();
         }
-    }
 
-    private static TrackMeshExporter.BuildJob CreateBuildJob(
-        NativeArray<float3> vertices,
-        NativeArray<float3> normals,
-        NativeArray<float2> uvs,
-        float4x4 transformMatrix,
-        NativeArray<VertexData> outputData) {
+        [Test]
+        public void ObjExport_HandednessConversion_GeometricNormalMatchesVertexNormal() {
+            // Regression test: OBJ export must convert Unity (left-handed) to OBJ (right-handed).
+            // This requires both Z negation AND winding flip. Either alone produces inverted normals.
+            //
+            // This test simulates the export transform and verifies the geometric normal
+            // (computed from CCW winding, standard for OBJ) matches the exported vertex normal.
 
-        return new TrackMeshExporter.BuildJob {
-            Vertices = vertices,
-            Normals = normals,
-            UVs = uvs,
-            TransformMatrix = transformMatrix,
-            OutputData = outputData
-        };
+            var mesh = CreateTestSegmentMesh();
+            var spline = CreateStraightSpline(20f);
+
+            var outputPositions = new NativeArray<float3>(mesh.Vertices.Length, Allocator.Temp);
+            var outputNormals = new NativeArray<float3>(mesh.Normals.Length, Allocator.Temp);
+
+            Deform.Mesh(
+                mesh.Vertices,
+                mesh.Normals,
+                spline,
+                0f,
+                NOMINAL_LENGTH,
+                NOMINAL_LENGTH,
+                ref outputPositions,
+                ref outputNormals
+            );
+
+            // Apply OBJ export transforms: negate Z on positions and normals
+            var exportedPositions = new NativeArray<float3>(mesh.Vertices.Length, Allocator.Temp);
+            var exportedNormals = new NativeArray<float3>(mesh.Normals.Length, Allocator.Temp);
+
+            for (int i = 0; i < outputPositions.Length; i++) {
+                var p = outputPositions[i];
+                exportedPositions[i] = new float3(p.x, p.y, -p.z);  // Negate Z
+                var n = outputNormals[i];
+                exportedNormals[i] = new float3(n.x, n.y, -n.z);    // Negate Z
+            }
+
+            // Simulate winding flip: triangle 0-1-2 becomes 2-1-0
+            float3 v0 = exportedPositions[2];
+            float3 v1 = exportedPositions[1];
+            float3 v2 = exportedPositions[0];
+
+            // Compute geometric normal using CCW convention (standard for OBJ)
+            float3 edge1 = v1 - v0;
+            float3 edge2 = v2 - v0;
+            float3 geometricNormal = math.normalize(math.cross(edge1, edge2));
+
+            // The exported vertex normal should match the geometric normal direction
+            float3 vertexNormal = exportedNormals[0];
+            float dot = math.dot(geometricNormal, vertexNormal);
+
+            Assert.Greater(dot, 0f,
+                $"After handedness conversion, geometric normal should match vertex normal. " +
+                $"Geometric: ({geometricNormal.x:F3}, {geometricNormal.y:F3}, {geometricNormal.z:F3}), " +
+                $"Vertex: ({vertexNormal.x:F3}, {vertexNormal.y:F3}, {vertexNormal.z:F3}), Dot: {dot:F3}");
+
+            exportedPositions.Dispose();
+            exportedNormals.Dispose();
+            outputPositions.Dispose();
+            outputNormals.Dispose();
+            mesh.Dispose();
+            spline.Dispose();
+        }
     }
 }

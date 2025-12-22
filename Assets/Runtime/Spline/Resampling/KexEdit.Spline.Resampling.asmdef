@@ -1,0 +1,20 @@
+{
+    "name": "KexEdit.Spline.Resampling",
+    "rootNamespace": "KexEdit.Spline.Resampling",
+    "references": [
+        "Unity.Mathematics",
+        "Unity.Burst",
+        "Unity.Collections",
+        "KexEdit.Sim",
+        "KexEdit.Spline"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

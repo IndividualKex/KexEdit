@@ -1,8 +1,12 @@
+using KexEdit.Legacy;
+using KexEdit.Trains.Sim;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using LegacyCoaster = KexEdit.Legacy.Coaster;
+using static KexEdit.Sim.Sim;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup), OrderLast = true)]
@@ -25,7 +29,7 @@ namespace KexEdit.UI {
 
         protected override void OnCreate() {
             _coasterQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<Coaster, EditorCoasterTag>()
+                .WithAll<LegacyCoaster, EditorCoasterTag>()
                 .Build(EntityManager);
         }
 
@@ -60,7 +64,7 @@ namespace KexEdit.UI {
 
             Entity root = Entity.Null;
             if (!_coasterQuery.IsEmpty) {
-                var coaster = _coasterQuery.GetSingleton<Coaster>();
+                var coaster = _coasterQuery.GetSingleton<LegacyCoaster>();
                 root = coaster.RootNode;
             }
 
@@ -80,8 +84,10 @@ namespace KexEdit.UI {
             }
 
             if (_data.IsPlaying && !KexTime.IsPaused) {
-                if (SystemAPI.HasBuffer<Point>(follower.Section)) {
-                    var points = SystemAPI.GetBuffer<Point>(follower.Section);
+                AdvanceSimFollower();
+
+                if (SystemAPI.HasBuffer<CorePointBuffer>(follower.Section)) {
+                    var points = SystemAPI.GetBuffer<CorePointBuffer>(follower.Section);
                     if (follower.Index >= points.Length - 1) {
                         bool hasNext = SystemAPI.HasComponent<Node>(follower.Section) &&
                                       SystemAPI.GetComponent<Node>(follower.Section).Next != Entity.Null;
@@ -96,6 +102,19 @@ namespace KexEdit.UI {
 
             float currentDistance = CalculateDistanceToSection(root, follower.Section) + follower.Index;
             _data.Progress = _data.TotalLength > 0f ? currentDistance / _data.TotalLength : 0f;
+        }
+
+        private void AdvanceSimFollower() {
+            if (!SystemAPI.HasSingleton<TrackSingleton>()) return;
+            if (!SystemAPI.HasSingleton<SimFollowerSingleton>()) return;
+
+            var trackSingleton = SystemAPI.GetSingleton<TrackSingleton>();
+            var track = trackSingleton.Value;
+            if (!track.IsCreated || track.TraversalCount == 0) return;
+
+            ref var simFollowerSingleton = ref SystemAPI.GetSingletonRW<SimFollowerSingleton>().ValueRW;
+            float dt = SystemAPI.Time.DeltaTime;
+            SimFollowerLogic.Advance(ref simFollowerSingleton.Follower, in track, dt, HZ, wrapAtEnd: true, out _);
         }
 
         private void TogglePlayPause() {
@@ -172,8 +191,8 @@ namespace KexEdit.UI {
             while (currentEntity != Entity.Null && !processedEntities.Contains(currentEntity)) {
                 processedEntities.Add(currentEntity);
 
-                if (SystemAPI.HasBuffer<Point>(currentEntity)) {
-                    _data.TotalLength += SystemAPI.GetBuffer<Point>(currentEntity).Length;
+                if (SystemAPI.HasBuffer<CorePointBuffer>(currentEntity)) {
+                    _data.TotalLength += SystemAPI.GetBuffer<CorePointBuffer>(currentEntity).Length;
                 }
 
                 currentEntity = SystemAPI.HasComponent<Node>(currentEntity)
@@ -192,8 +211,8 @@ namespace KexEdit.UI {
 
                 if (currentEntity == targetSection) return distance;
 
-                if (SystemAPI.HasBuffer<Point>(currentEntity)) {
-                    distance += SystemAPI.GetBuffer<Point>(currentEntity).Length;
+                if (SystemAPI.HasBuffer<CorePointBuffer>(currentEntity)) {
+                    distance += SystemAPI.GetBuffer<CorePointBuffer>(currentEntity).Length;
                 }
 
                 currentEntity = SystemAPI.HasComponent<Node>(currentEntity)
@@ -225,7 +244,9 @@ namespace KexEdit.UI {
         private void SetProgress(float progress) {
             _data.Progress = progress;
 
-            var editorCoaster = _coasterQuery.GetSingleton<Coaster>();
+            UpdateSimFollowerProgress(progress);
+
+            var editorCoaster = _coasterQuery.GetSingleton<LegacyCoaster>();
             Entity root = editorCoaster.RootNode;
 
             if (root == Entity.Null || _data.TotalLength <= 0f) return;
@@ -244,6 +265,18 @@ namespace KexEdit.UI {
             }
         }
 
+        private void UpdateSimFollowerProgress(float progress) {
+            if (!SystemAPI.HasSingleton<TrackSingleton>()) return;
+            if (!SystemAPI.HasSingleton<SimFollowerSingleton>()) return;
+
+            var trackSingleton = SystemAPI.GetSingleton<TrackSingleton>();
+            var track = trackSingleton.Value;
+            if (!track.IsCreated || track.TraversalCount == 0) return;
+
+            ref var simFollowerSingleton = ref SystemAPI.GetSingletonRW<SimFollowerSingleton>().ValueRW;
+            SimFollowerLogic.SetFromProgress(ref simFollowerSingleton.Follower, in track, progress);
+        }
+
         private void SetTrainPosition(ref TrackFollower follower, Entity start, float targetDistance) {
             float currentDistance = 0f;
             Entity current = start;
@@ -252,8 +285,8 @@ namespace KexEdit.UI {
             while (current != Entity.Null && !processedEntities.Contains(current)) {
                 processedEntities.Add(current);
 
-                if (SystemAPI.HasBuffer<Point>(current)) {
-                    var points = SystemAPI.GetBuffer<Point>(current);
+                if (SystemAPI.HasBuffer<CorePointBuffer>(current)) {
+                    var points = SystemAPI.GetBuffer<CorePointBuffer>(current);
                     float sectionLength = points.Length;
 
                     if (currentDistance + sectionLength >= targetDistance) {
@@ -277,8 +310,8 @@ namespace KexEdit.UI {
 
             processedEntities.Dispose();
 
-            if (follower.Section != Entity.Null && SystemAPI.HasBuffer<Point>(follower.Section)) {
-                var points = SystemAPI.GetBuffer<Point>(follower.Section);
+            if (follower.Section != Entity.Null && SystemAPI.HasBuffer<CorePointBuffer>(follower.Section)) {
+                var points = SystemAPI.GetBuffer<CorePointBuffer>(follower.Section);
                 follower.Index = points.Length - 1f;
             }
         }

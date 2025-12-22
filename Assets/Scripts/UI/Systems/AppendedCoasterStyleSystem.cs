@@ -1,5 +1,7 @@
+using KexEdit.Legacy;
 using Unity.Collections;
 using Unity.Entities;
+using LegacyCoaster = KexEdit.Legacy.Coaster;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
@@ -7,7 +9,7 @@ namespace KexEdit.UI {
         private EntityQuery _editorCoasterQuery;
 
         protected override void OnCreate() {
-            _editorCoasterQuery = GetEntityQuery(typeof(Coaster), typeof(EditorCoasterTag));
+            _editorCoasterQuery = GetEntityQuery(typeof(LegacyCoaster), typeof(EditorCoasterTag));
         }
 
         protected override void OnUpdate() {
@@ -23,7 +25,7 @@ namespace KexEdit.UI {
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
             foreach (var (coaster, entity) in SystemAPI
-                .Query<RefRO<Coaster>>()
+                .Query<RefRO<LegacyCoaster>>()
                 .WithAll<AppendedCoasterTag>()
                 .WithEntityAccess()) {
 

@@ -1,0 +1,22 @@
+{
+    "name": "KexEdit.Persistence",
+    "rootNamespace": "KexEdit.Persistence",
+    "references": [
+        "KexEdit.Graph",
+        "KexEdit.Sim",
+        "KexEdit.Sim.Schema",
+        "KexEdit.Document",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Burst"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

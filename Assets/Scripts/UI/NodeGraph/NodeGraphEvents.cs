@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;

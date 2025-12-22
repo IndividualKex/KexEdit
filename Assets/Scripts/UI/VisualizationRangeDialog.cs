@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using KexEdit.Legacy;
+using KexEdit.Sim.Schema;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
@@ -89,9 +91,6 @@ namespace KexEdit.UI {
                 (VisualizationMode.NormalForce, "Normal Force (G)", -2f, 5f),
                 (VisualizationMode.LateralForce, "Lateral Force (G)", -2f, 2f),
                 (VisualizationMode.RollSpeed, $"Roll Speed {Units.GetAnglePerTimeSuffix()}", -3f, 3f),
-                (VisualizationMode.PitchSpeed, $"Pitch Speed {Units.GetAnglePerTimeSuffix()}", -1f, 1f),
-                (VisualizationMode.YawSpeed, $"Yaw Speed {Units.GetAnglePerTimeSuffix()}", -1f, 1f),
-                (VisualizationMode.Curvature, $"Curvature {Units.GetAnglePerTimeSuffix()}", 0f, 1f)
             };
 
             foreach (var (mode, label, defaultMin, defaultMax) in modes) {
@@ -243,9 +242,6 @@ namespace KexEdit.UI {
             return mode switch {
                 VisualizationMode.Velocity => Units.SpeedToDisplay(value),
                 VisualizationMode.RollSpeed => Units.AnglePerTimeToDisplay(value),
-                VisualizationMode.PitchSpeed => Units.AnglePerTimeToDisplay(value),
-                VisualizationMode.YawSpeed => Units.AnglePerTimeToDisplay(value),
-                VisualizationMode.Curvature => Units.AnglePerTimeToDisplay(value),
                 _ => value
             };
         }
@@ -254,9 +250,6 @@ namespace KexEdit.UI {
             return mode switch {
                 VisualizationMode.Velocity => Units.DisplayToSpeed(displayValue),
                 VisualizationMode.RollSpeed => Units.DisplayToAnglePerTime(displayValue),
-                VisualizationMode.PitchSpeed => Units.DisplayToAnglePerTime(displayValue),
-                VisualizationMode.YawSpeed => Units.DisplayToAnglePerTime(displayValue),
-                VisualizationMode.Curvature => Units.DisplayToAnglePerTime(displayValue),
                 _ => displayValue
             };
         }

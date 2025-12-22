@@ -1,5 +1,8 @@
 using System;
 
+using KexEdit.Legacy;
+using CoreKeyframe = KexEdit.Sim.Keyframe;
+
 namespace KexEdit.UI {
     [Serializable]
     public struct KeyframeData {
@@ -17,6 +20,22 @@ namespace KexEdit.UI {
             Type = type;
             Value = value;
             Offset = offset;
+        }
+
+        public KeyframeData(PropertyType type, CoreKeyframe coreKeyframe) {
+            Type = type;
+            Value = new Keyframe {
+                Time = coreKeyframe.Time,
+                Value = coreKeyframe.Value,
+                InInterpolation = (InterpolationType)coreKeyframe.InInterpolation,
+                OutInterpolation = (InterpolationType)coreKeyframe.OutInterpolation,
+                InTangent = coreKeyframe.InTangent,
+                OutTangent = coreKeyframe.OutTangent,
+                InWeight = coreKeyframe.InWeight,
+                OutWeight = coreKeyframe.OutWeight,
+                Selected = false
+            };
+            Offset = 0f;
         }
     }
 }

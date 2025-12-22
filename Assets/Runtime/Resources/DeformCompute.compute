@@ -1,0 +1,133 @@
+#pragma kernel DeformKernel
+
+struct SplinePoint {
+    float Arc;
+    float3 Position;
+    float3 Direction;
+    float3 Normal;
+    float3 Lateral;
+};
+
+struct SegmentBoundary {
+    float StartArc;
+    float Length;
+    float Scale;
+    float ArcStart;
+    float ArcLength;
+    int SplineStartIndex;
+    int SplineCount;
+    int PieceIndex;
+    int SectionIndex;
+    int _pad0;
+    int _pad1;
+    int _pad2;
+};
+
+StructuredBuffer<float3> _SourceVertices;
+StructuredBuffer<float3> _SourceNormals;
+StructuredBuffer<float4> _SourceMask;
+StructuredBuffer<SplinePoint> _SplinePoints;
+StructuredBuffer<float> _SourceData;
+StructuredBuffer<float> _SectionHighlights;
+StructuredBuffer<SegmentBoundary> _Segments;
+
+RWStructuredBuffer<float3> _OutputVertices;
+RWStructuredBuffer<float3> _OutputNormals;
+RWStructuredBuffer<float4> _OutputMask;
+RWStructuredBuffer<float4> _OutputData;
+
+uint _VertexCount;
+uint _SegmentCount;
+uint _SegmentStart;
+float _NominalLength;
+
+SplinePoint SampleSpline(float arc, SegmentBoundary seg) {
+    if (seg.SplineCount <= 1) {
+        return _SplinePoints[seg.SplineStartIndex];
+    }
+
+    float t = saturate((arc - seg.ArcStart) / seg.ArcLength);
+    float exactIndex = t * (seg.SplineCount - 1);
+
+    int lo = (int)exactIndex;
+    int hi = min(lo + 1, seg.SplineCount - 1);
+    float frac = exactIndex - lo;
+
+    SplinePoint a = _SplinePoints[seg.SplineStartIndex + lo];
+    SplinePoint b = _SplinePoints[seg.SplineStartIndex + hi];
+
+    SplinePoint result;
+    result.Arc = lerp(a.Arc, b.Arc, frac);
+    result.Position = lerp(a.Position, b.Position, frac);
+    result.Direction = normalize(lerp(a.Direction, b.Direction, frac));
+    result.Lateral = normalize(lerp(a.Lateral, b.Lateral, frac));
+    result.Normal = normalize(cross(result.Direction, result.Lateral));
+
+    return result;
+}
+
+float SampleVisualization(float arc, SegmentBoundary seg) {
+    if (seg.SplineCount <= 1) {
+        return _SourceData[seg.SplineStartIndex];
+    }
+
+    float t = saturate((arc - seg.ArcStart) / seg.ArcLength);
+    float exactIndex = t * (seg.SplineCount - 1);
+
+    int lo = (int)exactIndex;
+    int hi = min(lo + 1, seg.SplineCount - 1);
+    float frac = exactIndex - lo;
+
+    float a = _SourceData[seg.SplineStartIndex + lo];
+    float b = _SourceData[seg.SplineStartIndex + hi];
+
+    return lerp(a, b, frac);
+}
+
+void DeformVertex(float3 localPos, float3 localNormal, SegmentBoundary seg,
+                  out float3 worldPos, out float3 worldNormal) {
+    float t = localPos.z / _NominalLength;
+    float arc = seg.StartArc + t * seg.Length;
+
+    SplinePoint frame = SampleSpline(arc, seg);
+
+    worldPos = frame.Position
+        + frame.Lateral * localPos.x
+        - frame.Normal * localPos.y;
+
+    worldNormal = normalize(
+        frame.Lateral * localNormal.x -
+        frame.Normal * localNormal.y +
+        frame.Direction * localNormal.z
+    );
+}
+
+[numthreads(64, 1, 1)]
+void DeformKernel(uint3 id : SV_DispatchThreadID) {
+    uint globalIdx = id.x;
+
+    uint localSegmentIdx = globalIdx / _VertexCount;
+    uint vertexIdx = globalIdx % _VertexCount;
+    uint segmentIdx = _SegmentStart + localSegmentIdx;
+
+    if (localSegmentIdx >= _SegmentCount || vertexIdx >= _VertexCount) return;
+
+    SegmentBoundary seg = _Segments[localSegmentIdx];
+    float3 localPos = _SourceVertices[vertexIdx];
+    float3 localNormal = _SourceNormals[vertexIdx];
+
+    float3 worldPos, worldNormal;
+    DeformVertex(localPos, localNormal, seg, worldPos, worldNormal);
+
+    float t = localPos.z / _NominalLength;
+    float arc = seg.StartArc + t * seg.Length;
+
+    float visualization = SampleVisualization(arc, seg);
+    float highlight = _SectionHighlights[seg.SectionIndex];
+
+    uint outputIdx = segmentIdx * _VertexCount + vertexIdx;  // Uses global segmentIdx for correct output position
+    _OutputVertices[outputIdx] = worldPos;
+    _OutputNormals[outputIdx] = worldNormal;
+    _OutputMask[outputIdx] = _SourceMask[vertexIdx];
+    _OutputData[outputIdx] = float4(visualization, highlight, 0, 0);
+}

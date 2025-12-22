@@ -1,4 +1,3 @@
-using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;

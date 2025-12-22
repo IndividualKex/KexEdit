@@ -1,0 +1,20 @@
+{
+    "name": "KexEdit.Spline.Rendering",
+    "rootNamespace": "KexEdit.Spline.Rendering",
+    "references": [
+        "Unity.Mathematics",
+        "Unity.Burst",
+        "Unity.Collections",
+        "KexEdit.Spline",
+        "KexEdit.Track"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

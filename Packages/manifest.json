@@ -1,4 +1,7 @@
 {
+  "testables": [
+    "com.unity.entities"
+  ],
   "dependencies": {
     "com.boxqkrtm.ide.cursor": "https://github.com/boxqkrtm/com.unity.ide.cursor.git",
     "com.unity.cinemachine": "3.1.5",

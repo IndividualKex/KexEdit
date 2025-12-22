@@ -1,10 +1,13 @@
 using System.IO;
+using KexEdit.Legacy;
+using KexEdit.Legacy.Serialization;
+using KexEdit.Sim.Schema;
+using KexEdit.UI.Timeline;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
-using KexEdit.UI.Timeline;
-using KexEdit.Serialization;
+using LegacyCoaster = KexEdit.Legacy.Coaster;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
@@ -25,7 +28,7 @@ namespace KexEdit.UI {
 
         protected override void OnCreate() {
             _coasterQuery = SystemAPI.QueryBuilder()
-                .WithAll<Coaster, EditorCoasterTag>()
+                .WithAll<LegacyCoaster, EditorCoasterTag>()
                 .Build();
         }
 
@@ -172,18 +175,12 @@ namespace KexEdit.UI {
                         isChecked: currentMode == VisualizationMode.None);
                     submenu.AddItem("Velocity", () => ToggleVisualizationMode(VisualizationMode.Velocity), "Ctrl+1".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.Velocity);
-                    submenu.AddItem("Curvature", () => ToggleVisualizationMode(VisualizationMode.Curvature), "Ctrl+2".ToPlatformShortcut(),
-                        isChecked: currentMode == VisualizationMode.Curvature);
-                    submenu.AddItem("Normal Force", () => ToggleVisualizationMode(VisualizationMode.NormalForce), "Ctrl+3".ToPlatformShortcut(),
+                    submenu.AddItem("Normal Force", () => ToggleVisualizationMode(VisualizationMode.NormalForce), "Ctrl+2".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.NormalForce);
-                    submenu.AddItem("Lateral Force", () => ToggleVisualizationMode(VisualizationMode.LateralForce), "Ctrl+4".ToPlatformShortcut(),
+                    submenu.AddItem("Lateral Force", () => ToggleVisualizationMode(VisualizationMode.LateralForce), "Ctrl+3".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.LateralForce);
-                    submenu.AddItem("Roll Speed", () => ToggleVisualizationMode(VisualizationMode.RollSpeed), "Ctrl+5".ToPlatformShortcut(),
+                    submenu.AddItem("Roll Speed", () => ToggleVisualizationMode(VisualizationMode.RollSpeed), "Ctrl+4".ToPlatformShortcut(),
                         isChecked: currentMode == VisualizationMode.RollSpeed);
-                    submenu.AddItem("Pitch Speed", () => ToggleVisualizationMode(VisualizationMode.PitchSpeed), "Ctrl+6".ToPlatformShortcut(),
-                        isChecked: currentMode == VisualizationMode.PitchSpeed);
-                    submenu.AddItem("Yaw Speed", () => ToggleVisualizationMode(VisualizationMode.YawSpeed), "Ctrl+7".ToPlatformShortcut(),
-                        isChecked: currentMode == VisualizationMode.YawSpeed);
                     submenu.AddSeparator();
                     submenu.AddItem("Edit Ranges...", ShowVisualizationRangeDialog);
                 });
@@ -373,7 +370,7 @@ namespace KexEdit.UI {
 
             foreach (var style in SystemAPI
                 .Query<TrackStyleSettingsReference>()
-                .WithAll<Coaster, EditorCoasterTag>()
+                .WithAll<LegacyCoaster, EditorCoasterTag>()
             ) {
                 if (!SystemAPI.HasComponent<TrackStyleSettings>(style)) continue;
                 ref var settings = ref SystemAPI.GetComponentRW<TrackStyleSettings>(style).ValueRW;
@@ -433,12 +430,9 @@ namespace KexEdit.UI {
                 else if (kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomIn();
                 else if (kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame) UIScaleSystem.Instance?.ZoomOut();
                 else if (!textEditing && kb.digit1Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.Velocity);
-                else if (!textEditing && kb.digit2Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.Curvature);
-                else if (!textEditing && kb.digit3Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.NormalForce);
-                else if (!textEditing && kb.digit4Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.LateralForce);
-                else if (!textEditing && kb.digit5Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.RollSpeed);
-                else if (!textEditing && kb.digit6Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.PitchSpeed);
-                else if (!textEditing && kb.digit7Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.YawSpeed);
+                else if (!textEditing && kb.digit2Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.NormalForce);
+                else if (!textEditing && kb.digit3Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.LateralForce);
+                else if (!textEditing && kb.digit4Key.wasPressedThisFrame) ToggleVisualizationMode(VisualizationMode.RollSpeed);
                 else if (!textEditing && kb.numpad1Key.wasPressedThisFrame) OrbitCameraSystem.SetBackView();
                 else if (!textEditing && kb.numpad3Key.wasPressedThisFrame) OrbitCameraSystem.SetOtherSideView();
                 else if (!textEditing && kb.numpad7Key.wasPressedThisFrame) OrbitCameraSystem.SetBottomView();

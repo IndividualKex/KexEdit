@@ -1,10 +1,10 @@
 using System;
-using System.IO;
-using UnityEngine;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using KexEdit.Serialization;
+using KexEdit.Legacy.Serialization;
 using Unity.Entities;
+using UnityEngine;
 
 namespace KexEdit.UI {
     public static class ProjectOperations {
@@ -49,7 +49,17 @@ namespace KexEdit.UI {
                 byte[] graphData = File.ReadAllBytes(filePath);
                 if (graphData == null || graphData.Length == 0) return Entity.Null;
 
-                Entity coaster = SerializationSystem.Instance.DeserializeGraph(graphData);
+                Entity coaster;
+                bool isLegacy = !SerializationSystem.IsKexdFormat(graphData);
+
+                if (isLegacy) {
+                    coaster = SerializationSystem.Instance.DeserializeLegacyGraph(graphData);
+                    HasUnsavedChanges = true;
+                }
+                else {
+                    coaster = SerializationSystem.Instance.DeserializeGraph(graphData);
+                    HasUnsavedChanges = false;
+                }
 
                 if (filePath.EndsWith(".kex1")) {
                     string fileName = Path.GetFileName(filePath);
@@ -61,9 +71,8 @@ namespace KexEdit.UI {
                 }
 
                 Undo.Clear();
-                HasUnsavedChanges = false;
                 FilePathChanged?.Invoke(CurrentFilePath);
-                UnsavedChangesChanged?.Invoke(false);
+                UnsavedChangesChanged?.Invoke(HasUnsavedChanges);
 
                 return coaster;
             }
@@ -210,6 +219,12 @@ namespace KexEdit.UI {
                 if (stream.Length < 4) return false;
                 var buffer = new byte[4];
                 stream.Read(buffer, 0, 4);
+
+                if (buffer[0] == 'K' && buffer[1] == 'E' &&
+                    buffer[2] == 'X' && buffer[3] == 'D') {
+                    return true;
+                }
+
                 int version = BitConverter.ToInt32(buffer, 0);
                 return version > 0 && version <= 10;
             }

@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using KexEdit.Legacy;
+using SFB;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using SFB;
 
 namespace KexEdit.UI {
     public static class NoLimits2Exporter {
@@ -43,9 +44,9 @@ namespace KexEdit.UI {
 
             var allPoints = new List<PointData>();
             foreach (var nodeEntity in orderedNodes) {
-                var points = entityManager.GetBuffer<Point>(nodeEntity);
+                var points = entityManager.GetBuffer<CorePointBuffer>(nodeEntity);
                 for (int i = 0; i < points.Length; i++) {
-                    allPoints.Add(points[i]);
+                    allPoints.Add(points[i].ToPointData());
                 }
             }
 
@@ -61,12 +62,12 @@ namespace KexEdit.UI {
         private static NativeList<Entity> BuildTrackGraph(EntityManager entityManager) {
             var orderedNodes = new NativeList<Entity>(Allocator.Temp);
 
-            var coasterQuery = entityManager.CreateEntityQuery(typeof(Coaster));
+            var coasterQuery = entityManager.CreateEntityQuery(typeof(KexEdit.Legacy.Coaster));
             if (coasterQuery.IsEmpty) {
                 return orderedNodes;
             }
 
-            var coaster = coasterQuery.GetSingleton<Coaster>();
+            var coaster = coasterQuery.GetSingleton<KexEdit.Legacy.Coaster>();
             var currentNode = coaster.RootNode;
 
             while (currentNode != Entity.Null) {
@@ -87,15 +88,15 @@ namespace KexEdit.UI {
             PointData first = allPoints[0];
             PointData last = allPoints[^1];
 
-            float totalLength = last.TotalHeartLength - first.TotalHeartLength;
+            float totalLength = last.SpineArc - first.SpineArc;
             int numPoints = math.max(2, (int)math.round(totalLength / metersPerNode));
             float adjustedSpacing = totalLength / (numPoints - 1);
 
-            float startLength = first.TotalHeartLength;
+            float startLength = first.SpineArc;
             float nextLength = startLength;
 
             sampledPoints.Add(new SampledPoint {
-                Position = first.Position,
+                Position = first.HeartPosition,
                 Direction = first.Direction,
                 Lateral = first.Lateral,
                 Normal = first.Normal,
@@ -107,14 +108,14 @@ namespace KexEdit.UI {
                 PointData p0 = allPoints[i];
                 PointData p1 = allPoints[i + 1];
 
-                float start = p0.TotalHeartLength;
-                float end = p1.TotalHeartLength;
+                float start = p0.SpineArc;
+                float end = p1.SpineArc;
 
                 while (nextLength <= end) {
                     float t = math.saturate((nextLength - start) / (end - start));
 
                     var sampledPoint = new SampledPoint {
-                        Position = math.lerp(p0.Position, p1.Position, t),
+                        Position = math.lerp(p0.HeartPosition, p1.HeartPosition, t),
                         Direction = math.normalize(math.lerp(p0.Direction, p1.Direction, t)),
                         Lateral = math.normalize(math.lerp(p0.Lateral, p1.Lateral, t)),
                         Normal = math.normalize(math.lerp(p0.Normal, p1.Normal, t)),
@@ -128,7 +129,7 @@ namespace KexEdit.UI {
             }
 
             sampledPoints.Add(new SampledPoint {
-                Position = last.Position,
+                Position = last.HeartPosition,
                 Direction = last.Direction,
                 Lateral = last.Lateral,
                 Normal = last.Normal,

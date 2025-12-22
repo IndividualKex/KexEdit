@@ -1,8 +1,8 @@
+using System.Collections.Generic;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System.Collections.Generic;
-using static KexEdit.Constants;
+using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI {
@@ -160,18 +160,20 @@ namespace KexEdit.UI {
 
                 if (_data.GradientType == VisualizationGradientType.TwoColorPositive) {
                     color = Color.Lerp(VISUALIZATION_ZERO_COLOR, VISUALIZATION_MAX_COLOR, t);
-                } else {
+                }
+                else {
                     float minValue = _data.MinValue;
                     float maxValue = _data.MaxValue;
                     float value = Mathf.Lerp(minValue, maxValue, t);
                     float neutralPoint = _data.NeutralOffset;
-                    
+
                     if (value < neutralPoint) {
                         float adjustedMin = minValue - neutralPoint;
                         float adjustedValue = value - neutralPoint;
                         float negativeT = Mathf.Clamp01(adjustedValue / adjustedMin);
                         color = Color.Lerp(VISUALIZATION_ZERO_COLOR, VISUALIZATION_MIN_COLOR, negativeT);
-                    } else {
+                    }
+                    else {
                         float adjustedMax = maxValue - neutralPoint;
                         float adjustedValue = value - neutralPoint;
                         float positiveT = Mathf.Clamp01(adjustedValue / adjustedMax);

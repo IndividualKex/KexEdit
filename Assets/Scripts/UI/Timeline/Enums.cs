@@ -8,4 +8,4 @@ namespace KexEdit.UI.Timeline {
         Previous,
         Next
     }
-} 
+}

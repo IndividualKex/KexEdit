@@ -4,7 +4,7 @@ namespace KexEdit.UI {
     public static class TrackColorPreferences {
         public static Color GetColor(string trackStyle, int colorIndex, Color defaultColor) {
             string baseKey = GetColorKey(trackStyle, colorIndex);
-            
+
             if (!IsOverridden(trackStyle, colorIndex)) {
                 return defaultColor;
             }
@@ -12,13 +12,13 @@ namespace KexEdit.UI {
             float r = PlayerPrefs.GetFloat($"{baseKey}_R", defaultColor.r);
             float g = PlayerPrefs.GetFloat($"{baseKey}_G", defaultColor.g);
             float b = PlayerPrefs.GetFloat($"{baseKey}_B", defaultColor.b);
-            
+
             return new Color(r, g, b, defaultColor.a);
         }
 
         public static void SetColor(string trackStyle, int colorIndex, Color color) {
             string baseKey = GetColorKey(trackStyle, colorIndex);
-            
+
             PlayerPrefs.SetFloat($"{baseKey}_R", color.r);
             PlayerPrefs.SetFloat($"{baseKey}_G", color.g);
             PlayerPrefs.SetFloat($"{baseKey}_B", color.b);
@@ -33,7 +33,7 @@ namespace KexEdit.UI {
 
         public static void ResetColor(string trackStyle, int colorIndex) {
             string baseKey = GetColorKey(trackStyle, colorIndex);
-            
+
             PlayerPrefs.DeleteKey($"{baseKey}_R");
             PlayerPrefs.DeleteKey($"{baseKey}_G");
             PlayerPrefs.DeleteKey($"{baseKey}_B");

@@ -1,5 +1,4 @@
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace KexEdit.UI {
     public interface IEditableHandler {

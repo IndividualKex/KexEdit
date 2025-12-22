@@ -106,7 +106,7 @@ namespace KexEdit.UI.NodeGraph {
                 e.ShiftKey = evt.shiftKey;
                 this.SendEvent(e);
             }
-            
+
             if (evt.button == 1 && !evt.altKey) {
                 var e = this.GetPooled<EdgeRightClickEvent>();
                 e.MousePosition = evt.localMousePosition;

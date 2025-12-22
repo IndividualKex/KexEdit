@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using KexEdit.Legacy;
 using KexEdit.UI.Timeline;
 using Unity.Properties;
 using UnityEngine;

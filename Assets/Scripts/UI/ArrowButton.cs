@@ -1,6 +1,6 @@
+using System;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System;
 using static KexEdit.UI.Constants;
 
 namespace KexEdit.UI {

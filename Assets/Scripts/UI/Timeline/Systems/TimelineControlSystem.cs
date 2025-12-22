@@ -1,15 +1,23 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using KexEdit.Legacy;
+using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
-using System.Collections.Generic;
-using System;
-using System.Collections;
-using Unity.Burst;
-using Unity.Jobs;
-using static KexEdit.Constants;
+using static KexEdit.Sim.Sim;
+using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Timeline.Constants;
+using KexEdit.Sim.Schema;
+using LegacyDurationType = KexEdit.Legacy.DurationType;
+using LegacyNodeType = KexEdit.Legacy.NodeType;
+using DocumentAggregate = KexEdit.Document.Document;
+using LegacyCoaster = KexEdit.Legacy.Coaster;
+using NodeMeta = KexEdit.Document.NodeMeta;
 
 namespace KexEdit.UI.Timeline {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
@@ -18,15 +26,17 @@ namespace KexEdit.UI.Timeline {
         private List<KeyframeData> _clipboard = new();
         private TimelineData _data;
         private Timeline _timeline;
+        private CoasterKeyframeManager _keyframeManager;
+        private uint _nodeId;
 
         private EntityQuery _coasterQuery;
         private EntityQuery _nodeQuery;
 
         protected override void OnCreate() {
-            _coasterQuery = GetEntityQuery(typeof(Coaster), typeof(EditorCoasterTag));
+            _coasterQuery = GetEntityQuery(typeof(LegacyCoaster), typeof(EditorCoasterTag));
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAspect<NodeAspect>()
-                .WithAll<Point>()
+                .WithAll<Node, CoasterReference>()
+                .WithAll<CorePointBuffer>()
                 .Build(EntityManager);
 
             RequireForUpdate<TimelineState>();
@@ -44,7 +54,8 @@ namespace KexEdit.UI.Timeline {
                         Values = new(Allocator.Persistent),
                         Times = new(Allocator.Persistent)
                     });
-                } else {
+                }
+                else {
                     _data.OrderedProperties.Add(propertyType);
                     _data.Properties.Add(propertyType, new PropertyData {
                         Type = propertyType,
@@ -128,9 +139,7 @@ namespace KexEdit.UI.Timeline {
 
         protected override void OnDestroy() {
             EditOperations.UnregisterHandler(this);
-            if (_data != null) {
-                _data.Dispose();
-            }
+            _data?.Dispose();
         }
 
         protected override void OnUpdate() {
@@ -147,6 +156,7 @@ namespace KexEdit.UI.Timeline {
             var timelineState = SystemAPI.GetSingleton<TimelineState>();
             _data.Offset = timelineState.Offset;
             _data.Zoom = timelineState.Zoom;
+
             if (_data.Entity != Entity.Null && SystemAPI.HasComponent<Node>(_data.Entity)) {
                 var node = SystemAPI.GetComponent<Node>(_data.Entity);
                 _stateCache[node.Id] = timelineState;
@@ -163,10 +173,12 @@ namespace KexEdit.UI.Timeline {
 
             using var entities = _nodeQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in entities) {
-                var node = SystemAPI.GetAspect<NodeAspect>(entity);
-                if (!node.Selected || node.Coaster != coasterEntity) continue;
+                var node = SystemAPI.GetComponent<Node>(entity);
+                var coaster = SystemAPI.GetComponent<CoasterReference>(entity).Value;
+                if (!node.Selected || coaster != coasterEntity) continue;
                 if (_data.Entity != Entity.Null) {
                     _data.Entity = Entity.Null;
+                    _nodeId = 0;
                     return;
                 }
                 _data.Entity = entity;
@@ -174,6 +186,12 @@ namespace KexEdit.UI.Timeline {
             _data.Active = _data.Entity != Entity.Null;
             if (_data.Active && _data.Entity != previousEntity) {
                 var node = SystemAPI.GetComponent<Node>(_data.Entity);
+                _nodeId = node.Id;
+
+                ref var coasterData = ref SystemAPI.GetComponentRW<CoasterData>(coasterEntity).ValueRW.Value;
+                ref var uiState = ref SystemAPI.GetComponentRW<UIStateData>(coasterEntity).ValueRW.Value;
+                _keyframeManager = new CoasterKeyframeManager(coasterData, uiState);
+
                 if (!_stateCache.TryGetValue(node.Id, out var state)) {
                     state = TimelineState.Default;
                     _stateCache[node.Id] = state;
@@ -181,20 +199,43 @@ namespace KexEdit.UI.Timeline {
                 ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
                 timelineState = state;
             }
+            else if (_data.Active && _keyframeManager != null) {
+                ref var coasterData = ref SystemAPI.GetComponentRW<CoasterData>(coasterEntity).ValueRW.Value;
+                _keyframeManager.UpdateCoaster(coasterData);
+            }
         }
 
         private void SyncWithPlayback() {
             if (!Preferences.SyncPlayback || !_data.Active) return;
 
+            ref var playheadTime = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW.PlayheadTime;
+
             foreach (var (train, follower) in SystemAPI.Query<Train, TrackFollower>()) {
-                if (train.Enabled && !train.Kinematic && follower.Section == _data.Entity) {
-                    float timelineTime = TrainPositionToTime(follower.Index);
-                    if (math.abs(_data.Time - timelineTime) > 1e-2f) {
-                        _data.Time = math.clamp(timelineTime, 0f, _data.Duration);
-                    }
-                    return;
+                if (!train.Enabled || train.Kinematic) continue;
+
+                if (follower.Section == _data.Entity) {
+                    playheadTime = TrainPositionToTime(follower.Index);
                 }
+                else {
+                    var selectedNode = SystemAPI.GetComponent<Node>(_data.Entity);
+                    playheadTime = IsTrainAhead(follower.Section, selectedNode)
+                        ? _data.Duration
+                        : 0f;
+                }
+
+                _data.Time = math.clamp(playheadTime, 0f, _data.Duration);
+                return;
             }
+        }
+
+        private bool IsTrainAhead(Entity trainSection, Node selectedNode) {
+            Entity current = selectedNode.Next;
+            while (current != Entity.Null) {
+                if (current == trainSection) return true;
+                if (!SystemAPI.HasComponent<Node>(current)) break;
+                current = SystemAPI.GetComponent<Node>(current).Next;
+            }
+            return false;
         }
 
         private void UpdatePlayhead() {
@@ -222,21 +263,21 @@ namespace KexEdit.UI.Timeline {
                 return;
             }
 
-            var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+            var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (pointBuffer.Length < 2) return;
 
-            if (SystemAPI.HasComponent<Duration>(_data.Entity)) {
-                var duration = SystemAPI.GetComponent<Duration>(_data.Entity);
-                if (duration.Type == DurationType.Time) {
+            if (HasEditableDuration()) {
+                var durationType = GetDurationType();
+                if (durationType == LegacyDurationType.Time) {
                     playheadFollower.Index = _data.Time * HZ;
                     return;
                 }
                 else {
-                    float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
+                    float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.HeartArc;
                     float targetDistance = anchorLength + _data.Time;
                     for (int i = 0; i < pointBuffer.Length - 1; i++) {
-                        float currentDistance = pointBuffer[i].Value.TotalLength;
-                        float nextDistance = pointBuffer[i + 1].Value.TotalLength;
+                        float currentDistance = pointBuffer[i].HeartArc();
+                        float nextDistance = pointBuffer[i + 1].HeartArc();
                         if (targetDistance >= currentDistance && targetDistance < nextDistance) {
                             float t = (nextDistance - currentDistance) > 0 ?
                                 (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;
@@ -312,7 +353,7 @@ namespace KexEdit.UI.Timeline {
                 propertyData.Visible = false;
 
                 var adapter = PropertyAdapter.GetAdapter(property);
-                adapter.GetKeyframes(_data.Entity, propertyData.Keyframes);
+                adapter.GetKeyframes(_keyframeManager, _nodeId, propertyData.Keyframes);
 
                 if (!_data.Active) continue;
 
@@ -336,7 +377,7 @@ namespace KexEdit.UI.Timeline {
             foreach (var (type, propertyData) in _data.Properties) {
                 var adapter = PropertyAdapter.GetAdapter(type);
                 propertyData.SelectedKeyframeCount = 0;
-                adapter.GetKeyframes(_data.Entity, propertyData.Keyframes);
+                adapter.GetKeyframes(_keyframeManager, _nodeId, propertyData.Keyframes);
                 if (!propertyData.Visible) continue;
                 foreach (var keyframe in propertyData.Keyframes) {
                     if (keyframe.Selected) {
@@ -376,7 +417,7 @@ namespace KexEdit.UI.Timeline {
             if (!hasAnyReadOnly) return;
             if (!_data.Active || _data.Entity == Entity.Null) return;
 
-            var pointBufferLookup = SystemAPI.GetBufferLookup<Point>(true);
+            var pointBufferLookup = SystemAPI.GetBufferLookup<CorePointBuffer>(true);
             var pointBuffer = pointBufferLookup[_data.Entity];
 
             new UpdateTimesJob {
@@ -424,22 +465,21 @@ namespace KexEdit.UI.Timeline {
         [BurstCompile]
         private struct UpdateTimesJob : IJob {
             [ReadOnly]
-            public DynamicBuffer<Point> Points;
+            public DynamicBuffer<CorePointBuffer> Points;
             public NativeList<float> Times;
-            public DurationType DurationType;
+            public LegacyDurationType DurationType;
 
             public void Execute() {
                 if (Points.Length == 0) return;
                 Times.Clear();
                 Times.ResizeUninitialized(Points.Length);
-                float startLength = Points[0].Value.TotalLength;
+                float startLength = Points[0].HeartArc();
                 for (int i = 0; i < Points.Length; i++) {
-                    var point = Points[i].Value;
-                    if (DurationType == DurationType.Time) {
+                    if (DurationType == LegacyDurationType.Time) {
                         Times[i] = i / HZ;
                     }
                     else {
-                        Times[i] = point.TotalLength - startLength;
+                        Times[i] = Points[i].HeartArc() - startLength;
                     }
                 }
             }
@@ -603,17 +643,22 @@ namespace KexEdit.UI.Timeline {
         }
 
         private string GetDisplayName() {
-            NodeType type = SystemAPI.GetComponent<Node>(_data.Entity).Type;
+            LegacyNodeType type = SystemAPI.GetComponent<Node>(_data.Entity).Type;
             return type.GetDisplayName();
         }
 
         private float GetDuration() {
-            if (SystemAPI.HasComponent<Duration>(_data.Entity)) {
-                return SystemAPI.GetComponent<Duration>(_data.Entity).Value;
+            if (HasEditableDuration()) {
+                uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
+                ref var coaster = ref GetCoasterRef();
+                ulong durKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Duration);
+                if (coaster.Scalars.TryGetValue(durKey, out float duration)) {
+                    return duration;
+                }
             }
 
-            if (SystemAPI.HasBuffer<Point>(_data.Entity)) {
-                var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+            if (SystemAPI.HasBuffer<CorePointBuffer>(_data.Entity)) {
+                var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
                 return pointBuffer.Length > 0 ? pointBuffer.Length / HZ : 0f;
             }
 
@@ -621,20 +666,39 @@ namespace KexEdit.UI.Timeline {
         }
 
         private bool HasEditableDuration() {
-            return SystemAPI.HasComponent<Duration>(_data.Entity);
+            if (_data.Entity == Entity.Null) return false;
+            var nodeType = SystemAPI.GetComponent<Node>(_data.Entity).Type;
+            return nodeType == LegacyNodeType.ForceSection || nodeType == LegacyNodeType.GeometricSection;
         }
 
-        private DurationType GetDurationType() {
-            if (_data.Active && SystemAPI.HasComponent<Duration>(_data.Entity)) {
-                return SystemAPI.GetComponent<Duration>(_data.Entity).Type;
+        private LegacyDurationType GetDurationType() {
+            if (_data.Active && HasEditableDuration()) {
+                uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
+                ref var coaster = ref GetCoasterRef();
+                ulong durTypeKey = DocumentAggregate.InputKey(nodeId, NodeMeta.DurationType);
+                if (coaster.Flags.TryGetValue(durTypeKey, out int durType) && durType == 1) {
+                    return LegacyDurationType.Distance;
+                }
             }
-            return DurationType.Time;
+            return LegacyDurationType.Time;
         }
 
         private bool IsPropertyVisible(PropertyType type) {
-            var adapter = PropertyAdapter.GetAdapter(type);
-            if (!adapter.HasBuffer(_data.Entity)) return false;
+            var node = SystemAPI.GetComponent<Node>(_data.Entity);
+            var coreNodeType = PropertyMapping.ToNodeType(node.Type);
+            var propertyId = PropertyMapping.ToPropertyId(type);
 
+            var kind = NodeSchema.GetPropertyKind(coreNodeType, propertyId);
+
+            return kind switch {
+                PropertyKind.Unavailable => false,
+                PropertyKind.Innate => true,
+                PropertyKind.Override => HasOverrideEnabled(type),
+                _ => false
+            };
+        }
+
+        private bool HasOverrideEnabled(PropertyType type) {
             var overrides = SystemAPI.HasComponent<PropertyOverrides>(_data.Entity)
                 ? SystemAPI.GetComponent<PropertyOverrides>(_data.Entity)
                 : PropertyOverrides.Default;
@@ -645,7 +709,7 @@ namespace KexEdit.UI.Timeline {
                 PropertyType.Friction => overrides.Friction,
                 PropertyType.Resistance => overrides.Resistance,
                 PropertyType.TrackStyle => overrides.TrackStyle,
-                _ => true
+                _ => false
             };
         }
 
@@ -672,15 +736,18 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void MarkTrackDirty() {
-            ref var dirty = ref SystemAPI.GetComponentRW<Dirty>(_data.Entity).ValueRW;
-            dirty = true;
+            SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
+        }
+
+        private ref DocumentAggregate GetCoasterRef() {
+            var coasterEntity = SystemAPI.GetComponent<CoasterReference>(_data.Entity).Value;
+            return ref SystemAPI.GetComponentRW<CoasterData>(coasterEntity).ValueRW.Value;
         }
 
         private float EvaluateAt(PropertyType type, float time) {
             var adapter = PropertyAdapter.GetAdapter(type);
-            if (!adapter.HasBuffer(_data.Entity)) return 0f;
-            var anchor = SystemAPI.GetComponent<Anchor>(_data.Entity);
-            return adapter.EvaluateAt(_data.Entity, time, anchor);
+            if (!adapter.HasKeyframes(_keyframeManager, _nodeId)) return type.Default(time);
+            return adapter.EvaluateAt(_keyframeManager, _nodeId, time);
         }
 
         private Keyframe FindKeyframeById(PropertyAdapter adapter, uint keyframeId) {
@@ -694,28 +761,45 @@ namespace KexEdit.UI.Timeline {
 
         private void SetPropertyOverride(PropertyType type, bool value) {
             ref var overrides = ref SystemAPI.GetComponentRW<PropertyOverrides>(_data.Entity).ValueRW;
+            ref var coaster = ref GetCoasterRef();
+            uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
+
             switch (type) {
                 case PropertyType.FixedVelocity:
                     overrides.FixedVelocity = value;
+                    SetCoasterFlag(ref coaster, nodeId, NodeMeta.Driven, value);
                     break;
                 case PropertyType.Heart:
                     overrides.Heart = value;
+                    SetCoasterFlag(ref coaster, nodeId, NodeMeta.OverrideHeart, value);
                     break;
                 case PropertyType.Friction:
                     overrides.Friction = value;
+                    SetCoasterFlag(ref coaster, nodeId, NodeMeta.OverrideFriction, value);
                     break;
                 case PropertyType.Resistance:
                     overrides.Resistance = value;
+                    SetCoasterFlag(ref coaster, nodeId, NodeMeta.OverrideResistance, value);
                     break;
                 case PropertyType.TrackStyle:
                     overrides.TrackStyle = value;
+                    SetCoasterFlag(ref coaster, nodeId, NodeMeta.OverrideTrackStyle, value);
                     break;
                 default:
                     throw new System.NotImplementedException($"Property override not implemented for {type}");
             }
 
-            ref var dirty = ref SystemAPI.GetComponentRW<Dirty>(_data.Entity).ValueRW;
-            dirty = true;
+            SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
+        }
+
+        private static void SetCoasterFlag(ref DocumentAggregate coaster, uint nodeId, int metaIndex, bool value) {
+            ulong key = DocumentAggregate.InputKey(nodeId, metaIndex);
+            if (value) {
+                coaster.Flags[key] = 1;
+            }
+            else {
+                coaster.Flags.Remove(key);
+            }
         }
 
         private void SelectProperty(PropertyType type) {
@@ -752,7 +836,7 @@ namespace KexEdit.UI.Timeline {
         private void SelectKeyframe(KeyframeData keyframe) {
             if (keyframe.Value.Selected) return;
             var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
-            adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithSelected(true));
+            adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.Value.WithSelected(true));
             _data.LatestSelectedProperty = keyframe.Type;
             UpdateKeyframes();
             UpdateSelectionState();
@@ -761,7 +845,7 @@ namespace KexEdit.UI.Timeline {
         private void DeselectKeyframe(KeyframeData keyframe) {
             if (!keyframe.Value.Selected) return;
             var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
-            adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithSelected(false));
+            adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.Value.WithSelected(false));
             UpdateKeyframes();
             UpdateSelectionState();
         }
@@ -769,7 +853,7 @@ namespace KexEdit.UI.Timeline {
         private void SelectAllKeyframesForProperty(PropertyType type) {
             var adapter = PropertyAdapter.GetAdapter(type);
             foreach (var keyframe in _data.Properties[type].Keyframes) {
-                adapter.UpdateKeyframe(_data.Entity, keyframe.WithSelected(true));
+                adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.WithSelected(true));
             }
             UpdateKeyframes();
             UpdateSelectionState();
@@ -778,7 +862,7 @@ namespace KexEdit.UI.Timeline {
         private void DeselectAllKeyframesForProperty(PropertyType type) {
             var adapter = PropertyAdapter.GetAdapter(type);
             foreach (var keyframe in _data.Properties[type].Keyframes) {
-                adapter.UpdateKeyframe(_data.Entity, keyframe.WithSelected(false));
+                adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.WithSelected(false));
             }
             UpdateKeyframes();
             UpdateSelectionState();
@@ -789,7 +873,7 @@ namespace KexEdit.UI.Timeline {
                 if (!propertyData.Visible) continue;
                 var adapter = PropertyAdapter.GetAdapter(type);
                 foreach (var keyframe in propertyData.Keyframes) {
-                    adapter.UpdateKeyframe(_data.Entity, keyframe.WithSelected(true));
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.WithSelected(true));
                 }
             }
             UpdateKeyframes();
@@ -801,7 +885,7 @@ namespace KexEdit.UI.Timeline {
                 if (!propertyData.Visible) continue;
                 var adapter = PropertyAdapter.GetAdapter(type);
                 foreach (var keyframe in propertyData.Keyframes) {
-                    adapter.UpdateKeyframe(_data.Entity, keyframe.WithSelected(false));
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.WithSelected(false));
                 }
             }
             UpdateKeyframes();
@@ -878,7 +962,7 @@ namespace KexEdit.UI.Timeline {
                     }
 
                     if (changed) {
-                        adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                        adapter.UpdateKeyframe(_keyframeManager, _nodeId, updatedKeyframe);
                         anyChanged = true;
                     }
                 }
@@ -955,8 +1039,8 @@ namespace KexEdit.UI.Timeline {
                         trackFollowerRW.ValueRW.Section = _data.Entity;
                         float trainPosition = TimeToTrainPosition(_data.Time);
 
-                        if (SystemAPI.HasBuffer<Point>(_data.Entity)) {
-                            var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+                        if (SystemAPI.HasBuffer<CorePointBuffer>(_data.Entity)) {
+                            var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
                             trainPosition = math.clamp(trainPosition, 0f, math.max(0f, pointBuffer.Length - 1));
                         }
 
@@ -968,11 +1052,11 @@ namespace KexEdit.UI.Timeline {
         }
 
         private float TimeToTrainPosition(float time) {
-            if (GetDurationType() == DurationType.Time) {
+            if (GetDurationType() == LegacyDurationType.Time) {
                 return time * HZ;
             }
 
-            float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
+            float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.HeartArc;
             return DistanceToTrainPosition(anchorLength + time);
         }
 
@@ -981,18 +1065,18 @@ namespace KexEdit.UI.Timeline {
                 return 0f;
             }
 
-            if (GetDurationType() == DurationType.Time) {
+            if (GetDurationType() == LegacyDurationType.Time) {
                 return trainPosition / HZ;
             }
 
-            var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+            var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (pointBuffer.Length < 2) return 0f;
 
             int index = math.clamp((int)math.floor(trainPosition), 0, pointBuffer.Length - 2);
             float t = trainPosition - index;
 
-            float distance = math.lerp(pointBuffer[index].Value.TotalLength, pointBuffer[index + 1].Value.TotalLength, t);
-            float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength;
+            float distance = math.lerp(pointBuffer[index].HeartArc(), pointBuffer[index + 1].HeartArc(), t);
+            float anchorLength = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.HeartArc;
             return distance - anchorLength;
         }
 
@@ -1001,16 +1085,16 @@ namespace KexEdit.UI.Timeline {
                 return 0f;
             }
 
-            var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+            var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (pointBuffer.Length < 2) return 0f;
 
-            if (targetDistance < pointBuffer[0].Value.TotalLength) {
+            if (targetDistance < pointBuffer[0].HeartArc()) {
                 return 0f;
             }
 
             for (int i = 0; i < pointBuffer.Length - 1; i++) {
-                float currentDistance = pointBuffer[i].Value.TotalLength;
-                float nextDistance = pointBuffer[i + 1].Value.TotalLength;
+                float currentDistance = pointBuffer[i].HeartArc();
+                float nextDistance = pointBuffer[i + 1].HeartArc();
                 if (targetDistance >= currentDistance && targetDistance < nextDistance) {
                     float t = (nextDistance - currentDistance) > 0 ?
                         (targetDistance - currentDistance) / (nextDistance - currentDistance) : 0f;
@@ -1021,7 +1105,7 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void OnDurationChange(DurationChangeEvent evt) {
-            if (!SystemAPI.HasComponent<Duration>(_data.Entity)) {
+            if (!HasEditableDuration()) {
                 throw new Exception("No entity or duration component found");
             }
 
@@ -1033,23 +1117,12 @@ namespace KexEdit.UI.Timeline {
 
             duration = math.max(0.1f, duration);
 
-            var inputPorts = SystemAPI.GetBuffer<InputPortReference>(_data.Entity);
+            uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
+            ref var coaster = ref GetCoasterRef();
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, NodeMeta.Duration)] = duration;
 
-            foreach (var portRef in inputPorts) {
-                if (SystemAPI.HasComponent<Port>(portRef.Value) &&
-                    SystemAPI.GetComponent<Port>(portRef.Value).Type == PortType.Duration &&
-                    SystemAPI.HasComponent<DurationPort>(portRef.Value)) {
-
-                    ref var durationPort = ref SystemAPI.GetComponentRW<DurationPort>(portRef.Value).ValueRW;
-                    durationPort.Value = duration;
-
-                    ref var dirty = ref SystemAPI.GetComponentRW<Dirty>(portRef.Value).ValueRW;
-                    dirty = true;
-
-                    MarkTrackDirty();
-                    return;
-                }
-            }
+            SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
+            MarkTrackDirty();
         }
 
         private void OnPropertyClick(PropertyClickEvent evt) {
@@ -1118,7 +1191,7 @@ namespace KexEdit.UI.Timeline {
                 newValue => {
                     Undo.Record();
                     var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
-                    adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithValue(newValue));
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.Value.WithValue(newValue));
                     MarkTrackDirty();
                 },
                 unitsType
@@ -1126,7 +1199,7 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void ShowKeyframeTimeEditor(KeyframeData keyframe, UnityEngine.Vector2 position) {
-            var unitsType = _data.DurationType == DurationType.Time ? UnitsType.Time : UnitsType.Distance;
+            var unitsType = _data.DurationType == LegacyDurationType.Time ? UnitsType.Time : UnitsType.Distance;
             _timeline.View.ShowFloatFieldEditor(
                 position,
                 keyframe.Value.Time,
@@ -1148,7 +1221,7 @@ namespace KexEdit.UI.Timeline {
                         OutWeight = keyframe.Value.OutWeight,
                         Selected = keyframe.Value.Selected
                     };
-                    adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, updatedKeyframe);
                     MarkTrackDirty();
                 },
                 unitsType
@@ -1163,7 +1236,7 @@ namespace KexEdit.UI.Timeline {
                     Undo.Record();
                     var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
                     newValue = math.clamp(newValue, 0.01f, 2f);
-                    adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithInEasing(keyframe.Value.InTangent, newValue));
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.Value.WithInEasing(keyframe.Value.InTangent, newValue));
                     MarkTrackDirty();
                 },
                 UnitsType.None
@@ -1178,7 +1251,7 @@ namespace KexEdit.UI.Timeline {
                     Undo.Record();
                     var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
                     newValue = math.clamp(newValue, 0.01f, 2f);
-                    adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithOutEasing(keyframe.Value.OutTangent, newValue));
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.Value.WithOutEasing(keyframe.Value.OutTangent, newValue));
                     MarkTrackDirty();
                 },
                 UnitsType.None
@@ -1192,7 +1265,7 @@ namespace KexEdit.UI.Timeline {
                 newValue => {
                     Undo.Record();
                     var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
-                    adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithInEasing(newValue, keyframe.Value.InWeight));
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.Value.WithInEasing(newValue, keyframe.Value.InWeight));
                     MarkTrackDirty();
                 },
                 UnitsType.None
@@ -1206,7 +1279,7 @@ namespace KexEdit.UI.Timeline {
                 newValue => {
                     Undo.Record();
                     var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
-                    adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithOutEasing(newValue, keyframe.Value.OutWeight));
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.Value.WithOutEasing(newValue, keyframe.Value.OutWeight));
                     MarkTrackDirty();
                 },
                 UnitsType.None
@@ -1449,7 +1522,7 @@ namespace KexEdit.UI.Timeline {
                 foreach (var keyframe in propertyData.Keyframes) {
                     if (!keyframe.Selected) continue;
                     var updatedKeyframe = keyframe.WithTimeLock(locked);
-                    adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, updatedKeyframe);
                 }
             }
             UpdateKeyframes();
@@ -1463,7 +1536,7 @@ namespace KexEdit.UI.Timeline {
                 foreach (var keyframe in propertyData.Keyframes) {
                     if (!keyframe.Selected) continue;
                     var updatedKeyframe = keyframe.WithValueLock(locked);
-                    adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, updatedKeyframe);
                 }
             }
             UpdateKeyframes();
@@ -1477,7 +1550,7 @@ namespace KexEdit.UI.Timeline {
                 foreach (var keyframe in propertyData.Keyframes) {
                     if (!keyframe.Selected) continue;
                     var updatedKeyframe = keyframe.WithTimeLock(locked).WithValueLock(locked);
-                    adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, updatedKeyframe);
                 }
             }
             UpdateKeyframes();
@@ -1527,12 +1600,12 @@ namespace KexEdit.UI.Timeline {
         private void OnSetKeyframe(SetKeyframeEvent evt) {
             var adapter = PropertyAdapter.GetAdapter(evt.Type);
             if (FindKeyframe(evt.Type, _data.Time, out var keyframe)) {
-                adapter.UpdateKeyframe(_data.Entity, keyframe.WithValue(evt.Value));
+                adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.WithValue(evt.Value));
             }
             else {
                 DeselectAllKeyframes();
                 var newKeyframe = Keyframe.Create(_data.Time, evt.Value).WithSelected(true);
-                adapter.AddKeyframe(_data.Entity, newKeyframe);
+                adapter.AddKeyframe(_keyframeManager, _nodeId, newKeyframe);
                 UpdateKeyframes();
                 UpdateSelectionState();
             }
@@ -1558,7 +1631,7 @@ namespace KexEdit.UI.Timeline {
                     OutWeight = evt.OutWeight,
                     Selected = keyframe.Selected
                 };
-                adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                adapter.UpdateKeyframe(_keyframeManager, _nodeId, updatedKeyframe);
             }
             else {
                 UnityEngine.Debug.LogError($"No keyframe found for type {evt.Type} with ID {evt.KeyframeId}");
@@ -1574,7 +1647,7 @@ namespace KexEdit.UI.Timeline {
             var keyframe = GetSelectedKeyframe();
             float defaultValue = keyframe.Type.Default(_data.Time);
             var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
-            adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithValue(defaultValue));
+            adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.Value.WithValue(defaultValue));
             MarkTrackDirty();
         }
 
@@ -1583,7 +1656,7 @@ namespace KexEdit.UI.Timeline {
             var keyframe = GetSelectedKeyframe();
             var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
             float previousValue = keyframe.Type.Previous(_data.Time, anchor, _data.DurationType);
-            adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithValue(previousValue));
+            adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.Value.WithValue(previousValue));
             MarkTrackDirty();
         }
 
@@ -1603,7 +1676,7 @@ namespace KexEdit.UI.Timeline {
                 Units = targetValueType.GetUnits()
             };
             var dialog = root.ShowOptimizerDialog(optimizerData);
-            var optimizer = new Optimizer(_data.Entity, keyframe, optimizerData);
+            var optimizer = new Optimizer(_keyframeManager, _nodeId, keyframe, optimizerData);
 
             while (!optimizerData.IsComplete && !optimizerData.IsCanceled) {
                 if (!SystemAPI.Exists(_data.Entity) || !_data.Active) {
@@ -1617,9 +1690,9 @@ namespace KexEdit.UI.Timeline {
                         TargetValueType.Roll => timelinePoint.Roll,
                         TargetValueType.Pitch => timelinePoint.GetPitch(),
                         TargetValueType.Yaw => timelinePoint.GetYaw(),
-                        TargetValueType.X => timelinePoint.Position.x,
-                        TargetValueType.Y => timelinePoint.Position.y,
-                        TargetValueType.Z => timelinePoint.Position.z,
+                        TargetValueType.X => timelinePoint.HeartPosition.x,
+                        TargetValueType.Y => timelinePoint.HeartPosition.y,
+                        TargetValueType.Z => timelinePoint.HeartPosition.z,
                         TargetValueType.NormalForce => timelinePoint.NormalForce,
                         TargetValueType.LateralForce => timelinePoint.LateralForce,
                         _ => throw new NotImplementedException()
@@ -1631,10 +1704,10 @@ namespace KexEdit.UI.Timeline {
                     break;
                 }
 
-                SystemAPI.SetComponent<Dirty>(_data.Entity, true);
+                SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
                 while (
                     SystemAPI.HasComponent<Dirty>(_data.Entity) &&
-                    SystemAPI.GetComponent<Dirty>(_data.Entity).Value) {
+                    SystemAPI.IsComponentEnabled<Dirty>(_data.Entity)) {
                     yield return null;
                 }
             }
@@ -1648,33 +1721,33 @@ namespace KexEdit.UI.Timeline {
             int index = (int)math.floor(playheadPosition);
             int nextIndex = index + 1;
 
-            var points = SystemAPI.GetBuffer<Point>(_data.Entity);
+            var points = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (index < 0 || nextIndex >= points.Length) {
                 UnityEngine.Debug.LogError($"Playhead position {playheadPosition} is out of bounds for entity {_data.Entity}");
                 return PointData.Create();
             }
 
-            PointData p0 = points[index].Value;
-            PointData p1 = points[nextIndex].Value;
+            PointData p0 = points[index].ToPointData();
+            PointData p1 = points[nextIndex].ToPointData();
 
             float t = playheadPosition - math.floor(playheadPosition);
             return PointData.Lerp(p0, p1, t);
         }
 
         private PointData GetPointAtTime(float time) {
-            var points = SystemAPI.GetBuffer<Point>(_data.Entity);
+            var points = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (points.Length == 0) {
                 return PointData.Create();
             }
 
             float position;
-            if (SystemAPI.HasComponent<Duration>(_data.Entity)) {
-                var duration = SystemAPI.GetComponent<Duration>(_data.Entity);
-                if (duration.Type == DurationType.Time) {
+            if (HasEditableDuration()) {
+                var durationType = GetDurationType();
+                if (durationType == LegacyDurationType.Time) {
                     position = time * HZ;
                 }
                 else {
-                    float targetDistance = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.TotalLength + time;
+                    float targetDistance = SystemAPI.GetComponent<Anchor>(_data.Entity).Value.HeartArc + time;
                     position = DistanceToTrainPosition(targetDistance);
                 }
             }
@@ -1687,11 +1760,11 @@ namespace KexEdit.UI.Timeline {
             int nextIndex = math.min(index + 1, points.Length - 1);
 
             if (index == nextIndex) {
-                return points[index].Value;
+                return points[index].ToPointData();
             }
 
-            PointData p0 = points[index].Value;
-            PointData p1 = points[nextIndex].Value;
+            PointData p0 = points[index].ToPointData();
+            PointData p1 = points[nextIndex].ToPointData();
 
             float t = position - math.floor(position);
             return PointData.Lerp(p0, p1, t);
@@ -1738,9 +1811,8 @@ namespace KexEdit.UI.Timeline {
                             trackFollowerRW.ValueRW.Section = _data.Entity;
                             float trainPosition = TimeToTrainPosition(_data.Time);
 
-                            // Clamp to valid point buffer range
-                            if (SystemAPI.HasBuffer<Point>(_data.Entity)) {
-                                var pointBuffer = SystemAPI.GetBuffer<Point>(_data.Entity);
+                            if (SystemAPI.HasBuffer<CorePointBuffer>(_data.Entity)) {
+                                var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
                                 trainPosition = math.clamp(trainPosition, 0f, math.max(0f, pointBuffer.Length - 1));
                             }
 
@@ -1799,7 +1871,7 @@ namespace KexEdit.UI.Timeline {
                     updatedKeyframe.Time = time;
                     updatedKeyframe.Value = value;
 
-                    adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, updatedKeyframe);
                 }
             }
 
@@ -1850,14 +1922,14 @@ namespace KexEdit.UI.Timeline {
                 }
             }
 
-            adapter.UpdateKeyframe(_data.Entity, evt.Keyframe.Value);
+            adapter.UpdateKeyframe(_keyframeManager, _nodeId, evt.Keyframe.Value);
             MarkTrackDirty();
         }
 
         private void OnSelectKeyframes(SelectKeyframesEvent evt) {
             foreach (var keyframe in evt.Keyframes) {
                 var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
-                adapter.UpdateKeyframe(_data.Entity, keyframe.Value.WithSelected(true));
+                adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.Value.WithSelected(true));
                 _data.LatestSelectedProperty = keyframe.Type;
             }
             UpdateKeyframes();
@@ -1898,6 +1970,15 @@ namespace KexEdit.UI.Timeline {
         private void AddProperty(PropertyType type) {
             Undo.Record();
             SetPropertyOverride(type, true);
+
+            var anchor = SystemAPI.GetComponent<Anchor>(_data.Entity).Value;
+            float initialValue = type.Previous(0f, anchor);
+
+            var adapter = PropertyAdapter.GetAdapter(type);
+            var keyframe = Keyframe.Create(0f, initialValue);
+            adapter.AddKeyframe(_keyframeManager, _nodeId, keyframe);
+
+            UpdateKeyframes();
             MarkTrackDirty();
         }
 
@@ -1905,7 +1986,7 @@ namespace KexEdit.UI.Timeline {
             Undo.Record();
             var adapter = PropertyAdapter.GetAdapter(type);
             foreach (var keyframe in _data.Properties[type].Keyframes) {
-                adapter.RemoveKeyframe(_data.Entity, keyframe.Id);
+                adapter.RemoveKeyframe(_keyframeManager, _nodeId, keyframe.Id);
             }
             SetPropertyOverride(type, false);
             UpdateKeyframes();
@@ -1915,7 +1996,7 @@ namespace KexEdit.UI.Timeline {
 
         private void RemoveKeyframe(KeyframeData keyframe) {
             var adapter = PropertyAdapter.GetAdapter(keyframe.Type);
-            adapter.RemoveKeyframe(_data.Entity, keyframe.Value.Id);
+            adapter.RemoveKeyframe(_keyframeManager, _nodeId, keyframe.Value.Id);
             UpdateKeyframes();
             UpdateSelectionState();
             MarkTrackDirty();
@@ -1955,6 +2036,9 @@ namespace KexEdit.UI.Timeline {
             }
 
             _data.Time = time;
+
+            ref var playheadTime = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW.PlayheadTime;
+            playheadTime = time;
         }
 
         private void CopyKeyframes() {
@@ -2001,11 +2085,11 @@ namespace KexEdit.UI.Timeline {
 
                 if (keyframeExists) {
                     newKeyframe.Id = keyframe.Id;
-                    adapter.UpdateKeyframe(_data.Entity, newKeyframe);
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, newKeyframe);
                 }
                 else {
                     newKeyframe.Id = Uuid.Create();
-                    adapter.AddKeyframe(_data.Entity, newKeyframe);
+                    adapter.AddKeyframe(_keyframeManager, _nodeId, newKeyframe);
                 }
             }
 
@@ -2023,7 +2107,7 @@ namespace KexEdit.UI.Timeline {
                 var adapter = PropertyAdapter.GetAdapter(type);
                 foreach (var keyframe in _data.Properties[type].Keyframes) {
                     if (!keyframe.Selected) continue;
-                    adapter.RemoveKeyframe(_data.Entity, keyframe.Id);
+                    adapter.RemoveKeyframe(_keyframeManager, _nodeId, keyframe.Id);
                 }
                 anyRemoved = true;
             }
@@ -2100,15 +2184,15 @@ namespace KexEdit.UI.Timeline {
 
                 if (selectedCount == 1) {
                     var keyframe = propertyData.Keyframes[firstSelected];
-                    adapter.UpdateKeyframe(_data.Entity, keyframe.WithEasing(tangent, weight));
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, keyframe.WithEasing(tangent, weight));
                 }
                 else {
                     int prev = -1;
                     for (int i = 0; i < propertyData.Keyframes.Count; i++) {
                         if (!propertyData.Keyframes[i].Selected) continue;
                         if (prev != -1 && i == prev + 1) {
-                            adapter.UpdateKeyframe(_data.Entity, propertyData.Keyframes[prev].WithOutEasing(tangent, weight));
-                            adapter.UpdateKeyframe(_data.Entity, propertyData.Keyframes[i].WithInEasing(tangent, weight));
+                            adapter.UpdateKeyframe(_keyframeManager, _nodeId, propertyData.Keyframes[prev].WithOutEasing(tangent, weight));
+                            adapter.UpdateKeyframe(_keyframeManager, _nodeId, propertyData.Keyframes[i].WithInEasing(tangent, weight));
                         }
                         prev = i;
                     }
@@ -2206,7 +2290,7 @@ namespace KexEdit.UI.Timeline {
                         Selected = keyframe.Selected
                     };
 
-                    adapter.UpdateKeyframe(_data.Entity, updatedKeyframe);
+                    adapter.UpdateKeyframe(_keyframeManager, _nodeId, updatedKeyframe);
                 }
             }
 

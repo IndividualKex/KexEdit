@@ -1,0 +1,22 @@
+{
+    "name": "KexEdit.Rendering",
+    "rootNamespace": "KexEdit.Rendering",
+    "references": [
+        "Unity.Mathematics",
+        "Unity.Collections",
+        "Unity.Burst",
+        "KexEdit.Spline.Rendering",
+        "KexEdit.Track",
+        "KexEdit.Sim",
+        "KexEdit.Sim.Schema"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

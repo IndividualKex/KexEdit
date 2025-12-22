@@ -1,3 +1,4 @@
+using KexEdit.Legacy;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
@@ -88,24 +89,24 @@ namespace KexEdit.UI.NodeGraph {
                 container.Add(new ThumbFloatField(_data, 1));
                 container.Add(new ThumbFloatField(_data, 2));
             }
-            else if (_data.Port.Type == PortType.Duration
-                || _data.Port.Type == PortType.Roll
-                || _data.Port.Type == PortType.Pitch
-                || _data.Port.Type == PortType.Yaw
-                || _data.Port.Type == PortType.Velocity
-                || _data.Port.Type == PortType.Heart
-                || _data.Port.Type == PortType.Friction
-                || _data.Port.Type == PortType.Resistance
-                || _data.Port.Type == PortType.Radius
-                || _data.Port.Type == PortType.Arc
-                || _data.Port.Type == PortType.Axis
-                || _data.Port.Type == PortType.LeadIn
-                || _data.Port.Type == PortType.LeadOut
-                || _data.Port.Type == PortType.InWeight
-                || _data.Port.Type == PortType.OutWeight
-                || _data.Port.Type == PortType.Scale
-                || _data.Port.Type == PortType.Start
-                || _data.Port.Type == PortType.End) {
+            else if (_data.Port.Type == PortType.Duration ||
+                _data.Port.Type == PortType.Roll ||
+                _data.Port.Type == PortType.Pitch ||
+                _data.Port.Type == PortType.Yaw ||
+                _data.Port.Type == PortType.Velocity ||
+                _data.Port.Type == PortType.Heart ||
+                _data.Port.Type == PortType.Friction ||
+                _data.Port.Type == PortType.Resistance ||
+                _data.Port.Type == PortType.Radius ||
+                _data.Port.Type == PortType.Arc ||
+                _data.Port.Type == PortType.Axis ||
+                _data.Port.Type == PortType.LeadIn ||
+                _data.Port.Type == PortType.LeadOut ||
+                _data.Port.Type == PortType.InWeight ||
+                _data.Port.Type == PortType.OutWeight ||
+                _data.Port.Type == PortType.Scale ||
+                _data.Port.Type == PortType.Start ||
+                _data.Port.Type == PortType.End) {
                 container.Add(new ThumbFloatField(_data, 0));
             }
             else {
@@ -167,10 +168,6 @@ namespace KexEdit.UI.NodeGraph {
 
                 _edge = new InputThumbEdge(this, vertical);
                 cap.Add(_edge);
-            }
-
-            if (_data.Port.Type == PortType.Anchor) {
-                Add(new AnchorThumbControl(_data));
             }
 
             RegisterCallback<MouseOverEvent>(OnMouseOver);

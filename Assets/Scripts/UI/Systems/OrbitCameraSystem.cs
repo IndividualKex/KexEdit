@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using CameraState = KexEdit.Legacy.CameraState;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]

@@ -1,0 +1,3 @@
+[submodule "kexengine"]
+	path = kexengine
+	url = https://github.com/IndividualKex/kexengine.git

@@ -1,10 +1,12 @@
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.Timeline.Constants;
+using Keyframe = KexEdit.Legacy.Keyframe;
 
 namespace KexEdit.UI.Timeline {
     public static class Extensions {
