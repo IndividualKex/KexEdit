@@ -155,6 +155,31 @@ namespace KexEdit.Legacy.Serialization {
             return result;
         }
 
+        public byte[] SerializeToKEXD(Entity target) {
+            ref readonly var coasterData = ref SystemAPI.GetComponentRW<CoasterData>(target).ValueRO.Value;
+
+            var uiMeta = new KexEdit.Persistence.UIMetadataChunk(Allocator.Temp);
+            using var nodeEntities = _nodeQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in nodeEntities) {
+                if (SystemAPI.GetComponent<CoasterReference>(entity).Value != target) continue;
+                var node = SystemAPI.GetComponent<Node>(entity);
+                uiMeta.Positions[node.Id] = node.Position;
+            }
+
+            var writer = new KexEdit.Persistence.ChunkWriter(Allocator.Temp);
+            KexEdit.Persistence.CoasterSerializer.Write(writer, in coasterData);
+            KexEdit.Persistence.ExtensionSerializer.WriteUIMetadata(ref writer, in uiMeta);
+
+            var data = writer.ToArray();
+            var result = data.ToArray();
+
+            writer.Dispose();
+            uiMeta.Dispose();
+            data.Dispose();
+
+            return result;
+        }
+
         public Entity DeserializeGraph(byte[] data, bool restoreUIState = true) {
             var coaster = EntityManager.CreateEntity(typeof(Coaster), typeof(CoasterData));
             EntityManager.SetName(coaster, "Coaster");

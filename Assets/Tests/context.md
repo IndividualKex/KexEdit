@@ -21,10 +21,12 @@ Tests/
 ├── Core*Tests.cs               # Unit tests for Core layer
 ├── LegacyImporterTests.cs      # Unit tests for legacy import
 ├── CoasterSerializerTests.cs   # Chunk-based serialization tests
-├── CoasterValidationTests.cs   # Phase B-1: round-trip validation, Python export
+├── CoasterValidationTests.cs   # Round-trip validation
 ├── CoasterGoldTests.cs         # Integration tests: .kex → evaluate
+├── KexdRoundTripTests.cs       # KEXD serialization validation (Phase 4A)
+├── KexdIntegrationTests.cs     # KEXD integration tests with FileManager
 ├── *NodeTests.cs               # Golden tests for node types
-├── *TestBuilder.cs             # Test data builders from gold fixtures
+├── *TestBuilder.cs             # Test data builders
 ├── SimPointComparer.cs         # KexEdit.Core.Point comparison
 ├── PointComparer.cs            # ECS Point comparison
 ├── PerformanceTests/           # Burst vs Rust benchmarks
@@ -32,7 +34,7 @@ Tests/
 ├── Storage/                    # Storage layer tests
 ├── Coaster/                    # Coaster aggregate tests
 ├── TrackData/                  # Gold test fixtures (JSON)
-└── Assets/                     # Test .kex files (veloci, shuttle, all_types)
+└── Assets/                     # Test .kex files
 ```
 
 ## Running Tests

@@ -13,8 +13,8 @@ Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant 
 | 1 | Component & System Audit | ✅ COMPLETE |
 | 2 | Validation Foundation | ✅ COMPLETE |
 | 3 | Extensible Serialization | ✅ COMPLETE |
-| 4A | KEXD Write Path | ⏸️ Next |
-| 4B | KEXD Read Path | ⏸️ Pending |
+| 4A | KEXD Write Path | ✅ COMPLETE |
+| 4B | KEXD Read Path | ⏸️ Next |
 | 4C | Switch to KEXD-Only | ⏸️ Pending |
 | 5 | Pruning | ⏸️ Pending |
 | 6 | Cleanup | ⏸️ Pending |
@@ -28,6 +28,14 @@ Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant 
 - **107 ECS components** audited; **35 removable** (port values + keyframe duplicates)
 - Round-trip tests pass with CoasterSerializer
 - Extension system implemented: UIMetadataChunk for node positions
+
+## Phase 4A: Summary
+
+- **SerializeToKEXD** method implemented in SerializationSystem
+- **5 tests passing**: KexdRoundTripTests (3) + KexdIntegrationTests (2)
+- **Debug hook** added to FileManager with `DEBUG_KEXD_FORMAT` flag
+- Python tool already validates KEXD format
+- Legacy save/load unchanged
 
 ### KEXD File Format
 
@@ -122,10 +130,11 @@ File.WriteAllBytes(path + ".kexd", kexdData);
 
 ## Definition of Done
 
-- [ ] `SerializeToKEXD()` implemented and tested
-- [ ] Python tool validates KEXD output
-- [ ] Round-trip test passes
-- [ ] Legacy save/load unchanged
+- [x] `SerializeToKEXD()` implemented and tested
+- [x] Python tool validates KEXD output (existing tool already supports this)
+- [x] Round-trip test passes (KexdRoundTripTests - 3 tests passing)
+- [x] Legacy save/load unchanged
+- [x] Debug flag `DEBUG_KEXD_FORMAT` added for parallel output testing
 
 ---
 

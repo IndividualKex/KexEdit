@@ -5,25 +5,26 @@ Save/load, serialization, and import/export
 ## Purpose
 
 - Handles project save and load operations
-- Manages track serialization format
+- Manages track serialization formats (legacy and KEXD)
 - Provides import from external formats
 
 ## Key Systems
 
-- `SerializationSystem` - Save/load, undo/redo; syncs Anchor component from port values on save
-- `LegacyImporter` - Converts SerializedGraph to Coaster aggregate; populates Coaster.Scalars/Keyframes
+- `SerializationSystem` - Save/load, undo/redo; supports both legacy and KEXD formats
+- `LegacyImporter` - Converts SerializedGraph to Coaster aggregate
 
 ## Serialization
 
-- `GraphSerializer` - Node graph serialization to/from bytes
-- `SerializedGraph` - Intermediate format for save/load
+- `GraphSerializer` - Legacy node graph serialization
+- `SerializedGraph` - Legacy intermediate format
+- `SerializeToKEXD` - New KEXD chunk-based format (Phase 4A complete)
 
 ## Data Flow
 
 ```
-Save: ECS entities → SerializeNode (syncs Anchor) → SerializedGraph → bytes
-Load: bytes → SerializedGraph → LegacyImporter → Coaster aggregate
-                             → DeserializeNode → ECS entities
+Legacy Save: ECS entities → SerializedGraph → bytes
+KEXD Save:   ECS entities → Coaster + UI metadata → KEXD chunks
+Load:        bytes → SerializedGraph → Coaster → ECS entities
 ```
 
 ## Entry Points
