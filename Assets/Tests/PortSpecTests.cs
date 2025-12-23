@@ -1,4 +1,4 @@
-using KexEdit.Nodes;
+using KexEdit.Sim.Schema;
 using NUnit.Framework;
 
 namespace Tests {

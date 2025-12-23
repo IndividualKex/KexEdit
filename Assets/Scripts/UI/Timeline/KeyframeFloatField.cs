@@ -1,9 +1,9 @@
+using KexEdit.Legacy;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public class KeyframeFloatField : VisualElement {
         private FloatField _field;

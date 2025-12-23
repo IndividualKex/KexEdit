@@ -1,7 +1,6 @@
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class Connector : VisualElement {
         private VisualElement _circle;

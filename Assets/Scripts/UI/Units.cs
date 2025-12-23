@@ -1,7 +1,6 @@
 using Unity.Mathematics;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class Units {
         private const float MetersToFeet = 3.28084f;

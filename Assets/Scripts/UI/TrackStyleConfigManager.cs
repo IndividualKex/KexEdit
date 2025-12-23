@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class TrackStyleConfigManager {
         public static string TrackStylesPath => Path.Combine(Application.streamingAssetsPath, "TrackStyles");

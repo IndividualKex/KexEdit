@@ -1,12 +1,12 @@
+using System;
+using System.Collections.Generic;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System;
-using System.Collections.Generic;
+using static KexEdit.Sim.Sim;
 using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class VideoControls : VisualElement {
         private static readonly string s_TimeString = new('\0', 32);

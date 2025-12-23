@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class SelectionBox : VisualElement {
         private Vector2 _start;

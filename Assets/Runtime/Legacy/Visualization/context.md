@@ -26,7 +26,7 @@ Rendering, mesh generation, and visual styling
 - `TrackStyleBuildSystem` - Builds track visuals
 - `TrackStyleRenderSystem` - Renders track styles
 - `TrackStyleSettingsLoadingSystem` - Loads style settings
-- `StyleHashSystem` - Manages style caching (reads CorePointBuffer)
+- `StyleHashSystem` - Manages style caching (reads Coaster.Keyframes or CorePointBuffer)
 
 ## Utils
 

@@ -1,6 +1,6 @@
+using KexEdit.Legacy;
 using Unity.Entities;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIInitializationSystemGroup))]
     public partial class PreferencesUpdateSystem : SystemBase {

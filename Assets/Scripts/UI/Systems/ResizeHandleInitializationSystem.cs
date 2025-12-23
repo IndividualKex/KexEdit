@@ -1,8 +1,7 @@
+using KexEdit.UI.Timeline;
 using Unity.Entities;
 using UnityEngine.UIElements;
-using KexEdit.UI.Timeline;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIInitializationSystemGroup))]
     public partial class ResizeHandleInitializationSystem : SystemBase {

@@ -1,4 +1,3 @@
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class NotificationData {
         public string DisplayText;

@@ -1,8 +1,7 @@
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Collections;
 using Unity.Entities;
-
-using KexEdit.Legacy;
 using LegacyCoaster = KexEdit.Legacy.Coaster;
 
 namespace KexEdit.UI {

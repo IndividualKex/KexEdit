@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class RideCameraDialog : VisualElement {
         private Action _onClose;

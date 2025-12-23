@@ -1,6 +1,6 @@
 #if VALIDATE_COASTER_PARITY
 using Unity.Entities;
-using CorePoint = KexEdit.Core.Point;
+using CorePoint = KexEdit.Sim.Point;
 
 namespace KexEdit.Legacy {
     public struct CoasterPointBuffer : IBufferElementData {

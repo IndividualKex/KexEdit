@@ -1,10 +1,10 @@
-using Unity.Entities;
 using System.IO;
-using UnityEngine;
+using KexEdit.Legacy;
 using KexEdit.Legacy.Serialization;
 using Unity.Collections;
+using Unity.Entities;
+using UnityEngine;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class AppendLoadingSystem : SystemBase {

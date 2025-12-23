@@ -1,11 +1,11 @@
-using UnityEngine;
-using Unity.Entities;
-using Unity.Collections;
-using Unity.Jobs;
-using Unity.Burst;
-using Unity.Mathematics;
-
 using KexEdit.Legacy;
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Jobs;
+using Unity.Mathematics;
+using UnityEngine;
+
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class GridSystem : SystemBase {
@@ -148,7 +148,7 @@ namespace KexEdit.UI {
 
                 if (FaceCamera) {
                     bool isSideView = math.abs(Yaw - 90f) < 0.1f || math.abs(Yaw + 90f) < 0.1f;
-                    
+
                     if (isSideView) {
                         for (int y = -halfSize; y <= halfSize; y++) {
                             float yPos = Center.y + y * GridSpacing;
@@ -169,7 +169,8 @@ namespace KexEdit.UI {
                             Indices[indexCounter++] = (uint)vertexOffset;
                             Indices[indexCounter++] = (uint)(vertexOffset + 1);
                         }
-                    } else {
+                    }
+                    else {
                         for (int y = -halfSize; y <= halfSize; y++) {
                             float yPos = Center.y + y * GridSpacing;
                             int baseIndex = y + halfSize;
@@ -190,7 +191,8 @@ namespace KexEdit.UI {
                             Indices[indexCounter++] = (uint)(vertexOffset + 1);
                         }
                     }
-                } else {
+                }
+                else {
                     for (int x = -halfSize; x <= halfSize; x++) {
                         float xPos = Center.x + x * GridSpacing;
                         int baseIndex = x + halfSize;

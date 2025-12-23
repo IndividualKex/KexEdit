@@ -1,12 +1,12 @@
-# Legacy Runtime Context
+# KexEdit.Legacy
 
-Monolithic ECS runtime being hollowed out. Systems here call into clean Core/Nodes layer.
+Unity ECS runtime layer. Systems here call into clean Sim/Schema layer.
 
 ## Purpose
 
 - Unity DOTS ECS systems for track processing
-- Adapters between modern Core layer and Unity ECS
-- LegacyImporter: Converts SerializedGraph → Coaster aggregate on load
+- Adapters between modern Sim layer and Unity ECS
+- LegacyImporter: Reads .kex binary directly → Coaster aggregate on load
 
 ## Layout
 
@@ -17,10 +17,10 @@ Legacy/
 ├── Trains/         # Vehicle systems
 ├── Physics/        # Simulation & dynamics
 ├── Visualization/  # Rendering & mesh generation
-├── Persistence/    # Save/load & import (SerializationSystem calls LegacyImporter)
+├── Persistence/    # Save/load & import
 ├── State/          # Application state & singletons
 ├── Editor/         # Unity editor integration
-└── LegacyImporter.cs  # SerializedGraph → Coaster conversion
+└── LegacyImporter.cs  # .kex binary → Coaster conversion
 ```
 
 ## Entrypoints
@@ -31,4 +31,4 @@ Legacy/
 
 ## Dependencies
 
-- KexEdit.Core, KexEdit.Coaster, KexEdit.Nodes.*, KexGraph, Unity.Entities, Unity.Mathematics, Unity.Burst
+- KexEdit.Sim, KexEdit.App.Coaster, KexEdit.Sim.Nodes.*, KexEdit.Graph, Unity.Entities, Unity.Mathematics, Unity.Burst

@@ -1,10 +1,7 @@
 using Unity.Burst;
-using Unity.Collections;
-using Unity.Entities;
 using Unity.Mathematics;
-using static KexEdit.Legacy.Constants;
-using CoreKeyframe = KexEdit.Core.Keyframe;
-using CorePoint = KexEdit.Core.Point;
+using static KexEdit.Sim.Sim;
+using CorePoint = KexEdit.Sim.Point;
 
 namespace KexEdit.Legacy {
     [BurstCompile]
@@ -158,25 +155,6 @@ namespace KexEdit.Legacy {
         [BurstCompile]
         public static float GetYaw(in float3 direction) {
             return math.degrees(math.atan2(-direction.x, -direction.z));
-        }
-
-        public static NativeArray<CoreKeyframe> ConvertKeyframes<T>(DynamicBuffer<T> buffer, Allocator allocator)
-            where T : unmanaged, IBufferElementData {
-            var result = new NativeArray<CoreKeyframe>(buffer.Length, allocator);
-            for (int i = 0; i < buffer.Length; i++) {
-                var legacy = buffer.Reinterpret<Keyframe>()[i];
-                result[i] = new CoreKeyframe(
-                    legacy.Time,
-                    legacy.Value,
-                    (Core.InterpolationType)(int)legacy.InInterpolation,
-                    (Core.InterpolationType)(int)legacy.OutInterpolation,
-                    legacy.InTangent,
-                    legacy.OutTangent,
-                    legacy.InWeight,
-                    legacy.OutWeight
-                );
-            }
-            return result;
         }
     }
 }

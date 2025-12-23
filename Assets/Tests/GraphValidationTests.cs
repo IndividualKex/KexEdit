@@ -2,7 +2,7 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
 
-namespace KexGraph.Tests {
+namespace KexEdit.Graph.Tests {
     [TestFixture]
     [Category("Unit")]
     public class GraphValidationTests {

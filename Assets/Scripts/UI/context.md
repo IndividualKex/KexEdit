@@ -21,7 +21,8 @@ UI/
 │   └── [Various].cs  # Timeline implementation
 ├── Components/  # Reusable UI components
 ├── Systems/  # UI update systems
-│   └── StatsOverlaySystem.cs  # Real-time stats display
+│   ├── StatsOverlaySystem.cs  # Real-time stats display
+│   └── KeyframeGizmoUpdateSystem.cs  # Keyframe visualization (reads Coaster.Keyframes)
 ├── UIManager.cs  # Main UI coordinator
 ├── MenuBar.cs  # Application menu
 ├── VideoControls.cs  # Playback controls

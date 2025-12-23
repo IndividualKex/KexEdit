@@ -24,7 +24,10 @@ Timeline/
 ├── TimelineOutliner.cs  # Property list
 ├── ReadOnlyButton.cs  # Read-only toggle
 ├── Extensions.cs  # Drawing utilities
-└── PropertyAdapter.cs  # Editable property adapters
+├── PropertyAdapter.cs  # Editable property adapters
+├── PropertyMapping.cs  # PropertyType ↔ PropertyId mapping
+├── KeyframeConversion.cs  # Core.Keyframe ↔ Legacy.Keyframe conversion
+└── CoasterKeyframeManager.cs  # Coaster.KeyframeStore + UIStateChunk access layer
 ```
 
 ## Scope

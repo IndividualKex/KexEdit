@@ -1,4 +1,4 @@
-using KexEdit.Core;
+using KexEdit.Sim;
 using NUnit.Framework;
 using Unity.Collections;
 
@@ -175,13 +175,26 @@ namespace Tests {
         }
 
         [Test]
-        public void EvaluateSegment_ConstantInInterpolation_ReturnsEndValue() {
+        public void EvaluateSegment_ConstantIn_DoesNotAffectSegment() {
+            // Constant IN on end keyframe should NOT cause immediate jump
+            // Per industry standard (Blender/After Effects), constant is an OUTGOING property
             var start = new Keyframe(0f, 100f, InterpolationType.Bezier, InterpolationType.Bezier);
             var end = new Keyframe(1f, 200f, InterpolationType.Constant, InterpolationType.Bezier);
 
-            float result = KeyframeEvaluator.EvaluateSegment(start, end, 0.5f);
+            float midpoint = KeyframeEvaluator.EvaluateSegment(start, end, 0.5f);
 
-            Assert.AreEqual(200f, result, TOLERANCE, "Constant in should jump to end value");
+            Assert.Greater(midpoint, 100f, "Should interpolate, not hold at start");
+            Assert.Less(midpoint, 200f, "Should interpolate, not jump to end");
+        }
+
+        [Test]
+        public void EvaluateSegment_ConstantOut_HoldsEntireSegment() {
+            var start = new Keyframe(0f, 100f, InterpolationType.Bezier, InterpolationType.Constant);
+            var end = new Keyframe(1f, 200f, InterpolationType.Bezier, InterpolationType.Bezier);
+
+            Assert.AreEqual(100f, KeyframeEvaluator.EvaluateSegment(start, end, 0.0f), TOLERANCE);
+            Assert.AreEqual(100f, KeyframeEvaluator.EvaluateSegment(start, end, 0.5f), TOLERANCE);
+            Assert.AreEqual(100f, KeyframeEvaluator.EvaluateSegment(start, end, 0.99f), TOLERANCE);
         }
 
         [TestCase(0.1f)]

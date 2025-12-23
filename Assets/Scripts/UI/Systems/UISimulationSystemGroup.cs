@@ -1,6 +1,5 @@
 using Unity.Entities;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     public partial class UISimulationSystemGroup : ComponentSystemGroup {

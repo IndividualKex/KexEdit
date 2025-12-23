@@ -1,11 +1,12 @@
 using System.IO;
-using KexEdit.Coaster;
+using KexEdit.App.Coaster;
 using KexEdit.Legacy;
-using KexEdit.Legacy.Serialization;
-using KexEdit.NodeGraph;
-using KexGraph;
+using KexEdit.Graph.Typed;
+using KexEdit.Graph;
 using NUnit.Framework;
 using Unity.Collections;
+using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using CoasterAggregate = KexEdit.App.Coaster.Coaster;
 
 namespace Tests {
     [TestFixture]
@@ -41,30 +42,22 @@ namespace Tests {
             var buffer = new NativeArray<byte>(kexData, Allocator.Temp);
 
             try {
-                var serializedGraph = new SerializedGraph();
-                GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
+                LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
                 try {
-                    LegacyImporter.Import(in serializedGraph, Allocator.TempJob, out var coaster);
+                    CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.TempJob);
 
                     try {
-                        CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.TempJob);
-
-                        try {
-                            Assert.Greater(result.Paths.Count, 0, "No paths generated");
-                            LogCoasterDiagnostics(coaster, gold);
-                            AssertSectionsMatchByType(gold, result, nodeType);
-                        }
-                        finally {
-                            result.Dispose();
-                        }
+                        Assert.Greater(result.Paths.Count, 0, "No paths generated");
+                        LogCoasterDiagnostics(coaster, gold);
+                        AssertSectionsMatchByType(gold, result, nodeType);
                     }
                     finally {
-                        coaster.Dispose();
+                        result.Dispose();
                     }
                 }
                 finally {
-                    serializedGraph.Dispose();
+                    coaster.Dispose();
                 }
             }
             finally {
@@ -82,30 +75,22 @@ namespace Tests {
             var buffer = new NativeArray<byte>(kexData, Allocator.Temp);
 
             try {
-                var serializedGraph = new SerializedGraph();
-                GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
+                LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
                 try {
-                    LegacyImporter.Import(in serializedGraph, Allocator.TempJob, out var coaster);
+                    CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.TempJob);
 
                     try {
-                        CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.TempJob);
-
-                        try {
-                            Assert.Greater(result.Paths.Count, 0, "No paths generated");
-                            LogCoasterDiagnostics(coaster, gold);
-                            AssertAllSectionsMatch(gold, result);
-                        }
-                        finally {
-                            result.Dispose();
-                        }
+                        Assert.Greater(result.Paths.Count, 0, "No paths generated");
+                        LogCoasterDiagnostics(coaster, gold);
+                        AssertAllSectionsMatch(gold, result);
                     }
                     finally {
-                        coaster.Dispose();
+                        result.Dispose();
                     }
                 }
                 finally {
-                    serializedGraph.Dispose();
+                    coaster.Dispose();
                 }
             }
             finally {
@@ -113,7 +98,7 @@ namespace Tests {
             }
         }
 
-        private static void LogCoasterDiagnostics(KexEdit.Coaster.Coaster coaster, GoldTrackData gold) {
+        private static void LogCoasterDiagnostics(KexEdit.App.Coaster.Coaster coaster, GoldTrackData gold) {
             UnityEngine.Debug.Log($"=== COASTER DIAGNOSTICS ===");
             UnityEngine.Debug.Log($"Graph: {coaster.Graph.NodeCount} nodes, {coaster.Graph.EdgeCount} edges");
 
@@ -128,13 +113,14 @@ namespace Tests {
             for (int i = 0; i < coaster.Graph.NodeCount; i++) {
                 uint nodeId = coaster.Graph.NodeIds[i];
                 uint nodeType = coaster.Graph.NodeTypes[i];
-                string typeName = ((KexEdit.Nodes.NodeType)nodeType).ToString();
-                string durInfo = coaster.Durations.TryGetValue(nodeId, out var dur) ? $"dur={dur.Value}" : "no-dur";
+                string typeName = ((KexEdit.Sim.Schema.NodeType)nodeType).ToString();
+                ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                string durInfo = coaster.Scalars.TryGetValue(durKey, out var dur) ? $"dur={dur}" : "no-dur";
                 string vectorInfo = coaster.Vectors.TryGetValue(nodeId, out var vec) ? $"pos=({vec.x:F2},{vec.y:F2},{vec.z:F2})" : "no-vec";
 
                 string velInfo = "no-vel";
                 // Velocity is only on Anchor nodes at index 2
-                if ((KexEdit.Nodes.NodeType)nodeType == KexEdit.Nodes.NodeType.Anchor &&
+                if ((KexEdit.Sim.Schema.NodeType)nodeType == KexEdit.Sim.Schema.NodeType.Anchor &&
                     coaster.Graph.TryGetInput(nodeId, 2, out uint velPortId)) {
                     velInfo = coaster.Scalars.TryGetValue(velPortId, out float vel) ? $"vel={vel:F4} (port={velPortId})" : $"vel-port={velPortId}-no-scalar";
                 }
@@ -252,7 +238,7 @@ namespace Tests {
         }
 
         private static void AssertBridgeTargetMatch(
-            NativeList<KexEdit.Core.Point> actual,
+            NativeList<KexEdit.Sim.Point> actual,
             System.Collections.Generic.List<GoldPointData> expected,
             uint nodeId
         ) {
@@ -270,7 +256,7 @@ namespace Tests {
         }
 
         private static void AssertHighOffsetEndpointsMatch(
-            NativeList<KexEdit.Core.Point> actual,
+            NativeList<KexEdit.Sim.Point> actual,
             System.Collections.Generic.List<GoldPointData> expected,
             uint nodeId,
             string nodeType
@@ -292,7 +278,7 @@ namespace Tests {
         }
 
         private static void AssertEndpointsMatch(
-            NativeList<KexEdit.Core.Point> actual,
+            NativeList<KexEdit.Sim.Point> actual,
             System.Collections.Generic.List<GoldPointData> expected,
             uint nodeId,
             string nodeType
@@ -321,7 +307,7 @@ namespace Tests {
         }
 
         private static void AssertPointNear(
-            KexEdit.Core.Point actual,
+            KexEdit.Sim.Point actual,
             GoldPointData expected,
             string context,
             float tolerance

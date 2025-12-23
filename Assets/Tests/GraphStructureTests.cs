@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using Unity.Collections;
 
-namespace KexGraph.Tests {
+namespace KexEdit.Graph.Tests {
     [TestFixture]
     [Category("Unit")]
     public class GraphStructureTests {

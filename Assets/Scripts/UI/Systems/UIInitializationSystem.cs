@@ -1,10 +1,10 @@
+using KexEdit.Legacy;
 using KexEdit.UI.NodeGraph;
 using KexEdit.UI.Timeline;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class UIInitializationSystem : SystemBase {

@@ -1,6 +1,5 @@
 using UnityEngine;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class TrainCarCountPreferences {
         public static int GetCarCount(string trainStyle, int defaultCount) {

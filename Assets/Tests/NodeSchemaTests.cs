@@ -1,4 +1,4 @@
-using KexEdit.Nodes;
+using KexEdit.Sim.Schema;
 using NUnit.Framework;
 using System;
 using Unity.Collections;
@@ -16,7 +16,7 @@ namespace Tests {
         [TestCase(NodeType.Curved, 6)]
         [TestCase(NodeType.CopyPath, 4)]
         [TestCase(NodeType.Bridge, 4)]
-        [TestCase(NodeType.Anchor, 6)]
+        [TestCase(NodeType.Anchor, 8)]
         [TestCase(NodeType.Reverse, 1)]
         [TestCase(NodeType.ReversePath, 1)]
         public void InputCount_AllNodeTypes_ReturnsExpectedCount(NodeType type, int expected) {
@@ -183,19 +183,40 @@ namespace Tests {
         }
 
         [Test]
-        public void InputSpec_Anchor_HasVectors() {
-            // Anchor: Position(Vector0), Rotation(Vector1), Velocity(Scalar0)
+        public void InputSpec_Anchor_HasCorrectTypes() {
+            // Anchor: Position(Vector0), Roll(Scalar0), Pitch(Scalar1), Yaw(Scalar2),
+            //         Velocity(Scalar3), Heart(Scalar4), Friction(Scalar5), Resistance(Scalar6)
             NodeSchema.InputSpec(NodeType.Anchor, 0, out var position);
             Assert.AreEqual(PortDataType.Vector, position.DataType);
             Assert.AreEqual(0, position.LocalIndex);
 
-            NodeSchema.InputSpec(NodeType.Anchor, 1, out var rotation);
-            Assert.AreEqual(PortDataType.Vector, rotation.DataType);
-            Assert.AreEqual(1, rotation.LocalIndex);
+            NodeSchema.InputSpec(NodeType.Anchor, 1, out var roll);
+            Assert.AreEqual(PortDataType.Scalar, roll.DataType);
+            Assert.AreEqual(0, roll.LocalIndex);
 
-            NodeSchema.InputSpec(NodeType.Anchor, 2, out var velocity);
+            NodeSchema.InputSpec(NodeType.Anchor, 2, out var pitch);
+            Assert.AreEqual(PortDataType.Scalar, pitch.DataType);
+            Assert.AreEqual(1, pitch.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.Anchor, 3, out var yaw);
+            Assert.AreEqual(PortDataType.Scalar, yaw.DataType);
+            Assert.AreEqual(2, yaw.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.Anchor, 4, out var velocity);
             Assert.AreEqual(PortDataType.Scalar, velocity.DataType);
-            Assert.AreEqual(0, velocity.LocalIndex);
+            Assert.AreEqual(3, velocity.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.Anchor, 5, out var heart);
+            Assert.AreEqual(PortDataType.Scalar, heart.DataType);
+            Assert.AreEqual(4, heart.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.Anchor, 6, out var friction);
+            Assert.AreEqual(PortDataType.Scalar, friction.DataType);
+            Assert.AreEqual(5, friction.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.Anchor, 7, out var resistance);
+            Assert.AreEqual(PortDataType.Scalar, resistance.DataType);
+            Assert.AreEqual(6, resistance.LocalIndex);
         }
 
         [Test]
@@ -295,9 +316,19 @@ namespace Tests {
             NodeSchema.InputName(NodeType.Anchor, 0, out var name0);
             NodeSchema.InputName(NodeType.Anchor, 1, out var name1);
             NodeSchema.InputName(NodeType.Anchor, 2, out var name2);
+            NodeSchema.InputName(NodeType.Anchor, 3, out var name3);
+            NodeSchema.InputName(NodeType.Anchor, 4, out var name4);
+            NodeSchema.InputName(NodeType.Anchor, 5, out var name5);
+            NodeSchema.InputName(NodeType.Anchor, 6, out var name6);
+            NodeSchema.InputName(NodeType.Anchor, 7, out var name7);
             Assert.AreEqual("Position", name0.ToString());
-            Assert.AreEqual("Rotation", name1.ToString());
-            Assert.AreEqual("Velocity", name2.ToString());
+            Assert.AreEqual("Roll", name1.ToString());
+            Assert.AreEqual("Pitch", name2.ToString());
+            Assert.AreEqual("Yaw", name3.ToString());
+            Assert.AreEqual("Velocity", name4.ToString());
+            Assert.AreEqual("Heart", name5.ToString());
+            Assert.AreEqual("Friction", name6.ToString());
+            Assert.AreEqual("Resistance", name7.ToString());
         }
 
         [Test]

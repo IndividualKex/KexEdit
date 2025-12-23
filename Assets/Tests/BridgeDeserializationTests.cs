@@ -1,17 +1,14 @@
 using System.IO;
 using System.Text;
-using KexEdit.Coaster;
+using KexEdit.App.Coaster;
 using KexEdit.Legacy;
-using KexEdit.Legacy.Serialization;
-using KexEdit.NodeGraph;
-using KexEdit.Nodes;
-using KexEdit.Nodes.Bridge;
-using KexGraph;
+using KexEdit.Graph.Typed;
+using KexEdit.Sim.Schema;
+using KexEdit.Sim.Nodes.Bridge;
+using KexEdit.Graph;
 using NUnit.Framework;
 using Unity.Collections;
-using Unity.Mathematics;
-using LegacyNodeType = KexEdit.Legacy.NodeType;
-using CoreNodeType = KexEdit.Nodes.NodeType;
+using CoreNodeType = KexEdit.Sim.Schema.NodeType;
 
 namespace Tests {
     [TestFixture]
@@ -21,111 +18,11 @@ namespace Tests {
         [TestCase("Assets/Tests/Assets/all_types.kex")]
         [TestCase("Assets/Tests/Assets/veloci.kex")]
         [TestCase("Assets/Tests/Assets/shuttle.kex")]
-        public void DumpGraphStructure(string path) {
-            var bytes = File.ReadAllBytes(path);
-            var buffer = new NativeArray<byte>(bytes, Allocator.Temp);
-
-            var serializedGraph = new SerializedGraph();
-            GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"File version: {serializedGraph.Version}");
-            sb.AppendLine($"Node count: {serializedGraph.Nodes.Length}");
-            sb.AppendLine($"Edge count: {serializedGraph.Edges.Length}");
-            sb.AppendLine();
-
-            sb.AppendLine("=== NODES ===");
-            for (int i = 0; i < serializedGraph.Nodes.Length; i++) {
-                var node = serializedGraph.Nodes[i];
-                sb.AppendLine($"\nNode {node.Node.Id}: {node.Node.Type}");
-                sb.AppendLine($"  Position: ({node.Node.Position.x:F1}, {node.Node.Position.y:F1})");
-
-                sb.AppendLine($"  Input ports ({node.InputPorts.Length}):");
-                for (int j = 0; j < node.InputPorts.Length; j++) {
-                    var port = node.InputPorts[j];
-                    string value = port.Port.Type == PortType.Anchor || port.Port.Type == PortType.Path
-                        ? ""
-                        : $" = {port.Value.Roll:F3}";
-                    sb.AppendLine($"    [{j}] Port {port.Port.Id}: {port.Port.Type}{value}");
-                }
-
-                sb.AppendLine($"  Output ports ({node.OutputPorts.Length}):");
-                for (int j = 0; j < node.OutputPorts.Length; j++) {
-                    var port = node.OutputPorts[j];
-                    sb.AppendLine($"    [{j}] Port {port.Port.Id}: {port.Port.Type}");
-                }
-            }
-
-            sb.AppendLine("\n=== EDGES ===");
-            for (int i = 0; i < serializedGraph.Edges.Length; i++) {
-                var edge = serializedGraph.Edges[i];
-                sb.AppendLine($"Edge {edge.Id}: Port {edge.SourceId} -> Port {edge.TargetId}");
-            }
-
-            sb.AppendLine("\n=== BRIDGE NODE ANALYSIS ===");
-            for (int i = 0; i < serializedGraph.Nodes.Length; i++) {
-                var node = serializedGraph.Nodes[i];
-                if (node.Node.Type != LegacyNodeType.Bridge) continue;
-
-                sb.AppendLine($"\nBridge Node {node.Node.Id}:");
-                sb.AppendLine($"  Expected schema: [Anchor, Target, OutWeight, InWeight]");
-                sb.AppendLine($"  Actual ports:");
-                for (int j = 0; j < node.InputPorts.Length; j++) {
-                    var port = node.InputPorts[j];
-                    sb.AppendLine($"    [{j}] {port.Port.Type} (id={port.Port.Id})");
-                }
-
-                sb.AppendLine($"  Connections:");
-                for (int j = 0; j < node.InputPorts.Length; j++) {
-                    var port = node.InputPorts[j];
-                    bool found = false;
-                    for (int k = 0; k < serializedGraph.Edges.Length; k++) {
-                        if (serializedGraph.Edges[k].TargetId == port.Port.Id) {
-                            var edge = serializedGraph.Edges[k];
-                            string sourceInfo = $"Port {edge.SourceId}";
-                            for (int m = 0; m < serializedGraph.Nodes.Length; m++) {
-                                foreach (var outPort in serializedGraph.Nodes[m].OutputPorts) {
-                                    if (outPort.Port.Id == edge.SourceId) {
-                                        sourceInfo = $"Node {serializedGraph.Nodes[m].Node.Id} ({serializedGraph.Nodes[m].Node.Type})";
-                                        break;
-                                    }
-                                }
-                            }
-                            sb.AppendLine($"    Input[{j}] ({port.Port.Type}) <- {sourceInfo}");
-                            found = true;
-                        }
-                    }
-                    if (!found) {
-                        sb.AppendLine($"    Input[{j}] ({port.Port.Type}): NOT CONNECTED");
-                    }
-                }
-
-                sb.AppendLine($"  Anchor data in node:");
-                sb.AppendLine($"    HeartPosition: {node.Anchor.HeartPosition}");
-                sb.AppendLine($"    Direction: {node.Anchor.Direction}");
-                sb.AppendLine($"    Velocity: {node.Anchor.Velocity}");
-            }
-
-            UnityEngine.Debug.Log(sb.ToString());
-
-            serializedGraph.Dispose();
-            buffer.Dispose();
-
-            Assert.Pass("Graph structure dumped to console");
-        }
-
-        [Test]
-        [TestCase("Assets/Tests/Assets/all_types.kex")]
-        [TestCase("Assets/Tests/Assets/veloci.kex")]
-        [TestCase("Assets/Tests/Assets/shuttle.kex")]
         public void DumpCoasterAfterImport(string path) {
             var bytes = File.ReadAllBytes(path);
             var buffer = new NativeArray<byte>(bytes, Allocator.Temp);
 
-            var serializedGraph = new SerializedGraph();
-            GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
-
-            LegacyImporter.Import(in serializedGraph, Allocator.Temp, out var coaster);
+            LegacyImporter.Import(ref buffer, Allocator.Temp, out var coaster, out _);
 
             var sb = new StringBuilder();
             sb.AppendLine("=== COASTER AFTER IMPORT ===");
@@ -193,7 +90,6 @@ namespace Tests {
             UnityEngine.Debug.Log(sb.ToString());
 
             coaster.Dispose();
-            serializedGraph.Dispose();
             buffer.Dispose();
 
             Assert.Pass("Coaster structure dumped to console");
@@ -254,10 +150,7 @@ namespace Tests {
             var bytes = File.ReadAllBytes(path);
             var buffer = new NativeArray<byte>(bytes, Allocator.Temp);
 
-            var serializedGraph = new SerializedGraph();
-            GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
-
-            LegacyImporter.Import(in serializedGraph, Allocator.TempJob, out var coaster);
+            LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
             CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.TempJob);
 
@@ -302,7 +195,6 @@ namespace Tests {
 
             result.Dispose();
             coaster.Dispose();
-            serializedGraph.Dispose();
             buffer.Dispose();
         }
     }

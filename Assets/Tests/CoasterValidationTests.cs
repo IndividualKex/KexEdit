@@ -1,12 +1,13 @@
 using System.IO;
 using System.Text;
-using KexEdit.Coaster;
+using KexEdit.App.Coaster;
 using KexEdit.Legacy;
-using KexEdit.Legacy.Serialization;
-using KexEdit.Nodes;
+using KexEdit.Sim.Schema;
 using NUnit.Framework;
 using Unity.Collections;
 using UnityEngine;
+using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using CoasterAggregate = KexEdit.App.Coaster.Coaster;
 
 namespace Tests {
     [TestFixture]
@@ -29,24 +30,16 @@ namespace Tests {
             var buffer = new NativeArray<byte>(kexData, Allocator.Temp);
 
             try {
-                var serializedGraph = new SerializedGraph();
-                GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
+                LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
                 try {
-                    LegacyImporter.Import(in serializedGraph, Allocator.TempJob, out var coaster);
-
-                    try {
-                        string jsonPath = $"Assets/Tests/Assets/{name}.actual.json";
-                        ExportCoasterToJson(coaster, jsonPath);
-                        Debug.Log($"Exported Coaster state to: {jsonPath}");
-                        Debug.Log($"Run validation: python tools/validate_coaster_state.py {kexPath} {jsonPath}");
-                    }
-                    finally {
-                        coaster.Dispose();
-                    }
+                    string jsonPath = $"Assets/Tests/Assets/{name}.actual.json";
+                    ExportCoasterToJson(coaster, jsonPath);
+                    Debug.Log($"Exported Coaster state to: {jsonPath}");
+                    Debug.Log($"Run validation: python tools/validate_coaster_state.py {kexPath} {jsonPath}");
                 }
                 finally {
-                    serializedGraph.Dispose();
+                    coaster.Dispose();
                 }
             }
             finally {
@@ -69,36 +62,28 @@ namespace Tests {
             var buffer = new NativeArray<byte>(kexData, Allocator.Temp);
 
             try {
-                var serializedGraph = new SerializedGraph();
-                GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
+                LegacyImporter.Import(ref buffer, Allocator.TempJob, out var original, out _);
 
                 try {
-                    LegacyImporter.Import(in serializedGraph, Allocator.TempJob, out var original);
+                    // Serialize to new format
+                    using var writer = new KexEdit.App.Persistence.ChunkWriter(Allocator.Temp);
+                    KexEdit.App.Persistence.CoasterSerializer.Write(writer, in original);
+                    var serializedData = writer.ToArray();
+
+                    // Deserialize back
+                    var reader = new KexEdit.App.Persistence.ChunkReader(serializedData);
+                    var restored = KexEdit.App.Persistence.CoasterSerializer.Read(ref reader, Allocator.TempJob);
 
                     try {
-                        // Serialize to new format
-                        using var writer = new KexEdit.Persistence.ChunkWriter(Allocator.Temp);
-                        KexEdit.Persistence.CoasterSerializer.Write(writer, in original);
-                        var serializedData = writer.ToArray();
-
-                        // Deserialize back
-                        using var reader = new KexEdit.Persistence.ChunkReader(serializedData);
-                        var restored = KexEdit.Persistence.CoasterSerializer.Read(reader, Allocator.TempJob);
-
-                        try {
-                            // Compare
-                            AssertCoastersEqual(original, restored);
-                        }
-                        finally {
-                            restored.Dispose();
-                        }
+                        // Compare
+                        AssertCoastersEqual(original, restored);
                     }
                     finally {
-                        original.Dispose();
+                        restored.Dispose();
                     }
                 }
                 finally {
-                    serializedGraph.Dispose();
+                    original.Dispose();
                 }
             }
             finally {
@@ -106,7 +91,7 @@ namespace Tests {
             }
         }
 
-        private static void ExportCoasterToJson(in KexEdit.Coaster.Coaster coaster, string path) {
+        private static void ExportCoasterToJson(in KexEdit.App.Coaster.Coaster coaster, string path) {
             var sb = new StringBuilder();
             sb.AppendLine("{");
 
@@ -156,31 +141,20 @@ namespace Tests {
             sb.AppendLine();
             sb.AppendLine("  },");
 
-            // Rotations
-            sb.AppendLine("  \"rotations\": {");
-            var rotationEnumerator = coaster.Rotations.GetEnumerator();
-            bool firstRotation = true;
-            while (rotationEnumerator.MoveNext()) {
-                if (!firstRotation) sb.AppendLine(",");
-                firstRotation = false;
-                var rot = rotationEnumerator.Current.Value;
-                sb.Append($"    \"{rotationEnumerator.Current.Key}\": [{rot.x}, {rot.y}, {rot.z}]");
-            }
-            rotationEnumerator.Dispose();
-            sb.AppendLine();
-            sb.AppendLine("  },");
 
-            // Durations
+            // Durations (extracted from Scalars/Flags)
             sb.AppendLine("  \"durations\": {");
-            var durationEnumerator = coaster.Durations.GetEnumerator();
             bool firstDuration = true;
-            while (durationEnumerator.MoveNext()) {
+            foreach (var kv in coaster.Scalars) {
+                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
+                if (idx != NodeMeta.Duration) continue;
                 if (!firstDuration) sb.AppendLine(",");
                 firstDuration = false;
-                var dur = durationEnumerator.Current.Value;
-                sb.Append($"    \"{durationEnumerator.Current.Key}\": {{\"value\": {dur.Value}, \"type\": {(int)dur.Type}}}");
+                float durValue = kv.Value;
+                ulong durTypeKey = CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType);
+                int durType = coaster.Flags.TryGetValue(durTypeKey, out int t) ? t : 0;
+                sb.Append($"    \"{nodeId}\": {{\"value\": {durValue}, \"type\": {durType}}}");
             }
-            durationEnumerator.Dispose();
             sb.AppendLine();
             sb.AppendLine("  },");
 
@@ -192,7 +166,7 @@ namespace Tests {
                 if (!firstKeyframe) sb.AppendLine(",");
                 firstKeyframe = false;
 
-                KexEdit.Nodes.Storage.KeyframeStore.UnpackKey(keyframeEnumerator.Current.Key, out uint nodeId, out PropertyId propertyId);
+                KexEdit.Sim.Schema.Storage.KeyframeStore.UnpackKey(keyframeEnumerator.Current.Key, out uint nodeId, out PropertyId propertyId);
                 var range = keyframeEnumerator.Current.Value;
                 sb.Append($"    \"({nodeId}, {propertyId})\": {range.y}");
             }
@@ -200,29 +174,29 @@ namespace Tests {
             sb.AppendLine();
             sb.AppendLine("  },");
 
-            // Steering
+            // Steering (extracted from Flags)
             sb.AppendLine("  \"steering\": [");
-            var steeringEnumerator = coaster.Steering.GetEnumerator();
             bool firstSteering = true;
-            while (steeringEnumerator.MoveNext()) {
+            foreach (var kv in coaster.Flags) {
+                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
+                if (idx != NodeMeta.Steering || kv.Value != 1) continue;
                 if (!firstSteering) sb.Append(", ");
                 firstSteering = false;
-                sb.Append(steeringEnumerator.Current);
+                sb.Append(nodeId);
             }
-            steeringEnumerator.Dispose();
             sb.AppendLine();
             sb.AppendLine("  ],");
 
-            // Driven
+            // Driven (extracted from Flags)
             sb.AppendLine("  \"driven\": [");
-            var drivenEnumerator = coaster.Driven.GetEnumerator();
             bool firstDriven = true;
-            while (drivenEnumerator.MoveNext()) {
+            foreach (var kv in coaster.Flags) {
+                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
+                if (idx != NodeMeta.Driven || kv.Value != 1) continue;
                 if (!firstDriven) sb.Append(", ");
                 firstDriven = false;
-                sb.Append(drivenEnumerator.Current);
+                sb.Append(nodeId);
             }
-            drivenEnumerator.Dispose();
             sb.AppendLine();
             sb.AppendLine("  ]");
 
@@ -231,7 +205,7 @@ namespace Tests {
             File.WriteAllText(path, sb.ToString());
         }
 
-        private static void AssertCoastersEqual(in KexEdit.Coaster.Coaster expected, in KexEdit.Coaster.Coaster actual) {
+        private static void AssertCoastersEqual(in KexEdit.App.Coaster.Coaster expected, in KexEdit.App.Coaster.Coaster actual) {
             // Graph structure
             Assert.AreEqual(expected.Graph.NodeIds.Length, actual.Graph.NodeIds.Length, "Node count mismatch");
             Assert.AreEqual(expected.Graph.EdgeIds.Length, actual.Graph.EdgeIds.Length, "Edge count mismatch");
@@ -257,23 +231,6 @@ namespace Tests {
                 Assert.AreEqual(kv.Value.z, actualValue.z, 0.0001f, $"Vector.z mismatch for key {kv.Key}");
             }
 
-            // Rotations
-            Assert.AreEqual(expected.Rotations.Count, actual.Rotations.Count, "Rotation count mismatch");
-            foreach (var kv in expected.Rotations) {
-                Assert.IsTrue(actual.Rotations.TryGetValue(kv.Key, out var actualValue), $"Rotation key {kv.Key} not found");
-                Assert.AreEqual(kv.Value.x, actualValue.x, 0.0001f, $"Rotation.x mismatch for key {kv.Key}");
-                Assert.AreEqual(kv.Value.y, actualValue.y, 0.0001f, $"Rotation.y mismatch for key {kv.Key}");
-                Assert.AreEqual(kv.Value.z, actualValue.z, 0.0001f, $"Rotation.z mismatch for key {kv.Key}");
-            }
-
-            // Durations
-            Assert.AreEqual(expected.Durations.Count, actual.Durations.Count, "Duration count mismatch");
-            foreach (var kv in expected.Durations) {
-                Assert.IsTrue(actual.Durations.TryGetValue(kv.Key, out var actualValue), $"Duration key {kv.Key} not found");
-                Assert.AreEqual(kv.Value.Value, actualValue.Value, 0.0001f, $"Duration value mismatch for key {kv.Key}");
-                Assert.AreEqual(kv.Value.Type, actualValue.Type, $"Duration type mismatch for key {kv.Key}");
-            }
-
             // Keyframes
             Assert.AreEqual(expected.Keyframes.Ranges.Count, actual.Keyframes.Ranges.Count, "Keyframe count mismatch");
             foreach (var kv in expected.Keyframes.Ranges) {
@@ -281,16 +238,11 @@ namespace Tests {
                 Assert.AreEqual(kv.Value.y, actualRange.y, $"Keyframe count mismatch for key {kv.Key}");
             }
 
-            // Steering
-            Assert.AreEqual(expected.Steering.Count, actual.Steering.Count, "Steering count mismatch");
-            foreach (var nodeId in expected.Steering) {
-                Assert.IsTrue(actual.Steering.Contains(nodeId), $"Steering node {nodeId} not found");
-            }
-
-            // Driven
-            Assert.AreEqual(expected.Driven.Count, actual.Driven.Count, "Driven count mismatch");
-            foreach (var nodeId in expected.Driven) {
-                Assert.IsTrue(actual.Driven.Contains(nodeId), $"Driven node {nodeId} not found");
+            // Flags (Steering, Driven, DurationType, etc.)
+            Assert.AreEqual(expected.Flags.Count, actual.Flags.Count, "Flags count mismatch");
+            foreach (var kv in expected.Flags) {
+                Assert.IsTrue(actual.Flags.TryGetValue(kv.Key, out var actualValue), $"Flag key {kv.Key} not found");
+                Assert.AreEqual(kv.Value, actualValue, $"Flag value mismatch for key {kv.Key}");
             }
         }
     }

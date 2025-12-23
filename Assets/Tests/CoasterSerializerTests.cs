@@ -1,14 +1,15 @@
-using KexEdit.Nodes;
-using KexEdit.Persistence;
-using KexGraph;
+using KexEdit.Sim.Schema;
+using KexEdit.App.Persistence;
+using KexEdit.Graph;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
-using Coaster = KexEdit.Coaster.Coaster;
-using Duration = KexEdit.Coaster.Duration;
-using DurationType = KexEdit.Coaster.DurationType;
-using InterpolationType = KexEdit.Core.InterpolationType;
-using Keyframe = KexEdit.Core.Keyframe;
+using Coaster = KexEdit.App.Coaster.Coaster;
+using Duration = KexEdit.App.Coaster.Duration;
+using DurationType = KexEdit.App.Coaster.DurationType;
+using InterpolationType = KexEdit.Sim.InterpolationType;
+using Keyframe = KexEdit.Sim.Keyframe;
+using NodeMeta = KexEdit.App.Coaster.NodeMeta;
 
 namespace Tests {
     [TestFixture]
@@ -21,8 +22,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.AreEqual(0, loaded.Graph.NodeIds.Length);
             Assert.AreEqual(0, loaded.Scalars.Count);
@@ -40,14 +41,12 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.AreEqual(1, loaded.Graph.NodeIds.Length);
             Assert.AreEqual(nodeId, loaded.Graph.NodeIds[0]);
             Assert.AreEqual((uint)NodeType.Force, loaded.Graph.NodeTypes[0]);
-            Assert.AreEqual(100f, loaded.Graph.NodePositions[0].x, 0.001f);
-            Assert.AreEqual(200f, loaded.Graph.NodePositions[0].y, 0.001f);
 
             loaded.Dispose();
             original.Dispose();
@@ -67,8 +66,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.AreEqual(2, loaded.Graph.NodeIds.Length);
             Assert.AreEqual(2, loaded.Graph.PortIds.Length);
@@ -88,8 +87,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Scalars.TryGetValue(nodeId, out float value));
             Assert.AreEqual(42.5f, value, 0.001f);
@@ -108,8 +107,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Vectors.TryGetValue(nodeId, out float3 value));
             Assert.AreEqual(1f, value.x, 0.001f);
@@ -121,22 +120,23 @@ namespace Tests {
         }
 
         [Test]
-        public void Rotations_RoundTrip_PreservesValues() {
+        public void Scalars_RoundTrip_PreservesRotationValues() {
             var original = Coaster.Create(Allocator.Temp);
-            var nodeId = original.Graph.AddNode((uint)NodeType.Geometric, float2.zero);
-            original.SetRotation(nodeId, new float3(10, 20, 30));
+            uint rollPortId = 100u, pitchPortId = 101u, yawPortId = 102u;
+            original.Scalars[rollPortId] = 10f;
+            original.Scalars[pitchPortId] = 20f;
+            original.Scalars[yawPortId] = 30f;
 
             using var writer = new ChunkWriter(Allocator.Temp);
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
-            var rotation = loaded.GetRotation(nodeId);
-            Assert.AreEqual(10f, rotation.x, 0.001f);
-            Assert.AreEqual(20f, rotation.y, 0.001f);
-            Assert.AreEqual(30f, rotation.z, 0.001f);
+            Assert.AreEqual(10f, loaded.Scalars[rollPortId], 0.001f);
+            Assert.AreEqual(20f, loaded.Scalars[pitchPortId], 0.001f);
+            Assert.AreEqual(30f, loaded.Scalars[yawPortId], 0.001f);
 
             loaded.Dispose();
             original.Dispose();
@@ -146,18 +146,18 @@ namespace Tests {
         public void Durations_RoundTrip_PreservesValues() {
             var original = Coaster.Create(Allocator.Temp);
             var nodeId = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
-            original.Durations[nodeId] = new Duration(5.5f, DurationType.Time);
+            ulong durKey = Coaster.InputKey(nodeId, NodeMeta.Duration);
+            original.Scalars[durKey] = 5.5f;
 
             using var writer = new ChunkWriter(Allocator.Temp);
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
-            Assert.IsTrue(loaded.Durations.TryGetValue(nodeId, out Duration duration));
-            Assert.AreEqual(5.5f, duration.Value, 0.001f);
-            Assert.AreEqual(DurationType.Time, duration.Type);
+            Assert.IsTrue(loaded.Scalars.TryGetValue(durKey, out float durationValue));
+            Assert.AreEqual(5.5f, durationValue, 0.001f);
 
             loaded.Dispose();
             original.Dispose();
@@ -168,17 +168,19 @@ namespace Tests {
             var original = Coaster.Create(Allocator.Temp);
             var node1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
             var node2 = original.Graph.AddNode((uint)NodeType.Force, new float2(100, 0));
-            original.Steering.Add(node1);
+            ulong steeringKey1 = Coaster.InputKey(node1, NodeMeta.Steering);
+            ulong steeringKey2 = Coaster.InputKey(node2, NodeMeta.Steering);
+            original.Flags[steeringKey1] = 1;
 
             using var writer = new ChunkWriter(Allocator.Temp);
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
-            Assert.IsTrue(loaded.Steering.Contains(node1));
-            Assert.IsFalse(loaded.Steering.Contains(node2));
+            Assert.IsTrue(loaded.Flags.TryGetValue(steeringKey1, out int s1) && s1 == 1);
+            Assert.IsFalse(loaded.Flags.TryGetValue(steeringKey2, out int s2) && s2 == 1);
 
             loaded.Dispose();
             original.Dispose();
@@ -199,8 +201,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Keyframes.TryGet(nodeId, PropertyId.RollSpeed, out var loadedKeyframes));
             Assert.AreEqual(2, loadedKeyframes.Length);
@@ -246,12 +248,193 @@ namespace Tests {
 
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.AreEqual(1, loaded.Graph.NodeIds.Length);
             Assert.IsTrue(loaded.Scalars.TryGetValue(nodeId, out float value));
             Assert.AreEqual(42f, value, 0.001f);
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void PropertyOverrides_RoundTrip_PreservesDrivenFlag() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+            var n2 = original.Graph.AddNode((uint)NodeType.Geometric, new float2(100, 0));
+
+            ulong drivenKey1 = Coaster.InputKey(n1, NodeMeta.Driven);
+            ulong drivenKey2 = Coaster.InputKey(n2, NodeMeta.Driven);
+
+            original.Flags[drivenKey1] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(drivenKey1, out int d1) && d1 == 1, "Node 1 should have Driven flag");
+            Assert.IsFalse(loaded.Flags.TryGetValue(drivenKey2, out int d2) && d2 == 1, "Node 2 should not have Driven flag");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void PropertyOverrides_RoundTrip_PreservesOverrideHeart() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+
+            ulong heartKey = Coaster.InputKey(n1, NodeMeta.OverrideHeart);
+            original.Flags[heartKey] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(heartKey, out int h) && h == 1, "OverrideHeart flag should be preserved");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void PropertyOverrides_RoundTrip_PreservesOverrideFriction() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+
+            ulong frictionKey = Coaster.InputKey(n1, NodeMeta.OverrideFriction);
+            original.Flags[frictionKey] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(frictionKey, out int f) && f == 1, "OverrideFriction flag should be preserved");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void PropertyOverrides_RoundTrip_PreservesOverrideResistance() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+
+            ulong resistanceKey = Coaster.InputKey(n1, NodeMeta.OverrideResistance);
+            original.Flags[resistanceKey] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(resistanceKey, out int r) && r == 1, "OverrideResistance flag should be preserved");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void PropertyOverrides_RoundTrip_PreservesOverrideTrackStyle() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+
+            ulong trackStyleKey = Coaster.InputKey(n1, NodeMeta.OverrideTrackStyle);
+            original.Flags[trackStyleKey] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(trackStyleKey, out int t) && t == 1, "OverrideTrackStyle flag should be preserved");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void PropertyOverrides_RoundTrip_PreservesAllOverrides() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+
+            ulong drivenKey = Coaster.InputKey(n1, NodeMeta.Driven);
+            ulong heartKey = Coaster.InputKey(n1, NodeMeta.OverrideHeart);
+            ulong frictionKey = Coaster.InputKey(n1, NodeMeta.OverrideFriction);
+            ulong resistanceKey = Coaster.InputKey(n1, NodeMeta.OverrideResistance);
+            ulong trackStyleKey = Coaster.InputKey(n1, NodeMeta.OverrideTrackStyle);
+
+            original.Flags[drivenKey] = 1;
+            original.Flags[heartKey] = 1;
+            original.Flags[frictionKey] = 1;
+            original.Flags[resistanceKey] = 1;
+            original.Flags[trackStyleKey] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(drivenKey, out int d) && d == 1, "Driven flag should be preserved");
+            Assert.IsTrue(loaded.Flags.TryGetValue(heartKey, out int h) && h == 1, "OverrideHeart flag should be preserved");
+            Assert.IsTrue(loaded.Flags.TryGetValue(frictionKey, out int f) && f == 1, "OverrideFriction flag should be preserved");
+            Assert.IsTrue(loaded.Flags.TryGetValue(resistanceKey, out int r) && r == 1, "OverrideResistance flag should be preserved");
+            Assert.IsTrue(loaded.Flags.TryGetValue(trackStyleKey, out int t) && t == 1, "OverrideTrackStyle flag should be preserved");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void Priority_And_Render_RoundTrip_PreservesValues() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+            var n2 = original.Graph.AddNode((uint)NodeType.Geometric, new float2(100, 0));
+            var n3 = original.Graph.AddNode((uint)NodeType.Curved, new float2(200, 0));
+
+            ulong priorityKey1 = Coaster.InputKey(n1, NodeMeta.Priority);
+            ulong priorityKey2 = Coaster.InputKey(n2, NodeMeta.Priority);
+            ulong priorityKey3 = Coaster.InputKey(n3, NodeMeta.Priority);
+            ulong renderKey1 = Coaster.InputKey(n1, NodeMeta.Render);
+            ulong renderKey2 = Coaster.InputKey(n2, NodeMeta.Render);
+            ulong renderKey3 = Coaster.InputKey(n3, NodeMeta.Render);
+
+            original.Scalars[priorityKey2] = 5f;
+            original.Scalars[priorityKey3] = -2f;
+            original.Flags[renderKey2] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
+
+            Assert.IsFalse(loaded.Scalars.ContainsKey(priorityKey1));
+            Assert.IsTrue(loaded.Scalars.TryGetValue(priorityKey2, out float priority2));
+            Assert.AreEqual(5f, priority2, 0.001f);
+            Assert.IsTrue(loaded.Scalars.TryGetValue(priorityKey3, out float priority3));
+            Assert.AreEqual(-2f, priority3, 0.001f);
+            Assert.IsFalse(loaded.Flags.TryGetValue(renderKey1, out int r1) && r1 == 1);
+            Assert.IsTrue(loaded.Flags.TryGetValue(renderKey2, out int r2) && r2 == 1);
+            Assert.IsFalse(loaded.Flags.TryGetValue(renderKey3, out int r3) && r3 == 1);
 
             loaded.Dispose();
             original.Dispose();

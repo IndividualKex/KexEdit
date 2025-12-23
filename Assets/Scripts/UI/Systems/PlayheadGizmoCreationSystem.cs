@@ -1,9 +1,8 @@
+using KexEdit.Legacy;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
-
-using KexEdit.Legacy;
 using LegacyCoaster = KexEdit.Legacy.Coaster;
 
 namespace KexEdit.UI {

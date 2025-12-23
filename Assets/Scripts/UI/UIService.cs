@@ -2,7 +2,6 @@ using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class UIService : MonoBehaviour {
         public UIDocument UIDocument;

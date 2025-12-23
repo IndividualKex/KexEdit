@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Unity.Mathematics;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class StatsStringPool {
         private static readonly Dictionary<int, string> s_IntegerStrings = new();
@@ -100,7 +99,8 @@ namespace KexEdit.UI {
             if (metric) {
                 float kmh = Units.SpeedToDisplay(speed);
                 return GetSpeedMetric(kmh);
-            } else {
+            }
+            else {
                 float mph = Units.SpeedToDisplay(speed);
                 return GetSpeedImperial(mph);
             }

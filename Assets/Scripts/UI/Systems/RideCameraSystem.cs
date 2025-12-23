@@ -1,10 +1,10 @@
+using KexEdit.Legacy;
 using Unity.Cinemachine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class RideCameraSystem : SystemBase {

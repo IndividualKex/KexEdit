@@ -1,11 +1,11 @@
-using KexEdit.Core;
-using KexEdit.Nodes;
-using KexEdit.Nodes.Force;
+using KexEdit.Sim;
+using KexEdit.Sim.Schema;
+using KexEdit.Sim.Nodes.Force;
 using KexEdit.Native.RustCore;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
-using Keyframe = KexEdit.Core.Keyframe;
+using Keyframe = KexEdit.Sim.Keyframe;
 
 namespace Tests {
     [TestFixture]

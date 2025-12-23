@@ -2,10 +2,10 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
 using Unity.PerformanceTesting;
-using KexEdit.Core;
-using KexEdit.Nodes;
-using KexEdit.Nodes.Force;
-using Keyframe = KexEdit.Core.Keyframe;
+using KexEdit.Sim;
+using KexEdit.Sim.Schema;
+using KexEdit.Sim.Nodes.Force;
+using Keyframe = KexEdit.Sim.Keyframe;
 
 #if USE_RUST_BACKEND_BACKEND_BACKEND
 using KexEdit.Native.RustCore;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Properties;
@@ -6,7 +7,6 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class NodeGraphNode : VisualElement {
         private VisualElement _portsContainer;

@@ -1,0 +1,20 @@
+{
+    "name": "KexEdit.Legacy.Debug",
+    "rootNamespace": "KexEdit.Legacy.Debug",
+    "references": [
+        "Unity.Mathematics",
+        "Unity.Collections",
+        "Unity.Entities",
+        "KexEdit.Spline",
+        "KexEdit.Legacy"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

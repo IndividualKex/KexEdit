@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Unity.Mathematics;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class TrainCarPositionCalculator {
         public static float GetCarOffsetFromIndex(int carIndex, int totalCarCount, float carSpacing) {

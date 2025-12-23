@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using KexEdit.Legacy;
+using SFB;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using SFB;
-
-using KexEdit.Legacy;
-using Coaster = KexEdit.Legacy.Coaster;
 
 namespace KexEdit.UI {
     public static class NoLimits2Exporter {

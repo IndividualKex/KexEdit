@@ -5,7 +5,9 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using static KexEdit.Legacy.Constants;
-using CoasterAggregate = KexEdit.Coaster.Coaster;
+using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using CoreNodeType = KexEdit.Sim.Schema.NodeType;
 
 namespace KexEdit.Legacy.Serialization {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -68,7 +70,10 @@ namespace KexEdit.Legacy.Serialization {
             var current = SerializeGraph(target);
             var prev = _undoStack.Pop();
             _redoStack.Push(current);
-            return DeserializeGraph(prev, restoreUIState: false);
+            DestroyCoasterEntities(target);
+            var result = DeserializeGraph(prev, restoreUIState: false);
+            RestorePlayheadTime(result);
+            return result;
         }
 
         public Entity Redo(Entity target) {
@@ -76,7 +81,44 @@ namespace KexEdit.Legacy.Serialization {
             var current = SerializeGraph(target);
             var next = _redoStack.Pop();
             _undoStack.Push(current);
-            return DeserializeGraph(next, restoreUIState: false);
+            DestroyCoasterEntities(target);
+            var result = DeserializeGraph(next, restoreUIState: false);
+            RestorePlayheadTime(result);
+            return result;
+        }
+
+        private void RestorePlayheadTime(Entity coasterEntity) {
+            if (!SystemAPI.HasSingleton<TimelineState>()) return;
+            if (!EntityManager.HasComponent<UIStateData>(coasterEntity)) return;
+
+            var uiState = EntityManager.GetComponentData<UIStateData>(coasterEntity).Value;
+            ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
+            timelineState.PlayheadTime = uiState.PlayheadTime;
+        }
+
+        private void DestroyCoasterEntities(Entity coasterEntity) {
+            using var nodesToDestroy = _nodeQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in nodesToDestroy) {
+                if (SystemAPI.GetComponent<CoasterReference>(entity).Value == coasterEntity) {
+                    EntityManager.DestroyEntity(entity);
+                }
+            }
+
+            using var portsToDestroy = _portQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in portsToDestroy) {
+                EntityManager.DestroyEntity(entity);
+            }
+
+            using var connectionsToDestroy = _connectionQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in connectionsToDestroy) {
+                if (SystemAPI.GetComponent<CoasterReference>(entity).Value == coasterEntity) {
+                    EntityManager.DestroyEntity(entity);
+                }
+            }
+
+            if (EntityManager.Exists(coasterEntity)) {
+                EntityManager.DestroyEntity(coasterEntity);
+            }
         }
 
         public void Clear() {
@@ -94,130 +136,168 @@ namespace KexEdit.Legacy.Serialization {
         }
 
         public byte[] SerializeGraph(Entity target) {
-            SerializedGraph graph = new();
+            return SerializeToKEXD(target);
+        }
 
-            var timelineState = SystemAPI.GetSingleton<TimelineState>();
-            var nodeGraphState = SystemAPI.GetSingleton<NodeGraphState>();
-            var cameraState = SystemAPI.GetSingleton<CameraState>();
-            graph.UIState = SerializedUIState.FromState(timelineState, nodeGraphState, cameraState);
+        public byte[] SerializeToKEXD(Entity target) {
+            ref readonly var coasterData = ref SystemAPI.GetComponentRW<CoasterData>(target).ValueRO.Value;
+            ref var uiState = ref SystemAPI.GetComponentRW<UIStateData>(target).ValueRW.Value;
+
+            ref readonly var graph = ref coasterData.Graph;
+            for (int i = 0; i < graph.NodeIds.Length; i++) {
+                uiState.NodePositions[graph.NodeIds[i]] = graph.NodePositions[i];
+            }
 
             using var nodeEntities = _nodeQuery.ToEntityArray(Allocator.Temp);
-            using var targetNodes = new NativeList<Entity>(Allocator.Temp);
-
             foreach (var entity in nodeEntities) {
-                var coaster = SystemAPI.GetComponent<CoasterReference>(entity).Value;
-                if (coaster == target) {
-                    targetNodes.Add(entity);
-                }
+                if (SystemAPI.GetComponent<CoasterReference>(entity).Value != target) continue;
+                var node = SystemAPI.GetComponent<Node>(entity);
+                uiState.NodePositions[node.Id] = node.Position;
             }
 
-            ref readonly var coasterData = ref SystemAPI.GetComponentRW<CoasterData>(target).ValueRO.Value;
-
-            graph.Nodes = new(targetNodes.Length, Allocator.Temp);
-            for (int i = 0; i < targetNodes.Length; i++) {
-                graph.Nodes[i] = SerializeNode(targetNodes[i], in coasterData, Allocator.Temp);
+            uiState.SelectedNodeIds.Clear();
+            uiState.SelectedConnectionIds.Clear();
+            foreach (var entity in nodeEntities) {
+                if (SystemAPI.GetComponent<CoasterReference>(entity).Value != target) continue;
+                var node = SystemAPI.GetComponent<Node>(entity);
+                if (node.Selected) uiState.SelectedNodeIds.Add(node.Id);
             }
-
             using var connectionEntities = _connectionQuery.ToEntityArray(Allocator.Temp);
-            using var targetConnections = new NativeList<Entity>(Allocator.Temp);
-
             foreach (var entity in connectionEntities) {
-                var coasterReference = SystemAPI.GetComponent<CoasterReference>(entity);
-                if (coasterReference.Value != target) continue;
-
-                var connection = SystemAPI.GetComponent<Connection>(entity);
-                targetConnections.Add(entity);
+                if (SystemAPI.GetComponent<CoasterReference>(entity).Value != target) continue;
+                var conn = SystemAPI.GetComponent<Connection>(entity);
+                if (conn.Selected) uiState.SelectedConnectionIds.Add(conn.Id);
             }
 
-            graph.Edges = new(targetConnections.Length, Allocator.Temp);
-            for (int i = 0; i < targetConnections.Length; i++) {
-                var connection = SystemAPI.GetComponent<Connection>(targetConnections[i]);
-                uint sourceId = SystemAPI.GetComponent<Port>(connection.Source).Id;
-                uint targetId = SystemAPI.GetComponent<Port>(connection.Target).Id;
-                graph.Edges[i] = new SerializedEdge {
-                    Id = connection.Id,
-                    SourceId = sourceId,
-                    TargetId = targetId,
-                    Selected = connection.Selected,
-                };
+            if (SystemAPI.TryGetSingleton<TimelineState>(out var timeline) &&
+                SystemAPI.TryGetSingleton<NodeGraphState>(out var nodeGraph) &&
+                SystemAPI.TryGetSingleton<CameraState>(out var camera)) {
+                ViewStateAdapter.Capture(ref uiState, in timeline, in nodeGraph, in camera);
             }
 
-            int size = SizeCalculator.CalculateSize(ref graph);
-            var buffer = new NativeArray<byte>(size, Allocator.Temp);
+            var writer = new KexEdit.App.Persistence.ChunkWriter(Allocator.Temp);
+            KexEdit.App.Persistence.CoasterSerializer.Write(writer, in coasterData);
+            KexEdit.App.Persistence.UIExtensionCodec.Write(ref writer, in uiState);
 
-            int actualSize = GraphSerializer.Serialize(ref graph, ref buffer);
+            var data = writer.ToArray();
+            var result = data.ToArray();
 
-            var result = new byte[actualSize];
-            buffer.Slice(0, actualSize).CopyTo(result);
-            buffer.Dispose();
+            writer.Dispose();
+            data.Dispose();
 
-            graph.Dispose();
             return result;
         }
 
         public Entity DeserializeGraph(byte[] data, bool restoreUIState = true) {
-            var coaster = EntityManager.CreateEntity(typeof(Coaster), typeof(CoasterData));
+            var coaster = EntityManager.CreateEntity(typeof(Coaster), typeof(CoasterData), typeof(UIStateData));
             EntityManager.SetName(coaster, "Coaster");
 
             if (data.Length == 0) {
                 EntityManager.SetComponentData(coaster, new CoasterData {
                     Value = CoasterAggregate.Create(Allocator.Persistent)
                 });
+                EntityManager.SetComponentData(coaster, new UIStateData {
+                    Value = KexEdit.App.Persistence.UIStateChunk.Create(Allocator.Persistent)
+                });
                 return coaster;
             }
 
+            return DeserializeKexd(data, coaster, restoreUIState);
+        }
+
+        public Entity DeserializeLegacyGraph(byte[] data, bool restoreUIState = true) {
+            var coaster = EntityManager.CreateEntity(typeof(Coaster), typeof(CoasterData), typeof(UIStateData));
+            EntityManager.SetName(coaster, "Coaster");
+
+            if (data.Length == 0) {
+                EntityManager.SetComponentData(coaster, new CoasterData {
+                    Value = CoasterAggregate.Create(Allocator.Persistent)
+                });
+                EntityManager.SetComponentData(coaster, new UIStateData {
+                    Value = KexEdit.App.Persistence.UIStateChunk.Create(Allocator.Persistent)
+                });
+                return coaster;
+            }
+
+            return DeserializeLegacy(data, coaster, restoreUIState);
+        }
+
+        public static bool IsKexdFormat(byte[] data) {
+            return data.Length >= 4 &&
+                   data[0] == 'K' && data[1] == 'E' &&
+                   data[2] == 'X' && data[3] == 'D';
+        }
+
+        private Entity DeserializeKexd(byte[] data, Entity coaster, bool restoreUIState) {
             var buffer = new NativeArray<byte>(data, Allocator.Temp);
-            SerializedGraph serializedGraph = new();
-            GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
+            var reader = new KexEdit.App.Persistence.ChunkReader(buffer);
+
+            var coasterAggregate = KexEdit.App.Persistence.CoasterSerializer.Read(ref reader, Allocator.Persistent);
+            bool hasUIState = KexEdit.App.Persistence.UIExtensionCodec.TryRead(ref reader, Allocator.Persistent, out var uiState);
+            if (!hasUIState) {
+                uiState = KexEdit.App.Persistence.UIStateChunk.Create(Allocator.Persistent);
+            }
+
+            EntityManager.SetComponentData(coaster, new CoasterData {
+                Value = coasterAggregate
+            });
+            EntityManager.SetComponentData(coaster, new UIStateData {
+                Value = uiState
+            });
+
+            KexdAdapter.ImportToEcs(
+                in coasterAggregate,
+                in uiState,
+                coaster,
+                EntityManager,
+                restoreUIState
+            );
+
+            if (restoreUIState && hasUIState &&
+                SystemAPI.HasSingleton<TimelineState>() &&
+                SystemAPI.HasSingleton<NodeGraphState>() &&
+                SystemAPI.HasSingleton<CameraState>()) {
+                ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
+                ref var nodeGraphState = ref SystemAPI.GetSingletonRW<NodeGraphState>().ValueRW;
+                ref var cameraState = ref SystemAPI.GetSingletonRW<CameraState>().ValueRW;
+                ViewStateAdapter.Apply(in uiState, ref timelineState, ref nodeGraphState, ref cameraState);
+            }
+
+            buffer.Dispose();
+            return coaster;
+        }
+
+        private Entity DeserializeLegacy(byte[] data, Entity coaster, bool restoreUIState) {
+            var buffer = new NativeArray<byte>(data, Allocator.Temp);
+
+            LegacyImporter.Import(ref buffer, Allocator.Persistent, out var coasterAggregate, out var serializedUIState);
             buffer.Dispose();
 
-            LegacyImporter.Import(in serializedGraph, Allocator.Persistent, out var coasterAggregate);
             EntityManager.SetComponentData(coaster, new CoasterData {
                 Value = coasterAggregate
             });
 
-            if (restoreUIState) {
+            if (restoreUIState &&
+                SystemAPI.HasSingleton<TimelineState>() &&
+                SystemAPI.HasSingleton<NodeGraphState>() &&
+                SystemAPI.HasSingleton<CameraState>()) {
                 ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
                 ref var nodeGraphState = ref SystemAPI.GetSingletonRW<NodeGraphState>().ValueRW;
                 ref var cameraState = ref SystemAPI.GetSingletonRW<CameraState>().ValueRW;
-                serializedGraph.UIState.ToState(out timelineState, out nodeGraphState, out cameraState);
+                serializedUIState.ToState(out timelineState, out nodeGraphState, out cameraState);
             }
 
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var node in serializedGraph.Nodes) {
-                DeserializeNode(node, coaster, ref ecb, restoreUIState);
-            }
-
-            ecb.Playback(EntityManager);
-            ecb.Dispose();
-
-            using var ports = _portQuery.ToEntityArray(Allocator.Temp);
-            var portMap = new NativeHashMap<uint, Entity>(ports.Length, Allocator.Temp);
-            foreach (var port in ports) {
-                uint id = SystemAPI.GetComponent<Port>(port).Id;
-                portMap[id] = port;
-            }
-
-            ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var edge in serializedGraph.Edges) {
-                var source = portMap[edge.SourceId];
-                var target = portMap[edge.TargetId];
-                var connection = ecb.CreateEntity();
-                ecb.AddComponent<Dirty>(connection);
-                ecb.AddComponent<CoasterReference>(connection, coaster);
-                ecb.AddComponent(connection, new Connection {
-                    Id = edge.Id,
-                    Source = source,
-                    Target = target,
-                    Selected = edge.Selected,
-                });
-                ecb.SetName(connection, "Connection");
-            }
-            ecb.Playback(EntityManager);
-            ecb.Dispose();
-
-            portMap.Dispose();
-            serializedGraph.Dispose();
+            var uiState = KexEdit.App.Persistence.UIStateChunk.Create(Allocator.Persistent);
+            EntityManager.SetComponentData(coaster, new UIStateData {
+                Value = uiState
+            });
+            KexdAdapter.ImportToEcs(
+                in coasterAggregate,
+                in uiState,
+                coaster,
+                EntityManager,
+                restoreUIState
+            );
 
             return coaster;
         }
@@ -233,99 +313,96 @@ namespace KexEdit.Legacy.Serialization {
             for (int i = 0; i < inputPortBuffer.Length; i++) {
                 var portEntity = inputPortBuffer[i];
                 Port port = SystemAPI.GetComponent<Port>(portEntity);
-                uint portId = port.Id;
+                ulong key = CoasterAggregate.InputKey(nodeId, i);
                 SerializedPort portData = new() { Port = port };
                 switch (port.Type) {
                     case PortType.Anchor:
-                        PointData anchorValue = SystemAPI.GetComponent<AnchorPort>(portEntity).Value;
-                        portData.Value = anchorValue;
-                        break;
                     case PortType.Path:
                         break;
                     case PortType.Duration:
-                        float durationValue = coaster.Durations.TryGetValue(nodeId, out var d) ? d.Value : 0f;
+                        ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                        float durationValue = coaster.Scalars.TryGetValue(durKey, out var d) ? d : 0f;
                         portData.Value.Roll = durationValue;
                         break;
                     case PortType.Position:
-                        float3 positionValue = coaster.Vectors.TryGetValue(nodeId, out var pos) ? pos : float3.zero;
+                        float3 positionValue = coaster.Vectors.TryGetValue(key, out var pos) ? pos : float3.zero;
                         portData.Value.Roll = positionValue.x;
                         portData.Value.Velocity = positionValue.y;
                         portData.Value.Energy = positionValue.z;
                         break;
                     case PortType.Roll:
-                        float rollValue = coaster.Scalars.TryGetValue(portId, out var roll) ? roll : 0f;
+                        float rollValue = coaster.Scalars.TryGetValue(key, out var roll) ? roll : 0f;
                         portData.Value.Roll = rollValue;
                         break;
                     case PortType.Pitch:
-                        float pitchValue = coaster.Scalars.TryGetValue(portId, out var pitch) ? pitch : 0f;
+                        float pitchValue = coaster.Scalars.TryGetValue(key, out var pitch) ? pitch : 0f;
                         portData.Value.Roll = pitchValue;
                         break;
                     case PortType.Yaw:
-                        float yawValue = coaster.Scalars.TryGetValue(portId, out var yaw) ? yaw : 0f;
+                        float yawValue = coaster.Scalars.TryGetValue(key, out var yaw) ? yaw : 0f;
                         portData.Value.Roll = yawValue;
                         break;
                     case PortType.Velocity:
-                        float velocityValue = coaster.Scalars.TryGetValue(portId, out var velocity) ? velocity : 0f;
+                        float velocityValue = coaster.Scalars.TryGetValue(key, out var velocity) ? velocity : 0f;
                         portData.Value.Roll = velocityValue;
                         break;
                     case PortType.Heart:
-                        float heartValue = coaster.Scalars.TryGetValue(portId, out var heart) ? heart : 0f;
+                        float heartValue = coaster.Scalars.TryGetValue(key, out var heart) ? heart : 0f;
                         portData.Value.Roll = heartValue;
                         break;
                     case PortType.Friction:
-                        float frictionPhysicsValue = coaster.Scalars.TryGetValue(portId, out var friction) ? friction : 0f;
+                        float frictionPhysicsValue = coaster.Scalars.TryGetValue(key, out var friction) ? friction : 0f;
                         float frictionUIValue = frictionPhysicsValue * FRICTION_PHYSICS_TO_UI_SCALE;
                         portData.Value.Roll = frictionUIValue;
                         break;
                     case PortType.Resistance:
-                        float resistancePhysicsValue = coaster.Scalars.TryGetValue(portId, out var resistance) ? resistance : 0f;
+                        float resistancePhysicsValue = coaster.Scalars.TryGetValue(key, out var resistance) ? resistance : 0f;
                         float resistanceUIValue = resistancePhysicsValue * RESISTANCE_PHYSICS_TO_UI_SCALE;
                         portData.Value.Roll = resistanceUIValue;
                         break;
                     case PortType.Radius:
-                        float radiusValue = coaster.Scalars.TryGetValue(portId, out var radius) ? radius : 0f;
+                        float radiusValue = coaster.Scalars.TryGetValue(key, out var radius) ? radius : 0f;
                         portData.Value.Roll = radiusValue;
                         break;
                     case PortType.Arc:
-                        float arcValue = coaster.Scalars.TryGetValue(portId, out var arc) ? arc : 0f;
+                        float arcValue = coaster.Scalars.TryGetValue(key, out var arc) ? arc : 0f;
                         portData.Value.Roll = arcValue;
                         break;
                     case PortType.Axis:
-                        float axisValue = coaster.Scalars.TryGetValue(portId, out var axis) ? axis : 0f;
+                        float axisValue = coaster.Scalars.TryGetValue(key, out var axis) ? axis : 0f;
                         portData.Value.Roll = axisValue;
                         break;
                     case PortType.InWeight:
-                        float inWeightValue = coaster.Scalars.TryGetValue(portId, out var inWeight) ? inWeight : 0f;
+                        float inWeightValue = coaster.Scalars.TryGetValue(key, out var inWeight) ? inWeight : 0f;
                         portData.Value.Roll = inWeightValue;
                         break;
                     case PortType.OutWeight:
-                        float outWeightValue = coaster.Scalars.TryGetValue(portId, out var outWeight) ? outWeight : 0f;
+                        float outWeightValue = coaster.Scalars.TryGetValue(key, out var outWeight) ? outWeight : 0f;
                         portData.Value.Roll = outWeightValue;
                         break;
                     case PortType.LeadIn:
-                        float leadInValue = coaster.Scalars.TryGetValue(portId, out var leadIn) ? leadIn : 0f;
+                        float leadInValue = coaster.Scalars.TryGetValue(key, out var leadIn) ? leadIn : 0f;
                         portData.Value.Roll = leadInValue;
                         break;
                     case PortType.LeadOut:
-                        float leadOutValue = coaster.Scalars.TryGetValue(portId, out var leadOut) ? leadOut : 0f;
+                        float leadOutValue = coaster.Scalars.TryGetValue(key, out var leadOut) ? leadOut : 0f;
                         portData.Value.Roll = leadOutValue;
                         break;
                     case PortType.Rotation:
-                        float3 rotationValue = coaster.GetRotation(nodeId);
-                        portData.Value.Roll = rotationValue.x;
-                        portData.Value.Velocity = rotationValue.y;
-                        portData.Value.Energy = rotationValue.z;
+                        portData.Value.Roll = 0f;
+                        portData.Value.Velocity = 0f;
+                        portData.Value.Energy = 0f;
                         break;
                     case PortType.Scale:
-                        float scaleValue = coaster.Scalars.TryGetValue(portId, out var scale) ? scale : 0f;
+                        float scaleValue = coaster.Scalars.TryGetValue(key, out var scale) ? scale : 0f;
                         portData.Value.Roll = scaleValue;
                         break;
                     case PortType.Start:
-                        float startValue = coaster.Scalars.TryGetValue(portId, out var start) ? start : 0f;
+                        float startValue = coaster.Scalars.TryGetValue(key, out var start) ? start : 0f;
                         portData.Value.Roll = startValue;
                         break;
                     case PortType.End:
-                        float endValue = coaster.Scalars.TryGetValue(portId, out var end) ? end : 0f;
+                        float endValue = coaster.Scalars.TryGetValue(key, out var end) ? end : 0f;
                         portData.Value.Roll = endValue;
                         break;
                     default:
@@ -392,144 +469,32 @@ namespace KexEdit.Legacy.Serialization {
                 NodeType.Append => SystemAPI.GetComponent<AppendReference>(entity).FilePath,
                 _ => default,
             };
-            DynamicBuffer<RollSpeedKeyframe>? rollSpeedKeyframeBuffer = node.Type switch {
-                NodeType.ForceSection or NodeType.GeometricSection or
-                NodeType.CurvedSection => SystemAPI.GetBuffer<RollSpeedKeyframe>(entity),
-                _ => null,
-            };
-            DynamicBuffer<NormalForceKeyframe>? normalForceKeyframeBuffer = node.Type switch {
-                NodeType.ForceSection => SystemAPI.GetBuffer<NormalForceKeyframe>(entity),
-                _ => null,
-            };
-            DynamicBuffer<LateralForceKeyframe>? lateralForceKeyframeBuffer = node.Type switch {
-                NodeType.ForceSection => SystemAPI.GetBuffer<LateralForceKeyframe>(entity),
-                _ => null,
-            };
-            DynamicBuffer<PitchSpeedKeyframe>? pitchSpeedKeyframeBuffer = node.Type switch {
-                NodeType.GeometricSection => SystemAPI.GetBuffer<PitchSpeedKeyframe>(entity),
-                _ => null,
-            };
-            DynamicBuffer<YawSpeedKeyframe>? yawSpeedKeyframeBuffer = node.Type switch {
-                NodeType.GeometricSection => SystemAPI.GetBuffer<YawSpeedKeyframe>(entity),
-                _ => null,
-            };
-            DynamicBuffer<FixedVelocityKeyframe>? fixedVelocityKeyframeBuffer = node.Type switch {
-                NodeType.ForceSection or NodeType.GeometricSection or
-                NodeType.CurvedSection or NodeType.CopyPathSection or
-                NodeType.Bridge => SystemAPI.GetBuffer<FixedVelocityKeyframe>(entity),
-                _ => null,
-            };
-            DynamicBuffer<HeartKeyframe>? heartKeyframeBuffer = node.Type switch {
-                NodeType.ForceSection or NodeType.GeometricSection or
-                NodeType.CurvedSection or NodeType.CopyPathSection or
-                NodeType.Bridge => SystemAPI.GetBuffer<HeartKeyframe>(entity),
-                _ => null,
-            };
-            DynamicBuffer<FrictionKeyframe>? frictionKeyframeBuffer = node.Type switch {
-                NodeType.ForceSection or NodeType.GeometricSection or
-                NodeType.CurvedSection or NodeType.CopyPathSection or
-                NodeType.Bridge => SystemAPI.GetBuffer<FrictionKeyframe>(entity),
-                _ => null,
-            };
-            DynamicBuffer<ResistanceKeyframe>? resistanceKeyframeBuffer = node.Type switch {
-                NodeType.ForceSection or NodeType.GeometricSection or
-                NodeType.CurvedSection or NodeType.CopyPathSection or
-                NodeType.Bridge => SystemAPI.GetBuffer<ResistanceKeyframe>(entity),
-                _ => null,
-            };
-            DynamicBuffer<TrackStyleKeyframe>? trackStyleKeyframeBuffer = node.Type switch {
-                NodeType.ForceSection or NodeType.GeometricSection or
-                NodeType.CurvedSection or NodeType.CopyPathSection or
-                NodeType.Bridge => SystemAPI.GetBuffer<TrackStyleKeyframe>(entity),
-                _ => null,
-            };
-
-            NativeArray<RollSpeedKeyframe> rollSpeedKeyframes = rollSpeedKeyframeBuffer.HasValue ?
-                rollSpeedKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
-
-            NativeArray<NormalForceKeyframe> normalForceKeyframes = normalForceKeyframeBuffer.HasValue ?
-                normalForceKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
-
-            NativeArray<LateralForceKeyframe> lateralForceKeyframes = lateralForceKeyframeBuffer.HasValue ?
-                lateralForceKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
-
-            NativeArray<PitchSpeedKeyframe> pitchSpeedKeyframes = pitchSpeedKeyframeBuffer.HasValue ?
-                pitchSpeedKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
-
-            NativeArray<YawSpeedKeyframe> yawSpeedKeyframes = yawSpeedKeyframeBuffer.HasValue ?
-                yawSpeedKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
-
-            NativeArray<FixedVelocityKeyframe> fixedVelocityKeyframes = fixedVelocityKeyframeBuffer.HasValue ?
-                fixedVelocityKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
-
-            NativeArray<HeartKeyframe> heartKeyframes = heartKeyframeBuffer.HasValue ?
-                heartKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
-
-            NativeArray<FrictionKeyframe> frictionKeyframes = frictionKeyframeBuffer.HasValue ?
-                frictionKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
-
-            NativeArray<ResistanceKeyframe> resistanceKeyframes = resistanceKeyframeBuffer.HasValue ?
-                resistanceKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
-
-            NativeArray<TrackStyleKeyframe> trackStyleKeyframes = trackStyleKeyframeBuffer.HasValue ?
-                trackStyleKeyframeBuffer.Value.ToNativeArray(allocator) : new(0, allocator);
+            CoreNodeType coreNodeType = LegacyToCoreNodeType(node.Type);
+            KexdAdapter.ExtractKeyframesForNode(
+                in coaster,
+                coreNodeType,
+                nodeId,
+                allocator,
+                out var rollSpeedKeyframes,
+                out var normalForceKeyframes,
+                out var lateralForceKeyframes,
+                out var pitchSpeedKeyframes,
+                out var yawSpeedKeyframes,
+                out var fixedVelocityKeyframes,
+                out var heartKeyframes,
+                out var frictionKeyframes,
+                out var resistanceKeyframes,
+                out var trackStyleKeyframes
+            );
 
             NativeArray<SerializedPort> outputPorts = new(outputPortBuffer.Length, allocator);
             for (int i = 0; i < outputPortBuffer.Length; i++) {
                 var portEntity = outputPortBuffer[i];
                 Port port = SystemAPI.GetComponent<Port>(portEntity);
                 SerializedPort portData = new() { Port = port };
-                switch (port.Type) {
-                    case PortType.Anchor:
-                        PointData anchorValue = SystemAPI.GetComponent<AnchorPort>(portEntity).Value;
-                        portData.Value = anchorValue;
-                        break;
-                    case PortType.Path:
-                        break;
-                    case PortType.Duration:
-                        float durationValue = SystemAPI.GetComponent<DurationPort>(portEntity).Value;
-                        portData.Value.Roll = durationValue;
-                        break;
-                    case PortType.Position:
-                        float3 positionValue = SystemAPI.GetComponent<PositionPort>(portEntity).Value;
-                        portData.Value.Roll = positionValue.x;
-                        portData.Value.Velocity = positionValue.y;
-                        portData.Value.Energy = positionValue.z;
-                        break;
-                    case PortType.Roll:
-                        float rollValue = SystemAPI.GetComponent<RollPort>(portEntity).Value;
-                        portData.Value.Roll = rollValue;
-                        break;
-                    case PortType.Pitch:
-                        float pitchValue = SystemAPI.GetComponent<PitchPort>(portEntity).Value;
-                        portData.Value.Roll = pitchValue;
-                        break;
-                    case PortType.Yaw:
-                        float yawValue = SystemAPI.GetComponent<YawPort>(portEntity).Value;
-                        portData.Value.Roll = yawValue;
-                        break;
-                    case PortType.Velocity:
-                        float velocityValue = SystemAPI.GetComponent<VelocityPort>(portEntity).Value;
-                        portData.Value.Roll = velocityValue;
-                        break;
-                    case PortType.Heart:
-                        float heartValue = SystemAPI.GetComponent<HeartPort>(portEntity).Value;
-                        portData.Value.Roll = heartValue;
-                        break;
-                    case PortType.Friction:
-                        float frictionPhysicsValue = SystemAPI.GetComponent<FrictionPort>(portEntity).Value;
-                        float frictionUIValue = frictionPhysicsValue * FRICTION_PHYSICS_TO_UI_SCALE;
-                        portData.Value.Roll = frictionUIValue;
-                        break;
-                    case PortType.Resistance:
-                        float resistancePhysicsValue = SystemAPI.GetComponent<ResistancePort>(portEntity).Value;
-                        float resistanceUIValue = resistancePhysicsValue * RESISTANCE_PHYSICS_TO_UI_SCALE;
-                        portData.Value.Roll = resistanceUIValue;
-                        break;
-                    default:
-                        throw new NotImplementedException();
+                if (port.Type == PortType.Anchor) {
+                    portData.Value = anchor.Value;
                 }
-
                 outputPorts[i] = portData;
             }
 
@@ -584,79 +549,6 @@ namespace KexEdit.Legacy.Serialization {
                 var portEntity = ecb.CreateEntity();
                 ecb.AddComponent<Port>(portEntity, port.Port);
                 ecb.AddComponent<Dirty>(portEntity);
-                switch (port.Port.Type) {
-                    case PortType.Anchor:
-                        ecb.AddComponent<AnchorPort>(portEntity, port.Value);
-                        break;
-                    case PortType.Path:
-                        break;
-                    case PortType.Duration:
-                        ecb.AddComponent<DurationPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Position:
-                        float3 positionValue = new(port.Value.Roll, port.Value.Velocity, port.Value.Energy);
-                        ecb.AddComponent<PositionPort>(portEntity, positionValue);
-                        break;
-                    case PortType.Roll:
-                        ecb.AddComponent<RollPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Pitch:
-                        ecb.AddComponent<PitchPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Yaw:
-                        ecb.AddComponent<YawPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Velocity:
-                        ecb.AddComponent<VelocityPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Heart:
-                        ecb.AddComponent<HeartPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Friction:
-                        float frictionPhysicsValue = port.Value.Roll * FRICTION_UI_TO_PHYSICS_SCALE;
-                        ecb.AddComponent<FrictionPort>(portEntity, frictionPhysicsValue);
-                        break;
-                    case PortType.Resistance:
-                        float resistancePhysicsValue = port.Value.Roll * RESISTANCE_UI_TO_PHYSICS_SCALE;
-                        ecb.AddComponent<ResistancePort>(portEntity, resistancePhysicsValue);
-                        break;
-                    case PortType.Radius:
-                        ecb.AddComponent<RadiusPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Arc:
-                        ecb.AddComponent<ArcPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Axis:
-                        ecb.AddComponent<AxisPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.InWeight:
-                        ecb.AddComponent<InWeightPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.OutWeight:
-                        ecb.AddComponent<OutWeightPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.LeadIn:
-                        ecb.AddComponent<LeadInPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.LeadOut:
-                        ecb.AddComponent<LeadOutPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Rotation:
-                        float3 rotationValue = new(port.Value.Roll, port.Value.Velocity, port.Value.Energy);
-                        ecb.AddComponent<RotationPort>(portEntity, rotationValue);
-                        break;
-                    case PortType.Scale:
-                        ecb.AddComponent<ScalePort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Start:
-                        ecb.AddComponent<StartPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.End:
-                        ecb.AddComponent<EndPort>(portEntity, port.Value.Roll);
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
                 ecb.AppendToBuffer<InputPortReference>(entity, portEntity);
                 ecb.SetName(portEntity, "Input Port");
             }
@@ -670,6 +562,7 @@ namespace KexEdit.Legacy.Serialization {
                 type == NodeType.Bridge ||
                 type == NodeType.ReversePath) {
                 ecb.AddBuffer<CorePointBuffer>(entity);
+                ecb.AddBuffer<SplineBuffer>(entity);
 #if VALIDATE_COASTER_PARITY
                 ecb.AddBuffer<CoasterPointBuffer>(entity);
 #endif
@@ -688,26 +581,6 @@ namespace KexEdit.Legacy.Serialization {
                 ecb.AddComponent<Render>(entity, node.Render);
                 ecb.AddComponent(entity, node.PropertyOverrides);
                 ecb.AddComponent(entity, node.SelectedProperties);
-                ecb.AddBuffer<FixedVelocityKeyframe>(entity);
-                foreach (var keyframe in node.FixedVelocityKeyframes) {
-                    ecb.AppendToBuffer(entity, keyframe);
-                }
-                ecb.AddBuffer<HeartKeyframe>(entity);
-                foreach (var keyframe in node.HeartKeyframes) {
-                    ecb.AppendToBuffer(entity, keyframe);
-                }
-                ecb.AddBuffer<FrictionKeyframe>(entity);
-                foreach (var keyframe in node.FrictionKeyframes) {
-                    ecb.AppendToBuffer(entity, keyframe);
-                }
-                ecb.AddBuffer<ResistanceKeyframe>(entity);
-                foreach (var keyframe in node.ResistanceKeyframes) {
-                    ecb.AppendToBuffer(entity, keyframe);
-                }
-                ecb.AddBuffer<TrackStyleKeyframe>(entity);
-                foreach (var keyframe in node.TrackStyleKeyframes) {
-                    ecb.AppendToBuffer(entity, keyframe);
-                }
                 ecb.AddComponent<TrackStyleHash>(entity);
             }
 
@@ -719,33 +592,7 @@ namespace KexEdit.Legacy.Serialization {
                 type == NodeType.GeometricSection) {
                 ecb.AddComponent(entity, node.Duration);
 
-                ecb.AddBuffer<RollSpeedKeyframe>(entity);
-                foreach (var keyframe in node.RollSpeedKeyframes) {
-                    ecb.AppendToBuffer(entity, keyframe);
-                }
-
-                if (type == NodeType.ForceSection) {
-                    ecb.AddBuffer<NormalForceKeyframe>(entity);
-                    foreach (var keyframe in node.NormalForceKeyframes) {
-                        ecb.AppendToBuffer(entity, keyframe);
-                    }
-
-                    ecb.AddBuffer<LateralForceKeyframe>(entity);
-                    foreach (var keyframe in node.LateralForceKeyframes) {
-                        ecb.AppendToBuffer(entity, keyframe);
-                    }
-                }
-                else if (type == NodeType.GeometricSection) {
-                    ecb.AddBuffer<PitchSpeedKeyframe>(entity);
-                    foreach (var keyframe in node.PitchSpeedKeyframes) {
-                        ecb.AppendToBuffer(entity, keyframe);
-                    }
-
-                    ecb.AddBuffer<YawSpeedKeyframe>(entity);
-                    foreach (var keyframe in node.YawSpeedKeyframes) {
-                        ecb.AppendToBuffer(entity, keyframe);
-                    }
-
+                if (type == NodeType.GeometricSection) {
                     bool steering = (node.FieldFlags & NodeFieldFlags.HasSteering) == 0 || node.Steering;
                     ecb.AddComponent<Steering>(entity, steering);
                 }
@@ -753,10 +600,6 @@ namespace KexEdit.Legacy.Serialization {
 
             if (type == NodeType.CurvedSection) {
                 ecb.AddComponent(entity, node.CurveData);
-                ecb.AddBuffer<RollSpeedKeyframe>(entity);
-                foreach (var keyframe in node.RollSpeedKeyframes) {
-                    ecb.AppendToBuffer(entity, keyframe);
-                }
             }
 
             if (type == NodeType.CopyPathSection) {
@@ -791,51 +634,26 @@ namespace KexEdit.Legacy.Serialization {
                 var portEntity = ecb.CreateEntity();
                 ecb.AddComponent<Port>(portEntity, port.Port);
                 ecb.AddComponent<Dirty>(portEntity);
-                switch (port.Port.Type) {
-                    case PortType.Anchor:
-                        ecb.AddComponent<AnchorPort>(portEntity, port.Value);
-                        break;
-                    case PortType.Path:
-                        break;
-                    case PortType.Duration:
-                        ecb.AddComponent<DurationPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Position:
-                        float3 positionValue = new(port.Value.Roll, port.Value.Velocity, port.Value.Energy);
-                        ecb.AddComponent<PositionPort>(portEntity, positionValue);
-                        break;
-                    case PortType.Roll:
-                        ecb.AddComponent<RollPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Pitch:
-                        ecb.AddComponent<PitchPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Yaw:
-                        ecb.AddComponent<YawPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Velocity:
-                        ecb.AddComponent<VelocityPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Heart:
-                        ecb.AddComponent<HeartPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Friction:
-                        float frictionPhysicsValue = port.Value.Roll * FRICTION_UI_TO_PHYSICS_SCALE;
-                        ecb.AddComponent<FrictionPort>(portEntity, frictionPhysicsValue);
-                        break;
-                    case PortType.Resistance:
-                        float resistancePhysicsValue = port.Value.Roll * RESISTANCE_UI_TO_PHYSICS_SCALE;
-                        ecb.AddComponent<ResistancePort>(portEntity, resistancePhysicsValue);
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
                 ecb.AppendToBuffer<OutputPortReference>(entity, portEntity);
                 ecb.SetName(portEntity, "Output Port");
             }
 
             ecb.SetName(entity, "Node");
             return entity;
+        }
+
+        private static CoreNodeType LegacyToCoreNodeType(NodeType type) {
+            return type switch {
+                NodeType.ForceSection => CoreNodeType.Force,
+                NodeType.GeometricSection => CoreNodeType.Geometric,
+                NodeType.CurvedSection => CoreNodeType.Curved,
+                NodeType.CopyPathSection => CoreNodeType.CopyPath,
+                NodeType.Anchor => CoreNodeType.Anchor,
+                NodeType.Reverse => CoreNodeType.Reverse,
+                NodeType.ReversePath => CoreNodeType.ReversePath,
+                NodeType.Bridge => CoreNodeType.Bridge,
+                _ => CoreNodeType.Anchor
+            };
         }
     }
 }

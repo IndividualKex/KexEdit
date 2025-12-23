@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices;
-using CorePoint = KexEdit.Core.Point;
+using CorePoint = KexEdit.Sim.Point;
 
 namespace KexEdit.Native.RustCore {
     [StructLayout(LayoutKind.Sequential)]

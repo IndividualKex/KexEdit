@@ -3,9 +3,8 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
-
-using KexEdit.Legacy;
 using CameraState = KexEdit.Legacy.CameraState;
+
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class OrbitCameraSystem : SystemBase {

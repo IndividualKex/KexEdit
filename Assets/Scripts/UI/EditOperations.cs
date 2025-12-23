@@ -1,6 +1,5 @@
 using UnityEngine;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class EditOperations {
         public static void RegisterHandler(IEditableHandler handler) => EditOperationsSystem.Instance?.RegisterHandler(handler);

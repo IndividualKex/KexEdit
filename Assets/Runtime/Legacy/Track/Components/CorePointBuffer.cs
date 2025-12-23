@@ -1,7 +1,8 @@
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
-using CorePoint = KexEdit.Core.Point;
+using static KexEdit.Sim.Sim;
+using CorePoint = KexEdit.Sim.Point;
 
 namespace KexEdit.Legacy {
     [BurstCompile]
@@ -24,7 +25,7 @@ namespace KexEdit.Legacy {
             float yawFromLast = 0f;
             float3 diff = point.Direction - prev.Direction;
 
-            if (math.length(diff) >= Constants.EPSILON) {
+            if (math.length(diff) >= EPSILON) {
                 float pitch = PointConverter.GetPitch(in point.Direction);
                 float yaw = PointConverter.GetYaw(in point.Direction);
                 float prevPitch = PointConverter.GetPitch(in prev.Direction);

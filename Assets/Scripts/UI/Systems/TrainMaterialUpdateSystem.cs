@@ -1,10 +1,10 @@
+using KexEdit.Legacy;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Rendering;
 using Unity.Transforms;
 using UnityEngine;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial class TrainMaterialUpdateSystem : SystemBase {

@@ -1,14 +1,18 @@
+using KexEdit.Spline;
+using KexEdit.Spline.Resampling;
+using KexEdit.App.Coaster;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
-using KexEdit.Coaster;
-using CorePoint = KexEdit.Core.Point;
-using CoasterAggregate = KexEdit.Coaster.Coaster;
+using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using CorePoint = KexEdit.Sim.Point;
 
 namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
     [BurstCompile]
     public partial struct CoasterSyncSystem : ISystem {
+        private const float SplineResolution = 0.1f;
+
         private EntityQuery _coasterQuery;
 
         [BurstCompile]
@@ -24,6 +28,7 @@ namespace KexEdit.Legacy {
         public void OnUpdate(ref SystemState state) {
             var coasterDataLookup = SystemAPI.GetComponentLookup<CoasterData>(true);
             var anchorLookup = SystemAPI.GetComponentLookup<Anchor>(true);
+            var splineBufferLookup = SystemAPI.GetBufferLookup<SplineBuffer>(false);
 #if VALIDATE_COASTER_PARITY
             var coasterPointBufferLookup = SystemAPI.GetBufferLookup<CoasterPointBuffer>(false);
 #else
@@ -58,6 +63,8 @@ namespace KexEdit.Legacy {
                     ref pointBufferLookup
                 );
 #endif
+
+                SyncPathsToSplineBuffers(ref state, coasterEntity, in result, ref splineBufferLookup);
 
                 result.Dispose();
             }
@@ -171,5 +178,42 @@ namespace KexEdit.Legacy {
             }
         }
 #endif
+
+        [BurstCompile]
+        private void SyncPathsToSplineBuffers(
+            ref SystemState state,
+            Entity coasterEntity,
+            in EvaluationResult result,
+            ref BufferLookup<SplineBuffer> splineBufferLookup
+        ) {
+            var nodeToEntity = new NativeHashMap<uint, Entity>(64, Allocator.Temp);
+
+            foreach (var (node, coasterRef, entity) in
+                     SystemAPI.Query<RefRO<Node>, RefRO<CoasterReference>>().WithEntityAccess()) {
+                if (coasterRef.ValueRO.Value != coasterEntity) continue;
+                nodeToEntity.TryAdd(node.ValueRO.Id, entity);
+            }
+
+            var pathKeys = result.Paths.GetKeyArray(Allocator.Temp);
+            var tempSpline = new NativeList<SplinePoint>(256, Allocator.Temp);
+
+            for (int k = 0; k < pathKeys.Length; k++) {
+                uint nodeId = pathKeys[k];
+                if (!nodeToEntity.TryGetValue(nodeId, out Entity nodeEntity)) continue;
+                if (!splineBufferLookup.TryGetBuffer(nodeEntity, out var splineBuffer)) continue;
+                if (!result.Paths.TryGetValue(nodeId, out var path) || !path.IsCreated) continue;
+
+                SplineResampler.Resample(path.AsArray(), SplineResolution, ref tempSpline);
+
+                splineBuffer.Clear();
+                for (int i = 0; i < tempSpline.Length; i++) {
+                    splineBuffer.Add(new SplineBuffer { Point = tempSpline[i] });
+                }
+            }
+
+            tempSpline.Dispose();
+            pathKeys.Dispose();
+            nodeToEntity.Dispose();
+        }
     }
 }

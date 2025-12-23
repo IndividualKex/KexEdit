@@ -1,10 +1,10 @@
-using UnityEngine;
-using System.Collections.Generic;
-using System.IO;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
-
+using System.IO;
 using KexEdit.Legacy;
+using UnityEngine;
+
 namespace KexEdit.UI {
     public static class TrackStyleResourceLoader {
         public static TrackStyleConfig LoadConfig(string configPath) {

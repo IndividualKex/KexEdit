@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class PivotEditorDialog : VisualElement {
         private Action _onClose;

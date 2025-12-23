@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using KexEdit.Legacy;
 using KexEdit.UI.Timeline;
 using Unity.Properties;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class OptimizerDialog : VisualElement {
         private static readonly Dictionary<TargetValueType, string> _targetValueTypeLabels = new() {

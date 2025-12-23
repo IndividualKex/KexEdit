@@ -1,8 +1,8 @@
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI.Timeline {
     public static class TimelineEvents {
         public static void Send<T>(this VisualElement element) where T : TimelineEvent<T>, new() {

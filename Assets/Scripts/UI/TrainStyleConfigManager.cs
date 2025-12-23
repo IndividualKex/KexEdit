@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public static class TrainStyleConfigManager {
         public static string TrainStylesPath => Path.Combine(Application.streamingAssetsPath, "TrainStyles");

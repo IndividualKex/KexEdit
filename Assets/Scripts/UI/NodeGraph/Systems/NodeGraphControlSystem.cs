@@ -1,28 +1,27 @@
 using System;
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using KexEdit.Legacy.Serialization;
+using KexEdit.Graph.Typed;
+using KexEdit.Graph;
 using SFB;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static KexEdit.Sim.Sim;
 using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Extensions;
-
-using KexEdit.Legacy;
-using KexEdit.NodeGraph;
-using KexGraph;
+using AnchorNodeBuilder = KexEdit.Sim.Nodes.Anchor.AnchorNode;
+using AnchorPorts = KexEdit.Sim.Nodes.Anchor.AnchorPorts;
+using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using CoreNodeType = KexEdit.Sim.Schema.NodeType;
+using CorePoint = KexEdit.Sim.Point;
 using LegacyCoaster = KexEdit.Legacy.Coaster;
-using CoasterAggregate = KexEdit.Coaster.Coaster;
-using CoreDuration = KexEdit.Coaster.Duration;
-using CoreDurationType = KexEdit.Coaster.DurationType;
-using CorePoint = KexEdit.Core.Point;
-using CoreNodeType = KexEdit.Nodes.NodeType;
-using PortSpec = KexEdit.Nodes.PortSpec;
-using PortDataType = KexEdit.Nodes.PortDataType;
-using AnchorNodeBuilder = KexEdit.Nodes.Anchor.AnchorNode;
-using AnchorPorts = KexEdit.Nodes.Anchor.AnchorPorts;
+using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using PortDataType = KexEdit.Sim.Schema.PortDataType;
+using PortSpec = KexEdit.Sim.Schema.PortSpec;
 
 namespace KexEdit.UI.NodeGraph {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
@@ -127,10 +126,10 @@ namespace KexEdit.UI.NodeGraph {
             }
 
             if (type == NodeType.ForceSection || type == NodeType.GeometricSection) {
-                coaster.Durations[nodeId] = new CoreDuration(1f, CoreDurationType.Time);
+                coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = 1f;
             }
             if (type == NodeType.GeometricSection) {
-                coaster.Steering.Add(nodeId);
+                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Steering)] = 1;
             }
 
             InitializePortScalars(ref coaster, entity, type);
@@ -158,28 +157,19 @@ namespace KexEdit.UI.NodeGraph {
         }
 
         private void RebuildAnchorInCoaster(ref CoasterAggregate coaster, Entity nodeEntity) {
-            var inputPorts = SystemAPI.GetBuffer<InputPortReference>(nodeEntity);
             uint nodeId = SystemAPI.GetComponent<Node>(nodeEntity).Id;
 
-            // Position from Vectors (stored by node ID)
-            float3 position = coaster.Vectors.TryGetValue(nodeId, out var pos) ? pos : float3.zero;
+            ulong posKey = CoasterAggregate.InputKey(nodeId, AnchorPorts.Position);
+            float3 position = coaster.Vectors.TryGetValue(posKey, out var pos) ? pos : float3.zero;
 
-            // Rotation from Rotations (stored as euler angles in radians: pitch, yaw, roll)
-            float3 rotation = coaster.GetRotation(nodeId);
-            float pitch = rotation.x;
-            float yaw = rotation.y;
-            float roll = rotation.z;
+            float roll = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Roll), out var rollVal) ? rollVal : 0f;
+            float pitch = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Pitch), out var pitchVal) ? pitchVal : 0f;
+            float yaw = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Yaw), out var yawVal) ? yawVal : 0f;
 
-            // Scalar ports
-            uint velocityPortId = SystemAPI.GetComponent<Port>(inputPorts[AnchorPorts.Velocity].Value).Id;
-            uint heartPortId = SystemAPI.GetComponent<Port>(inputPorts[AnchorPorts.Heart].Value).Id;
-            uint frictionPortId = SystemAPI.GetComponent<Port>(inputPorts[AnchorPorts.Friction].Value).Id;
-            uint resistancePortId = SystemAPI.GetComponent<Port>(inputPorts[AnchorPorts.Resistance].Value).Id;
-
-            float velocity = coaster.Scalars.TryGetValue(velocityPortId, out var v) ? v : 10f;
-            float heart = coaster.Scalars.TryGetValue(heartPortId, out var h) ? h : 1.1f;
-            float friction = coaster.Scalars.TryGetValue(frictionPortId, out var f) ? f : 0.021f;
-            float resistance = coaster.Scalars.TryGetValue(resistancePortId, out var r) ? r : 2e-5f;
+            float velocity = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Velocity), out var v) ? v : 10f;
+            float heart = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Heart), out var h) ? h : 1.1f;
+            float friction = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Friction), out var f) ? f : 0.021f;
+            float resistance = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Resistance), out var r) ? r : 2e-5f;
 
             // Build anchor for ECS component (used by UI/visualization)
             float energy = 0.5f * velocity * velocity + 9.80665f * position.y;
@@ -217,66 +207,67 @@ namespace KexEdit.UI.NodeGraph {
         private void InitializePortScalars(ref CoasterAggregate coaster, Entity entity, NodeType type) {
             var inputPorts = SystemAPI.GetBuffer<InputPortReference>(entity);
             var defaultCurveData = CurveData.Default;
+            uint nodeId = SystemAPI.GetComponent<Node>(entity).Id;
 
             for (int i = 0; i < inputPorts.Length; i++) {
                 var portEntity = inputPorts[i].Value;
                 var port = SystemAPI.GetComponent<Port>(portEntity);
+                ulong key = CoasterAggregate.InputKey(nodeId, i);
 
                 switch (port.Type) {
                     case PortType.Duration:
-                        coaster.Scalars[port.Id] = 1f;
+                        coaster.Scalars[key] = 1f;
                         break;
                     case PortType.Radius:
-                        coaster.Scalars[port.Id] = defaultCurveData.Radius;
+                        coaster.Scalars[key] = defaultCurveData.Radius;
                         break;
                     case PortType.Arc:
-                        coaster.Scalars[port.Id] = defaultCurveData.Arc;
+                        coaster.Scalars[key] = defaultCurveData.Arc;
                         break;
                     case PortType.Axis:
-                        coaster.Scalars[port.Id] = defaultCurveData.Axis;
+                        coaster.Scalars[key] = defaultCurveData.Axis;
                         break;
                     case PortType.LeadIn:
-                        coaster.Scalars[port.Id] = defaultCurveData.LeadIn;
+                        coaster.Scalars[key] = defaultCurveData.LeadIn;
                         break;
                     case PortType.LeadOut:
-                        coaster.Scalars[port.Id] = defaultCurveData.LeadOut;
+                        coaster.Scalars[key] = defaultCurveData.LeadOut;
                         break;
                     case PortType.InWeight:
-                        coaster.Scalars[port.Id] = 0.3f;
+                        coaster.Scalars[key] = 0.3f;
                         break;
                     case PortType.OutWeight:
-                        coaster.Scalars[port.Id] = 0.3f;
+                        coaster.Scalars[key] = 0.3f;
                         break;
                     case PortType.Start:
-                        coaster.Scalars[port.Id] = 0f;
+                        coaster.Scalars[key] = 0f;
                         break;
                     case PortType.End:
-                        coaster.Scalars[port.Id] = -1f;
+                        coaster.Scalars[key] = -1f;
                         break;
                     case PortType.Roll:
-                        coaster.Scalars[port.Id] = 0f;
+                        coaster.Scalars[key] = 0f;
                         break;
                     case PortType.Pitch:
-                        coaster.Scalars[port.Id] = 0f;
+                        coaster.Scalars[key] = 0f;
                         break;
                     case PortType.Yaw:
-                        coaster.Scalars[port.Id] = 0f;
+                        coaster.Scalars[key] = 0f;
                         break;
                     case PortType.Velocity:
-                        coaster.Scalars[port.Id] = 10f;
+                        coaster.Scalars[key] = 10f;
                         break;
                     case PortType.Heart:
-                        coaster.Scalars[port.Id] = HEART_BASE;
+                        coaster.Scalars[key] = HEART_BASE;
                         break;
                     case PortType.Friction:
-                        coaster.Scalars[port.Id] = FRICTION_BASE;
+                        coaster.Scalars[key] = FRICTION_BASE;
                         break;
                     case PortType.Resistance:
-                        coaster.Scalars[port.Id] = RESISTANCE_BASE;
+                        coaster.Scalars[key] = RESISTANCE_BASE;
                         break;
                     case PortType.Position:
-                        uint nodeId = SystemAPI.GetComponent<Node>(entity).Id;
-                        coaster.Vectors[nodeId] = float3.zero;
+                        coaster.Vectors[key] = float3.zero;
                         break;
                 }
             }
@@ -392,21 +383,21 @@ namespace KexEdit.UI.NodeGraph {
                 var nodeData = NodeData.Create(entity, node, durationType, render, steering);
 
                 var inputPortReferences = SystemAPI.GetBuffer<InputPortReference>(entity);
-                foreach (var inputPortReference in inputPortReferences) {
-                    var portEntity = inputPortReference.Value;
+                for (int i = 0; i < inputPortReferences.Length; i++) {
+                    var portEntity = inputPortReferences[i].Value;
                     var port = SystemAPI.GetComponent<Port>(portEntity);
                     UnitsType units = GetUnits(port.Type, durationType);
-                    var portData = PortData.Create(portEntity, port, entity, units);
+                    var portData = PortData.Create(portEntity, port, entity, i, units);
                     nodeData.OrderedInputs.Add(portEntity);
                     nodeData.Inputs.Add(portEntity, portData);
                 }
 
                 var outputPortReferences = SystemAPI.GetBuffer<OutputPortReference>(entity);
-                foreach (var outputPortReference in outputPortReferences) {
-                    var portEntity = outputPortReference.Value;
+                for (int i = 0; i < outputPortReferences.Length; i++) {
+                    var portEntity = outputPortReferences[i].Value;
                     var port = SystemAPI.GetComponent<Port>(portEntity);
                     UnitsType units = GetUnits(port.Type, durationType);
-                    var portData = PortData.Create(portEntity, port, entity, units);
+                    var portData = PortData.Create(portEntity, port, entity, i, units);
                     nodeData.OrderedOutputs.Add(portEntity);
                     nodeData.Outputs.Add(portEntity, portData);
                 }
@@ -511,11 +502,12 @@ namespace KexEdit.UI.NodeGraph {
                 foreach (var portData in nodeData.Outputs.Values) {
                     switch (portData.Port.Type) {
                         case PortType.Anchor:
-                            PointData anchorValue = SystemAPI.GetComponent<AnchorPort>(portData.Entity);
-                            portData.SetValue(anchorValue);
+                            if (SystemAPI.HasComponent<Anchor>(entity)) {
+                                PointData anchorValue = SystemAPI.GetComponent<Anchor>(entity).Value;
+                                portData.SetValue(anchorValue);
+                            }
                             break;
                         case PortType.Path:
-                            // Pass
                             break;
                         default:
                             throw new NotImplementedException();
@@ -789,27 +781,20 @@ namespace KexEdit.UI.NodeGraph {
             var targetPort = evt.Port.Entity;
             AddConnection(sourcePort, targetPort);
 
-            PointData anchor = SystemAPI.GetComponent<AnchorPort>(targetPort).Value;
+            PointData anchor = evt.Port.Value;
             ref var nodeAnchor = ref SystemAPI.GetComponentRW<Anchor>(node).ValueRW;
             nodeAnchor.Value = anchor;
 
-            var anchorInputBuffer = SystemAPI.GetBuffer<InputPortReference>(node);
-
             uint anchorNodeId = SystemAPI.GetComponent<Node>(node).Id;
             ref var coaster = ref GetCoasterRef();
-            coaster.Vectors[anchorNodeId] = anchor.HeartPosition;
-            coaster.Rotations[anchorNodeId] = new float3(
-                math.radians(anchor.GetPitch()),
-                math.radians(anchor.GetYaw()),
-                math.radians(anchor.Roll)
-            );
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[1].Value).Id] = anchor.Roll;
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[2].Value).Id] = anchor.GetPitch();
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[3].Value).Id] = anchor.GetYaw();
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[4].Value).Id] = anchor.Velocity;
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[5].Value).Id] = anchor.HeartOffset;
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[6].Value).Id] = anchor.Friction;
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[7].Value).Id] = anchor.Resistance;
+            coaster.Vectors[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Position)] = anchor.HeartPosition;
+            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Roll)] = math.radians(anchor.Roll);
+            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Pitch)] = math.radians(anchor.GetPitch());
+            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Yaw)] = math.radians(anchor.GetYaw());
+            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Velocity)] = anchor.Velocity;
+            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Heart)] = anchor.HeartOffset;
+            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Friction)] = anchor.Friction;
+            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Resistance)] = anchor.Resistance;
         }
 
         private void OnAddConnection(AddConnectionEvent evt) {
@@ -841,9 +826,8 @@ namespace KexEdit.UI.NodeGraph {
 
             uint nodeId = SystemAPI.GetComponent<Node>(evt.Node).Id;
             ref var coaster = ref GetCoasterRef();
-            if (coaster.Durations.TryGetValue(nodeId, out var existing)) {
-                coaster.Durations[nodeId] = new CoreDuration(existing.Value, (CoreDurationType)evt.DurationType);
-            }
+            ulong durTypeKey = CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType);
+            coaster.Flags[durTypeKey] = evt.DurationType == KexEdit.Legacy.DurationType.Distance ? 1 : 0;
 
             SystemAPI.SetComponentEnabled<Dirty>(evt.Node, true);
         }
@@ -851,6 +835,13 @@ namespace KexEdit.UI.NodeGraph {
         private void OnRenderToggleChange(RenderToggleChangeEvent evt) {
             ref var render = ref SystemAPI.GetComponentRW<Render>(evt.Node).ValueRW;
             render.Value = evt.Render;
+
+            uint nodeId = SystemAPI.GetComponent<Node>(evt.Node).Id;
+            ref var coaster = ref GetCoasterRef();
+            ulong renderKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Render);
+            coaster.Flags[renderKey] = evt.Render ? 0 : 1;
+
+            SystemAPI.SetComponentEnabled<Dirty>(evt.Node, true);
         }
 
         private void OnSteeringToggleChange(SteeringToggleChangeEvent evt) {
@@ -859,11 +850,8 @@ namespace KexEdit.UI.NodeGraph {
 
             uint nodeId = SystemAPI.GetComponent<Node>(evt.Node).Id;
             ref var coaster = ref GetCoasterRef();
-            if (evt.Steering) {
-                coaster.Steering.Add(nodeId);
-            } else {
-                coaster.Steering.Remove(nodeId);
-            }
+            ulong steeringKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Steering);
+            coaster.Flags[steeringKey] = evt.Steering ? 1 : 0;
 
             SystemAPI.SetComponentEnabled<Dirty>(evt.Node, true);
         }
@@ -981,7 +969,7 @@ namespace KexEdit.UI.NodeGraph {
         private void DeselectEdge(EdgeData data) {
             ref Connection connection = ref SystemAPI.GetComponentRW<Connection>(data.Entity).ValueRW;
             connection.Selected = false;
-            
+
             UpdateSelectionState();
         }
 
@@ -997,21 +985,21 @@ namespace KexEdit.UI.NodeGraph {
                 var inputPortBuffer = SystemAPI.GetBuffer<InputPortReference>(entity);
                 var outputPortBuffer = SystemAPI.GetBuffer<OutputPortReference>(entity);
 
-                foreach (var portRef in inputPortBuffer) {
-                    uint portId = SystemAPI.GetComponent<Port>(portRef.Value).Id;
-                    coaster.Scalars.Remove(portId);
-                    ecb.DestroyEntity(portRef);
+                for (int i = 0; i < inputPortBuffer.Length; i++) {
+                    ulong key = CoasterAggregate.InputKey(nodeId, i);
+                    coaster.Scalars.Remove(key);
+                    coaster.Vectors.Remove(key);
+                    ecb.DestroyEntity(inputPortBuffer[i]);
                 }
                 foreach (var portRef in outputPortBuffer) {
                     ecb.DestroyEntity(portRef);
                 }
 
                 coaster.Graph.RemoveNodeCascade(nodeId);
-                coaster.Durations.Remove(nodeId);
-                coaster.Steering.Remove(nodeId);
-                coaster.Driven.Remove(nodeId);
-                coaster.Vectors.Remove(nodeId);
-                coaster.Rotations.Remove(nodeId);
+                coaster.Scalars.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.Duration));
+                coaster.Flags.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType));
+                coaster.Flags.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.Steering));
+                coaster.Flags.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.Driven));
 
                 ecb.DestroyEntity(entity);
             }
@@ -1076,117 +1064,110 @@ namespace KexEdit.UI.NodeGraph {
 
         private void UpdateInputPortValue(PortData port) {
             ref var coaster = ref GetCoasterRef();
-            uint portId = SystemAPI.GetComponent<Port>(port.Entity).Id;
             uint nodeId = SystemAPI.GetComponent<Node>(port.Node).Id;
+            ulong key = CoasterAggregate.InputKey(nodeId, port.Index);
 
             switch (port.Port.Type) {
                 case PortType.Anchor:
-                    PointData anchorValue = SystemAPI.GetComponent<AnchorPort>(port.Entity);
-                    port.SetValue(anchorValue);
-                    break;
                 case PortType.Path:
-                    // Pass
                     break;
                 case PortType.Duration:
-                    if (coaster.Durations.TryGetValue(nodeId, out var duration)) {
-                        port.SetValue(duration.Value);
+                    ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                    if (coaster.Scalars.TryGetValue(durKey, out var durationVal)) {
+                        port.SetValue(durationVal);
                     }
                     break;
                 case PortType.Position:
-                    if (coaster.Vectors.TryGetValue(nodeId, out var positionValue)) {
+                    if (coaster.Vectors.TryGetValue(key, out var positionValue)) {
                         port.SetValue(positionValue);
                     }
                     break;
                 case PortType.Roll:
-                    if (coaster.Scalars.TryGetValue(portId, out var rollValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var rollValue)) {
                         port.SetValue(rollValue);
                     }
                     break;
                 case PortType.Pitch:
-                    if (coaster.Scalars.TryGetValue(portId, out var pitchValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var pitchValue)) {
                         port.SetValue(pitchValue);
                     }
                     break;
                 case PortType.Yaw:
-                    if (coaster.Scalars.TryGetValue(portId, out var yawValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var yawValue)) {
                         port.SetValue(yawValue);
                     }
                     break;
                 case PortType.Velocity:
-                    if (coaster.Scalars.TryGetValue(portId, out var velocityValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var velocityValue)) {
                         port.SetValue(velocityValue);
                     }
                     break;
                 case PortType.Heart:
-                    if (coaster.Scalars.TryGetValue(portId, out var heartValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var heartValue)) {
                         port.SetValue(heartValue);
                     }
                     break;
                 case PortType.Friction:
-                    if (coaster.Scalars.TryGetValue(portId, out var frictionPhysicsValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var frictionPhysicsValue)) {
                         float frictionUIValue = frictionPhysicsValue * FRICTION_PHYSICS_TO_UI_SCALE;
                         port.SetValue(frictionUIValue);
                     }
                     break;
                 case PortType.Resistance:
-                    if (coaster.Scalars.TryGetValue(portId, out var resistancePhysicsValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var resistancePhysicsValue)) {
                         float resistanceUIValue = resistancePhysicsValue * RESISTANCE_PHYSICS_TO_UI_SCALE;
                         port.SetValue(resistanceUIValue);
                     }
                     break;
                 case PortType.Radius:
-                    if (coaster.Scalars.TryGetValue(portId, out var radiusValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var radiusValue)) {
                         port.SetValue(radiusValue);
                     }
                     break;
                 case PortType.Arc:
-                    if (coaster.Scalars.TryGetValue(portId, out var arcValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var arcValue)) {
                         port.SetValue(arcValue);
                     }
                     break;
                 case PortType.Axis:
-                    if (coaster.Scalars.TryGetValue(portId, out var axisValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var axisValue)) {
                         port.SetValue(axisValue);
                     }
                     break;
                 case PortType.InWeight:
-                    if (coaster.Scalars.TryGetValue(portId, out var inWeightValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var inWeightValue)) {
                         port.SetValue(inWeightValue);
                     }
                     break;
                 case PortType.OutWeight:
-                    if (coaster.Scalars.TryGetValue(portId, out var outWeightValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var outWeightValue)) {
                         port.SetValue(outWeightValue);
                     }
                     break;
                 case PortType.LeadIn:
-                    if (coaster.Scalars.TryGetValue(portId, out var leadInValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var leadInValue)) {
                         port.SetValue(leadInValue);
                     }
                     break;
                 case PortType.LeadOut:
-                    if (coaster.Scalars.TryGetValue(portId, out var leadOutValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var leadOutValue)) {
                         port.SetValue(leadOutValue);
                     }
                     break;
                 case PortType.Rotation:
-                    if (coaster.Rotations.TryGetValue(nodeId, out var rotationRad)) {
-                        float3 rotationValue = math.degrees(rotationRad);
-                        port.SetValue(rotationValue);
-                    }
                     break;
                 case PortType.Scale:
-                    if (coaster.Scalars.TryGetValue(portId, out var scaleValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var scaleValue)) {
                         port.SetValue(scaleValue);
                     }
                     break;
                 case PortType.Start:
-                    if (coaster.Scalars.TryGetValue(portId, out var startValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var startValue)) {
                         port.SetValue(startValue);
                     }
                     break;
                 case PortType.End:
-                    if (coaster.Scalars.TryGetValue(portId, out var endValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out var endValue)) {
                         port.SetValue(endValue);
                     }
                     break;
@@ -1197,63 +1178,57 @@ namespace KexEdit.UI.NodeGraph {
 
         private void ApplyInputPortValue(PortData port) {
             ref var coaster = ref GetCoasterRef();
-            uint portId = SystemAPI.GetComponent<Port>(port.Entity).Id;
             var node = SystemAPI.GetComponent<Node>(port.Node);
             uint nodeId = node.Id;
             var nodeType = node.Type;
+            ulong key = CoasterAggregate.InputKey(nodeId, port.Index);
 
             switch (port.Port.Type) {
                 case PortType.Anchor:
-                    port.GetValue(out PointData anchorValue);
-                    ref var anchor = ref SystemAPI.GetComponentRW<AnchorPort>(port.Entity).ValueRW;
-                    anchor.Value = anchorValue;
-                    break;
                 case PortType.Path:
                     break;
                 case PortType.Duration:
                     port.GetValue(out float durationValue);
-                    if (coaster.Durations.TryGetValue(nodeId, out var existingDuration)) {
-                        coaster.Durations[nodeId] = new CoreDuration(durationValue, existingDuration.Type);
-                    }
+                    coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = durationValue;
                     break;
                 case PortType.Position:
                     port.GetValue(out float3 positionValue);
-                    coaster.Vectors[nodeId] = positionValue;
+                    coaster.Vectors[key] = positionValue;
                     if (nodeType == NodeType.Anchor) {
                         RebuildAnchorInCoaster(ref coaster, port.Node);
                     }
                     break;
                 case PortType.Roll:
                     port.GetValue(out float rollValue);
-                    coaster.Scalars[portId] = rollValue;
+                    coaster.Scalars[key] = rollValue;
                     if (nodeType == NodeType.Anchor) {
                         RebuildAnchorInCoaster(ref coaster, port.Node);
                     }
                     break;
                 case PortType.Pitch:
                     port.GetValue(out float pitchValue);
-                    coaster.Scalars[portId] = pitchValue;
+                    coaster.Scalars[key] = pitchValue;
                     if (nodeType == NodeType.Anchor) {
                         RebuildAnchorInCoaster(ref coaster, port.Node);
                     }
                     break;
                 case PortType.Yaw:
                     port.GetValue(out float yawValue);
-                    coaster.Scalars[portId] = yawValue;
+                    coaster.Scalars[key] = yawValue;
                     if (nodeType == NodeType.Anchor) {
                         RebuildAnchorInCoaster(ref coaster, port.Node);
                     }
                     break;
                 case PortType.Velocity:
                     port.GetValue(out float velocityValue);
-                    coaster.Scalars[portId] = velocityValue;
+                    coaster.Scalars[key] = velocityValue;
                     if (nodeType == NodeType.Anchor) {
                         RebuildAnchorInCoaster(ref coaster, port.Node);
                     }
                     break;
                 case PortType.Heart:
                     port.GetValue(out float heartValue);
-                    coaster.Scalars[portId] = heartValue;
+                    coaster.Scalars[key] = heartValue;
                     if (nodeType == NodeType.Anchor) {
                         RebuildAnchorInCoaster(ref coaster, port.Node);
                     }
@@ -1261,7 +1236,7 @@ namespace KexEdit.UI.NodeGraph {
                 case PortType.Friction:
                     port.GetValue(out float frictionUIValue);
                     float frictionPhysicsValue = frictionUIValue * FRICTION_UI_TO_PHYSICS_SCALE;
-                    coaster.Scalars[portId] = frictionPhysicsValue;
+                    coaster.Scalars[key] = frictionPhysicsValue;
                     if (nodeType == NodeType.Anchor) {
                         RebuildAnchorInCoaster(ref coaster, port.Node);
                     }
@@ -1269,54 +1244,52 @@ namespace KexEdit.UI.NodeGraph {
                 case PortType.Resistance:
                     port.GetValue(out float resistanceUIValue);
                     float resistancePhysicsValue = resistanceUIValue * RESISTANCE_UI_TO_PHYSICS_SCALE;
-                    coaster.Scalars[portId] = resistancePhysicsValue;
+                    coaster.Scalars[key] = resistancePhysicsValue;
                     if (nodeType == NodeType.Anchor) {
                         RebuildAnchorInCoaster(ref coaster, port.Node);
                     }
                     break;
                 case PortType.Radius:
                     port.GetValue(out float radiusValue);
-                    coaster.Scalars[portId] = radiusValue;
+                    coaster.Scalars[key] = radiusValue;
                     break;
                 case PortType.Arc:
                     port.GetValue(out float arcValue);
-                    coaster.Scalars[portId] = arcValue;
+                    coaster.Scalars[key] = arcValue;
                     break;
                 case PortType.Axis:
                     port.GetValue(out float axisValue);
-                    coaster.Scalars[portId] = axisValue;
+                    coaster.Scalars[key] = axisValue;
                     break;
                 case PortType.InWeight:
                     port.GetValue(out float inWeightValue);
-                    coaster.Scalars[portId] = inWeightValue;
+                    coaster.Scalars[key] = inWeightValue;
                     break;
                 case PortType.OutWeight:
                     port.GetValue(out float outWeightValue);
-                    coaster.Scalars[portId] = outWeightValue;
+                    coaster.Scalars[key] = outWeightValue;
                     break;
                 case PortType.LeadIn:
                     port.GetValue(out float leadInValue);
-                    coaster.Scalars[portId] = leadInValue;
+                    coaster.Scalars[key] = leadInValue;
                     break;
                 case PortType.LeadOut:
                     port.GetValue(out float leadOutValue);
-                    coaster.Scalars[portId] = leadOutValue;
+                    coaster.Scalars[key] = leadOutValue;
                     break;
                 case PortType.Rotation:
-                    port.GetValue(out float3 rotationValue);
-                    coaster.SetRotation(nodeId, math.radians(rotationValue));
                     break;
                 case PortType.Scale:
                     port.GetValue(out float scaleValue);
-                    coaster.Scalars[portId] = scaleValue;
+                    coaster.Scalars[key] = scaleValue;
                     break;
                 case PortType.Start:
                     port.GetValue(out float startValue);
-                    coaster.Scalars[portId] = startValue;
+                    coaster.Scalars[key] = startValue;
                     break;
                 case PortType.End:
                     port.GetValue(out float endValue);
-                    coaster.Scalars[portId] = endValue;
+                    coaster.Scalars[key] = endValue;
                     break;
                 default:
                     throw new NotImplementedException();
@@ -1341,55 +1314,47 @@ namespace KexEdit.UI.NodeGraph {
                 var positionPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(positionPort, Port.Create(PortType.Position, true));
                 ecb.AddComponent<Dirty>(positionPort);
-                ecb.AddComponent<PositionPort>(positionPort);
                 ecb.AppendToBuffer<InputPortReference>(entity, positionPort);
                 ecb.SetName(positionPort, PortType.Position.GetDisplayName(true));
 
                 var rollPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(rollPort, Port.Create(PortType.Roll, true));
                 ecb.AddComponent<Dirty>(rollPort);
-                ecb.AddComponent<RollPort>(rollPort, 0f);
                 ecb.AppendToBuffer<InputPortReference>(entity, rollPort);
                 ecb.SetName(rollPort, PortType.Roll.GetDisplayName(true));
 
                 var pitchPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(pitchPort, Port.Create(PortType.Pitch, true));
                 ecb.AddComponent<Dirty>(pitchPort);
-                ecb.AddComponent<PitchPort>(pitchPort, 0f);
                 ecb.AppendToBuffer<InputPortReference>(entity, pitchPort);
                 ecb.SetName(pitchPort, PortType.Pitch.GetDisplayName(true));
 
                 var yawPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(yawPort, Port.Create(PortType.Yaw, true));
                 ecb.AddComponent<Dirty>(yawPort);
-                ecb.AddComponent<YawPort>(yawPort, 0f);
                 ecb.AppendToBuffer<InputPortReference>(entity, yawPort);
                 ecb.SetName(yawPort, PortType.Yaw.GetDisplayName(true));
 
                 var velocityPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(velocityPort, Port.Create(PortType.Velocity, true));
                 ecb.AddComponent<Dirty>(velocityPort);
-                ecb.AddComponent<VelocityPort>(velocityPort, 10f);
                 ecb.AppendToBuffer<InputPortReference>(entity, velocityPort);
                 ecb.SetName(velocityPort, PortType.Velocity.GetDisplayName(true));
 
                 var heartPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(heartPort, Port.Create(PortType.Heart, true));
                 ecb.AddComponent<Dirty>(heartPort);
-                ecb.AddComponent<HeartPort>(heartPort, HEART_BASE);
                 ecb.AppendToBuffer<InputPortReference>(entity, heartPort);
                 ecb.SetName(heartPort, PortType.Heart.GetDisplayName(true));
 
                 var frictionPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(frictionPort, Port.Create(PortType.Friction, true));
                 ecb.AddComponent<Dirty>(frictionPort);
-                ecb.AddComponent<FrictionPort>(frictionPort, FRICTION_BASE);
                 ecb.AppendToBuffer<InputPortReference>(entity, frictionPort);
                 ecb.SetName(frictionPort, PortType.Friction.GetDisplayName(true));
 
                 var resistancePort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(resistancePort, Port.Create(PortType.Resistance, true));
-                ecb.AddComponent<ResistancePort>(resistancePort, RESISTANCE_BASE);
                 ecb.AddComponent<Dirty>(resistancePort);
                 ecb.AppendToBuffer<InputPortReference>(entity, resistancePort);
                 ecb.SetName(resistancePort, PortType.Resistance.GetDisplayName(true));
@@ -1405,7 +1370,6 @@ namespace KexEdit.UI.NodeGraph {
                 var inputPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(inputPort, Port.Create(PortType.Anchor, true));
                 ecb.AddComponent<Dirty>(inputPort);
-                ecb.AddComponent<AnchorPort>(inputPort, PointData.Create());
                 ecb.AppendToBuffer<InputPortReference>(entity, inputPort);
                 ecb.SetName(inputPort, PortType.Anchor.GetDisplayName(true));
             }
@@ -1414,21 +1378,18 @@ namespace KexEdit.UI.NodeGraph {
                 var targetPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(targetPort, Port.Create(PortType.Anchor, true));
                 ecb.AddComponent<Dirty>(targetPort);
-                ecb.AddComponent<AnchorPort>(targetPort, PointData.Create());
                 ecb.AppendToBuffer<InputPortReference>(entity, targetPort);
                 ecb.SetName(targetPort, PortType.Anchor.GetDisplayName(true, 1));
 
                 var outWeightPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(outWeightPort, Port.Create(PortType.OutWeight, true));
                 ecb.AddComponent<Dirty>(outWeightPort);
-                ecb.AddComponent<OutWeightPort>(outWeightPort, 0.3f);
                 ecb.AppendToBuffer<InputPortReference>(entity, outWeightPort);
                 ecb.SetName(outWeightPort, PortType.OutWeight.GetDisplayName(true));
 
                 var inWeightPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(inWeightPort, Port.Create(PortType.InWeight, true));
                 ecb.AddComponent<Dirty>(inWeightPort);
-                ecb.AddComponent<InWeightPort>(inWeightPort, 0.3f);
                 ecb.AppendToBuffer<InputPortReference>(entity, inWeightPort);
                 ecb.SetName(inWeightPort, PortType.InWeight.GetDisplayName(true));
             }
@@ -1446,14 +1407,12 @@ namespace KexEdit.UI.NodeGraph {
                 var startPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(startPort, Port.Create(PortType.Start, true));
                 ecb.AddComponent<Dirty>(startPort);
-                ecb.AddComponent<StartPort>(startPort, 0f);
                 ecb.AppendToBuffer<InputPortReference>(entity, startPort);
                 ecb.SetName(startPort, PortType.Start.GetDisplayName(true));
 
                 var endPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(endPort, Port.Create(PortType.End, true));
                 ecb.AddComponent<Dirty>(endPort);
-                ecb.AddComponent<EndPort>(endPort, -1f);
                 ecb.AppendToBuffer<InputPortReference>(entity, endPort);
                 ecb.SetName(endPort, PortType.End.GetDisplayName(true));
             }
@@ -1462,46 +1421,38 @@ namespace KexEdit.UI.NodeGraph {
                 var durationPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(durationPort, Port.Create(PortType.Duration, true));
                 ecb.AddComponent<Dirty>(durationPort);
-                ecb.AddComponent<DurationPort>(durationPort, 1f);
                 ecb.AppendToBuffer<InputPortReference>(entity, durationPort);
                 ecb.SetName(durationPort, PortType.Duration.GetDisplayName(true));
             }
 
             if (type == NodeType.CurvedSection) {
-                var defaultCurveData = CurveData.Default;
-
                 var radiusPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(radiusPort, Port.Create(PortType.Radius, true));
                 ecb.AddComponent<Dirty>(radiusPort);
-                ecb.AddComponent<RadiusPort>(radiusPort, defaultCurveData.Radius);
                 ecb.AppendToBuffer<InputPortReference>(entity, radiusPort);
                 ecb.SetName(radiusPort, PortType.Radius.GetDisplayName(true));
 
                 var arcPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(arcPort, Port.Create(PortType.Arc, true));
                 ecb.AddComponent<Dirty>(arcPort);
-                ecb.AddComponent<ArcPort>(arcPort, defaultCurveData.Arc);
                 ecb.AppendToBuffer<InputPortReference>(entity, arcPort);
                 ecb.SetName(arcPort, PortType.Arc.GetDisplayName(true));
 
                 var axisPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(axisPort, Port.Create(PortType.Axis, true));
                 ecb.AddComponent<Dirty>(axisPort);
-                ecb.AddComponent<AxisPort>(axisPort, defaultCurveData.Axis);
                 ecb.AppendToBuffer<InputPortReference>(entity, axisPort);
                 ecb.SetName(axisPort, PortType.Axis.GetDisplayName(true));
 
                 var leadInPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(leadInPort, Port.Create(PortType.LeadIn, true));
                 ecb.AddComponent<Dirty>(leadInPort);
-                ecb.AddComponent<LeadInPort>(leadInPort, defaultCurveData.LeadIn);
                 ecb.AppendToBuffer<InputPortReference>(entity, leadInPort);
                 ecb.SetName(leadInPort, PortType.LeadIn.GetDisplayName(true));
 
                 var leadOutPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(leadOutPort, Port.Create(PortType.LeadOut, true));
                 ecb.AddComponent<Dirty>(leadOutPort);
-                ecb.AddComponent<LeadOutPort>(leadOutPort, defaultCurveData.LeadOut);
                 ecb.AppendToBuffer<InputPortReference>(entity, leadOutPort);
                 ecb.SetName(leadOutPort, PortType.LeadOut.GetDisplayName(true));
             }
@@ -1510,21 +1461,18 @@ namespace KexEdit.UI.NodeGraph {
                 var positionPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(positionPort, Port.Create(PortType.Position, true));
                 ecb.AddComponent<Dirty>(positionPort);
-                ecb.AddComponent<PositionPort>(positionPort, float3.zero);
                 ecb.AppendToBuffer<InputPortReference>(entity, positionPort);
                 ecb.SetName(positionPort, PortType.Position.GetDisplayName(true));
 
                 var rotationPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(rotationPort, Port.Create(PortType.Rotation, true));
                 ecb.AddComponent<Dirty>(rotationPort);
-                ecb.AddComponent<RotationPort>(rotationPort, float3.zero);
                 ecb.AppendToBuffer<InputPortReference>(entity, rotationPort);
                 ecb.SetName(rotationPort, PortType.Rotation.GetDisplayName(true));
 
                 var scalePort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(scalePort, Port.Create(PortType.Scale, true));
                 ecb.AddComponent<Dirty>(scalePort);
-                ecb.AddComponent<ScalePort>(scalePort, 1f);
                 ecb.AppendToBuffer<InputPortReference>(entity, scalePort);
                 ecb.SetName(scalePort, PortType.Scale.GetDisplayName(true));
             }
@@ -1543,6 +1491,7 @@ namespace KexEdit.UI.NodeGraph {
                 type == NodeType.ReversePath
             ) {
                 ecb.AddBuffer<CorePointBuffer>(entity);
+                ecb.AddBuffer<SplineBuffer>(entity);
 #if VALIDATE_COASTER_PARITY
                 ecb.AddBuffer<CoasterPointBuffer>(entity);
 #endif
@@ -1562,11 +1511,6 @@ namespace KexEdit.UI.NodeGraph {
                 ecb.AddComponent<Render>(entity, true);
                 ecb.AddComponent(entity, PropertyOverrides.Default);
                 ecb.AddComponent<SelectedProperties>(entity);
-                ecb.AddBuffer<FixedVelocityKeyframe>(entity);
-                ecb.AddBuffer<HeartKeyframe>(entity);
-                ecb.AddBuffer<FrictionKeyframe>(entity);
-                ecb.AddBuffer<ResistanceKeyframe>(entity);
-                ecb.AddBuffer<TrackStyleKeyframe>(entity);
                 ecb.AddComponent<TrackStyleHash>(entity);
             }
 
@@ -1584,21 +1528,10 @@ namespace KexEdit.UI.NodeGraph {
                     Type = DurationType.Time,
                     Value = 1f,
                 });
-                ecb.AddBuffer<RollSpeedKeyframe>(entity);
-
-                if (type == NodeType.ForceSection) {
-                    ecb.AddBuffer<NormalForceKeyframe>(entity);
-                    ecb.AddBuffer<LateralForceKeyframe>(entity);
-                }
-                else if (type == NodeType.GeometricSection) {
-                    ecb.AddBuffer<PitchSpeedKeyframe>(entity);
-                    ecb.AddBuffer<YawSpeedKeyframe>(entity);
-                }
             }
 
             if (type == NodeType.CurvedSection) {
                 ecb.AddComponent(entity, CurveData.Default);
-                ecb.AddBuffer<RollSpeedKeyframe>(entity);
             }
 
             if (type == NodeType.CopyPathSection) {
@@ -1626,7 +1559,6 @@ namespace KexEdit.UI.NodeGraph {
                 var outputPort = ecb.CreateEntity();
                 ecb.AddComponent<Port>(outputPort, Port.Create(PortType.Anchor, false));
                 ecb.AddComponent<Dirty>(outputPort);
-                ecb.AddComponent<AnchorPort>(outputPort, anchor);
                 ecb.AppendToBuffer<OutputPortReference>(entity, outputPort);
                 ecb.SetName(outputPort, PortType.Anchor.GetDisplayName(false));
             }
@@ -1714,65 +1646,105 @@ namespace KexEdit.UI.NodeGraph {
             float2 center = float2.zero;
             foreach (var node in _data.Nodes.Values) {
                 if (!node.Selected) continue;
-                var entity = node.Entity;
-                float2 position = SystemAPI.GetComponent<Node>(entity).Position;
+                float2 position = SystemAPI.GetComponent<Node>(node.Entity).Position;
                 center += position;
                 selectedNodeCount++;
             }
             center /= selectedNodeCount;
             _clipboardCenter = center;
 
-            var clipboardGraph = new SerializedGraph {
-                Nodes = new NativeArray<SerializedNode>(selectedNodeCount, Allocator.Temp)
-            };
+            var clipboardCoaster = CoasterAggregate.Create(Allocator.Temp);
             var nodeOffsets = new NativeArray<float2>(selectedNodeCount, Allocator.Temp);
+            var selectedNodeIds = new NativeHashSet<uint>(selectedNodeCount, Allocator.Temp);
+            var selectedPortIds = new NativeHashSet<uint>(selectedNodeCount * 4, Allocator.Temp);
 
             int nodeIndex = 0;
-            var portIdMap = new Dictionary<Entity, uint>();
             foreach (var node in _data.Nodes.Values) {
                 if (!node.Selected) continue;
                 var entity = node.Entity;
-                var inputPorts = SystemAPI.GetBuffer<InputPortReference>(entity);
-                var outputPorts = SystemAPI.GetBuffer<OutputPortReference>(entity);
-
-                foreach (var port in inputPorts) {
-                    portIdMap[port.Value] = SystemAPI.GetComponent<Port>(port.Value).Id;
-                }
-                foreach (var port in outputPorts) {
-                    portIdMap[port.Value] = SystemAPI.GetComponent<Port>(port.Value).Id;
-                }
-
-                var serializedNode = SerializationSystem.Instance.SerializeNode(entity, in coaster, Allocator.Temp);
+                uint nodeId = SystemAPI.GetComponent<Node>(entity).Id;
                 float2 position = SystemAPI.GetComponent<Node>(entity).Position;
-                nodeOffsets[nodeIndex] = position - center;
-                clipboardGraph.Nodes[nodeIndex++] = serializedNode;
+
+                selectedNodeIds.Add(nodeId);
+                nodeOffsets[nodeIndex++] = position - center;
+
+                if (!coaster.Graph.NodeIndexMap.TryGetValue(nodeId, out int srcIdx)) continue;
+
+                int destIdx = clipboardCoaster.Graph.NodeIds.Length;
+                clipboardCoaster.Graph.NodeIds.Add(nodeId);
+                clipboardCoaster.Graph.NodeTypes.Add(coaster.Graph.NodeTypes[srcIdx]);
+                clipboardCoaster.Graph.NodePositions.Add(coaster.Graph.NodePositions[srcIdx]);
+                clipboardCoaster.Graph.NodeInputCount.Add(coaster.Graph.NodeInputCount[srcIdx]);
+                clipboardCoaster.Graph.NodeOutputCount.Add(coaster.Graph.NodeOutputCount[srcIdx]);
+                clipboardCoaster.Graph.NodeIndexMap[nodeId] = destIdx;
             }
 
-            int edgeCount = 0;
-            foreach (var edge in _data.Edges.Values) {
-                var connection = SystemAPI.GetComponent<Connection>(edge.Entity);
-                if (portIdMap.ContainsKey(connection.Source) && portIdMap.ContainsKey(connection.Target)) {
-                    edgeCount++;
+            for (int i = 0; i < coaster.Graph.PortIds.Length; i++) {
+                uint portOwner = coaster.Graph.PortOwners[i];
+                if (!selectedNodeIds.Contains(portOwner)) continue;
+
+                uint portId = coaster.Graph.PortIds[i];
+                selectedPortIds.Add(portId);
+
+                int destIdx = clipboardCoaster.Graph.PortIds.Length;
+                clipboardCoaster.Graph.PortIds.Add(portId);
+                clipboardCoaster.Graph.PortTypes.Add(coaster.Graph.PortTypes[i]);
+                clipboardCoaster.Graph.PortOwners.Add(portOwner);
+                clipboardCoaster.Graph.PortIsInput.Add(coaster.Graph.PortIsInput[i]);
+                clipboardCoaster.Graph.PortIndexMap[portId] = destIdx;
+            }
+
+            for (int i = 0; i < coaster.Graph.EdgeIds.Length; i++) {
+                uint sourcePortId = coaster.Graph.EdgeSources[i];
+                uint targetPortId = coaster.Graph.EdgeTargets[i];
+                if (!selectedPortIds.Contains(sourcePortId) || !selectedPortIds.Contains(targetPortId)) continue;
+
+                uint edgeId = coaster.Graph.EdgeIds[i];
+                int destIdx = clipboardCoaster.Graph.EdgeIds.Length;
+                clipboardCoaster.Graph.EdgeIds.Add(edgeId);
+                clipboardCoaster.Graph.EdgeSources.Add(sourcePortId);
+                clipboardCoaster.Graph.EdgeTargets.Add(targetPortId);
+                clipboardCoaster.Graph.EdgeIndexMap[edgeId] = destIdx;
+            }
+
+            foreach (var kv in coaster.Scalars) {
+                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
+                if (selectedNodeIds.Contains(nodeId)) {
+                    clipboardCoaster.Scalars[kv.Key] = kv.Value;
                 }
             }
 
-            clipboardGraph.Edges = new NativeArray<SerializedEdge>(edgeCount, Allocator.Temp);
-
-            int edgeIndex = 0;
-            foreach (var edge in _data.Edges.Values) {
-                var connection = SystemAPI.GetComponent<Connection>(edge.Entity);
-                if (portIdMap.ContainsKey(connection.Source) && portIdMap.ContainsKey(connection.Target)) {
-                    clipboardGraph.Edges[edgeIndex++] = new SerializedEdge {
-                        Id = connection.Id,
-                        SourceId = portIdMap[connection.Source],
-                        TargetId = portIdMap[connection.Target],
-                        Selected = connection.Selected
-                    };
+            foreach (var kv in coaster.Vectors) {
+                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
+                if (selectedNodeIds.Contains(nodeId)) {
+                    clipboardCoaster.Vectors[kv.Key] = kv.Value;
                 }
             }
+
+            foreach (var kv in coaster.Flags) {
+                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
+                if (selectedNodeIds.Contains(nodeId)) {
+                    clipboardCoaster.Flags[kv.Key] = kv.Value;
+                }
+            }
+
+            foreach (var kv in coaster.Keyframes.Ranges) {
+                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
+                if (selectedNodeIds.Contains(nodeId)) {
+                    int2 range = kv.Value;
+                    int newStart = clipboardCoaster.Keyframes.Keyframes.Length;
+                    for (int i = range.x; i < range.x + range.y; i++) {
+                        clipboardCoaster.Keyframes.Keyframes.Add(coaster.Keyframes.Keyframes[i]);
+                    }
+                    clipboardCoaster.Keyframes.Ranges[kv.Key] = new int2(newStart, range.y);
+                }
+            }
+
+            selectedNodeIds.Dispose();
+            selectedPortIds.Dispose();
 
             var clipboardData = new ClipboardData {
-                Graph = clipboardGraph,
+                Coaster = clipboardCoaster,
                 NodeOffsets = nodeOffsets,
                 Center = center
             };
@@ -1788,13 +1760,21 @@ namespace KexEdit.UI.NodeGraph {
 
             var clipboardData = ClipboardSerializer.Deserialize(_clipboardData);
             var portMap = new Dictionary<uint, uint>();
+            var emptyUiState = KexEdit.App.Persistence.UIStateChunk.Create(Allocator.Temp);
 
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            for (int i = 0; i < clipboardData.Graph.Nodes.Length; i++) {
-                var nodeData = clipboardData.Graph.Nodes[i];
+            for (int i = 0; i < clipboardData.Coaster.Graph.NodeIds.Length; i++) {
                 var offset = clipboardData.NodeOffsets[i];
                 var newPosition = pastePosition + offset;
+
+                KexdAdapter.BuildSerializedNode(
+                    in clipboardData.Coaster,
+                    in emptyUiState,
+                    i,
+                    Allocator.Temp,
+                    out var nodeData
+                );
 
                 var updatedNodeData = nodeData;
                 updatedNodeData.Node.Position = newPosition;
@@ -1819,10 +1799,12 @@ namespace KexEdit.UI.NodeGraph {
                 }
 
                 SerializationSystem.Instance.DeserializeNode(updatedNodeData, _data.Coaster, ref ecb, false);
+                nodeData.Dispose();
             }
 
             ecb.Playback(EntityManager);
             ecb.Dispose();
+            emptyUiState.Dispose();
 
             using var ports = _portQuery.ToEntityArray(Allocator.Temp);
             var lookup = new NativeHashMap<uint, Entity>(ports.Length, Allocator.Temp);
@@ -1832,15 +1814,17 @@ namespace KexEdit.UI.NodeGraph {
             }
 
             using var connectionEcb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var copiedEdge in clipboardData.Graph.Edges) {
-                if (portMap.TryGetValue(copiedEdge.SourceId, out var newSourceId) &&
-                    portMap.TryGetValue(copiedEdge.TargetId, out var newTargetId) &&
+            for (int i = 0; i < clipboardData.Coaster.Graph.EdgeIds.Length; i++) {
+                uint sourcePortId = clipboardData.Coaster.Graph.EdgeSources[i];
+                uint targetPortId = clipboardData.Coaster.Graph.EdgeTargets[i];
+
+                if (portMap.TryGetValue(sourcePortId, out var newSourceId) &&
+                    portMap.TryGetValue(targetPortId, out var newTargetId) &&
                     lookup.TryGetValue(newSourceId, out var source) &&
                     lookup.TryGetValue(newTargetId, out var target)) {
 
                     var entity = connectionEcb.CreateEntity();
-                    bool selected = copiedEdge.Selected;
-                    var connection = Connection.Create(source, target, selected);
+                    var connection = Connection.Create(source, target, false);
                     connectionEcb.AddComponent<Dirty>(entity);
                     connectionEcb.AddComponent<CoasterReference>(entity, _data.Coaster);
                     connectionEcb.AddComponent(entity, connection);

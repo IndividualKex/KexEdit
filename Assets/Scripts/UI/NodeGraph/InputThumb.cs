@@ -1,8 +1,8 @@
+using KexEdit.Legacy;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class InputThumb : VisualElement {
         private InputThumbEdge _edge;

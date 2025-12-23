@@ -1,40 +1,55 @@
+using KexEdit.Sim.Schema;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using CoreKeyframe = KexEdit.Sim.Keyframe;
 
 namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [UpdateBefore(typeof(TrackSegmentInitializationSystem))]
     [BurstCompile]
     public partial struct StyleHashSystem : ISystem {
+        private ComponentLookup<CoasterData> _coasterDataLookup;
+
+        [BurstCompile]
+        public void OnCreate(ref SystemState state) {
+            _coasterDataLookup = state.GetComponentLookup<CoasterData>(true);
+        }
+
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            foreach (var (hash, trackStyleBuffer, entity) in SystemAPI
-                .Query<RefRW<TrackStyleHash>, DynamicBuffer<TrackStyleKeyframe>>()
+            _coasterDataLookup.Update(ref state);
+
+            foreach (var (hash, node, overrides, coasterRef, entity) in SystemAPI
+                .Query<RefRW<TrackStyleHash>, Node, PropertyOverrides, CoasterReference>()
                 .WithEntityAccess()
             ) {
                 ref var hashRef = ref hash.ValueRW;
 
-                var overrides = SystemAPI.GetComponent<PropertyOverrides>(entity);
                 if (overrides.TrackStyle) {
-                    hashRef = CalculateStyleHash(trackStyleBuffer);
-                }
-                else {
+                    if (_coasterDataLookup.TryGetComponent(coasterRef, out var coasterData)) {
+                        hashRef = CalculateStyleHash(in coasterData.Value.Keyframes, node.Id);
+                    } else {
+                        hashRef = 13;
+                    }
+                } else {
                     hashRef = CalculatePointHash(SystemAPI.GetBuffer<CorePointBuffer>(entity));
                 }
             }
         }
 
-        private uint CalculateStyleHash(DynamicBuffer<TrackStyleKeyframe> keyframes) {
-            if (keyframes.Length == 0) return 13;
+        private uint CalculateStyleHash(in KexEdit.Sim.Schema.Storage.KeyframeStore keyframes, uint nodeId) {
+            if (!keyframes.TryGet(nodeId, PropertyId.TrackStyle, out var slice)) return 13;
+            if (slice.Length == 0) return 13;
 
             uint hash = 13;
-            for (int i = 0; i < keyframes.Length; i++) {
-                var keyframe = keyframes[i].Value;
+            for (int i = 0; i < slice.Length; i++) {
+                var keyframe = slice[i];
                 hash = math.hash(new float4(
                     keyframe.Time,
                     keyframe.Value,
-                    (float)keyframe.Id,
+                    (float)(byte)keyframe.OutInterpolation,
                     hash
                 ));
             }

@@ -1,7 +1,7 @@
+using KexEdit.Legacy;
 using Unity.Collections;
 using Unity.Entities;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class MeshLoadingSystem : SystemBase {

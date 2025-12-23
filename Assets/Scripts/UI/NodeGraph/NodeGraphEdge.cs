@@ -3,7 +3,6 @@ using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 using static KexEdit.UI.NodeGraph.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class NodeGraphEdge : VisualElement {
         private NodeGraphView _view;
@@ -107,7 +106,7 @@ namespace KexEdit.UI.NodeGraph {
                 e.ShiftKey = evt.shiftKey;
                 this.SendEvent(e);
             }
-            
+
             if (evt.button == 1 && !evt.altKey) {
                 var e = this.GetPooled<EdgeRightClickEvent>();
                 e.MousePosition = evt.localMousePosition;

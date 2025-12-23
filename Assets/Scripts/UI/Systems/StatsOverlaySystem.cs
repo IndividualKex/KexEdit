@@ -1,12 +1,13 @@
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
+using static KexEdit.Sim.Sim;
 using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class StatsOverlaySystem : SystemBase {
@@ -353,7 +354,8 @@ namespace KexEdit.UI {
 
             if (hasReadOnlyForces) {
                 GetInterpolatedPointWithReadOnlyForces(ref _interpolatedPoint, pointBuffer, follower.Section, follower.Index);
-            } else {
+            }
+            else {
                 GetInterpolatedPoint(ref _interpolatedPoint, pointBuffer, follower.Index);
             }
 
@@ -444,7 +446,8 @@ namespace KexEdit.UI {
                         _cachedCarOffsets[i] = TrainCarPositionCalculator.GetCarOffsetFromIndex(i, carCount, _cachedTrainConfig.CarSpacing);
                     }
                 }
-            } else {
+            }
+            else {
                 int currentCarCount = TrainCarCountPreferences.GetCarCount(currentStyle, _cachedTrainConfig.CarCount);
                 if (currentCarCount != _cachedCarCount) {
                     _cachedCarCount = currentCarCount;

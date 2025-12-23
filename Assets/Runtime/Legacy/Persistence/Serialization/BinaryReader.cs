@@ -43,6 +43,18 @@ namespace KexEdit.Legacy.Serialization {
             }
         }
 
+        public void SkipArray<T>() where T : unmanaged {
+            int length = Read<int>();
+            if (length > 0) {
+                var tempArray = new NativeArray<T>(1, Allocator.Temp);
+                int elementSize = new NativeSlice<T>(tempArray).SliceConvert<byte>().Length;
+                tempArray.Dispose();
+                int byteSize = length * elementSize;
+                CheckCapacity(byteSize);
+                _position += byteSize;
+            }
+        }
+
         private void CheckCapacity(int size) {
             if (_position + size > _buffer.Length) {
                 throw new InvalidOperationException($"Buffer overflow: need {size} bytes, have {_buffer.Length - _position}");

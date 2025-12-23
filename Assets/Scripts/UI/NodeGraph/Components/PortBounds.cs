@@ -1,4 +1,3 @@
-using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public struct PortBounds {
         public float Min;

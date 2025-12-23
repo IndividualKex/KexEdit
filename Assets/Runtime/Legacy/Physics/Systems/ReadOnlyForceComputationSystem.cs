@@ -2,6 +2,7 @@ using Unity.Entities;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
+using static KexEdit.Sim.Sim;
 
 namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
@@ -67,12 +68,12 @@ namespace KexEdit.Legacy {
                     float adjustedPitchFromLast = offsetPoint.PitchFromLast;
                     float adjustedYawFromLast = offsetPoint.YawFromLast;
 
-                    if (math.abs(offsetPoint.Velocity) > Constants.EPSILON &&
-                        math.abs(centroidVelocity - offsetPoint.Velocity) > Constants.EPSILON) {
-                        float pitchPerMeter = offsetPoint.PitchFromLast * Constants.HZ / offsetPoint.Velocity;
-                        float yawPerMeter = offsetPoint.YawFromLast * Constants.HZ / offsetPoint.Velocity;
-                        adjustedPitchFromLast = pitchPerMeter * centroidVelocity / Constants.HZ;
-                        adjustedYawFromLast = yawPerMeter * centroidVelocity / Constants.HZ;
+                    if (math.abs(offsetPoint.Velocity) > EPSILON &&
+                        math.abs(centroidVelocity - offsetPoint.Velocity) > EPSILON) {
+                        float pitchPerMeter = offsetPoint.PitchFromLast * HZ / offsetPoint.Velocity;
+                        float yawPerMeter = offsetPoint.YawFromLast * HZ / offsetPoint.Velocity;
+                        adjustedPitchFromLast = pitchPerMeter * centroidVelocity / HZ;
+                        adjustedYawFromLast = yawPerMeter * centroidVelocity / HZ;
                     }
 
                     float3 forceVec;
@@ -82,7 +83,7 @@ namespace KexEdit.Legacy {
                         + adjustedPitchFromLast * adjustedPitchFromLast
                     );
 
-                    if (math.abs(angleFromLast) < Constants.EPSILON) {
+                    if (math.abs(angleFromLast) < EPSILON) {
                         forceVec = math.up();
                     }
                     else {
@@ -94,11 +95,11 @@ namespace KexEdit.Legacy {
                         float lateralAngle = math.radians(adjustedPitchFromLast * sinRoll
                             - yawScaleFactor * adjustedYawFromLast * cosRoll);
 
-                        float distancePerStep = centroidVelocity / Constants.HZ;
+                        float distancePerStep = centroidVelocity / HZ;
 
                         forceVec = math.up()
-                            + centroidVelocity * Constants.HZ * lateralAngle * offsetPoint.Lateral / Constants.G
-                            + distancePerStep * Constants.HZ * Constants.HZ * normalAngle * offsetPoint.Normal / Constants.G;
+                            + centroidVelocity * HZ * lateralAngle * offsetPoint.Lateral / G
+                            + distancePerStep * HZ * HZ * normalAngle * offsetPoint.Normal / G;
                     }
 
                     float normalForce = -math.dot(forceVec, offsetPoint.Normal);

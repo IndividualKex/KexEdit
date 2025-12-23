@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using CoreKeyframe = KexEdit.Core.Keyframe;
-using CoreInterpolationType = KexEdit.Core.InterpolationType;
+using CoreKeyframe = KexEdit.Sim.Keyframe;
+using CoreInterpolationType = KexEdit.Sim.InterpolationType;
 
 namespace KexEdit.Native.RustCore {
     [StructLayout(LayoutKind.Sequential)]

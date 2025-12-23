@@ -1,4 +1,5 @@
 using KexEdit.Legacy;
+
 namespace KexEdit.UI {
     public class OptimizerData {
         public float Loss;

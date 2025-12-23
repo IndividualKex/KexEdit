@@ -1,12 +1,11 @@
 using System.IO;
+using KexEdit.Legacy;
+using KexEdit.Legacy.Serialization;
+using KexEdit.UI.Timeline;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
-using KexEdit.UI.Timeline;
-using KexEdit.Legacy.Serialization;
-
-using KexEdit.Legacy;
 using LegacyCoaster = KexEdit.Legacy.Coaster;
 
 namespace KexEdit.UI {

@@ -1,4 +1,3 @@
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class VisualizationLegendData {
         public string VisualizationName;

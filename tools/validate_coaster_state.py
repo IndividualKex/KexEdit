@@ -19,6 +19,7 @@ from dataclasses import dataclass, asdict
 from typing import List, Dict, Optional, Any
 from enum import IntEnum
 
+
 # Import existing .kex parser components
 class NodeType(IntEnum):
     ForceSection = 0
@@ -31,6 +32,7 @@ class NodeType(IntEnum):
     Bridge = 7
     Mesh = 8
     Append = 9
+
 
 class PortType(IntEnum):
     Anchor = 0
@@ -56,6 +58,7 @@ class PortType(IntEnum):
     Start = 20
     End = 21
 
+
 class PropertyId(IntEnum):
     RollSpeed = 0
     NormalForce = 1
@@ -68,9 +71,11 @@ class PropertyId(IntEnum):
     Resistance = 8
     TrackStyle = 9
 
+
 class DurationType(IntEnum):
     Time = 0
     Distance = 1
+
 
 class SerializationVersion:
     INITIAL = 1
@@ -82,6 +87,7 @@ class SerializationVersion:
     BRIDGE_WEIGHT_PORTS = 7
     CURRENT = BRIDGE_WEIGHT_PORTS
 
+
 class NodeFieldFlags(IntEnum):
     HasRender = 1 << 0
     HasSelected = 1 << 1
@@ -92,9 +98,11 @@ class NodeFieldFlags(IntEnum):
     HasMeshFilePath = 1 << 6
     HasSteering = 1 << 7
 
+
 @dataclass
 class ExpectedCoasterState:
     """Expected Coaster aggregate state extracted from .kex file"""
+
     # Graph structure
     node_ids: List[int]
     node_types: List[str]
@@ -116,6 +124,7 @@ class ExpectedCoasterState:
     # Flags
     steering_nodes: List[int]
     driven_nodes: List[int]
+
 
 @dataclass
 class PointData:
@@ -142,16 +151,19 @@ class PointData:
     resistance: float
     facing: int
 
+
 @dataclass
 class Port:
     id: int
     type: int
     is_input: bool
 
+
 @dataclass
 class SerializedPort:
     port: Port
     value: PointData
+
 
 @dataclass
 class Node:
@@ -162,6 +174,7 @@ class Node:
     selected: bool
     next_entity: tuple
     prev_entity: tuple
+
 
 @dataclass
 class SerializedNode:
@@ -175,6 +188,7 @@ class SerializedNode:
     duration: Optional[tuple] = None  # (type, value)
     keyframe_counts: Optional[List[int]] = None  # Count per property
 
+
 @dataclass
 class SerializedEdge:
     id: int
@@ -182,33 +196,34 @@ class SerializedEdge:
     target_id: int
     selected: bool
 
+
 class KexReader:
     def __init__(self, data: bytes):
         self.data = data
         self.pos = 0
 
     def read_int(self) -> int:
-        val = struct.unpack_from('<i', self.data, self.pos)[0]
+        val = struct.unpack_from("<i", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_uint(self) -> int:
-        val = struct.unpack_from('<I', self.data, self.pos)[0]
+        val = struct.unpack_from("<I", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_float(self) -> float:
-        val = struct.unpack_from('<f', self.data, self.pos)[0]
+        val = struct.unpack_from("<f", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_bool(self) -> bool:
-        val = struct.unpack_from('<B', self.data, self.pos)[0]
+        val = struct.unpack_from("<B", self.data, self.pos)[0]
         self.pos += 1
         return val != 0
 
     def read_byte(self) -> int:
-        val = struct.unpack_from('<B', self.data, self.pos)[0]
+        val = struct.unpack_from("<B", self.data, self.pos)[0]
         self.pos += 1
         return val
 
@@ -258,7 +273,7 @@ class KexReader:
             heart_offset=self.read_float(),
             friction=self.read_float(),
             resistance=self.read_float(),
-            facing=self.read_int()
+            facing=self.read_int(),
         )
 
     def read_serialized_port(self) -> SerializedPort:
@@ -275,7 +290,9 @@ class KexReader:
             self.pos += 3  # padding
             next_entity = self.read_entity()
             prev_entity = self.read_entity()
-            return Node(counter, pos, type_val, priority, selected, next_entity, prev_entity)
+            return Node(
+                counter, pos, type_val, priority, selected, next_entity, prev_entity
+            )
         else:
             id = self.read_uint()
             pos = self.read_float2()
@@ -303,9 +320,10 @@ class KexReader:
             self.pos += count * 48
         return count
 
+
 def extract_expected_state(kex_path: str) -> ExpectedCoasterState:
     """Extract expected Coaster state from .kex file"""
-    with open(kex_path, 'rb') as f:
+    with open(kex_path, "rb") as f:
         data = f.read()
 
     reader = KexReader(data)
@@ -327,7 +345,11 @@ def extract_expected_state(kex_path: str) -> ExpectedCoasterState:
         field_flags = reader.read_uint()
 
         boolean_flags = 0
-        if field_flags & (NodeFieldFlags.HasRender | NodeFieldFlags.HasSelected | NodeFieldFlags.HasSteering):
+        if field_flags & (
+            NodeFieldFlags.HasRender
+            | NodeFieldFlags.HasSelected
+            | NodeFieldFlags.HasSteering
+        ):
             boolean_flags = reader.read_byte()
 
         if field_flags & NodeFieldFlags.HasPropertyOverrides:
@@ -366,7 +388,9 @@ def extract_expected_state(kex_path: str) -> ExpectedCoasterState:
             output_ports.append(reader.read_serialized_port())
 
         # Keyframes
-        num_keyframe_arrays = 10 if version >= SerializationVersion.TRACK_STYLE_PROPERTY else 9
+        num_keyframe_arrays = (
+            10 if version >= SerializationVersion.TRACK_STYLE_PROPERTY else 9
+        )
         keyframe_counts = []
         for _ in range(num_keyframe_arrays):
             keyframe_counts.append(reader.read_keyframe_array(version))
@@ -380,7 +404,7 @@ def extract_expected_state(kex_path: str) -> ExpectedCoasterState:
             output_ports=output_ports,
             curve_data=curve_data,
             duration=duration,
-            keyframe_counts=keyframe_counts
+            keyframe_counts=keyframe_counts,
         )
         nodes.append(serialized_node)
 
@@ -429,24 +453,42 @@ def extract_expected_state(kex_path: str) -> ExpectedCoasterState:
             port_type = PortType(port.port.type)
 
             # Scalar ports (all stored in value.roll)
-            if port_type in [PortType.Velocity, PortType.Roll, PortType.Pitch, PortType.Yaw,
-                            PortType.Friction, PortType.Resistance, PortType.Heart,
-                            PortType.Radius, PortType.Arc, PortType.Axis,
-                            PortType.LeadIn, PortType.LeadOut, PortType.InWeight, PortType.OutWeight,
-                            PortType.Start, PortType.End]:
+            if port_type in [
+                PortType.Velocity,
+                PortType.Roll,
+                PortType.Pitch,
+                PortType.Yaw,
+                PortType.Friction,
+                PortType.Resistance,
+                PortType.Heart,
+                PortType.Radius,
+                PortType.Arc,
+                PortType.Axis,
+                PortType.LeadIn,
+                PortType.LeadOut,
+                PortType.InWeight,
+                PortType.OutWeight,
+                PortType.Start,
+                PortType.End,
+            ]:
                 scalars[port_id] = port.value.roll
 
             # Vector port (Position) - stored in (roll, velocity, energy) fields
             elif port_type == PortType.Position:
-                vectors[node_id] = (port.value.roll, port.value.velocity, port.value.energy)
+                vectors[node_id] = (
+                    port.value.roll,
+                    port.value.velocity,
+                    port.value.energy,
+                )
 
             # Rotation port - stored in (roll, velocity, energy) fields, converted to radians
             elif port_type == PortType.Rotation:
                 import math
+
                 rotations[node_id] = (
                     math.radians(port.value.roll),
                     math.radians(port.value.velocity),
-                    math.radians(port.value.energy)
+                    math.radians(port.value.energy),
                 )
 
         # Anchor nodes: velocity port gets value from anchor data
@@ -495,8 +537,9 @@ def extract_expected_state(kex_path: str) -> ExpectedCoasterState:
         durations=durations,
         keyframes=keyframes,
         steering_nodes=steering_nodes,
-        driven_nodes=driven_nodes
+        driven_nodes=driven_nodes,
     )
+
 
 def compare_states(expected: ExpectedCoasterState, actual: Dict[str, Any]) -> List[str]:
     """Compare expected vs actual Coaster state, return list of discrepancies
@@ -509,60 +552,77 @@ def compare_states(expected: ExpectedCoasterState, actual: Dict[str, Any]) -> Li
     discrepancies = []
 
     # Compare graph structure
-    if len(expected.node_ids) != len(actual.get('node_ids', [])):
-        discrepancies.append(f"Node count mismatch: expected {len(expected.node_ids)}, got {len(actual.get('node_ids', []))}")
+    if len(expected.node_ids) != len(actual.get("node_ids", [])):
+        discrepancies.append(
+            f"Node count mismatch: expected {len(expected.node_ids)}, got {len(actual.get('node_ids', []))}"
+        )
 
-    if expected.edge_count != len(actual.get('edges', [])):
-        discrepancies.append(f"Edge count mismatch: expected {expected.edge_count}, got {len(actual.get('edges', []))}")
+    if expected.edge_count != len(actual.get("edges", [])):
+        discrepancies.append(
+            f"Edge count mismatch: expected {expected.edge_count}, got {len(actual.get('edges', []))}"
+        )
 
     # Compare scalars (only check ones in expected; actual may have more)
-    actual_scalars = actual.get('scalars', {})
+    actual_scalars = actual.get("scalars", {})
     for port_id, expected_value in expected.scalars.items():
         if str(port_id) in actual_scalars:
             actual_value = actual_scalars[str(port_id)]
             if abs(expected_value - actual_value) > 0.001:
-                discrepancies.append(f"Scalar[{port_id}] mismatch: expected {expected_value}, got {actual_value}")
+                discrepancies.append(
+                    f"Scalar[{port_id}] mismatch: expected {expected_value}, got {actual_value}"
+                )
         else:
             discrepancies.append(f"Scalar[{port_id}] missing in actual state")
 
     # Compare vectors
-    actual_vectors = actual.get('vectors', {})
+    actual_vectors = actual.get("vectors", {})
     for node_id, expected_vec in expected.vectors.items():
         if str(node_id) in actual_vectors:
             actual_vec = actual_vectors[str(node_id)]
             for i in range(3):
                 if abs(expected_vec[i] - actual_vec[i]) > 0.001:
-                    discrepancies.append(f"Vector[{node_id}][{i}] mismatch: expected {expected_vec[i]}, got {actual_vec[i]}")
+                    discrepancies.append(
+                        f"Vector[{node_id}][{i}] mismatch: expected {expected_vec[i]}, got {actual_vec[i]}"
+                    )
         else:
             discrepancies.append(f"Vector[{node_id}] missing in actual state")
 
     # Compare durations
-    actual_durations = actual.get('durations', {})
+    actual_durations = actual.get("durations", {})
     for node_id, expected_dur in expected.durations.items():
         if str(node_id) in actual_durations:
             actual_dur = actual_durations[str(node_id)]
-            if abs(expected_dur[0] - actual_dur['value']) > 0.001:
-                discrepancies.append(f"Duration[{node_id}] value mismatch: expected {expected_dur[0]}, got {actual_dur['value']}")
-            if expected_dur[1] != actual_dur['type']:
-                discrepancies.append(f"Duration[{node_id}] type mismatch: expected {expected_dur[1]}, got {actual_dur['type']}")
+            if abs(expected_dur[0] - actual_dur["value"]) > 0.001:
+                discrepancies.append(
+                    f"Duration[{node_id}] value mismatch: expected {expected_dur[0]}, got {actual_dur['value']}"
+                )
+            if expected_dur[1] != actual_dur["type"]:
+                discrepancies.append(
+                    f"Duration[{node_id}] type mismatch: expected {expected_dur[1]}, got {actual_dur['type']}"
+                )
         else:
             discrepancies.append(f"Duration[{node_id}] missing in actual state")
 
     # Compare keyframe counts
-    actual_keyframes = actual.get('keyframes', {})
+    actual_keyframes = actual.get("keyframes", {})
     for key, expected_count in expected.keyframes.items():
         if key in actual_keyframes:
             actual_count = actual_keyframes[key]
             if expected_count != actual_count:
-                discrepancies.append(f"Keyframe{key} count mismatch: expected {expected_count}, got {actual_count}")
+                discrepancies.append(
+                    f"Keyframe{key} count mismatch: expected {expected_count}, got {actual_count}"
+                )
         else:
             discrepancies.append(f"Keyframe{key} missing in actual state")
 
     return discrepancies
 
+
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python tools/validate_coaster_state.py path/to/file.kex [path/to/coaster_export.json]")
+        print(
+            "Usage: python tools/validate_coaster_state.py path/to/file.kex [path/to/coaster_export.json]"
+        )
         sys.exit(1)
 
     kex_path = sys.argv[1]
@@ -574,29 +634,29 @@ def main():
         expected = extract_expected_state(kex_path)
 
         print("=== EXPECTED COASTER STATE ===\n")
-        print(f"Graph Structure:")
+        print("Graph Structure:")
         print(f"  Nodes: {len(expected.node_ids)}")
         print(f"  Edges: {expected.edge_count}")
-        print(f"\nData Collections:")
+        print("\nData Collections:")
         print(f"  Scalars: {len(expected.scalars)}")
         print(f"  Vectors: {len(expected.vectors)}")
         print(f"  Rotations: {len(expected.rotations)}")
         print(f"  Durations: {len(expected.durations)}")
         print(f"  Keyframe curves: {len(expected.keyframes)}")
-        print(f"\nFlags:")
+        print("\nFlags:")
         print(f"  Steering nodes: {expected.steering_nodes}")
         print(f"  Driven nodes: {expected.driven_nodes}")
 
         # Export expected state to JSON for reference
-        output_path = Path(kex_path).with_suffix('.expected.json')
-        with open(output_path, 'w') as f:
+        output_path = Path(kex_path).with_suffix(".expected.json")
+        with open(output_path, "w") as f:
             json.dump(asdict(expected), f, indent=2)
         print(f"\n[OK] Expected state written to: {output_path}")
 
         # If actual export provided, compare
         if export_path:
-            print(f"\n=== COMPARING WITH ACTUAL STATE ===\n")
-            with open(export_path, 'r') as f:
+            print("\n=== COMPARING WITH ACTUAL STATE ===\n")
+            with open(export_path, "r") as f:
                 actual = json.load(f)
 
             discrepancies = compare_states(expected, actual)
@@ -609,13 +669,17 @@ def main():
             else:
                 print("[OK] All checks passed! Coaster state matches .kex file.")
         else:
-            print("\nNo actual state provided. Run Unity test to export Coaster state for comparison.")
+            print(
+                "\nNo actual state provided. Run Unity test to export Coaster state for comparison."
+            )
 
     except Exception as e:
         print(f"Error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

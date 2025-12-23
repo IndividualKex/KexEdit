@@ -1,5 +1,5 @@
 using System.Runtime.InteropServices;
-using CoreFrame = KexEdit.Core.Frame;
+using CoreFrame = KexEdit.Sim.Frame;
 
 namespace KexEdit.Native.RustCore {
     [StructLayout(LayoutKind.Sequential)]

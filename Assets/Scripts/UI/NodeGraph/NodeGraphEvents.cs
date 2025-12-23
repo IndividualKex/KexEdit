@@ -1,10 +1,10 @@
 using System.Collections.Generic;
+using KexEdit.Legacy;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public static class NodeGraphEvents {
         public static void Send<T>(this VisualElement element) where T : NodeGraphEvent<T>, new() {

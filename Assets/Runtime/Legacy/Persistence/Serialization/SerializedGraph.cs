@@ -1,18 +1,73 @@
 using System;
 using System.Runtime.InteropServices;
 using Unity.Collections;
+using Unity.Entities;
 using Unity.Mathematics;
 
 namespace KexEdit.Legacy.Serialization {
-    /*
-     * HOW TO ADD NEW FIELDS TO SERIALIZATION:
-     * 1. Add field to SerializedNode struct
-     * 2. Add corresponding flag to NodeFieldFlags enum  
-     * 3. Update GraphSerializer.SerializeNode() to write field conditionally
-     * 4. Update GraphSerializer.DeserializeNode() to read field conditionally
-     * 5. Update SizeCalculator.CalculateNodeSize() to include field size
-     * 6. Set flag in SerializationSystem.SerializeNode() when field has data
-     */
+    [Serializable]
+    internal struct KeyframeV1 {
+#pragma warning disable 0649
+        public uint Id;
+        public float Time;
+        public float Value;
+        public InterpolationType InInterpolation;
+        public InterpolationType OutInterpolation;
+        public float InTangent;
+        public float OutTangent;
+        public float InWeight;
+        public float OutWeight;
+        public bool Selected;
+#pragma warning restore 0649
+
+        public Keyframe ToCurrentKeyframe() {
+            var handleType = HandleType.Free;
+            if ((int)InInterpolation == 3 || (int)OutInterpolation == 3) {
+                handleType = HandleType.Aligned;
+            }
+
+            return new Keyframe {
+                Id = Id,
+                Time = Time,
+                Value = Value,
+                InInterpolation = (int)InInterpolation == 3 ? InterpolationType.Bezier : InInterpolation,
+                OutInterpolation = (int)OutInterpolation == 3 ? InterpolationType.Bezier : OutInterpolation,
+                HandleType = handleType,
+                Flags = KeyframeFlags.None,
+                InTangent = InTangent,
+                OutTangent = OutTangent,
+                InWeight = InWeight,
+                OutWeight = OutWeight,
+                Selected = Selected
+            };
+        }
+    }
+
+    [Serializable]
+    internal struct NodeV1 {
+#pragma warning disable 0649
+        public float2 Position;
+        public NodeType Type;
+        public int Priority;
+        [MarshalAs(UnmanagedType.U1)]
+        public bool Selected;
+
+        public Entity Next;
+        public Entity Previous;
+#pragma warning restore 0649
+
+        public Node ToCurrentNode(uint id) {
+            return new Node {
+                Id = id,
+                Position = Position,
+                Type = Type,
+                Priority = Priority,
+                Selected = Selected,
+                Next = Next,
+                Previous = Previous
+            };
+        }
+    }
 
     public static class SerializationVersion {
         public const int INITIAL = 1;
@@ -116,18 +171,6 @@ namespace KexEdit.Legacy.Serialization {
         }
     }
 
-    public struct SerializedGraph : IDisposable {
-        public int Version;
-        public SerializedUIState UIState;
-        public NativeArray<SerializedNode> Nodes;
-        public NativeArray<SerializedEdge> Edges;
-
-        public void Dispose() {
-            if (Nodes.IsCreated) Nodes.Dispose();
-            if (Edges.IsCreated) Edges.Dispose();
-        }
-    }
-
     public struct SerializedNode : IDisposable {
         public Node Node;
         public PointData Anchor;
@@ -141,16 +184,16 @@ namespace KexEdit.Legacy.Serialization {
 
         public NativeArray<SerializedPort> InputPorts;
         public NativeArray<SerializedPort> OutputPorts;
-        public NativeArray<RollSpeedKeyframe> RollSpeedKeyframes;
-        public NativeArray<NormalForceKeyframe> NormalForceKeyframes;
-        public NativeArray<LateralForceKeyframe> LateralForceKeyframes;
-        public NativeArray<PitchSpeedKeyframe> PitchSpeedKeyframes;
-        public NativeArray<YawSpeedKeyframe> YawSpeedKeyframes;
-        public NativeArray<FixedVelocityKeyframe> FixedVelocityKeyframes;
-        public NativeArray<HeartKeyframe> HeartKeyframes;
-        public NativeArray<FrictionKeyframe> FrictionKeyframes;
-        public NativeArray<ResistanceKeyframe> ResistanceKeyframes;
-        public NativeArray<TrackStyleKeyframe> TrackStyleKeyframes;
+        public NativeArray<Keyframe> RollSpeedKeyframes;
+        public NativeArray<Keyframe> NormalForceKeyframes;
+        public NativeArray<Keyframe> LateralForceKeyframes;
+        public NativeArray<Keyframe> PitchSpeedKeyframes;
+        public NativeArray<Keyframe> YawSpeedKeyframes;
+        public NativeArray<Keyframe> FixedVelocityKeyframes;
+        public NativeArray<Keyframe> HeartKeyframes;
+        public NativeArray<Keyframe> FrictionKeyframes;
+        public NativeArray<Keyframe> ResistanceKeyframes;
+        public NativeArray<Keyframe> TrackStyleKeyframes;
 
         public bool Render {
             get => (BooleanFlags & NodeFlags.Render) != 0;

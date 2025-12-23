@@ -1,6 +1,5 @@
 using System;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public enum UnitsType {
         None,

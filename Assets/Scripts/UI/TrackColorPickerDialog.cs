@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class TrackColorPickerDialog : VisualElement {
         private Action _onClose;

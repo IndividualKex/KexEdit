@@ -1,7 +1,6 @@
 using Unity.Properties;
 using UnityEngine.UIElements;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI.NodeGraph {
     public class RenderToggle : VisualElement {
         private Toggle _toggle;

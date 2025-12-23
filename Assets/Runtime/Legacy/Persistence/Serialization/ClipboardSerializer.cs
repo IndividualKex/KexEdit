@@ -1,54 +1,43 @@
+using KexEdit.App.Persistence;
 using Unity.Collections;
 using Unity.Mathematics;
+using CoasterAggregate = KexEdit.App.Coaster.Coaster;
 
 namespace KexEdit.Legacy.Serialization {
     public static class ClipboardSerializer {
         public static byte[] Serialize(ref ClipboardData clipboardData) {
-            // Calculate total size
-            int graphSize = SizeCalculator.CalculateSize(ref clipboardData.Graph);
-            int offsetsSize = sizeof(int) + clipboardData.NodeOffsets.Length * (2 * sizeof(float));
-            int centerSize = 2 * sizeof(float);
-            int totalSize = graphSize + offsetsSize + centerSize;
+            using var writer = new ChunkWriter(Allocator.Temp);
 
-            var buffer = new NativeArray<byte>(totalSize, Allocator.Temp);
-            var writer = new BinaryWriter(buffer);
+            CoasterSerializer.Write(writer, in clipboardData.Coaster);
 
-            // Serialize graph
-            int actualGraphSize = GraphSerializer.Serialize(ref clipboardData.Graph, ref buffer);
-
-            // Create a new writer positioned after the graph data
-            var remainingBuffer = buffer.GetSubArray(actualGraphSize, buffer.Length - actualGraphSize);
-            writer = new BinaryWriter(remainingBuffer);
-
-            // Serialize offsets
             writer.WriteArray(clipboardData.NodeOffsets);
+            writer.WriteFloat2(clipboardData.Center);
 
-            // Serialize center
-            writer.Write(clipboardData.Center);
-
-            int actualSize = actualGraphSize + writer.Position;
-            var result = new byte[actualSize];
-            buffer.Slice(0, actualSize).CopyTo(result);
-            buffer.Dispose();
-
+            using var buffer = writer.ToArray();
+            var result = new byte[buffer.Length];
+            buffer.CopyTo(result);
             return result;
         }
 
         public static ClipboardData Deserialize(byte[] data) {
             var buffer = new NativeArray<byte>(data, Allocator.Temp);
 
-            // Deserialize graph first
-            var clipboardData = new ClipboardData();
-            int graphSize = GraphSerializer.Deserialize(ref clipboardData.Graph, ref buffer);
+            try {
+                var reader = new ChunkReader(buffer);
+                var coaster = CoasterSerializer.Read(ref reader, Allocator.Persistent);
 
-            // Deserialize offsets and center
-            var remainingBuffer = buffer.GetSubArray(graphSize, buffer.Length - graphSize);
-            var reader = new BinaryReader(remainingBuffer);
-            reader.ReadArray(out clipboardData.NodeOffsets, Allocator.Temp);
-            clipboardData.Center = reader.Read<float2>();
+                var nodeOffsets = reader.ReadArrayWithLength<float2>(Allocator.Persistent);
+                var center = reader.ReadFloat2();
 
-            buffer.Dispose();
-            return clipboardData;
+                return new ClipboardData {
+                    Coaster = coaster,
+                    NodeOffsets = nodeOffsets,
+                    Center = center
+                };
+            }
+            finally {
+                buffer.Dispose();
+            }
         }
     }
 }

@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using static KexEdit.UI.Constants;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class ContextMenu : VisualElement {
         private static readonly float s_MenuOverlap = 1f;

@@ -17,7 +17,7 @@ Simulation, dynamics, and movement systems
 - `Steering` - Directional control
 - `TrackPoint` - Sampled track positions
 - `CurveData` - Track curvature information
-- Force keyframes - Lateral, normal, friction, etc.
+- `Keyframe` - Base keyframe data type for animation curves
 - Read-only force buffers - `ReadNormalForce`, `ReadLateralForce`, `ReadPitchSpeed`, `ReadYawSpeed`, `ReadRollSpeed`
 - `ReadPivot` - Offset position for force calculations
 - Collider components - Track collision detection

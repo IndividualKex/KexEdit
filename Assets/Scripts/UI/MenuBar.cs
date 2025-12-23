@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public class MenuBar : VisualElement {
         private MenuBarItem _activeItem;

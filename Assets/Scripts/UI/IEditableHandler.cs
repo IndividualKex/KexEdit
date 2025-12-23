@@ -1,7 +1,5 @@
 using Unity.Mathematics;
-using UnityEngine;
 
-using KexEdit.Legacy;
 namespace KexEdit.UI {
     public interface IEditableHandler {
         bool CanCopy();

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using KexEdit.Core;
+using KexEdit.Sim;
 using Unity.Collections;
-using Keyframe = KexEdit.Core.Keyframe;
-using InterpolationType = KexEdit.Core.InterpolationType;
+using Keyframe = KexEdit.Sim.Keyframe;
+using InterpolationType = KexEdit.Sim.InterpolationType;
 
 namespace Tests {
     public struct CopyPathTestData : IDisposable {

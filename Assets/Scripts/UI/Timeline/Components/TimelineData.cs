@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
-
 using KexEdit.Legacy;
+
 namespace KexEdit.UI.Timeline {
     public class TimelineData : IComponentData, IDisposable {
         public NativeList<float> Times;

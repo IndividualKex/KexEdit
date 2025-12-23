@@ -1,11 +1,11 @@
-using KexEdit.Core;
-using KexEdit.Nodes;
-using KexEdit.Nodes.Geometric;
+using KexEdit.Sim;
+using KexEdit.Sim.Schema;
+using KexEdit.Sim.Nodes.Geometric;
 using NUnit.Framework;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
-using Keyframe = KexEdit.Core.Keyframe;
+using Keyframe = KexEdit.Sim.Keyframe;
 
 namespace Tests {
     [BurstCompile]

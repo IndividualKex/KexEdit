@@ -1,23 +1,29 @@
-using Unity.Entities;
-using Unity.Collections;
-using Unity.Mathematics;
+using KexEdit.Sim.Schema;
 using Unity.Burst;
+using Unity.Collections;
+using Unity.Entities;
 using Unity.Jobs;
+using Unity.Mathematics;
+using static KexEdit.Sim.Sim;
 using static KexEdit.Legacy.Constants;
+using CoreKeyframe = KexEdit.Sim.Keyframe;
 
 namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [BurstCompile]
     public partial struct TrackSegmentInitializationSystem : ISystem {
         private EntityQuery _segmentQuery;
+        private ComponentLookup<CoasterData> _coasterDataLookup;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state) {
             _segmentQuery = SystemAPI.QueryBuilder().WithAll<SectionReference>().Build();
+            _coasterDataLookup = state.GetComponentLookup<CoasterData>(true);
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
+            _coasterDataLookup.Update(ref state);
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
 
             int count = _segmentQuery.CalculateEntityCount();
@@ -29,8 +35,8 @@ namespace KexEdit.Legacy {
                 }
             }
 
-            foreach (var (coaster, render, trackStyleBuffer, entity) in SystemAPI
-                .Query<CoasterReference, Render, DynamicBuffer<TrackStyleKeyframe>>()
+            foreach (var (coasterRef, render, node, entity) in SystemAPI
+                .Query<CoasterReference, Render, Node>()
                 .WithAll<CorePointBuffer>()
                 .WithEntityAccess()
             ) {
@@ -40,9 +46,9 @@ namespace KexEdit.Legacy {
                 var points = SystemAPI.GetBuffer<CorePointBuffer>(entity);
                 if (points.Length == 0) continue;
 
-                if (!SystemAPI.HasComponent<TrackStyleSettingsReference>(coaster)) continue;
+                if (!SystemAPI.HasComponent<TrackStyleSettingsReference>(coasterRef)) continue;
 
-                Entity styleEntity = SystemAPI.GetComponent<TrackStyleSettingsReference>(coaster);
+                Entity styleEntity = SystemAPI.GetComponent<TrackStyleSettingsReference>(coasterRef);
                 if (!SystemAPI.HasComponent<TrackStyleSettings>(styleEntity)) continue;
 
                 var settings = SystemAPI.GetComponent<TrackStyleSettings>(styleEntity);
@@ -51,8 +57,14 @@ namespace KexEdit.Legacy {
                 uint styleHash = SystemAPI.GetComponent<TrackStyleHash>(entity);
                 var overrides = SystemAPI.GetComponent<PropertyOverrides>(entity);
 
-                using var breakpoints = overrides.TrackStyle
-                    ? DetectManualStyleBreakpoints(ref state, trackStyleBuffer, points, styleReferences.Length)
+                NativeSlice<CoreKeyframe> trackStyleKeyframes = default;
+                bool hasTrackStyleKeyframes = false;
+                if (overrides.TrackStyle && _coasterDataLookup.TryGetComponent(coasterRef, out var coasterData)) {
+                    hasTrackStyleKeyframes = coasterData.Value.Keyframes.TryGet(node.Id, PropertyId.TrackStyle, out trackStyleKeyframes);
+                }
+
+                using var breakpoints = hasTrackStyleKeyframes
+                    ? DetectManualStyleBreakpoints(ref state, trackStyleKeyframes, points, styleReferences.Length)
                     : DetectAutoStyleBreakpoints(ref state, points, settings, styleReferences);
 
                 for (int i = 0; i < breakpoints.Length; i++) {
@@ -61,7 +73,7 @@ namespace KexEdit.Legacy {
                     Entity targetStyle = styleReferences[styleIndex];
 
                     Entity segmentEntity = segmentEntity = ecb.CreateEntity();
-                    ecb.AddComponent<CoasterReference>(segmentEntity, coaster);
+                    ecb.AddComponent<CoasterReference>(segmentEntity, coasterRef);
                     ecb.AddComponent<SectionReference>(segmentEntity, entity);
                     ecb.AddComponent<SelectedBlend>(segmentEntity);
                     ecb.AddComponent<TrackHash>(segmentEntity);
@@ -86,7 +98,7 @@ namespace KexEdit.Legacy {
 
         private NativeArray<StyleBreakpoint> DetectManualStyleBreakpoints(
             ref SystemState state,
-            DynamicBuffer<TrackStyleKeyframe> keyframes,
+            NativeSlice<CoreKeyframe> keyframes,
             DynamicBuffer<CorePointBuffer> points,
             int styleCount
         ) {
@@ -168,7 +180,7 @@ namespace KexEdit.Legacy {
             public NativeList<StyleBreakpoint> Breakpoints;
 
             [ReadOnly]
-            public DynamicBuffer<TrackStyleKeyframe> Keyframes;
+            public NativeSlice<CoreKeyframe> Keyframes;
 
             [ReadOnly]
             public DynamicBuffer<CorePointBuffer> Points;
@@ -192,21 +204,21 @@ namespace KexEdit.Legacy {
             }
 
             private void GenerateKeyframeBreakpoints() {
-                int currentStyleIndex = (int)math.round(Keyframes[0].Value.Value);
+                int currentStyleIndex = (int)math.round(Keyframes[0].Value);
                 currentStyleIndex = math.clamp(currentStyleIndex, 0, MaxStyleCount - 1);
                 float segmentStartTime = 0f;
 
-                if (Keyframes[0].Value.Time > 0f) {
+                if (Keyframes[0].Time > 0f) {
                     Breakpoints.Add(new StyleBreakpoint {
                         StartTime = 0f,
-                        EndTime = Keyframes[0].Value.Time,
+                        EndTime = Keyframes[0].Time,
                         StyleIndex = currentStyleIndex
                     });
-                    segmentStartTime = Keyframes[0].Value.Time;
+                    segmentStartTime = Keyframes[0].Time;
                 }
 
                 for (int i = 0; i < Keyframes.Length; i++) {
-                    var keyframe = Keyframes[i].Value;
+                    var keyframe = Keyframes[i];
                     int styleIndex = (int)math.round(keyframe.Value);
                     styleIndex = math.clamp(styleIndex, 0, MaxStyleCount - 1);
 

@@ -2,7 +2,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using static KexEdit.Legacy.Constants;
+using static KexEdit.Sim.Sim;
 
 namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(SimulationSystemGroup))]

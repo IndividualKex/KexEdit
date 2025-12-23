@@ -1,9 +1,8 @@
-using System;
 using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
-using CorePoint = KexEdit.Core.Point;
-using CoreKeyframe = KexEdit.Core.Keyframe;
+using CoreKeyframe = KexEdit.Sim.Keyframe;
+using CorePoint = KexEdit.Sim.Point;
 
 namespace KexEdit.Native.RustCore {
     public static class RustForceNode {

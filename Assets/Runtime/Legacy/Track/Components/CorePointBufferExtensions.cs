@@ -1,6 +1,6 @@
 using Unity.Burst;
 using Unity.Mathematics;
-using static KexEdit.Legacy.Constants;
+using static KexEdit.Sim.Sim;
 
 namespace KexEdit.Legacy {
     [BurstCompile]

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using KexEdit.Core;
-using KexEdit.Nodes;
+using KexEdit.Sim;
+using KexEdit.Sim.Schema;
 using Unity.Collections;
 using Unity.Mathematics;
-using Keyframe = KexEdit.Core.Keyframe;
-using InterpolationType = KexEdit.Core.InterpolationType;
+using Keyframe = KexEdit.Sim.Keyframe;
+using InterpolationType = KexEdit.Sim.InterpolationType;
 
 namespace Tests {
     public struct ForceTestData : IDisposable {

@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Collections;
 using Unity.Burst;
 using Unity.Jobs;
+using static KexEdit.Sim.Sim;
 using static KexEdit.Legacy.Constants;
 
 namespace KexEdit.Legacy {

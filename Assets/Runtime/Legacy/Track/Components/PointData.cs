@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using Unity.Mathematics;
+using static KexEdit.Sim.Sim;
 
 namespace KexEdit.Legacy {
     [Serializable]
@@ -52,9 +53,9 @@ namespace KexEdit.Legacy {
                 HeartArc = 0f,
                 SpineArc = 0f,
                 FrictionOrigin = 0f,
-                HeartOffset = Constants.HEART_BASE,
-                Friction = Constants.FRICTION_BASE,
-                Resistance = Constants.RESISTANCE_BASE,
+                HeartOffset = HEART_BASE,
+                Friction = FRICTION_BASE,
+                Resistance = RESISTANCE_BASE,
                 Facing = 1,
             };
             point.Energy = point.ComputeEnergy();

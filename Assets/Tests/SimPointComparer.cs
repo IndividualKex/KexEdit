@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using KexEdit.Core;
+using KexEdit.Sim;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;

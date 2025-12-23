@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using Unity.Mathematics;
 using KexEdit.Native.RustCore;
-using CoreFrame = KexEdit.Core.Frame;
+using CoreFrame = KexEdit.Sim.Frame;
 
 namespace KexEdit.Tests.RustCore {
     public class RustFrameTests {

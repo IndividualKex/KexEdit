@@ -1,5 +1,5 @@
 using Unity.Entities;
-using CoasterAggregate = KexEdit.Coaster.Coaster;
+using CoasterAggregate = KexEdit.App.Coaster.Coaster;
 
 namespace KexEdit.Legacy {
     public struct CoasterData : IComponentData {

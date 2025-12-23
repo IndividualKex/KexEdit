@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "KexEdit.Legacy",
+        "KexEdit.Spline",
         "Unity.Entities",
         "Unity.Collections",
         "Unity.Burst",
@@ -19,12 +20,13 @@
         "glTFast",
         "glTFast.dots",
         "StandaloneFileBrowser",
-        "KexEdit.Core",
-        "KexGraph",
-        "KexEdit.Coaster",
-        "KexEdit.NodeGraph",
-        "KexEdit.Nodes",
-        "KexEdit.Nodes.Anchor"
+        "KexEdit.Sim",
+        "KexEdit.Graph",
+        "KexEdit.App.Coaster",
+        "KexEdit.Graph.Typed",
+        "KexEdit.Sim.Schema",
+        "KexEdit.Sim.Nodes.Anchor",
+        "KexEdit.App.Persistence"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
