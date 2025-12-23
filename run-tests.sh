@@ -40,12 +40,13 @@ else
   echo "Running Unity tests..."
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_PATH="$SCRIPT_DIR"
+
 if [[ "$OSTYPE" == "darwin"* ]]; then
   UNITY_PATH="/Applications/Unity/Hub/Editor/6000.3.1f1/Unity.app/Contents/MacOS/Unity"
-  PROJECT_PATH="/Users/dylanebert/KexEdit"
 else
   UNITY_PATH="C:/Program Files/Unity/Hub/Editor/6000.3.1f1/Editor/Unity.exe"
-  PROJECT_PATH="C:/Users/dylan/Documents/Games/KexEdit"
 fi
 
 "$UNITY_PATH" \
