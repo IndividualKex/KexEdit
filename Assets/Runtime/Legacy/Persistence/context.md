@@ -10,21 +10,22 @@ Save/load, serialization, and import/export
 
 ## Key Systems
 
-- `SerializationSystem` - Save/load, undo/redo; supports both legacy and KEXD formats
-- `LegacyImporter` - Converts SerializedGraph to Coaster aggregate
+- `SerializationSystem` - Save/load, undo/redo; auto-detects format by magic header
+- `LegacyImporter` - Converts SerializedGraph → Coaster aggregate
+- `KexdAdapter` - Converts Coaster aggregate → ECS entities
 
 ## Serialization
 
-- `GraphSerializer` - Legacy node graph serialization
+- `GraphSerializer` - Legacy node graph serialization (read-only for old files)
 - `SerializedGraph` - Legacy intermediate format
-- `SerializeToKEXD` - New KEXD chunk-based format (Phase 4A complete)
+- KEXD format - Chunk-based format with CORE + UIMD extensions
 
 ## Data Flow
 
 ```
-Legacy Save: ECS entities → SerializedGraph → bytes
 KEXD Save:   ECS entities → Coaster + UI metadata → KEXD chunks
-Load:        bytes → SerializedGraph → Coaster → ECS entities
+KEXD Load:   KEXD bytes → Coaster → KexdAdapter → ECS entities
+Legacy Load: Legacy bytes → SerializedGraph → LegacyImporter → Coaster → ECS entities
 ```
 
 ## Entry Points

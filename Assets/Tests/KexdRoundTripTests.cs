@@ -189,5 +189,155 @@ namespace Tests {
             entityManager.DestroyEntity(coasterEntity);
             entityManager.DestroyEntity(nodeEntity);
         }
+
+        [Test]
+        public void FormatDetection_RecognizesKEXDFormat() {
+            byte[] kexdData = new byte[] { (byte)'K', (byte)'E', (byte)'X', (byte)'D', 1, 0, 0, 0 };
+            var deserializedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
+
+            Assert.IsTrue(_world.EntityManager.Exists(deserializedEntity));
+            Assert.IsTrue(_world.EntityManager.HasComponent<CoasterData>(deserializedEntity));
+
+            _world.EntityManager.DestroyEntity(deserializedEntity);
+        }
+
+        [Test]
+        public void EmptyGraph_RoundTrip_Succeeds() {
+            var entityManager = _world.EntityManager;
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            entityManager.SetName(coasterEntity, "Coaster");
+
+            var coaster = Coaster.Create(Allocator.Persistent);
+            entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+
+            var kexdData = _serializationSystem.SerializeToKEXD(coasterEntity);
+
+            entityManager.DestroyEntity(coasterEntity);
+
+            var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
+
+            Assert.IsTrue(entityManager.Exists(loadedEntity));
+            Assert.IsTrue(entityManager.HasComponent<CoasterData>(loadedEntity));
+
+            var loadedCoaster = entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
+            Assert.AreEqual(0, loadedCoaster.Graph.NodeIds.Length);
+
+            entityManager.DestroyEntity(loadedEntity);
+        }
+
+        [Test]
+        public void SingleAnchor_RoundTrip_PreservesData() {
+            var entityManager = _world.EntityManager;
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            entityManager.SetName(coasterEntity, "Coaster");
+
+            var coaster = Coaster.Create(Allocator.Persistent);
+            var nodeId = coaster.Graph.AddNode((uint)KexEdit.Nodes.NodeType.Anchor, new float2(100, 200));
+
+            coaster.Vectors[nodeId] = new float3(10, 20, 30);
+            coaster.Rotations[nodeId] = new float3(0.1f, 0.2f, 0.3f);
+
+            entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+
+            var nodeEntity = entityManager.CreateEntity();
+            entityManager.AddComponentData(nodeEntity, new Node {
+                Id = nodeId,
+                Type = LegacyNodeType.Anchor,
+                Position = new float2(100, 200),
+                Selected = false
+            });
+            entityManager.AddComponentData(nodeEntity, new CoasterReference { Value = coasterEntity });
+
+            var kexdData = _serializationSystem.SerializeToKEXD(coasterEntity);
+
+            entityManager.DestroyEntity(coasterEntity);
+            entityManager.DestroyEntity(nodeEntity);
+
+            var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
+
+            Assert.IsTrue(entityManager.Exists(loadedEntity));
+
+            var loadedCoaster = entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
+            Assert.AreEqual(1, loadedCoaster.Graph.NodeIds.Length);
+            Assert.AreEqual(nodeId, loadedCoaster.Graph.NodeIds[0]);
+
+            Assert.IsTrue(loadedCoaster.Vectors.TryGetValue(nodeId, out var position));
+            Assert.AreEqual(10, position.x, 0.001f);
+            Assert.AreEqual(20, position.y, 0.001f);
+            Assert.AreEqual(30, position.z, 0.001f);
+
+            var query = entityManager.CreateEntityQuery(typeof(Node), typeof(CoasterReference));
+            using var nodes = query.ToEntityArray(Allocator.Temp);
+            Assert.AreEqual(1, nodes.Length);
+
+            var loadedNode = entityManager.GetComponentData<Node>(nodes[0]);
+            Assert.AreEqual(nodeId, loadedNode.Id);
+            Assert.AreEqual(100, loadedNode.Position.x, 0.001f);
+            Assert.AreEqual(200, loadedNode.Position.y, 0.001f);
+
+            entityManager.DestroyEntity(loadedEntity);
+        }
+
+        [Test]
+        public void NodePositions_RoundTrip_FromUIMetadata() {
+            var entityManager = _world.EntityManager;
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            entityManager.SetName(coasterEntity, "Coaster");
+
+            var coaster = Coaster.Create(Allocator.Persistent);
+            var node1Id = coaster.Graph.AddNode((uint)KexEdit.Nodes.NodeType.Anchor, new float2(150, 250));
+            var node2Id = coaster.Graph.AddNode((uint)KexEdit.Nodes.NodeType.Force, new float2(350, 450));
+
+            entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+
+            var node1Entity = entityManager.CreateEntity();
+            entityManager.AddComponentData(node1Entity, new Node {
+                Id = node1Id,
+                Type = LegacyNodeType.Anchor,
+                Position = new float2(150, 250),
+                Selected = false
+            });
+            entityManager.AddComponentData(node1Entity, new CoasterReference { Value = coasterEntity });
+
+            var node2Entity = entityManager.CreateEntity();
+            entityManager.AddComponentData(node2Entity, new Node {
+                Id = node2Id,
+                Type = LegacyNodeType.ForceSection,
+                Position = new float2(350, 450),
+                Selected = false
+            });
+            entityManager.AddComponentData(node2Entity, new CoasterReference { Value = coasterEntity });
+
+            var kexdData = _serializationSystem.SerializeToKEXD(coasterEntity);
+
+            entityManager.DestroyEntity(coasterEntity);
+            entityManager.DestroyEntity(node1Entity);
+            entityManager.DestroyEntity(node2Entity);
+
+            var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
+
+            var query = entityManager.CreateEntityQuery(typeof(Node), typeof(CoasterReference));
+            using var nodes = query.ToEntityArray(Allocator.Temp);
+            Assert.AreEqual(2, nodes.Length);
+
+            bool found1 = false, found2 = false;
+            foreach (var nodeEntity in nodes) {
+                var node = entityManager.GetComponentData<Node>(nodeEntity);
+                if (node.Id == node1Id) {
+                    found1 = true;
+                    Assert.AreEqual(150, node.Position.x, 0.001f);
+                    Assert.AreEqual(250, node.Position.y, 0.001f);
+                } else if (node.Id == node2Id) {
+                    found2 = true;
+                    Assert.AreEqual(350, node.Position.x, 0.001f);
+                    Assert.AreEqual(450, node.Position.y, 0.001f);
+                }
+            }
+
+            Assert.IsTrue(found1, "Node 1 not found after deserialization");
+            Assert.IsTrue(found2, "Node 2 not found after deserialization");
+
+            entityManager.DestroyEntity(loadedEntity);
+        }
     }
 }

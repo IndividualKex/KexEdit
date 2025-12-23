@@ -14,8 +14,8 @@ Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant 
 | 2 | Validation Foundation | ✅ COMPLETE |
 | 3 | Extensible Serialization | ✅ COMPLETE |
 | 4A | KEXD Write Path | ✅ COMPLETE |
-| 4B | KEXD Read Path | ⏸️ Next |
-| 4C | Switch to KEXD-Only | ⏸️ Pending |
+| 4B | KEXD Read Path | ✅ COMPLETE |
+| 4C | Switch to KEXD-Only | ⏸️ Next |
 | 5 | Pruning | ⏸️ Pending |
 | 6 | Cleanup | ⏸️ Pending |
 
@@ -36,6 +36,14 @@ Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant 
 - **Debug hook** added to FileManager with `DEBUG_KEXD_FORMAT` flag
 - Python tool already validates KEXD format
 - Legacy save/load unchanged
+
+## Phase 4B: Summary
+
+- **Format detection** by "KEXD" magic header in `IsKexdFormat()`
+- **DeserializeKexd** reads CORE + UIMD chunks, creates ECS entities
+- **KexdAdapter** converts Coaster aggregate → ECS entities (nodes, ports, connections)
+- **9 tests passing**: KexdRoundTripTests (7) + KexdIntegrationTests (2)
+- Legacy `.kex` files still loadable via `DeserializeLegacy` path
 
 ### KEXD File Format
 
@@ -225,11 +233,11 @@ public void KEXD_RoundTrip_PreservesAllData() {
 
 ## Definition of Done
 
-- [ ] Format detection works
-- [ ] KexdAdapter converts Coaster → SerializedGraph
-- [ ] DeserializeFromKEXD creates correct ECS entities
-- [ ] Bi-directional round-trip test passes
-- [ ] Both formats loadable (backwards compatibility)
+- [x] Format detection works
+- [x] KexdAdapter converts Coaster → ECS entities
+- [x] DeserializeFromKEXD creates correct ECS entities
+- [x] Bi-directional round-trip test passes (7 tests)
+- [x] Both formats loadable (backwards compatibility)
 
 ---
 
@@ -367,8 +375,8 @@ Duration, Steering, CurveData, PropertyOverrides
 
 # Next Steps
 
-1. Implement Phase 4A: SerializeToKEXD + validation
-2. Run tests, validate with Python tool
-3. Implement Phase 4B: Format detection + adapter
+1. ~~Implement Phase 4A: SerializeToKEXD + validation~~ ✅
+2. ~~Run tests, validate with Python tool~~ ✅
+3. ~~Implement Phase 4B: Format detection + adapter~~ ✅
 4. Implement Phase 4C: Switch default format
 5. Phase 5: Prune redundant components

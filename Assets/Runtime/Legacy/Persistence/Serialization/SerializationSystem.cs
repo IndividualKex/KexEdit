@@ -191,6 +191,50 @@ namespace KexEdit.Legacy.Serialization {
                 return coaster;
             }
 
+            if (IsKexdFormat(data)) {
+                return DeserializeKexd(data, coaster, restoreUIState);
+            } else {
+                return DeserializeLegacy(data, coaster, restoreUIState);
+            }
+        }
+
+        private bool IsKexdFormat(byte[] data) {
+            return data.Length >= 4 &&
+                   data[0] == 'K' && data[1] == 'E' &&
+                   data[2] == 'X' && data[3] == 'D';
+        }
+
+        private Entity DeserializeKexd(byte[] data, Entity coaster, bool restoreUIState) {
+            var buffer = new NativeArray<byte>(data, Allocator.Temp);
+
+            var reader = new KexEdit.Persistence.ChunkReader(buffer);
+            var coasterAggregate = KexEdit.Persistence.CoasterSerializer.Read(reader, Allocator.Persistent);
+            reader.Dispose();
+
+            buffer.Dispose();
+            buffer = new NativeArray<byte>(data, Allocator.Temp);
+            reader = new KexEdit.Persistence.ChunkReader(buffer);
+            var extensions = KexEdit.Persistence.ExtensionSerializer.ReadExtensions(ref reader, Allocator.Temp);
+            reader.Dispose();
+
+            EntityManager.SetComponentData(coaster, new CoasterData {
+                Value = coasterAggregate
+            });
+
+            KexdAdapter.ImportToEcs(
+                in coasterAggregate,
+                in extensions.UIMetadata,
+                coaster,
+                EntityManager,
+                restoreUIState
+            );
+
+            buffer.Dispose();
+            extensions.Dispose();
+            return coaster;
+        }
+
+        private Entity DeserializeLegacy(byte[] data, Entity coaster, bool restoreUIState) {
             var buffer = new NativeArray<byte>(data, Allocator.Temp);
             SerializedGraph serializedGraph = new();
             GraphSerializer.Deserialize(ref serializedGraph, ref buffer);
