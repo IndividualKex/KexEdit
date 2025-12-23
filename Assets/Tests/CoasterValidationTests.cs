@@ -156,19 +156,6 @@ namespace Tests {
             sb.AppendLine();
             sb.AppendLine("  },");
 
-            // Rotations
-            sb.AppendLine("  \"rotations\": {");
-            var rotationEnumerator = coaster.Rotations.GetEnumerator();
-            bool firstRotation = true;
-            while (rotationEnumerator.MoveNext()) {
-                if (!firstRotation) sb.AppendLine(",");
-                firstRotation = false;
-                var rot = rotationEnumerator.Current.Value;
-                sb.Append($"    \"{rotationEnumerator.Current.Key}\": [{rot.x}, {rot.y}, {rot.z}]");
-            }
-            rotationEnumerator.Dispose();
-            sb.AppendLine();
-            sb.AppendLine("  },");
 
             // Durations
             sb.AppendLine("  \"durations\": {");
@@ -255,15 +242,6 @@ namespace Tests {
                 Assert.AreEqual(kv.Value.x, actualValue.x, 0.0001f, $"Vector.x mismatch for key {kv.Key}");
                 Assert.AreEqual(kv.Value.y, actualValue.y, 0.0001f, $"Vector.y mismatch for key {kv.Key}");
                 Assert.AreEqual(kv.Value.z, actualValue.z, 0.0001f, $"Vector.z mismatch for key {kv.Key}");
-            }
-
-            // Rotations
-            Assert.AreEqual(expected.Rotations.Count, actual.Rotations.Count, "Rotation count mismatch");
-            foreach (var kv in expected.Rotations) {
-                Assert.IsTrue(actual.Rotations.TryGetValue(kv.Key, out var actualValue), $"Rotation key {kv.Key} not found");
-                Assert.AreEqual(kv.Value.x, actualValue.x, 0.0001f, $"Rotation.x mismatch for key {kv.Key}");
-                Assert.AreEqual(kv.Value.y, actualValue.y, 0.0001f, $"Rotation.y mismatch for key {kv.Key}");
-                Assert.AreEqual(kv.Value.z, actualValue.z, 0.0001f, $"Rotation.z mismatch for key {kv.Key}");
             }
 
             // Durations

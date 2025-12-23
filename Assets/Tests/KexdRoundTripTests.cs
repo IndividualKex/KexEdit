@@ -235,7 +235,11 @@ namespace Tests {
             var nodeId = coaster.Graph.AddNode((uint)KexEdit.Nodes.NodeType.Anchor, new float2(100, 200));
 
             coaster.Vectors[nodeId] = new float3(10, 20, 30);
-            coaster.Rotations[nodeId] = new float3(0.1f, 0.2f, 0.3f);
+            // Rotation stored as separate scalars (using fake port IDs for this test)
+            uint rollPortId = 1000u, pitchPortId = 1001u, yawPortId = 1002u;
+            coaster.Scalars[rollPortId] = 0.1f;
+            coaster.Scalars[pitchPortId] = 0.2f;
+            coaster.Scalars[yawPortId] = 0.3f;
 
             entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
 

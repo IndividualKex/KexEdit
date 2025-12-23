@@ -5,11 +5,13 @@ using Unity.Mathematics;
 namespace KexEdit.Nodes.Anchor {
     public static class AnchorPorts {
         public const int Position = 0;
-        public const int Rotation = 1;
-        public const int Velocity = 2;
-        public const int Heart = 3;
-        public const int Friction = 4;
-        public const int Resistance = 5;
+        public const int Roll = 1;
+        public const int Pitch = 2;
+        public const int Yaw = 3;
+        public const int Velocity = 4;
+        public const int Heart = 5;
+        public const int Friction = 6;
+        public const int Resistance = 7;
     }
 
     [BurstCompile]

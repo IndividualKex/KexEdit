@@ -1,7 +1,9 @@
 using KexEdit.Coaster;
 using KexEdit.Core;
 using KexEdit.Legacy.Serialization;
+using KexEdit.NodeGraph;
 using KexEdit.Nodes;
+using KexEdit.Nodes.Anchor;
 using KexGraph;
 using Unity.Burst;
 using Unity.Collections;
@@ -61,9 +63,12 @@ namespace KexEdit.Legacy {
             uint nodeId = coaster.Graph.NodeIds[nodeIndex];
             uint coreNodeType = coaster.Graph.NodeTypes[nodeIndex];
 
+            // Try UIMD first, fall back to Graph.NodePositions for synthetic nodes
             float2 position = float2.zero;
-            if (uiMetadata.Positions.IsCreated) {
-                uiMetadata.Positions.TryGetValue(nodeId, out position);
+            if (uiMetadata.Positions.IsCreated && uiMetadata.Positions.TryGetValue(nodeId, out position)) {
+                // Position found in UIMD
+            } else if (nodeIndex < coaster.Graph.NodePositions.Length) {
+                position = coaster.Graph.NodePositions[nodeIndex];
             }
 
             var legacyType = CoreToLegacyNodeType((Nodes.NodeType)coreNodeType);
@@ -234,11 +239,13 @@ namespace KexEdit.Legacy {
 
             return (coreType, portIndex) switch {
                 (Nodes.NodeType.Anchor, 0) => Legacy.PortType.Position,
-                (Nodes.NodeType.Anchor, 1) => Legacy.PortType.Rotation,
-                (Nodes.NodeType.Anchor, 2) => Legacy.PortType.Velocity,
-                (Nodes.NodeType.Anchor, 3) => Legacy.PortType.Heart,
-                (Nodes.NodeType.Anchor, 4) => Legacy.PortType.Friction,
-                (Nodes.NodeType.Anchor, 5) => Legacy.PortType.Resistance,
+                (Nodes.NodeType.Anchor, 1) => Legacy.PortType.Roll,
+                (Nodes.NodeType.Anchor, 2) => Legacy.PortType.Pitch,
+                (Nodes.NodeType.Anchor, 3) => Legacy.PortType.Yaw,
+                (Nodes.NodeType.Anchor, 4) => Legacy.PortType.Velocity,
+                (Nodes.NodeType.Anchor, 5) => Legacy.PortType.Heart,
+                (Nodes.NodeType.Anchor, 6) => Legacy.PortType.Friction,
+                (Nodes.NodeType.Anchor, 7) => Legacy.PortType.Resistance,
 
                 (Nodes.NodeType.Force, 0) => Legacy.PortType.Anchor,
                 (Nodes.NodeType.Force, 1) => Legacy.PortType.Duration,
@@ -288,12 +295,14 @@ namespace KexEdit.Legacy {
                     result = new PointData { HeartPosition = pos };
                     return;
 
-                case Legacy.PortType.Rotation:
-                    var rot = coaster.GetRotation(nodeId);
-                    result = new PointData {
-                        Roll = rot.x,
-                        HeartPosition = new float3(rot.y, rot.z, 0)
-                    };
+                case Legacy.PortType.Roll:
+                case Legacy.PortType.Pitch:
+                case Legacy.PortType.Yaw:
+                    if (coaster.Scalars.TryGetValue(portId, out float rotValue)) {
+                        result = new PointData { Roll = math.degrees(rotValue) };
+                        return;
+                    }
+                    result = default;
                     return;
 
                 case Legacy.PortType.Duration:
@@ -347,8 +356,19 @@ namespace KexEdit.Legacy {
         [BurstCompile]
         private static void BuildAnchorPortValue(in CoasterAggregate coaster, uint nodeId, out PointData result) {
             var position = coaster.Vectors.TryGetValue(nodeId, out var p) ? p : float3.zero;
-            var rotation = coaster.GetRotation(nodeId);
-            var frame = Frame.FromEuler(rotation.y, rotation.z, rotation.x);
+
+            float roll = 0f, pitch = 0f, yaw = 0f;
+            if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Roll, out uint rollPortId)) {
+                coaster.Scalars.TryGetValue(rollPortId, out roll);
+            }
+            if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Pitch, out uint pitchPortId)) {
+                coaster.Scalars.TryGetValue(pitchPortId, out pitch);
+            }
+            if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Yaw, out uint yawPortId)) {
+                coaster.Scalars.TryGetValue(yawPortId, out yaw);
+            }
+
+            var frame = Frame.FromEuler(pitch, yaw, roll);
 
             result = new PointData {
                 HeartPosition = position,
@@ -356,7 +376,7 @@ namespace KexEdit.Legacy {
                 Normal = frame.Normal,
                 Lateral = frame.Lateral,
                 Velocity = 0f,
-                Roll = rotation.x,
+                Roll = roll,
                 Energy = 0f
             };
         }

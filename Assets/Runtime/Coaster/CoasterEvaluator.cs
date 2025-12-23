@@ -174,18 +174,20 @@ namespace KexEdit.Coaster {
         [BurstCompile]
         private static void EvaluateAnchorNode(in Coaster coaster, uint nodeId, ref EvaluationResult result) {
             float3 position = coaster.Vectors.TryGetValue(nodeId, out var pos) ? pos : float3.zero;
-            float3 rotation = coaster.GetRotation(nodeId);
+            float roll = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Roll, 0f);
+            float pitch = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Pitch, 0f);
+            float yaw = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Yaw, 0f);
             float velocity = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Velocity, DEFAULT_VELOCITY);
             float heart = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Heart, DEFAULT_HEART_OFFSET);
             float friction = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Friction, DEFAULT_FRICTION);
             float resistance = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Resistance, DEFAULT_RESISTANCE);
 
-            Frame frame = Frame.FromEuler(rotation.x, rotation.y, rotation.z);
+            Frame frame = Frame.FromEuler(pitch, yaw, roll);
             float centerY = frame.SpinePosition(position, heart * 0.9f).y;
             float energy = 0.5f * velocity * velocity + Sim.G * centerY;
 
             AnchorNode.Build(
-                in position, rotation.x, rotation.y, rotation.z,
+                in position, pitch, yaw, roll,
                 velocity, energy,
                 heart, friction, resistance,
                 out Point anchor

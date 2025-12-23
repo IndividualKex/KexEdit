@@ -25,7 +25,6 @@ namespace KexEdit.Coaster {
         public KeyframeStore Keyframes;
         public NativeHashMap<uint, float> Scalars;
         public NativeHashMap<uint, float3> Vectors;
-        public NativeHashMap<uint, float3> Rotations;
         public NativeHashMap<uint, Duration> Durations;
         public NativeHashSet<uint> Steering;
         public NativeHashSet<uint> Driven;
@@ -36,19 +35,10 @@ namespace KexEdit.Coaster {
                 Keyframes = KeyframeStore.Create(allocator),
                 Scalars = new NativeHashMap<uint, float>(16, allocator),
                 Vectors = new NativeHashMap<uint, float3>(16, allocator),
-                Rotations = new NativeHashMap<uint, float3>(16, allocator),
                 Durations = new NativeHashMap<uint, Duration>(16, allocator),
                 Steering = new NativeHashSet<uint>(8, allocator),
                 Driven = new NativeHashSet<uint>(8, allocator),
             };
-        }
-
-        public void SetRotation(uint nodeId, float3 rotation) {
-            Rotations[nodeId] = rotation;
-        }
-
-        public float3 GetRotation(uint nodeId) {
-            return Rotations.TryGetValue(nodeId, out var rotation) ? rotation : float3.zero;
         }
 
         public void Dispose() {
@@ -56,7 +46,6 @@ namespace KexEdit.Coaster {
             if (Keyframes.Keyframes.IsCreated) Keyframes.Dispose();
             if (Scalars.IsCreated) Scalars.Dispose();
             if (Vectors.IsCreated) Vectors.Dispose();
-            if (Rotations.IsCreated) Rotations.Dispose();
             if (Durations.IsCreated) Durations.Dispose();
             if (Steering.IsCreated) Steering.Dispose();
             if (Driven.IsCreated) Driven.Dispose();

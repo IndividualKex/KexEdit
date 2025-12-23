@@ -101,6 +101,14 @@ namespace KexEdit.Legacy.Serialization {
             ref readonly var coasterData = ref SystemAPI.GetComponentRW<CoasterData>(target).ValueRO.Value;
 
             var uiMeta = new KexEdit.Persistence.UIMetadataChunk(Allocator.Temp);
+
+            // First, add all positions from Coaster.Graph (includes synthetic nodes)
+            ref readonly var graph = ref coasterData.Graph;
+            for (int i = 0; i < graph.NodeIds.Length; i++) {
+                uiMeta.Positions[graph.NodeIds[i]] = graph.NodePositions[i];
+            }
+
+            // Then, override with positions from ECS entities (they may have moved in the UI)
             using var nodeEntities = _nodeQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in nodeEntities) {
                 if (SystemAPI.GetComponent<CoasterReference>(entity).Value != target) continue;
@@ -332,10 +340,10 @@ namespace KexEdit.Legacy.Serialization {
                         portData.Value.Roll = leadOutValue;
                         break;
                     case PortType.Rotation:
-                        float3 rotationValue = coaster.GetRotation(nodeId);
-                        portData.Value.Roll = rotationValue.x;
-                        portData.Value.Velocity = rotationValue.y;
-                        portData.Value.Energy = rotationValue.z;
+                        // Rotation is now stored as separate Roll/Pitch/Yaw scalars
+                        portData.Value.Roll = 0f;
+                        portData.Value.Velocity = 0f;
+                        portData.Value.Energy = 0f;
                         break;
                     case PortType.Scale:
                         float scaleValue = coaster.Scalars.TryGetValue(portId, out var scale) ? scale : 0f;

@@ -119,10 +119,12 @@ namespace Tests {
         }
 
         [Test]
-        public void Rotations_RoundTrip_PreservesValues() {
+        public void Scalars_RoundTrip_PreservesRotationValues() {
             var original = Coaster.Create(Allocator.Temp);
-            var nodeId = original.Graph.AddNode((uint)NodeType.Geometric, float2.zero);
-            original.SetRotation(nodeId, new float3(10, 20, 30));
+            uint rollPortId = 100u, pitchPortId = 101u, yawPortId = 102u;
+            original.Scalars[rollPortId] = 10f;
+            original.Scalars[pitchPortId] = 20f;
+            original.Scalars[yawPortId] = 30f;
 
             using var writer = new ChunkWriter(Allocator.Temp);
             CoasterSerializer.Write(writer, in original);
@@ -131,10 +133,9 @@ namespace Tests {
             using var reader = new ChunkReader(data);
             var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
 
-            var rotation = loaded.GetRotation(nodeId);
-            Assert.AreEqual(10f, rotation.x, 0.001f);
-            Assert.AreEqual(20f, rotation.y, 0.001f);
-            Assert.AreEqual(30f, rotation.z, 0.001f);
+            Assert.AreEqual(10f, loaded.Scalars[rollPortId], 0.001f);
+            Assert.AreEqual(20f, loaded.Scalars[pitchPortId], 0.001f);
+            Assert.AreEqual(30f, loaded.Scalars[yawPortId], 0.001f);
 
             loaded.Dispose();
             original.Dispose();

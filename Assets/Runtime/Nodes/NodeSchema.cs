@@ -11,7 +11,7 @@ namespace KexEdit.Nodes {
             NodeType.Curved => 6,
             NodeType.CopyPath => 4,
             NodeType.Bridge => 4,
-            NodeType.Anchor => 6,
+            NodeType.Anchor => 8,
             NodeType.Reverse => 1,
             NodeType.ReversePath => 1,
             NodeType.Scalar => 0,
@@ -101,11 +101,13 @@ namespace KexEdit.Nodes {
                 (NodeType.Bridge, 2) => new PortSpec(PortDataType.Scalar, 1),
                 (NodeType.Bridge, 3) => new PortSpec(PortDataType.Scalar, 0),
                 (NodeType.Anchor, 0) => new PortSpec(PortDataType.Vector, 0),
-                (NodeType.Anchor, 1) => new PortSpec(PortDataType.Vector, 1),
-                (NodeType.Anchor, 2) => new PortSpec(PortDataType.Scalar, 0),
-                (NodeType.Anchor, 3) => new PortSpec(PortDataType.Scalar, 1),
-                (NodeType.Anchor, 4) => new PortSpec(PortDataType.Scalar, 2),
-                (NodeType.Anchor, 5) => new PortSpec(PortDataType.Scalar, 3),
+                (NodeType.Anchor, 1) => new PortSpec(PortDataType.Scalar, 0),
+                (NodeType.Anchor, 2) => new PortSpec(PortDataType.Scalar, 1),
+                (NodeType.Anchor, 3) => new PortSpec(PortDataType.Scalar, 2),
+                (NodeType.Anchor, 4) => new PortSpec(PortDataType.Scalar, 3),
+                (NodeType.Anchor, 5) => new PortSpec(PortDataType.Scalar, 4),
+                (NodeType.Anchor, 6) => new PortSpec(PortDataType.Scalar, 5),
+                (NodeType.Anchor, 7) => new PortSpec(PortDataType.Scalar, 6),
                 (NodeType.Reverse, 0) => new PortSpec(PortDataType.Anchor, 0),
                 (NodeType.ReversePath, 0) => new PortSpec(PortDataType.Path, 0),
                 _ => PortSpec.Invalid,
@@ -156,11 +158,13 @@ namespace KexEdit.Nodes {
                 (NodeType.Bridge, 2) => "Out Weight",
                 (NodeType.Bridge, 3) => "In Weight",
                 (NodeType.Anchor, 0) => "Position",
-                (NodeType.Anchor, 1) => "Rotation",
-                (NodeType.Anchor, 2) => "Velocity",
-                (NodeType.Anchor, 3) => "Heart",
-                (NodeType.Anchor, 4) => "Friction",
-                (NodeType.Anchor, 5) => "Resistance",
+                (NodeType.Anchor, 1) => "Roll",
+                (NodeType.Anchor, 2) => "Pitch",
+                (NodeType.Anchor, 3) => "Yaw",
+                (NodeType.Anchor, 4) => "Velocity",
+                (NodeType.Anchor, 5) => "Heart",
+                (NodeType.Anchor, 6) => "Friction",
+                (NodeType.Anchor, 7) => "Resistance",
                 (NodeType.Reverse, 0) => "Anchor",
                 (NodeType.ReversePath, 0) => "Path",
                 _ => "",
@@ -202,10 +206,13 @@ namespace KexEdit.Nodes {
             (NodeType.CopyPath, 3) => 1f,
             (NodeType.Bridge, 2) => 0.5f,
             (NodeType.Bridge, 3) => 0.5f,
-            (NodeType.Anchor, 2) => 10f,      // Velocity
-            (NodeType.Anchor, 3) => 1.1f,     // Heart
-            (NodeType.Anchor, 4) => 0.021f,   // Friction
-            (NodeType.Anchor, 5) => 2e-5f,    // Resistance
+            (NodeType.Anchor, 1) => 0f,       // Roll
+            (NodeType.Anchor, 2) => 0f,       // Pitch
+            (NodeType.Anchor, 3) => 0f,       // Yaw
+            (NodeType.Anchor, 4) => 10f,      // Velocity
+            (NodeType.Anchor, 5) => 1.1f,     // Heart
+            (NodeType.Anchor, 6) => 0.021f,   // Friction
+            (NodeType.Anchor, 7) => 2e-5f,    // Resistance
             _ => 0f,
         };
     }

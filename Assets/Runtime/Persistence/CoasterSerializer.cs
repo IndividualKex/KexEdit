@@ -174,7 +174,6 @@ namespace KexEdit.Persistence {
             WriteKeyframes(ref writer, coaster.Keyframes);
             WriteScalars(ref writer, coaster.Scalars);
             WriteVectors(ref writer, coaster.Vectors);
-            WriteRotations(ref writer, coaster.Rotations);
             WriteDurations(ref writer, coaster.Durations);
             WriteSteering(ref writer, coaster.Steering);
             WriteDriven(ref writer, coaster.Driven);
@@ -186,7 +185,6 @@ namespace KexEdit.Persistence {
             ReadKeyframes(ref reader, ref coaster.Keyframes, allocator);
             ReadScalars(ref reader, ref coaster.Scalars);
             ReadVectors(ref reader, ref coaster.Vectors);
-            ReadRotations(ref reader, ref coaster.Rotations);
             ReadDurations(ref reader, ref coaster.Durations);
             ReadSteering(ref reader, ref coaster.Steering);
             ReadDriven(ref reader, ref coaster.Driven);
@@ -276,23 +274,6 @@ namespace KexEdit.Persistence {
                 uint key = reader.ReadUInt();
                 float3 value = reader.ReadFloat3();
                 vectors[key] = value;
-            }
-        }
-
-        static void WriteRotations(ref ChunkWriter writer, in NativeHashMap<uint, float3> rotations) {
-            writer.WriteInt(rotations.Count);
-            foreach (var kv in rotations) {
-                writer.WriteUInt(kv.Key);
-                writer.WriteFloat3(kv.Value);
-            }
-        }
-
-        static void ReadRotations(ref ChunkReader reader, ref NativeHashMap<uint, float3> rotations) {
-            int count = reader.ReadInt();
-            for (int i = 0; i < count; i++) {
-                uint key = reader.ReadUInt();
-                float3 value = reader.ReadFloat3();
-                rotations[key] = value;
             }
         }
 

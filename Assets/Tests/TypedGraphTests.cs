@@ -169,7 +169,7 @@ namespace NodeGraph.Tests {
             graph.CreateNode(NodeType.Anchor, float2.zero,
                 out var inputs, out var outputs, Allocator.Temp);
 
-            Assert.AreEqual(6, inputs.Length);
+            Assert.AreEqual(8, inputs.Length);
             Assert.AreEqual(1, outputs.Length);
 
             inputs.Dispose();

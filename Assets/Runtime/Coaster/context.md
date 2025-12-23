@@ -4,7 +4,7 @@ Application layer aggregate root and evaluator.
 
 ## Purpose
 
-- `Coaster` - Aggregate: graph + node data (keyframes, durations, scalars, vectors, rotations)
+- `Coaster` - Aggregate: graph + node data (keyframes, durations, scalars, vectors)
 - `CoasterEvaluator` - Use case: topologically evaluate graph → paths and output anchors
 
 ## Layout

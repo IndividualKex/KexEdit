@@ -22,10 +22,12 @@ namespace KexEdit.Legacy {
             coaster = CoasterAggregate.Create(allocator);
 
             var nodeIdRemap = new NativeHashMap<int, uint>(16, Allocator.Temp);
-            ImportGraph(in serializedGraph, ref coaster.Graph, allocator, ref nodeIdRemap);
-            ImportNodeData(in serializedGraph, ref coaster, in nodeIdRemap);
+            var portIdRemap = new NativeHashMap<uint, uint>(64, Allocator.Temp);
+            ImportGraph(in serializedGraph, ref coaster.Graph, allocator, ref nodeIdRemap, ref portIdRemap);
+            ImportNodeData(in serializedGraph, ref coaster, in nodeIdRemap, in portIdRemap);
             ImportBridgeTargets(in serializedGraph, ref coaster, allocator, in nodeIdRemap);
             nodeIdRemap.Dispose();
+            portIdRemap.Dispose();
         }
 
         [BurstCompile]
@@ -45,7 +47,7 @@ namespace KexEdit.Legacy {
 
 
         [BurstCompile]
-        private static void ImportGraph(in SerializedGraph serializedGraph, ref Graph graph, Allocator allocator, ref NativeHashMap<int, uint> nodeIdRemap) {
+        private static void ImportGraph(in SerializedGraph serializedGraph, ref Graph graph, Allocator allocator, ref NativeHashMap<int, uint> nodeIdRemap, ref NativeHashMap<uint, uint> portIdRemap) {
             uint maxNodeId = 0;
             uint maxPortId = 0;
             uint maxEdgeId = 0;
@@ -71,7 +73,6 @@ namespace KexEdit.Legacy {
             graph.NextEdgeId = maxEdgeId + 1;
 
             var seenNodes = new NativeHashSet<uint>(serializedGraph.Nodes.Length, Allocator.Temp);
-            var portIdRemap = new NativeHashMap<uint, uint>(serializedGraph.Nodes.Length * 4, Allocator.Temp);
 
             for (int i = 0; i < serializedGraph.Nodes.Length; i++) {
                 var node = serializedGraph.Nodes[i];
@@ -203,7 +204,6 @@ namespace KexEdit.Legacy {
                 graph.EdgeIndexMap[edge.Id] = edgeIndex;
             }
 
-            portIdRemap.Dispose();
             seenEdges.Dispose();
 
             graph.NextNodeId = nextNodeId;
@@ -211,7 +211,7 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ImportNodeData(in SerializedGraph serializedGraph, ref CoasterAggregate coaster, in NativeHashMap<int, uint> nodeIdRemap) {
+        private static void ImportNodeData(in SerializedGraph serializedGraph, ref CoasterAggregate coaster, in NativeHashMap<int, uint> nodeIdRemap, in NativeHashMap<uint, uint> portIdRemap) {
             for (int i = 0; i < serializedGraph.Nodes.Length; i++) {
                 var node = serializedGraph.Nodes[i];
                 uint nodeId = nodeIdRemap.TryGetValue(i, out uint remappedId) ? remappedId : node.Node.Id;
@@ -220,7 +220,7 @@ namespace KexEdit.Legacy {
                 ImportDuration(in node, nodeId, ref coaster);
                 ImportSteering(in node, nodeId, ref coaster);
                 ImportDriven(in node, nodeId, ref coaster);
-                ImportPortValues(in node, nodeId, ref coaster);
+                ImportPortValues(in node, nodeId, ref coaster, in portIdRemap);
                 ImportAnchorData(in node, nodeId, ref coaster);
             }
         }
@@ -295,12 +295,15 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ImportPortValues(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
+        private static void ImportPortValues(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster, in NativeHashMap<uint, uint> portIdRemap) {
             for (int i = 0; i < node.InputPorts.Length; i++) {
                 var port = node.InputPorts[i];
                 var portType = port.Port.Type;
-                var portId = port.Port.Id;
+                var originalPortId = port.Port.Id;
                 var value = port.Value;
+
+                // Use remapped port ID if available
+                uint portId = portIdRemap.TryGetValue(originalPortId, out uint remappedId) ? remappedId : originalPortId;
 
                 switch (portType) {
                     case PortType.Anchor:
@@ -309,7 +312,11 @@ namespace KexEdit.Legacy {
                         coaster.Vectors[nodeId] = new float3(value.Roll, value.Velocity, value.Energy);
                         break;
                     case PortType.Rotation:
-                        coaster.SetRotation(nodeId, math.radians(new float3(value.Roll, value.Velocity, value.Energy)));
+                        break;
+                    case PortType.Roll:
+                    case PortType.Pitch:
+                    case PortType.Yaw:
+                        coaster.Scalars[portId] = math.radians(value.Roll);
                         break;
                     case PortType.Axis:
                     case PortType.Radius:
@@ -320,9 +327,6 @@ namespace KexEdit.Legacy {
                     case PortType.OutWeight:
                     case PortType.Start:
                     case PortType.End:
-                    case PortType.Roll:
-                    case PortType.Pitch:
-                    case PortType.Yaw:
                     case PortType.Velocity:
                     case PortType.Heart:
                     case PortType.Friction:
@@ -363,8 +367,15 @@ namespace KexEdit.Legacy {
                     math.normalizesafe(node.Anchor.Normal, math.down()),
                     math.normalizesafe(node.Anchor.Lateral, math.right())
                 );
-                float3 rotation = new float3(frame.Pitch, frame.Yaw, frame.Roll);
-                coaster.SetRotation(nodeId, rotation);
+                if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Roll, out uint rollPortId)) {
+                    coaster.Scalars[rollPortId] = frame.Roll;
+                }
+                if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Pitch, out uint pitchPortId)) {
+                    coaster.Scalars[pitchPortId] = frame.Pitch;
+                }
+                if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Yaw, out uint yawPortId)) {
+                    coaster.Scalars[yawPortId] = frame.Yaw;
+                }
             }
         }
 
@@ -403,8 +414,15 @@ namespace KexEdit.Legacy {
                     math.normalizesafe(anchor.Normal, math.down()),
                     math.normalizesafe(anchor.Lateral, math.right())
                 );
-                float3 rotation = new float3(frame.Pitch, frame.Yaw, frame.Roll);
-                coaster.SetRotation(anchorNodeId, rotation);
+                if (coaster.Graph.TryGetInput(anchorNodeId, AnchorPorts.Roll, out uint rollPortId)) {
+                    coaster.Scalars[rollPortId] = frame.Roll;
+                }
+                if (coaster.Graph.TryGetInput(anchorNodeId, AnchorPorts.Pitch, out uint pitchPortId)) {
+                    coaster.Scalars[pitchPortId] = frame.Pitch;
+                }
+                if (coaster.Graph.TryGetInput(anchorNodeId, AnchorPorts.Yaw, out uint yawPortId)) {
+                    coaster.Scalars[yawPortId] = frame.Yaw;
+                }
 
                 if (coaster.Graph.TryGetInput(anchorNodeId, AnchorPorts.Velocity, out uint velocityPortId)) {
                     coaster.Scalars[velocityPortId] = anchor.Velocity;

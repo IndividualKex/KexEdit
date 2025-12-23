@@ -39,23 +39,28 @@ namespace Tests {
             var coaster = CoasterAggregate.Create(Allocator.Persistent);
             var nodeId = coaster.Graph.AddNode((uint)CoreNodeType.Anchor, float2.zero);
 
-            coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Vector, 0).ToEncoded());
-            coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Vector, 1).ToEncoded());
-            uint velocityPort = coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Scalar, 0).ToEncoded());
-            uint heartPort = coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Scalar, 1).ToEncoded());
-            uint frictionPort = coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Scalar, 2).ToEncoded());
-            uint resistancePort = coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Scalar, 3).ToEncoded());
+            // New schema: Position (vector), Roll, Pitch, Yaw, Velocity, Heart, Friction, Resistance (all scalars)
+            coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Vector, 0).ToEncoded());  // Position
+            uint rollPort = coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Scalar, 0).ToEncoded());
+            uint pitchPort = coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Scalar, 1).ToEncoded());
+            uint yawPort = coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Scalar, 2).ToEncoded());
+            uint velocityPort = coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Scalar, 3).ToEncoded());
+            uint heartPort = coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Scalar, 4).ToEncoded());
+            uint frictionPort = coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Scalar, 5).ToEncoded());
+            uint resistancePort = coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Scalar, 6).ToEncoded());
             coaster.Graph.AddOutputPort(nodeId, new PortSpec(PortDataType.Anchor, 0).ToEncoded());
 
             float3 position = new float3(10, 20, 30);
-            float3 rotation = new float3(0.1f, 0.2f, 0.3f);
+            float roll = 0.1f, pitch = 0.2f, yaw = 0.3f;
             float velocity = 15f;
             float heart = 1.5f;
             float friction = 0.025f;
             float resistance = 3e-5f;
 
             coaster.Vectors[nodeId] = position;
-            coaster.Rotations[nodeId] = rotation;
+            coaster.Scalars[rollPort] = roll;
+            coaster.Scalars[pitchPort] = pitch;
+            coaster.Scalars[yawPort] = yaw;
             coaster.Scalars[velocityPort] = velocity;
             coaster.Scalars[heartPort] = heart;
             coaster.Scalars[frictionPort] = friction;
@@ -87,14 +92,10 @@ namespace Tests {
             Assert.AreEqual(position.y, loadedPosition.y, 0.001f, "Position.y mismatch");
             Assert.AreEqual(position.z, loadedPosition.z, 0.001f, "Position.z mismatch");
 
-            var loadedRotation = loadedCoaster.GetRotation(nodeId);
-            Assert.AreEqual(rotation.x, loadedRotation.x, 0.001f, "Rotation.x mismatch");
-            Assert.AreEqual(rotation.y, loadedRotation.y, 0.001f, "Rotation.y mismatch");
-            Assert.AreEqual(rotation.z, loadedRotation.z, 0.001f, "Rotation.z mismatch");
-
+            // Rotation is now stored in scalars - verify via port values in ECS
             var portQuery = _entityManager.CreateEntityQuery(typeof(Port));
             using var ports = portQuery.ToEntityArray(Allocator.Temp);
-            Assert.AreEqual(7, ports.Length, "Expected 7 ports (6 input + 1 output)");
+            Assert.AreEqual(9, ports.Length, "Expected 9 ports (8 input + 1 output)");
 
             bool foundVelocity = false, foundHeart = false, foundFriction = false, foundResistance = false;
             foreach (var portEntity in ports) {
@@ -506,6 +507,170 @@ namespace Tests {
                 Assert.IsFalse(sourcePort.IsInput, "Connection source should be an output port");
                 Assert.IsTrue(targetPort.IsInput, "Connection target should be an input port");
             }
+
+            _entityManager.DestroyEntity(loadedEntity);
+        }
+
+        [Test]
+        public void LegacyBridge_RollPitchYaw_StoredAsSeparateScalars() {
+            // Simulate legacy Bridge node with separate Roll/Pitch/Yaw ports
+            // Verify they are stored as separate scalars, not consolidated
+            var serializedGraph = new SerializedGraph();
+            serializedGraph.UIState = new SerializedUIState();
+
+            float roll = 15f, pitch = 30f, yaw = 45f;
+            float2 bridgePos = new float2(100, 200);
+
+            var inputPorts = new NativeArray<SerializedPort>(8, Allocator.Temp);
+            inputPorts[0] = new SerializedPort { Port = new Port { Id = 1, Type = PortType.Position, IsInput = true }, Value = new PointData { Roll = 0, Velocity = 3, Energy = 0 } };
+            inputPorts[1] = new SerializedPort { Port = new Port { Id = 2, Type = PortType.Roll, IsInput = true }, Value = new PointData { Roll = roll } };
+            inputPorts[2] = new SerializedPort { Port = new Port { Id = 3, Type = PortType.Pitch, IsInput = true }, Value = new PointData { Roll = pitch } };
+            inputPorts[3] = new SerializedPort { Port = new Port { Id = 4, Type = PortType.Yaw, IsInput = true }, Value = new PointData { Roll = yaw } };
+            inputPorts[4] = new SerializedPort { Port = new Port { Id = 5, Type = PortType.Velocity, IsInput = true }, Value = new PointData { Roll = 10 } };
+            inputPorts[5] = new SerializedPort { Port = new Port { Id = 6, Type = PortType.Heart, IsInput = true }, Value = new PointData { Roll = 1.1f } };
+            inputPorts[6] = new SerializedPort { Port = new Port { Id = 7, Type = PortType.Friction, IsInput = true }, Value = new PointData { Roll = 0.021f } };
+            inputPorts[7] = new SerializedPort { Port = new Port { Id = 8, Type = PortType.Resistance, IsInput = true }, Value = new PointData { Roll = 2e-5f } };
+
+            var outputPorts = new NativeArray<SerializedPort>(1, Allocator.Temp);
+            outputPorts[0] = new SerializedPort { Port = new Port { Id = 9, Type = PortType.Anchor, IsInput = false } };
+
+            var nodes = new NativeArray<SerializedNode>(1, Allocator.Temp);
+            nodes[0] = new SerializedNode {
+                Node = new Node { Id = 1, Type = LegacyNodeType.Bridge, Position = bridgePos },
+                InputPorts = inputPorts,
+                OutputPorts = outputPorts,
+                Anchor = PointData.Create(10f),
+                RollSpeedKeyframes = new NativeArray<RollSpeedKeyframe>(0, Allocator.Temp),
+                NormalForceKeyframes = new NativeArray<NormalForceKeyframe>(0, Allocator.Temp),
+                LateralForceKeyframes = new NativeArray<LateralForceKeyframe>(0, Allocator.Temp),
+                PitchSpeedKeyframes = new NativeArray<PitchSpeedKeyframe>(0, Allocator.Temp),
+                YawSpeedKeyframes = new NativeArray<YawSpeedKeyframe>(0, Allocator.Temp),
+                FixedVelocityKeyframes = new NativeArray<FixedVelocityKeyframe>(0, Allocator.Temp),
+                HeartKeyframes = new NativeArray<HeartKeyframe>(0, Allocator.Temp),
+                FrictionKeyframes = new NativeArray<FrictionKeyframe>(0, Allocator.Temp),
+                ResistanceKeyframes = new NativeArray<ResistanceKeyframe>(0, Allocator.Temp),
+                TrackStyleKeyframes = new NativeArray<TrackStyleKeyframe>(0, Allocator.Temp),
+            };
+
+            serializedGraph.Nodes = nodes;
+            serializedGraph.Edges = new NativeArray<SerializedEdge>(0, Allocator.Temp);
+
+            LegacyImporter.Import(in serializedGraph, Allocator.Persistent, out var coaster);
+
+            // Verify Roll/Pitch/Yaw are stored as separate scalars (in radians)
+            float rollRad = math.radians(roll);
+            float pitchRad = math.radians(pitch);
+            float yawRad = math.radians(yaw);
+
+            Assert.IsTrue(coaster.Scalars.TryGetValue(2, out var loadedRoll), "Roll port scalar should be stored");
+            Assert.IsTrue(coaster.Scalars.TryGetValue(3, out var loadedPitch), "Pitch port scalar should be stored");
+            Assert.IsTrue(coaster.Scalars.TryGetValue(4, out var loadedYaw), "Yaw port scalar should be stored");
+            Assert.AreEqual(rollRad, loadedRoll, 0.001f, "Roll value mismatch");
+            Assert.AreEqual(pitchRad, loadedPitch, 0.001f, "Pitch value mismatch");
+            Assert.AreEqual(yawRad, loadedYaw, 0.001f, "Yaw value mismatch");
+
+            coaster.Dispose();
+            serializedGraph.Dispose();
+        }
+
+        [Test]
+        public void SyntheticAnchor_UIPosition_PreservedOnRoundTrip() {
+            // Create a Bridge node with embedded anchor data but no target connection
+            // This should create a synthetic Anchor node with a calculated position
+            var serializedGraph = new SerializedGraph();
+            serializedGraph.UIState = new SerializedUIState();
+
+            float2 bridgePos = new float2(100, 200);
+            float2 expectedSyntheticPos = bridgePos + new float2(-100f, 50f);
+
+            var inputPorts = new NativeArray<SerializedPort>(8, Allocator.Temp);
+            inputPorts[0] = new SerializedPort { Port = new Port { Id = 1, Type = PortType.Position, IsInput = true }, Value = new PointData { Roll = 5, Velocity = 10, Energy = 15 } };
+            inputPorts[1] = new SerializedPort { Port = new Port { Id = 2, Type = PortType.Roll, IsInput = true }, Value = new PointData { Roll = 0 } };
+            inputPorts[2] = new SerializedPort { Port = new Port { Id = 3, Type = PortType.Pitch, IsInput = true }, Value = new PointData { Roll = 0 } };
+            inputPorts[3] = new SerializedPort { Port = new Port { Id = 4, Type = PortType.Yaw, IsInput = true }, Value = new PointData { Roll = 0 } };
+            inputPorts[4] = new SerializedPort { Port = new Port { Id = 5, Type = PortType.Velocity, IsInput = true }, Value = new PointData { Roll = 10 } };
+            inputPorts[5] = new SerializedPort { Port = new Port { Id = 6, Type = PortType.Heart, IsInput = true }, Value = new PointData { Roll = 1.1f } };
+            inputPorts[6] = new SerializedPort { Port = new Port { Id = 7, Type = PortType.Friction, IsInput = true }, Value = new PointData { Roll = 0.021f } };
+            inputPorts[7] = new SerializedPort { Port = new Port { Id = 8, Type = PortType.Resistance, IsInput = true }, Value = new PointData { Roll = 2e-5f } };
+
+            var outputPorts = new NativeArray<SerializedPort>(1, Allocator.Temp);
+            outputPorts[0] = new SerializedPort { Port = new Port { Id = 9, Type = PortType.Anchor, IsInput = false } };
+
+            var nodes = new NativeArray<SerializedNode>(1, Allocator.Temp);
+            nodes[0] = new SerializedNode {
+                Node = new Node { Id = 1, Type = LegacyNodeType.Bridge, Position = bridgePos },
+                InputPorts = inputPorts,
+                OutputPorts = outputPorts,
+                Anchor = PointData.Create(new float3(5, 10, 15), 10f),
+                RollSpeedKeyframes = new NativeArray<RollSpeedKeyframe>(0, Allocator.Temp),
+                NormalForceKeyframes = new NativeArray<NormalForceKeyframe>(0, Allocator.Temp),
+                LateralForceKeyframes = new NativeArray<LateralForceKeyframe>(0, Allocator.Temp),
+                PitchSpeedKeyframes = new NativeArray<PitchSpeedKeyframe>(0, Allocator.Temp),
+                YawSpeedKeyframes = new NativeArray<YawSpeedKeyframe>(0, Allocator.Temp),
+                FixedVelocityKeyframes = new NativeArray<FixedVelocityKeyframe>(0, Allocator.Temp),
+                HeartKeyframes = new NativeArray<HeartKeyframe>(0, Allocator.Temp),
+                FrictionKeyframes = new NativeArray<FrictionKeyframe>(0, Allocator.Temp),
+                ResistanceKeyframes = new NativeArray<ResistanceKeyframe>(0, Allocator.Temp),
+                TrackStyleKeyframes = new NativeArray<TrackStyleKeyframe>(0, Allocator.Temp),
+            };
+
+            serializedGraph.Nodes = nodes;
+            serializedGraph.Edges = new NativeArray<SerializedEdge>(0, Allocator.Temp);
+
+            LegacyImporter.Import(in serializedGraph, Allocator.Persistent, out var coaster);
+
+            // Should have created a synthetic Anchor node (Bridge + synthetic Anchor = 2 nodes)
+            Assert.AreEqual(2, coaster.Graph.NodeIds.Length, "Should have 2 nodes (Bridge + synthetic Anchor)");
+
+            // Find the synthetic Anchor node (not the Bridge)
+            int syntheticIndex = -1;
+            for (int i = 0; i < coaster.Graph.NodeIds.Length; i++) {
+                if ((CoreNodeType)coaster.Graph.NodeTypes[i] == CoreNodeType.Anchor) {
+                    syntheticIndex = i;
+                    break;
+                }
+            }
+            Assert.AreNotEqual(-1, syntheticIndex, "Should have a synthetic Anchor node");
+
+            // Verify the synthetic node has the expected position in Graph.NodePositions
+            float2 syntheticPos = coaster.Graph.NodePositions[syntheticIndex];
+            Assert.AreEqual(expectedSyntheticPos.x, syntheticPos.x, 0.1f, "Synthetic Anchor X position mismatch");
+            Assert.AreEqual(expectedSyntheticPos.y, syntheticPos.y, 0.1f, "Synthetic Anchor Y position mismatch");
+
+            // Create ECS entity for the Bridge node only (simulating legacy load)
+            var coasterEntity = _entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            _entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+
+            var bridgeEntity = _entityManager.CreateEntity();
+            _entityManager.AddComponentData(bridgeEntity, new Node { Id = 1, Type = LegacyNodeType.Bridge, Position = bridgePos });
+            _entityManager.AddComponentData(bridgeEntity, new CoasterReference { Value = coasterEntity });
+
+            // Serialize to KEXD (should include positions from Graph.NodePositions)
+            var kexdData = _serializationSystem.SerializeToKEXD(coasterEntity);
+
+            _entityManager.DestroyEntity(coasterEntity);
+            _entityManager.DestroyEntity(bridgeEntity);
+
+            // Deserialize KEXD
+            var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
+
+            // Verify synthetic Anchor node position was preserved
+            var nodeQuery = _entityManager.CreateEntityQuery(typeof(Node));
+            using var nodeEntities = nodeQuery.ToEntityArray(Allocator.Temp);
+
+            bool foundSyntheticAnchor = false;
+            foreach (var entity in nodeEntities) {
+                var node = _entityManager.GetComponentData<Node>(entity);
+                if (node.Type == LegacyNodeType.Anchor) {
+                    foundSyntheticAnchor = true;
+                    Assert.AreEqual(expectedSyntheticPos.x, node.Position.x, 0.1f,
+                        "Synthetic Anchor X position should be preserved after KEXD round-trip");
+                    Assert.AreEqual(expectedSyntheticPos.y, node.Position.y, 0.1f,
+                        "Synthetic Anchor Y position should be preserved after KEXD round-trip");
+                }
+            }
+
+            Assert.IsTrue(foundSyntheticAnchor, "Should have a synthetic Anchor node after KEXD round-trip");
 
             _entityManager.DestroyEntity(loadedEntity);
         }

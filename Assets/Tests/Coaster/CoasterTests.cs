@@ -1,6 +1,7 @@
 using KexEdit.Core;
 using KexEdit.NodeGraph;
 using KexEdit.Nodes;
+using KexEdit.Nodes.Anchor;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -39,14 +40,20 @@ public class CoasterTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             var position = new float3(10f, 20f, 30f);
-            var rotation = new float3(0.1f, 0.2f, 0.3f);
-            uint nodeId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out _, Allocator.Temp);
+            float roll = 0.1f, pitch = 0.2f, yaw = 0.3f;
+            uint nodeId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out var inputPorts, out _, Allocator.Temp);
 
             coaster.Vectors[nodeId] = position;
-            coaster.SetRotation(nodeId, rotation);
+            coaster.Scalars[inputPorts[AnchorPorts.Roll]] = roll;
+            coaster.Scalars[inputPorts[AnchorPorts.Pitch]] = pitch;
+            coaster.Scalars[inputPorts[AnchorPorts.Yaw]] = yaw;
 
             Assert.AreEqual(position, coaster.Vectors[nodeId]);
-            Assert.AreEqual(rotation, coaster.GetRotation(nodeId));
+            Assert.AreEqual(roll, coaster.Scalars[inputPorts[AnchorPorts.Roll]]);
+            Assert.AreEqual(pitch, coaster.Scalars[inputPorts[AnchorPorts.Pitch]]);
+            Assert.AreEqual(yaw, coaster.Scalars[inputPorts[AnchorPorts.Yaw]]);
+
+            inputPorts.Dispose();
         } finally {
             coaster.Dispose();
         }

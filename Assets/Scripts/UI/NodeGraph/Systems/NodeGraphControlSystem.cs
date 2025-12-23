@@ -164,11 +164,13 @@ namespace KexEdit.UI.NodeGraph {
             // Position from Vectors (stored by node ID)
             float3 position = coaster.Vectors.TryGetValue(nodeId, out var pos) ? pos : float3.zero;
 
-            // Rotation from Rotations (stored as euler angles in radians: pitch, yaw, roll)
-            float3 rotation = coaster.GetRotation(nodeId);
-            float pitch = rotation.x;
-            float yaw = rotation.y;
-            float roll = rotation.z;
+            // Rotation from separate scalar ports
+            uint rollPortId = SystemAPI.GetComponent<Port>(inputPorts[AnchorPorts.Roll].Value).Id;
+            uint pitchPortId = SystemAPI.GetComponent<Port>(inputPorts[AnchorPorts.Pitch].Value).Id;
+            uint yawPortId = SystemAPI.GetComponent<Port>(inputPorts[AnchorPorts.Yaw].Value).Id;
+            float roll = coaster.Scalars.TryGetValue(rollPortId, out var rollVal) ? rollVal : 0f;
+            float pitch = coaster.Scalars.TryGetValue(pitchPortId, out var pitchVal) ? pitchVal : 0f;
+            float yaw = coaster.Scalars.TryGetValue(yawPortId, out var yawVal) ? yawVal : 0f;
 
             // Scalar ports
             uint velocityPortId = SystemAPI.GetComponent<Port>(inputPorts[AnchorPorts.Velocity].Value).Id;
@@ -798,18 +800,14 @@ namespace KexEdit.UI.NodeGraph {
             uint anchorNodeId = SystemAPI.GetComponent<Node>(node).Id;
             ref var coaster = ref GetCoasterRef();
             coaster.Vectors[anchorNodeId] = anchor.HeartPosition;
-            coaster.Rotations[anchorNodeId] = new float3(
-                math.radians(anchor.GetPitch()),
-                math.radians(anchor.GetYaw()),
-                math.radians(anchor.Roll)
-            );
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[1].Value).Id] = anchor.Roll;
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[2].Value).Id] = anchor.GetPitch();
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[3].Value).Id] = anchor.GetYaw();
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[4].Value).Id] = anchor.Velocity;
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[5].Value).Id] = anchor.HeartOffset;
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[6].Value).Id] = anchor.Friction;
-            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[7].Value).Id] = anchor.Resistance;
+            // Store rotation as separate scalars (in radians)
+            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[AnchorPorts.Roll].Value).Id] = math.radians(anchor.Roll);
+            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[AnchorPorts.Pitch].Value).Id] = math.radians(anchor.GetPitch());
+            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[AnchorPorts.Yaw].Value).Id] = math.radians(anchor.GetYaw());
+            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[AnchorPorts.Velocity].Value).Id] = anchor.Velocity;
+            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[AnchorPorts.Heart].Value).Id] = anchor.HeartOffset;
+            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[AnchorPorts.Friction].Value).Id] = anchor.Friction;
+            coaster.Scalars[SystemAPI.GetComponent<Port>(anchorInputBuffer[AnchorPorts.Resistance].Value).Id] = anchor.Resistance;
         }
 
         private void OnAddConnection(AddConnectionEvent evt) {
@@ -1011,7 +1009,6 @@ namespace KexEdit.UI.NodeGraph {
                 coaster.Steering.Remove(nodeId);
                 coaster.Driven.Remove(nodeId);
                 coaster.Vectors.Remove(nodeId);
-                coaster.Rotations.Remove(nodeId);
 
                 ecb.DestroyEntity(entity);
             }
@@ -1170,10 +1167,7 @@ namespace KexEdit.UI.NodeGraph {
                     }
                     break;
                 case PortType.Rotation:
-                    if (coaster.Rotations.TryGetValue(nodeId, out var rotationRad)) {
-                        float3 rotationValue = math.degrees(rotationRad);
-                        port.SetValue(rotationValue);
-                    }
+                    // Rotation is now stored as separate Roll/Pitch/Yaw scalars
                     break;
                 case PortType.Scale:
                     if (coaster.Scalars.TryGetValue(portId, out var scaleValue)) {
@@ -1303,8 +1297,7 @@ namespace KexEdit.UI.NodeGraph {
                     coaster.Scalars[portId] = leadOutValue;
                     break;
                 case PortType.Rotation:
-                    port.GetValue(out float3 rotationValue);
-                    coaster.SetRotation(nodeId, math.radians(rotationValue));
+                    // Rotation is now stored as separate Roll/Pitch/Yaw scalars
                     break;
                 case PortType.Scale:
                     port.GetValue(out float scaleValue);
