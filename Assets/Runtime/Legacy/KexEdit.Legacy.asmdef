@@ -4,6 +4,7 @@
     "references": [
         "KexEdit.Core",
         "KexEdit.Coaster",
+        "KexEdit.Persistence",
         "KexGraph",
         "KexEdit.NodeGraph",
         "KexEdit.Nodes",

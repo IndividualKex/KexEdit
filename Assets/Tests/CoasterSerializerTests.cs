@@ -46,8 +46,6 @@ namespace Tests {
             Assert.AreEqual(1, loaded.Graph.NodeIds.Length);
             Assert.AreEqual(nodeId, loaded.Graph.NodeIds[0]);
             Assert.AreEqual((uint)NodeType.Force, loaded.Graph.NodeTypes[0]);
-            Assert.AreEqual(100f, loaded.Graph.NodePositions[0].x, 0.001f);
-            Assert.AreEqual(200f, loaded.Graph.NodePositions[0].y, 0.001f);
 
             loaded.Dispose();
             original.Dispose();

@@ -67,7 +67,8 @@ KexEdit/
 │   └── kexedit-ffi/   # FFI adapter (Rust → C)
 ├── build-rust.sh  # Rust build script (builds submodule)
 ├── tools/  # Development utilities (Python scripts)
-│   └── analyze_kex.py  # .kex binary format analyzer
+│   ├── analyze_kex.py  # Legacy .kex binary format analyzer
+│   └── analyze_kexd.py  # KEXD chunk format analyzer
 ├── layers/
 │   ├── structure.md  # Project-level context (Tier 1)
 │   └── context-template.md  # Template for context files

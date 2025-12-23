@@ -7,9 +7,9 @@
   <Project Path="KexEdit.NodeGraph.csproj" />
   <Project Path="KexEdit.Nodes.Anchor.csproj" />
   <Project Path="StandaloneFileBrowser.csproj" />
+  <Project Path="KexEdit.Persistence.csproj" />
   <Project Path="KexEdit.Nodes.csproj" />
   <Project Path="KexEdit.Nodes.Reverse.csproj" />
-  <Project Path="KexEdit.Persistence.csproj" />
   <Project Path="KexEdit.Native.RustCore.csproj" />
   <Project Path="KexEdit.Nodes.Geometric.csproj" />
   <Project Path="KexEdit.Legacy.Editor.csproj" />

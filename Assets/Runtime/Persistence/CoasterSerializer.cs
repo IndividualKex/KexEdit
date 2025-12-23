@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using KexEdit.Core;
 using KexEdit.Nodes.Storage;
 using KexGraph;
@@ -12,29 +11,15 @@ namespace KexEdit.Persistence {
     public static class CoasterSerializer {
         const uint FileVersion = 1;
         const uint CoreVersion = 1;
-        const uint GraphVersion = 1;
+        const uint GraphVersion = 2;
         const uint DataVersion = 1;
 
         public static void Write(ChunkWriter writer, in CoasterData coaster) {
-            Write(writer, in coaster, null);
-        }
-
-        public static void Write(ChunkWriter writer, in CoasterData coaster, IReadOnlyList<IChunkExtension> extensions) {
             WriteFileHeader(ref writer);
             WriteCoreChunk(ref writer, in coaster);
-
-            if (extensions != null) {
-                foreach (var ext in extensions) {
-                    ext.Write(ref writer);
-                }
-            }
         }
 
         public static CoasterData Read(ChunkReader reader, Allocator allocator) {
-            return Read(ref reader, allocator, null);
-        }
-
-        public static CoasterData Read(ref ChunkReader reader, Allocator allocator, IReadOnlyList<IChunkExtension> extensions) {
             ReadFileHeader(ref reader);
             var coaster = CoasterData.Create(allocator);
 
@@ -43,16 +28,6 @@ namespace KexEdit.Persistence {
 
                 if (header.TypeString == "CORE") {
                     ReadCoreChunk(ref reader, ref coaster, allocator, header);
-                } else if (extensions != null) {
-                    bool handled = false;
-                    foreach (var ext in extensions) {
-                        if (ext.ChunkType == header.TypeString) {
-                            ext.Read(ref reader, header.Version);
-                            handled = true;
-                            break;
-                        }
-                    }
-                    if (!handled) reader.SkipChunk(header);
                 } else {
                     reader.SkipChunk(header);
                 }
@@ -115,7 +90,6 @@ namespace KexEdit.Persistence {
             for (int i = 0; i < graph.NodeIds.Length; i++) {
                 writer.WriteUInt(graph.NodeIds[i]);
                 writer.WriteUInt(graph.NodeTypes[i]);
-                writer.WriteFloat2(graph.NodePositions[i]);
                 writer.WriteInt(graph.NodeInputCount[i]);
                 writer.WriteInt(graph.NodeOutputCount[i]);
             }
@@ -148,13 +122,19 @@ namespace KexEdit.Persistence {
             for (int i = 0; i < nodeCount; i++) {
                 uint id = reader.ReadUInt();
                 uint type = reader.ReadUInt();
-                float2 position = reader.ReadFloat2();
+
+                if (header.Version == 1) {
+                    float2 position = reader.ReadFloat2();
+                    graph.NodePositions.Add(position);
+                } else {
+                    graph.NodePositions.Add(float2.zero);
+                }
+
                 int inputCount = reader.ReadInt();
                 int outputCount = reader.ReadInt();
 
                 graph.NodeIds.Add(id);
                 graph.NodeTypes.Add(type);
-                graph.NodePositions.Add(position);
                 graph.NodeInputCount.Add(inputCount);
                 graph.NodeOutputCount.Add(outputCount);
             }
