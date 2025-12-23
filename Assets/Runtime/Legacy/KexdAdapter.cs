@@ -156,8 +156,7 @@ namespace KexEdit.Legacy {
             result = new NativeArray<SerializedPort>(inputCount, allocator);
 
             for (int i = 0; i < inputCount; i++) {
-                NodeSchema.InputSpec(coreType, i, out var portSpec);
-                var portType = SpecToLegacyPortType(portSpec, true, i);
+                var portType = GetLegacyPortType(coreType, i, true);
 
                 uint portId = FindPortId(in coaster, nodeId, true, i);
 
@@ -189,8 +188,7 @@ namespace KexEdit.Legacy {
             result = new NativeArray<SerializedPort>(outputCount, allocator);
 
             for (int i = 0; i < outputCount; i++) {
-                NodeSchema.OutputSpec(coreType, i, out var portSpec);
-                var portType = SpecToLegacyPortType(portSpec, false, i);
+                var portType = GetLegacyPortType(coreType, i, false);
 
                 uint portId = FindPortId(in coaster, nodeId, false, i);
 
@@ -225,32 +223,50 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static Legacy.PortType SpecToLegacyPortType(in PortSpec spec, bool isInput, int index) {
-            return spec.DataType switch {
-                PortDataType.Anchor => Legacy.PortType.Anchor,
-                PortDataType.Path => Legacy.PortType.Path,
-                PortDataType.Scalar => MapScalarPort(spec.LocalIndex, isInput, index),
-                _ => Legacy.PortType.Anchor
-            };
-        }
-
-        [BurstCompile]
-        private static Legacy.PortType MapScalarPort(byte localIndex, bool isInput, int portIndex) {
+        private static Legacy.PortType GetLegacyPortType(Nodes.NodeType coreType, int portIndex, bool isInput) {
             if (!isInput) {
                 return portIndex switch {
                     0 => Legacy.PortType.Anchor,
                     1 => Legacy.PortType.Path,
-                    _ => Legacy.PortType.Velocity
+                    _ => Legacy.PortType.Anchor
                 };
             }
 
-            return localIndex switch {
-                0 => Legacy.PortType.Duration,
-                1 => Legacy.PortType.Radius,
-                2 => Legacy.PortType.Arc,
-                3 => Legacy.PortType.Axis,
-                4 => Legacy.PortType.LeadIn,
-                _ => Legacy.PortType.Duration
+            return (coreType, portIndex) switch {
+                (Nodes.NodeType.Anchor, 0) => Legacy.PortType.Position,
+                (Nodes.NodeType.Anchor, 1) => Legacy.PortType.Rotation,
+                (Nodes.NodeType.Anchor, 2) => Legacy.PortType.Velocity,
+                (Nodes.NodeType.Anchor, 3) => Legacy.PortType.Heart,
+                (Nodes.NodeType.Anchor, 4) => Legacy.PortType.Friction,
+                (Nodes.NodeType.Anchor, 5) => Legacy.PortType.Resistance,
+
+                (Nodes.NodeType.Force, 0) => Legacy.PortType.Anchor,
+                (Nodes.NodeType.Force, 1) => Legacy.PortType.Duration,
+
+                (Nodes.NodeType.Geometric, 0) => Legacy.PortType.Anchor,
+                (Nodes.NodeType.Geometric, 1) => Legacy.PortType.Duration,
+
+                (Nodes.NodeType.Curved, 0) => Legacy.PortType.Anchor,
+                (Nodes.NodeType.Curved, 1) => Legacy.PortType.Radius,
+                (Nodes.NodeType.Curved, 2) => Legacy.PortType.Arc,
+                (Nodes.NodeType.Curved, 3) => Legacy.PortType.Axis,
+                (Nodes.NodeType.Curved, 4) => Legacy.PortType.LeadIn,
+                (Nodes.NodeType.Curved, 5) => Legacy.PortType.LeadOut,
+
+                (Nodes.NodeType.CopyPath, 0) => Legacy.PortType.Anchor,
+                (Nodes.NodeType.CopyPath, 1) => Legacy.PortType.Path,
+                (Nodes.NodeType.CopyPath, 2) => Legacy.PortType.Start,
+                (Nodes.NodeType.CopyPath, 3) => Legacy.PortType.End,
+
+                (Nodes.NodeType.Bridge, 0) => Legacy.PortType.Anchor,
+                (Nodes.NodeType.Bridge, 1) => Legacy.PortType.Anchor,
+                (Nodes.NodeType.Bridge, 2) => Legacy.PortType.OutWeight,
+                (Nodes.NodeType.Bridge, 3) => Legacy.PortType.InWeight,
+
+                (Nodes.NodeType.Reverse, 0) => Legacy.PortType.Anchor,
+                (Nodes.NodeType.ReversePath, 0) => Legacy.PortType.Path,
+
+                _ => Legacy.PortType.Anchor
             };
         }
 
@@ -267,6 +283,19 @@ namespace KexEdit.Legacy {
                     BuildAnchorPortValue(in coaster, nodeId, out result);
                     return;
 
+                case Legacy.PortType.Position:
+                    var pos = coaster.Vectors.TryGetValue(nodeId, out var p) ? p : float3.zero;
+                    result = new PointData { HeartPosition = pos };
+                    return;
+
+                case Legacy.PortType.Rotation:
+                    var rot = coaster.GetRotation(nodeId);
+                    result = new PointData {
+                        Roll = rot.x,
+                        HeartPosition = new float3(rot.y, rot.z, 0)
+                    };
+                    return;
+
                 case Legacy.PortType.Duration:
                     if (coaster.Durations.TryGetValue(nodeId, out var dur)) {
                         result = new PointData { Roll = dur.Value };
@@ -275,11 +304,41 @@ namespace KexEdit.Legacy {
                     result = default;
                     return;
 
-                default:
+                case Legacy.PortType.Friction:
+                    if (coaster.Scalars.TryGetValue(portId, out float frictionPhysics)) {
+                        result = new PointData { Roll = frictionPhysics * Constants.FRICTION_PHYSICS_TO_UI_SCALE };
+                        return;
+                    }
+                    result = default;
+                    return;
+
+                case Legacy.PortType.Resistance:
+                    if (coaster.Scalars.TryGetValue(portId, out float resistancePhysics)) {
+                        result = new PointData { Roll = resistancePhysics * Constants.RESISTANCE_PHYSICS_TO_UI_SCALE };
+                        return;
+                    }
+                    result = default;
+                    return;
+
+                case Legacy.PortType.Velocity:
+                case Legacy.PortType.Heart:
+                case Legacy.PortType.Radius:
+                case Legacy.PortType.Arc:
+                case Legacy.PortType.Axis:
+                case Legacy.PortType.LeadIn:
+                case Legacy.PortType.LeadOut:
+                case Legacy.PortType.Start:
+                case Legacy.PortType.End:
+                case Legacy.PortType.OutWeight:
+                case Legacy.PortType.InWeight:
                     if (coaster.Scalars.TryGetValue(portId, out float value)) {
                         result = new PointData { Roll = value };
                         return;
                     }
+                    result = default;
+                    return;
+
+                default:
                     result = default;
                     return;
             }
@@ -607,14 +666,11 @@ namespace KexEdit.Legacy {
         }
 
         private static void BuildConnections(CoasterAggregate coaster, Entity coasterEntity, EntityManager entityManager) {
-            var portQuery = entityManager.CreateEntityQuery(typeof(Port), typeof(CoasterReference));
+            var portQuery = entityManager.CreateEntityQuery(typeof(Port));
             using var ports = portQuery.ToEntityArray(Allocator.Temp);
 
             var portMap = new NativeHashMap<uint, Entity>(ports.Length, Allocator.Temp);
             foreach (var port in ports) {
-                var portCoaster = entityManager.GetComponentData<CoasterReference>(port).Value;
-                if (portCoaster != coasterEntity) continue;
-
                 uint id = entityManager.GetComponentData<Port>(port).Id;
                 portMap[id] = port;
             }

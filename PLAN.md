@@ -15,7 +15,8 @@ Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant 
 | 3 | Extensible Serialization | ✅ COMPLETE |
 | 4A | KEXD Write Path | ✅ COMPLETE |
 | 4B | KEXD Read Path | ✅ COMPLETE |
-| 4C | Switch to KEXD-Only | ⏸️ Next |
+| 4C | Switch to KEXD-Only | ✅ COMPLETE |
+| 4D | KEXD Parity Validation | 🔄 IN PROGRESS |
 | 5 | Pruning | ⏸️ Pending |
 | 6 | Cleanup | ⏸️ Pending |
 
@@ -241,44 +242,130 @@ public void KEXD_RoundTrip_PreservesAllData() {
 
 ---
 
-# Phase 4C: Switch to KEXD-Only
+## Phase 4C: Summary
 
-**Goal**: Make KEXD the default format, remove legacy write path
+- **SerializeGraph** now delegates to SerializeToKEXD - all new saves use KEXD format
+- **Format detection** moved to UI layer (`ProjectOperations.OpenProject`)
+- Legacy files automatically marked as unsaved to prompt re-save in KEXD format
+- **File extension**: `.kex` retained for both formats (KEXD detected by magic header)
+- **IsValidFileHeader** updated to recognize both KEXD magic and legacy version
+- **DEBUG_KEXD_FORMAT** code removed (no longer needed)
 
-## Tasks
+---
 
-### 1. Switch SerializeGraph
+# Phase 4D: KEXD Parity Validation
+
+**Goal**: Achieve full parity between legacy `.kex` and KEXD round-trip
+
+**Status**: 🔄 IN PROGRESS
+
+## Current State
+
+- **450 headless tests passing**
+- **Connections fixed**: `BuildConnections` port query no longer filters by `CoasterReference`
+- **Basic round-trip works**: Nodes, edges, scalars, durations serialize/deserialize
+
+## Known Issues
+
+### 1. Rotation Port Consolidation
+**Symptom**: Legacy files have separate Roll, Pitch, Yaw ports on Anchor nodes. After KEXD round-trip, these consolidate into a single Rotation port with different values.
+
+**Investigation needed**:
+- How legacy imports Roll/Pitch/Yaw vs Rotation
+- How KexdAdapter exports rotation data
+- Whether PortSpec encoding differs
+
+### 2. UI Position Drift
+**Symptom**: One anchor node's UI position shifts significantly after round-trip, while others remain correct.
+
+**Investigation needed**:
+- Check UIMD chunk write/read for that specific node
+- May be related to rotation issue (side effect)
+
+## Approach
+
+### Step 1: Python Validation Tool
+Extend `tools/validate_kexd_parity.py` to compare legacy vs KEXD:
+
+```python
+def compare_legacy_kexd(legacy_path: str, kexd_path: str):
+    """Compare graphs from legacy .kex and KEXD formats."""
+    legacy = parse_legacy(legacy_path)
+    kexd = parse_kexd(kexd_path)
+
+    # Compare node counts, types
+    # Compare port counts per node, port types
+    # Compare edge topology (source/target port IDs)
+    # Compare scalar values (with tolerance)
+    # Compare UI positions
+    # Report all differences
+```
+
+**Validation checks**:
+- [ ] Node count matches
+- [ ] Node types match
+- [ ] Port count per node matches
+- [ ] Port types match (Roll/Pitch/Yaw vs Rotation)
+- [ ] Edge count matches
+- [ ] Edge source/target port IDs match
+- [ ] Scalar values within tolerance (0.001)
+- [ ] Vector values within tolerance
+- [ ] UI positions within tolerance
+
+### Step 2: Identify Root Causes
+Use Python tool to pinpoint exact differences:
+```bash
+# Load legacy, save as KEXD, compare
+python tools/validate_kexd_parity.py Assets/Tests/Assets/shuttle.kex --compare-roundtrip
+```
+
+### Step 3: Fix KexdAdapter
+Based on findings, update `KexdAdapter.cs`:
+- Fix rotation port handling (preserve Roll/Pitch/Yaw separation if needed)
+- Fix any UI position edge cases
+
+### Step 4: Add Headless Parity Tests
+`Assets/Tests/KexdParityTests.cs`:
 
 ```csharp
-public byte[] SerializeGraph(Entity target) {
-    return SerializeToKEXD(target);
+[Test]
+public void LegacyToKexd_PreservesRotationPorts() {
+    // Load shuttle.kex via legacy path
+    // Serialize to KEXD
+    // Deserialize KEXD
+    // Verify Roll, Pitch, Yaw ports exist separately
+    // Verify values match original
+}
+
+[Test]
+public void LegacyToKexd_PreservesAllUIPositions() {
+    // Load all_types.kex via legacy path
+    // Serialize to KEXD
+    // Deserialize KEXD
+    // Verify all node positions within tolerance
+}
+
+[Test]
+public void LegacyToKexd_FullParity() {
+    // Comprehensive test with shuttle.kex
+    // Compare all nodes, ports, edges, values
 }
 ```
 
-### 2. Remove Legacy Write Code
-
-- Remove `GraphSerializer.Serialize` calls from write path
-- Keep `GraphSerializer.Deserialize` for reading old files
-- Keep `SerializeNode`/`DeserializeNode` for copy/paste (uses SerializedNode)
-
-### 3. Update File Extension
-
-Consider `.kexd` extension for new files (optional, `.kex` still works).
-
-### 4. Validation
-
-```bash
-./run-tests.sh  # All tests pass
-# Manual test: Create coaster, save, reload, verify
-```
+### Step 5: Regression Suite
+Ensure all test files round-trip correctly:
+- `veloci.kex`
+- `shuttle.kex`
+- `all_types.kex`
+- `shuttle_v1.kex`
 
 ## Definition of Done
 
-- [ ] New files saved in KEXD format
-- [ ] Old files still loadable
-- [ ] Undo/redo works with KEXD format
-- [ ] Copy/paste unchanged (uses SerializedNode)
-- [ ] All tests pass
+- [ ] Python validation tool reports zero differences on test corpus
+- [ ] Rotation ports preserved correctly (not consolidated)
+- [ ] UI positions stable after round-trip
+- [ ] `LegacyToKexd_FullParity` test passes for all test files
+- [ ] 450+ tests passing
 
 ---
 
@@ -286,7 +373,7 @@ Consider `.kexd` extension for new files (optional, `.kex` still works).
 
 **Goal**: Remove redundant ECS components now that Coaster is source of truth
 
-**Prerequisites**: Phase 4C complete (all data flows through Coaster/KEXD)
+**Prerequisites**: Phase 4D complete (full parity validated)
 
 ## Components to Remove (35 total)
 
@@ -340,8 +427,10 @@ Duration, Steering, CurveData, PropertyOverrides
 # Key Files
 
 ## New Files (Phase 4)
-- `Assets/Runtime/Legacy/Persistence/Serialization/KexdAdapter.cs` - Coaster → SerializedGraph
+- `Assets/Runtime/Legacy/KexdAdapter.cs` - Coaster → ECS entities
 - `Assets/Tests/KexdRoundTripTests.cs` - Format validation
+- `Assets/Tests/KexdParityTests.cs` - Parity validation (Phase 4D)
+- `tools/validate_kexd_parity.py` - Python parity validation tool
 
 ## Modified Files
 - `Assets/Runtime/Legacy/Persistence/Serialization/SerializationSystem.cs` - KEXD read/write
@@ -378,5 +467,10 @@ Duration, Steering, CurveData, PropertyOverrides
 1. ~~Implement Phase 4A: SerializeToKEXD + validation~~ ✅
 2. ~~Run tests, validate with Python tool~~ ✅
 3. ~~Implement Phase 4B: Format detection + adapter~~ ✅
-4. Implement Phase 4C: Switch default format
-5. Phase 5: Prune redundant components
+4. ~~Implement Phase 4C: Switch default format~~ ✅
+5. **Phase 4D: KEXD Parity Validation** ← CURRENT
+   - Extend Python parity tool to compare legacy vs KEXD
+   - Identify root cause of rotation port consolidation
+   - Fix UI position drift
+   - Add comprehensive parity tests
+6. Phase 5: Prune redundant components

@@ -94,65 +94,7 @@ namespace KexEdit.Legacy.Serialization {
         }
 
         public byte[] SerializeGraph(Entity target) {
-            SerializedGraph graph = new();
-
-            var timelineState = SystemAPI.GetSingleton<TimelineState>();
-            var nodeGraphState = SystemAPI.GetSingleton<NodeGraphState>();
-            var cameraState = SystemAPI.GetSingleton<CameraState>();
-            graph.UIState = SerializedUIState.FromState(timelineState, nodeGraphState, cameraState);
-
-            using var nodeEntities = _nodeQuery.ToEntityArray(Allocator.Temp);
-            using var targetNodes = new NativeList<Entity>(Allocator.Temp);
-
-            foreach (var entity in nodeEntities) {
-                var coaster = SystemAPI.GetComponent<CoasterReference>(entity).Value;
-                if (coaster == target) {
-                    targetNodes.Add(entity);
-                }
-            }
-
-            ref readonly var coasterData = ref SystemAPI.GetComponentRW<CoasterData>(target).ValueRO.Value;
-
-            graph.Nodes = new(targetNodes.Length, Allocator.Temp);
-            for (int i = 0; i < targetNodes.Length; i++) {
-                graph.Nodes[i] = SerializeNode(targetNodes[i], in coasterData, Allocator.Temp);
-            }
-
-            using var connectionEntities = _connectionQuery.ToEntityArray(Allocator.Temp);
-            using var targetConnections = new NativeList<Entity>(Allocator.Temp);
-
-            foreach (var entity in connectionEntities) {
-                var coasterReference = SystemAPI.GetComponent<CoasterReference>(entity);
-                if (coasterReference.Value != target) continue;
-
-                var connection = SystemAPI.GetComponent<Connection>(entity);
-                targetConnections.Add(entity);
-            }
-
-            graph.Edges = new(targetConnections.Length, Allocator.Temp);
-            for (int i = 0; i < targetConnections.Length; i++) {
-                var connection = SystemAPI.GetComponent<Connection>(targetConnections[i]);
-                uint sourceId = SystemAPI.GetComponent<Port>(connection.Source).Id;
-                uint targetId = SystemAPI.GetComponent<Port>(connection.Target).Id;
-                graph.Edges[i] = new SerializedEdge {
-                    Id = connection.Id,
-                    SourceId = sourceId,
-                    TargetId = targetId,
-                    Selected = connection.Selected,
-                };
-            }
-
-            int size = SizeCalculator.CalculateSize(ref graph);
-            var buffer = new NativeArray<byte>(size, Allocator.Temp);
-
-            int actualSize = GraphSerializer.Serialize(ref graph, ref buffer);
-
-            var result = new byte[actualSize];
-            buffer.Slice(0, actualSize).CopyTo(result);
-            buffer.Dispose();
-
-            graph.Dispose();
-            return result;
+            return SerializeToKEXD(target);
         }
 
         public byte[] SerializeToKEXD(Entity target) {
@@ -191,14 +133,24 @@ namespace KexEdit.Legacy.Serialization {
                 return coaster;
             }
 
-            if (IsKexdFormat(data)) {
-                return DeserializeKexd(data, coaster, restoreUIState);
-            } else {
-                return DeserializeLegacy(data, coaster, restoreUIState);
-            }
+            return DeserializeKexd(data, coaster, restoreUIState);
         }
 
-        private bool IsKexdFormat(byte[] data) {
+        public Entity DeserializeLegacyGraph(byte[] data, bool restoreUIState = true) {
+            var coaster = EntityManager.CreateEntity(typeof(Coaster), typeof(CoasterData));
+            EntityManager.SetName(coaster, "Coaster");
+
+            if (data.Length == 0) {
+                EntityManager.SetComponentData(coaster, new CoasterData {
+                    Value = CoasterAggregate.Create(Allocator.Persistent)
+                });
+                return coaster;
+            }
+
+            return DeserializeLegacy(data, coaster, restoreUIState);
+        }
+
+        public static bool IsKexdFormat(byte[] data) {
             return data.Length >= 4 &&
                    data[0] == 'K' && data[1] == 'E' &&
                    data[2] == 'X' && data[3] == 'D';

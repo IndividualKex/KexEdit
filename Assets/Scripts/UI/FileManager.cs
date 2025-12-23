@@ -2,7 +2,6 @@ using SFB;
 using System;
 using System.IO;
 using UnityEngine;
-using KexEdit.Legacy;
 
 namespace KexEdit.UI {
     public static class FileManager {
@@ -28,39 +27,12 @@ namespace KexEdit.UI {
                 }
 
                 File.WriteAllBytes(filePath, graphData);
-
-#if DEBUG_KEXD_FORMAT
-                SaveKEXDParallel(filePath);
-#endif
             }
             catch (Exception ex) {
                 Debug.LogError($"Error saving graph: {ex.Message}");
                 throw;
             }
         }
-
-#if DEBUG_KEXD_FORMAT
-        private static void SaveKEXDParallel(string originalPath) {
-            try {
-                var serializationSystem = KexEdit.Legacy.Serialization.SerializationSystem.Instance;
-                if (serializationSystem == null) return;
-
-                var coasterQuery = serializationSystem.World.EntityManager.CreateEntityQuery(typeof(Coaster));
-                using var entities = coasterQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
-                if (entities.Length == 0) return;
-
-                var coasterEntity = entities[0];
-                var kexdData = serializationSystem.SerializeToKEXD(coasterEntity);
-
-                string kexdPath = Path.ChangeExtension(originalPath, ".kexd");
-                File.WriteAllBytes(kexdPath, kexdData);
-                Debug.Log($"Saved parallel KEXD format to: {kexdPath}");
-            }
-            catch (Exception ex) {
-                Debug.LogWarning($"Failed to save parallel KEXD format: {ex.Message}");
-            }
-        }
-#endif
 
         public static string ShowSaveFileDialog(string defaultName = null) {
             defaultName ??= $"Track_{DateTime.Now:yyyyMMdd_HHmmss}";
