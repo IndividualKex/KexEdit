@@ -264,16 +264,17 @@ public class CoasterEvaluatorTests {
             coaster.Vectors[anchor1Id] = new float3(0f, 10f, 0f);
             coaster.SetRotation(anchor1Id, new float3(0f, 0f, 0f));
 
-            uint anchor2Id = coaster.Graph.CreateNode(NodeType.Anchor, new float2(0f, 100f), out _, out _, Allocator.Temp);
+            uint anchor2Id = coaster.Graph.CreateNode(NodeType.Anchor, new float2(0f, 100f), out _, out var anchor2Outputs, Allocator.Temp);
             coaster.Vectors[anchor2Id] = new float3(0f, 10f, 50f);
             coaster.SetRotation(anchor2Id, new float3(0f, 0f, 0f));
 
             uint bridgeId = coaster.Graph.CreateNode(NodeType.Bridge, new float2(100f, 0f), out var bridgeInputs, out _, Allocator.Temp);
-            coaster.Anchors[bridgeId] = Point.Default;
 
             coaster.Graph.AddEdge(anchor1Outputs[0], bridgeInputs[0]);
+            coaster.Graph.AddEdge(anchor2Outputs[0], bridgeInputs[1]);
 
             anchor1Outputs.Dispose();
+            anchor2Outputs.Dispose();
             bridgeInputs.Dispose();
 
             CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);

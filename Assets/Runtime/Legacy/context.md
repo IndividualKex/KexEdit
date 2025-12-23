@@ -6,7 +6,7 @@ Monolithic ECS runtime being hollowed out. Systems here call into clean Core/Nod
 
 - Unity DOTS ECS systems for track processing
 - Adapters between modern Core layer and Unity ECS
-- Uses modern naming: `HeartPosition`, `HeartArc`, `SpineArc`, `HeartOffset`
+- LegacyImporter: Converts SerializedGraph → Coaster aggregate on load
 
 ## Layout
 
@@ -17,15 +17,11 @@ Legacy/
 ├── Trains/         # Vehicle systems
 ├── Physics/        # Simulation & dynamics
 ├── Visualization/  # Rendering & mesh generation
-├── Persistence/    # Save/load & import
+├── Persistence/    # Save/load & import (SerializationSystem calls LegacyImporter)
 ├── State/          # Application state & singletons
-└── Editor/         # Unity editor integration
+├── Editor/         # Unity editor integration
+└── LegacyImporter.cs  # SerializedGraph → Coaster conversion
 ```
-
-## Migration Status
-
-- BuildForceSectionSystem → uses ForceNode.Build()
-- Other section systems → pending migration
 
 ## Entrypoints
 
@@ -35,4 +31,4 @@ Legacy/
 
 ## Dependencies
 
-- KexEdit.Core, KexEdit.Nodes.*, Unity.Entities, Unity.Mathematics, Unity.Burst
+- KexEdit.Core, KexEdit.Coaster, KexEdit.Nodes.*, KexGraph, Unity.Entities, Unity.Mathematics, Unity.Burst

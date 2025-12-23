@@ -4,6 +4,13 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 namespace KexEdit.Nodes.CopyPath {
+    public static class CopyPathPorts {
+        public const int Anchor = 0;
+        public const int Path = 1;
+        public const int Start = 2;
+        public const int End = 3;
+    }
+
     [BurstCompile]
     public static class CopyPathNode {
         private const int MAX_ITERATIONS = 1_000_000;

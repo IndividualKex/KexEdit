@@ -1,4 +1,3 @@
-using KexEdit.Core;
 using KexEdit.Nodes;
 using KexEdit.Persistence;
 using KexGraph;
@@ -8,6 +7,8 @@ using Unity.Mathematics;
 using Coaster = KexEdit.Coaster.Coaster;
 using Duration = KexEdit.Coaster.Duration;
 using DurationType = KexEdit.Coaster.DurationType;
+using InterpolationType = KexEdit.Core.InterpolationType;
+using Keyframe = KexEdit.Core.Keyframe;
 
 namespace Tests {
     [TestFixture]
@@ -208,48 +209,6 @@ namespace Tests {
             Assert.AreEqual(1f, loadedKeyframes[1].Time, 0.001f);
             Assert.AreEqual(2f, loadedKeyframes[1].Value, 0.001f);
             Assert.AreEqual(InterpolationType.Bezier, loadedKeyframes[1].InInterpolation);
-
-            loaded.Dispose();
-            original.Dispose();
-        }
-
-        [Test]
-        public void Anchors_RoundTrip_PreservesPoints() {
-            var original = Coaster.Create(Allocator.Temp);
-            var nodeId = original.Graph.AddNode((uint)NodeType.Anchor, float2.zero);
-
-            var anchor = new Point(
-                heartPosition: new float3(10, 20, 30),
-                direction: new float3(1, 0, 0),
-                normal: new float3(0, 1, 0),
-                lateral: new float3(0, 0, 1),
-                velocity: 15f,
-                energy: 500f,
-                normalForce: 1f,
-                lateralForce: 0f,
-                heartArc: 100f,
-                spineArc: 100f,
-                heartAdvance: 0.1f,
-                frictionOrigin: 0f,
-                rollSpeed: 0f,
-                heartOffset: 1.2f,
-                friction: 0.01f,
-                resistance: 0f
-            );
-            original.Anchors[nodeId] = anchor;
-
-            using var writer = new ChunkWriter(Allocator.Temp);
-            CoasterSerializer.Write(writer, in original);
-            var data = writer.ToArray();
-
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
-
-            Assert.IsTrue(loaded.Anchors.TryGetValue(nodeId, out Point loadedAnchor));
-            Assert.AreEqual(10f, loadedAnchor.HeartPosition.x, 0.001f);
-            Assert.AreEqual(20f, loadedAnchor.HeartPosition.y, 0.001f);
-            Assert.AreEqual(30f, loadedAnchor.HeartPosition.z, 0.001f);
-            Assert.AreEqual(15f, loadedAnchor.Velocity, 0.001f);
 
             loaded.Dispose();
             original.Dispose();

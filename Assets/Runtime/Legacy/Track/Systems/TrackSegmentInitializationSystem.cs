@@ -34,7 +34,8 @@ namespace KexEdit.Legacy {
                 .WithAll<CorePointBuffer>()
                 .WithEntityAccess()
             ) {
-                if (!render || existing.Contains(entity)) continue;
+                if (!render) continue;
+                if (existing.Contains(entity)) continue;
 
                 var points = SystemAPI.GetBuffer<CorePointBuffer>(entity);
                 if (points.Length == 0) continue;

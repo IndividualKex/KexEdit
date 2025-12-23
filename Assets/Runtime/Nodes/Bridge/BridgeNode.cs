@@ -4,6 +4,13 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 namespace KexEdit.Nodes.Bridge {
+    public static class BridgePorts {
+        public const int Anchor = 0;
+        public const int Target = 1;
+        public const int OutWeight = 2;
+        public const int InWeight = 3;
+    }
+
     [BurstCompile]
     public static class BridgeNode {
         private const int MAX_ITERATIONS = 1_000_000;

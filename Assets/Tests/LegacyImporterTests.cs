@@ -1,6 +1,6 @@
 using KexEdit.Legacy;
 using KexEdit.Legacy.Serialization;
-using KexEdit.LegacyImport;
+using KexGraph;
 using NUnit.Framework;
 using System.IO;
 using Unity.Collections;
@@ -83,10 +83,6 @@ namespace Tests {
                     Assert.AreEqual(1u, coaster.Graph.NodeIds[0]);
                     Assert.AreEqual((uint)KexEdit.Nodes.NodeType.Force, coaster.Graph.NodeTypes[0]);
                     Assert.AreEqual(new float2(100f, 200f), coaster.Graph.NodePositions[0]);
-
-                    Assert.IsTrue(coaster.Anchors.ContainsKey(1u));
-                    var anchor = coaster.Anchors[1u];
-                    Assert.AreEqual(10f, anchor.Velocity, 0.001f);
                 }
                 finally {
                     coaster.Dispose();

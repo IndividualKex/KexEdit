@@ -10,6 +10,8 @@ using UnityEngine;
 using SFB;
 
 using KexEdit.Legacy;
+using Coaster = KexEdit.Legacy.Coaster;
+
 namespace KexEdit.UI {
     public static class NoLimits2Exporter {
         public static void ExportTrack(float metersPerNode = 2f) {
@@ -62,12 +64,12 @@ namespace KexEdit.UI {
         private static NativeList<Entity> BuildTrackGraph(EntityManager entityManager) {
             var orderedNodes = new NativeList<Entity>(Allocator.Temp);
 
-            var coasterQuery = entityManager.CreateEntityQuery(typeof(Coaster));
+            var coasterQuery = entityManager.CreateEntityQuery(typeof(KexEdit.Legacy.Coaster));
             if (coasterQuery.IsEmpty) {
                 return orderedNodes;
             }
 
-            var coaster = coasterQuery.GetSingleton<Coaster>();
+            var coaster = coasterQuery.GetSingleton<KexEdit.Legacy.Coaster>();
             var currentNode = coaster.RootNode;
 
             while (currentNode != Entity.Null) {

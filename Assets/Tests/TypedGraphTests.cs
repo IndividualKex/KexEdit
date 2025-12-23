@@ -8,6 +8,128 @@ using Unity.Mathematics;
 namespace NodeGraph.Tests {
     [TestFixture]
     [Category("Unit")]
+    public class PortSpecLookupTests {
+        [Test]
+        public void TryGetInputBySpec_FindsCorrectPort() {
+            var graph = Graph.Create(Allocator.Temp);
+            uint nodeId = graph.CreateNode(NodeType.Curved, float2.zero,
+                out var inputs, out var outputs, Allocator.Temp);
+
+            // Find the Arc port (Scalar index 1)
+            bool found = graph.TryGetInputBySpec(nodeId, PortDataType.Scalar, 1, out uint portId);
+
+            Assert.IsTrue(found);
+            Assert.AreEqual(inputs[2], portId); // Arc is at index 2 (after Anchor, Radius)
+
+            inputs.Dispose();
+            outputs.Dispose();
+            graph.Dispose();
+        }
+
+        [Test]
+        public void TryGetInputBySpec_Bridge_FindsBothAnchors() {
+            var graph = Graph.Create(Allocator.Temp);
+            uint nodeId = graph.CreateNode(NodeType.Bridge, float2.zero,
+                out var inputs, out var outputs, Allocator.Temp);
+
+            bool foundFirst = graph.TryGetInputBySpec(nodeId, PortDataType.Anchor, 0, out uint firstAnchor);
+            bool foundSecond = graph.TryGetInputBySpec(nodeId, PortDataType.Anchor, 1, out uint secondAnchor);
+
+            Assert.IsTrue(foundFirst);
+            Assert.IsTrue(foundSecond);
+            Assert.AreEqual(inputs[0], firstAnchor);
+            Assert.AreEqual(inputs[1], secondAnchor);
+
+            inputs.Dispose();
+            outputs.Dispose();
+            graph.Dispose();
+        }
+
+        [Test]
+        public void TryGetInputBySpec_NonexistentIndex_ReturnsFalse() {
+            var graph = Graph.Create(Allocator.Temp);
+            uint nodeId = graph.CreateNode(NodeType.Force, float2.zero,
+                out var inputs, out var outputs, Allocator.Temp);
+
+            // Force only has 1 scalar (Duration at index 0)
+            bool found = graph.TryGetInputBySpec(nodeId, PortDataType.Scalar, 5, out _);
+
+            Assert.IsFalse(found);
+
+            inputs.Dispose();
+            outputs.Dispose();
+            graph.Dispose();
+        }
+
+        [Test]
+        public void TryGetOutputBySpec_FindsPathPort() {
+            var graph = Graph.Create(Allocator.Temp);
+            uint nodeId = graph.CreateNode(NodeType.Force, float2.zero,
+                out var inputs, out var outputs, Allocator.Temp);
+
+            bool found = graph.TryGetOutputBySpec(nodeId, PortDataType.Path, 0, out uint portId);
+
+            Assert.IsTrue(found);
+            Assert.AreEqual(outputs[1], portId);
+
+            inputs.Dispose();
+            outputs.Dispose();
+            graph.Dispose();
+        }
+
+        [Test]
+        public void TryGetInput_FindsCorrectPort() {
+            var graph = Graph.Create(Allocator.Temp);
+            uint nodeId = graph.CreateNode(NodeType.Curved, float2.zero,
+                out var inputs, out var outputs, Allocator.Temp);
+
+            // Find Arc port by index 2
+            bool found = graph.TryGetInput(nodeId, 2, out uint portId);
+
+            Assert.IsTrue(found);
+            Assert.AreEqual(inputs[2], portId);
+
+            inputs.Dispose();
+            outputs.Dispose();
+            graph.Dispose();
+        }
+
+        [Test]
+        public void TryGetInput_InvalidIndex_ReturnsFalse() {
+            var graph = Graph.Create(Allocator.Temp);
+            uint nodeId = graph.CreateNode(NodeType.Force, float2.zero,
+                out var inputs, out var outputs, Allocator.Temp);
+
+            bool found = graph.TryGetInput(nodeId, 99, out _);
+
+            Assert.IsFalse(found);
+
+            inputs.Dispose();
+            outputs.Dispose();
+            graph.Dispose();
+        }
+
+        [Test]
+        public void TryGetOutput_FindsCorrectPort() {
+            var graph = Graph.Create(Allocator.Temp);
+            uint nodeId = graph.CreateNode(NodeType.Force, float2.zero,
+                out var inputs, out var outputs, Allocator.Temp);
+
+            bool found = graph.TryGetOutput(nodeId, 1, out uint portId);
+
+            Assert.IsTrue(found);
+            Assert.AreEqual(outputs[1], portId);
+
+            inputs.Dispose();
+            outputs.Dispose();
+            graph.Dispose();
+        }
+    }
+}
+
+namespace NodeGraph.Tests {
+    [TestFixture]
+    [Category("Unit")]
     public class TypedGraphTests {
         [Test]
         public void CreateNode_Force_CreatesCorrectPorts() {
@@ -47,7 +169,7 @@ namespace NodeGraph.Tests {
             graph.CreateNode(NodeType.Anchor, float2.zero,
                 out var inputs, out var outputs, Allocator.Temp);
 
-            Assert.AreEqual(2, inputs.Length);
+            Assert.AreEqual(6, inputs.Length);
             Assert.AreEqual(1, outputs.Length);
 
             inputs.Dispose();
@@ -102,62 +224,16 @@ namespace NodeGraph.Tests {
         }
 
         [Test]
-        public void TryGetPortType_ReturnsCorrectType() {
+        public void TryGetPortSpec_ReturnsCorrectSpec() {
             var graph = Graph.Create(Allocator.Temp);
             graph.CreateNode(NodeType.Force, float2.zero,
                 out var inputs, out var outputs, Allocator.Temp);
 
-            bool found = graph.TryGetPortType(inputs[0], out PortId portType);
+            bool found = graph.TryGetPortSpec(inputs[0], out PortSpec portSpec);
 
             Assert.IsTrue(found);
-            Assert.AreEqual(PortId.Anchor, portType);
-
-            inputs.Dispose();
-            outputs.Dispose();
-            graph.Dispose();
-        }
-
-        [Test]
-        public void TryGetInputPort_FindsAnchorPort() {
-            var graph = Graph.Create(Allocator.Temp);
-            uint nodeId = graph.CreateNode(NodeType.Force, float2.zero,
-                out var inputs, out var outputs, Allocator.Temp);
-
-            bool found = graph.TryGetInputPort(nodeId, PortId.Anchor, out uint portId);
-
-            Assert.IsTrue(found);
-            Assert.AreEqual(inputs[0], portId);
-
-            inputs.Dispose();
-            outputs.Dispose();
-            graph.Dispose();
-        }
-
-        [Test]
-        public void TryGetInputPort_NonexistentType_ReturnsFalse() {
-            var graph = Graph.Create(Allocator.Temp);
-            uint nodeId = graph.CreateNode(NodeType.Force, float2.zero,
-                out var inputs, out var outputs, Allocator.Temp);
-
-            bool found = graph.TryGetInputPort(nodeId, PortId.Radius, out _);
-
-            Assert.IsFalse(found);
-
-            inputs.Dispose();
-            outputs.Dispose();
-            graph.Dispose();
-        }
-
-        [Test]
-        public void TryGetOutputPort_FindsPathPort() {
-            var graph = Graph.Create(Allocator.Temp);
-            uint nodeId = graph.CreateNode(NodeType.Force, float2.zero,
-                out var inputs, out var outputs, Allocator.Temp);
-
-            bool found = graph.TryGetOutputPort(nodeId, PortId.Path, out uint portId);
-
-            Assert.IsTrue(found);
-            Assert.AreEqual(outputs[1], portId);
+            Assert.AreEqual(PortDataType.Anchor, portSpec.DataType);
+            Assert.AreEqual(0, portSpec.LocalIndex);
 
             inputs.Dispose();
             outputs.Dispose();
@@ -236,7 +312,7 @@ namespace NodeGraph.Tests {
             uint forceId = graph.CreateNode(NodeType.Force, float2.zero,
                 out var forceIn, out var forceOut, Allocator.Temp);
 
-            // Anchor output (PortId.Anchor) to Duration input (PortId.Duration)
+            // Anchor output to Duration input - incompatible types
             bool valid = graph.ValidateConnection(anchorOut[0], forceIn[1], out var error);
 
             Assert.IsFalse(valid);
@@ -384,8 +460,7 @@ namespace NodeGraph.Tests {
             graph.CreateNode(NodeType.Force, float2.zero,
                 out var forceIn, out var forceOut, Allocator.Temp);
 
-            // Scalar output (PortId.Scalar) to Duration input (PortId.Duration)
-            // Should succeed because both have PortDataType.Scalar
+            // Scalar output to Duration input - should succeed (both Scalar type)
             bool valid = graph.ValidateConnection(scalarOut[0], forceIn[1], out var error);
 
             Assert.IsTrue(valid);
@@ -407,8 +482,7 @@ namespace NodeGraph.Tests {
             graph.CreateNode(NodeType.Anchor, float2.zero,
                 out var anchorIn, out var anchorOut, Allocator.Temp);
 
-            // Vector output (PortId.Vector) to Position input (PortId.Position)
-            // Should succeed because both have PortDataType.Vector
+            // Vector output to Position input - should succeed (both Vector type)
             bool valid = graph.ValidateConnection(vectorOut[0], anchorIn[0], out var error);
 
             Assert.IsTrue(valid);
@@ -430,7 +504,7 @@ namespace NodeGraph.Tests {
             graph.CreateNode(NodeType.Anchor, float2.zero,
                 out var anchorIn, out var anchorOut, Allocator.Temp);
 
-            // Scalar output to Position input - should fail (different categories)
+            // Scalar output to Position input - should fail (different types)
             bool valid = graph.ValidateConnection(scalarOut[0], anchorIn[0], out var error);
 
             Assert.IsFalse(valid);
@@ -441,56 +515,6 @@ namespace NodeGraph.Tests {
             anchorIn.Dispose();
             anchorOut.Dispose();
             graph.Dispose();
-        }
-    }
-
-    [TestFixture]
-    [Category("Unit")]
-    public class PortDataTypeTests {
-        [Test]
-        public void DataType_AnchorPort_ReturnsAnchor() {
-            Assert.AreEqual(PortDataType.Anchor, PortId.Anchor.DataType());
-        }
-
-        [Test]
-        public void DataType_PathPort_ReturnsPath() {
-            Assert.AreEqual(PortDataType.Path, PortId.Path.DataType());
-        }
-
-        [Test]
-        public void DataType_ScalarPorts_ReturnScalar() {
-            Assert.AreEqual(PortDataType.Scalar, PortId.Duration.DataType());
-            Assert.AreEqual(PortDataType.Scalar, PortId.Radius.DataType());
-            Assert.AreEqual(PortDataType.Scalar, PortId.Arc.DataType());
-        }
-
-        [Test]
-        public void DataType_VectorPorts_ReturnVector() {
-            Assert.AreEqual(PortDataType.Vector, PortId.Position.DataType());
-            Assert.AreEqual(PortDataType.Vector, PortId.Rotation.DataType());
-            Assert.AreEqual(PortDataType.Vector, PortId.Vector.DataType());
-        }
-
-        [Test]
-        public void DataType_GenericScalarPort_ReturnsScalar() {
-            Assert.AreEqual(PortDataType.Scalar, PortId.Scalar.DataType());
-        }
-
-        [Test]
-        public void DefaultValue_Duration_Returns5() {
-            Assert.AreEqual(5f, PortId.Duration.DefaultValue());
-        }
-
-        [Test]
-        public void DefaultValue_Weights_Return0Point5() {
-            Assert.AreEqual(0.5f, PortId.InWeight.DefaultValue());
-            Assert.AreEqual(0.5f, PortId.OutWeight.DefaultValue());
-        }
-
-        [Test]
-        public void DefaultValue_StartEnd_Return0And1() {
-            Assert.AreEqual(0f, PortId.Start.DefaultValue());
-            Assert.AreEqual(1f, PortId.End.DefaultValue());
         }
     }
 }

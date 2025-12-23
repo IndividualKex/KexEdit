@@ -4,7 +4,6 @@
   <Project Path="Unity.Entities.Editor.Tests.csproj" />
   <Project Path="Unity.Localization.csproj" />
   <Project Path="Unity.Entities.Graphics.csproj" />
-  <Project Path="KexEdit.Legacy.csproj" />
   <Project Path="Unity.Physics.csproj" />
   <Project Path="Unity.ScriptableBuildPipeline.Editor.csproj" />
   <Project Path="Unity.Mathematics.csproj" />
@@ -33,6 +32,7 @@
   <Project Path="Unity.InternalAPIEngineBridge.002.csproj" />
   <Project Path="Unity.ResourceManager.csproj" />
   <Project Path="Unity.VisualScripting.Core.csproj" />
+  <Project Path="KexEdit.Legacy.csproj" />
   <Project Path="Unity.VisualScripting.State.Editor.csproj" />
   <Project Path="Unity.Physics.Hybrid.csproj" />
   <Project Path="Unity.Burst.CodeGen.csproj" />
@@ -68,9 +68,9 @@
   <Project Path="StandaloneFileBrowser.csproj" />
   <Project Path="Unity.Scenes.Hybrid.Tests.Playmode.csproj" />
   <Project Path="glTFast.Documentation.Examples.csproj" />
+  <Project Path="KexEdit.Nodes.csproj" />
   <Project Path="Unity.Physics.Editor.csproj" />
   <Project Path="Unity.Numerics.Linear.Solvers.Lowlevel.csproj" />
-  <Project Path="KexEdit.Nodes.csproj" />
   <Project Path="Unity.InputSystem.ForUI.csproj" />
   <Project Path="Unity.Collections.CodeGen.csproj" />
   <Project Path="Unity.Addressables.csproj" />
@@ -134,5 +134,4 @@
   <Project Path="Unity.Entities.Hybrid.Tests.SeparateAssembly.csproj" />
   <Project Path="KexEdit.Nodes.ReversePath.csproj" />
   <Project Path="Unity.Numerics.Linear.csproj" />
-  <Project Path="KexEdit.LegacyImport.csproj" />
 </Solution>

@@ -7,6 +7,7 @@ Unit and integration tests for KexEdit functionality.
 - Unit tests for KexGraph library (nodes, ports, edges)
 - Unit tests for Core primitives and node types
 - Unit tests for LegacyImporter (SerializedGraph → Coaster)
+- Validation tests for Coaster aggregate integrity (Phase B-1)
 - Golden fixture tests validating physics against exported ground truth
 - Performance benchmarks comparing Burst vs Rust implementations
 
@@ -19,18 +20,19 @@ Tests/
 ├── Graph*Tests.cs              # Unit tests for KexGraph library
 ├── Core*Tests.cs               # Unit tests for Core layer
 ├── LegacyImporterTests.cs      # Unit tests for legacy import
+├── CoasterSerializerTests.cs   # Chunk-based serialization tests
+├── CoasterValidationTests.cs   # Phase B-1: round-trip validation, Python export
 ├── CoasterGoldTests.cs         # Integration tests: .kex → evaluate
 ├── *NodeTests.cs               # Golden tests for node types
-├── Build*SystemTests.cs        # Golden tests for ECS layer
-├── *TestBuilder.cs             # Build test data from gold fixtures
-├── *EntityBuilder.cs           # Build ECS entities from gold fixtures
+├── *TestBuilder.cs             # Test data builders from gold fixtures
 ├── SimPointComparer.cs         # KexEdit.Core.Point comparison
 ├── PointComparer.cs            # ECS Point comparison
 ├── PerformanceTests/           # Burst vs Rust benchmarks
 ├── GoldData/                   # Gold data loading
 ├── Storage/                    # Storage layer tests
+├── Coaster/                    # Coaster aggregate tests
 ├── TrackData/                  # Gold test fixtures (JSON)
-└── Assets/                     # Test asset files (.kex)
+└── Assets/                     # Test .kex files (veloci, shuttle, all_types)
 ```
 
 ## Running Tests

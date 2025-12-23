@@ -19,7 +19,12 @@
         "glTFast",
         "glTFast.dots",
         "StandaloneFileBrowser",
-        "KexEdit.Core"
+        "KexEdit.Core",
+        "KexGraph",
+        "KexEdit.Coaster",
+        "KexEdit.NodeGraph",
+        "KexEdit.Nodes",
+        "KexEdit.Nodes.Anchor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

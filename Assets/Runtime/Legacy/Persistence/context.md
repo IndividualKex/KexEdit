@@ -7,32 +7,24 @@ Save/load, serialization, and import/export
 - Handles project save and load operations
 - Manages track serialization format
 - Provides import from external formats
-- Handles clipboard operations
-
-## Key Components
-
-- `Coaster` - Project/coaster entity
-- `CoasterReference` - References to coasters
-- `AppendedCoasterTag` - Marks appended coasters
-- Load events - Track and train style loading
 
 ## Key Systems
 
-- `SerializationSystem` - Main save/load system
-- `AppendCleanupSystem` - Cleans up appended data
+- `SerializationSystem` - Save/load, undo/redo; syncs Anchor component from port values on save
+- `LegacyImporter` - Converts SerializedGraph to Coaster aggregate; populates Coaster.Scalars/Keyframes
 
 ## Serialization
 
-- `BinaryReader/Writer` - Binary file I/O
-- `GraphSerializer` - Node graph serialization
-- `ClipboardSerializer` - Copy/paste operations
-- `SerializedGraph` - Serialized graph format
+- `GraphSerializer` - Node graph serialization to/from bytes
+- `SerializedGraph` - Intermediate format for save/load
 
-## Import
+## Data Flow
 
-- `EntityImporter` - Import entities
-- `ObjImporter` - Import OBJ meshes
-- `CoasterLoader` - Load coaster files
+```
+Save: ECS entities → SerializeNode (syncs Anchor) → SerializedGraph → bytes
+Load: bytes → SerializedGraph → LegacyImporter → Coaster aggregate
+                             → DeserializeNode → ECS entities
+```
 
 ## Entry Points
 
@@ -40,10 +32,10 @@ Save/load, serialization, and import/export
 
 ## Dependencies
 
-- Track (for graph structure)
-- Core (for utilities)
+- Coaster aggregate (source of truth)
+- Track components (ECS entities)
 
 ## Scope
 
-- In: File I/O, serialization, import/export
+- In: File I/O, serialization, import
 - Out: Runtime logic, rendering, UI

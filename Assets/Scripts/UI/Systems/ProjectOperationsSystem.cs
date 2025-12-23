@@ -7,6 +7,8 @@ using KexEdit.UI.Timeline;
 using KexEdit.Legacy.Serialization;
 
 using KexEdit.Legacy;
+using LegacyCoaster = KexEdit.Legacy.Coaster;
+
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class ProjectOperationsSystem : SystemBase {
@@ -26,7 +28,7 @@ namespace KexEdit.UI {
 
         protected override void OnCreate() {
             _coasterQuery = SystemAPI.QueryBuilder()
-                .WithAll<Coaster, EditorCoasterTag>()
+                .WithAll<LegacyCoaster, EditorCoasterTag>()
                 .Build();
         }
 
@@ -374,7 +376,7 @@ namespace KexEdit.UI {
 
             foreach (var style in SystemAPI
                 .Query<TrackStyleSettingsReference>()
-                .WithAll<Coaster, EditorCoasterTag>()
+                .WithAll<LegacyCoaster, EditorCoasterTag>()
             ) {
                 if (!SystemAPI.HasComponent<TrackStyleSettings>(style)) continue;
                 ref var settings = ref SystemAPI.GetComponentRW<TrackStyleSettings>(style).ValueRW;

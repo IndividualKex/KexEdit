@@ -30,9 +30,9 @@ namespace KexEdit.NodeGraph {
                 return false;
             }
 
-            PortId srcType = (PortId)graph.PortTypes[srcIdx];
-            PortId tgtType = (PortId)graph.PortTypes[tgtIdx];
-            if (srcType.DataType() != tgtType.DataType()) {
+            PortSpec.FromEncoded(graph.PortTypes[srcIdx], out var srcSpec);
+            PortSpec.FromEncoded(graph.PortTypes[tgtIdx], out var tgtSpec);
+            if (srcSpec.DataType != tgtSpec.DataType) {
                 error = ValidationError.IncompatiblePortTypes;
                 return false;
             }

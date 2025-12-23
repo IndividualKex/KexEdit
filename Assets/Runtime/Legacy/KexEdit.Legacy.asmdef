@@ -3,7 +3,11 @@
     "rootNamespace": "KexEdit.Legacy",
     "references": [
         "KexEdit.Core",
+        "KexEdit.Coaster",
+        "KexGraph",
+        "KexEdit.NodeGraph",
         "KexEdit.Nodes",
+        "KexEdit.Nodes.Anchor",
         "KexEdit.Nodes.Force",
         "KexEdit.Nodes.Geometric",
         "KexEdit.Nodes.Curved",

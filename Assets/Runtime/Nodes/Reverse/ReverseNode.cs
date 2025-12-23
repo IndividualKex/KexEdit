@@ -2,6 +2,10 @@ using KexEdit.Core;
 using Unity.Burst;
 
 namespace KexEdit.Nodes.Reverse {
+    public static class ReversePorts {
+        public const int Anchor = 0;
+    }
+
     [BurstCompile]
     public static class ReverseNode {
         [BurstCompile]

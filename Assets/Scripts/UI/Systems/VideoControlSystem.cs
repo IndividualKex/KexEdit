@@ -5,6 +5,8 @@ using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
 using KexEdit.Legacy;
+using LegacyCoaster = KexEdit.Legacy.Coaster;
+
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup), OrderLast = true)]
     public partial class VideoControlSystem : SystemBase {
@@ -26,7 +28,7 @@ namespace KexEdit.UI {
 
         protected override void OnCreate() {
             _coasterQuery = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<Coaster, EditorCoasterTag>()
+                .WithAll<LegacyCoaster, EditorCoasterTag>()
                 .Build(EntityManager);
         }
 
@@ -61,7 +63,7 @@ namespace KexEdit.UI {
 
             Entity root = Entity.Null;
             if (!_coasterQuery.IsEmpty) {
-                var coaster = _coasterQuery.GetSingleton<Coaster>();
+                var coaster = _coasterQuery.GetSingleton<LegacyCoaster>();
                 root = coaster.RootNode;
             }
 
@@ -226,7 +228,7 @@ namespace KexEdit.UI {
         private void SetProgress(float progress) {
             _data.Progress = progress;
 
-            var editorCoaster = _coasterQuery.GetSingleton<Coaster>();
+            var editorCoaster = _coasterQuery.GetSingleton<LegacyCoaster>();
             Entity root = editorCoaster.RootNode;
 
             if (root == Entity.Null || _data.TotalLength <= 0f) return;

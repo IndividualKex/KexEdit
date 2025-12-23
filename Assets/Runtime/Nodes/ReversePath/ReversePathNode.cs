@@ -4,6 +4,10 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 namespace KexEdit.Nodes.ReversePath {
+    public static class ReversePathPorts {
+        public const int Path = 0;
+    }
+
     [BurstCompile]
     public static class ReversePathNode {
         [BurstCompile]

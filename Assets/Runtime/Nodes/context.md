@@ -5,22 +5,22 @@ Node schema layer - shared vocabulary for node types.
 ## Purpose
 
 - `NodeType` - 10 node types (Scalar/Vector leaf nodes + 8 track nodes)
-- `PortId` - graph port identifiers (Scalar/Vector generic + typed ports)
+- `PortSpec` - port specification: `(PortDataType, LocalIndex)` tuple
+- `PortDataType` - four data types: Scalar, Vector, Anchor, Path
 - `PropertyId` - keyframe property identifiers
 - `NodeSchema` - port/property contracts per node type (Burst-compiled)
 - `PropertyIndex` - serialization index ↔ PropertyId mapping
-- `IterationConfig` - time/distance iteration params
 
 ## Layout
 
 ```
 Nodes/
 ├── NodeType.cs         # 10 node types (Scalar, Vector first)
-├── PortId.cs           # Graph ports (Scalar, Vector, Anchor, Path, etc.)
+├── PortSpec.cs         # Port specification struct (DataType + LocalIndex)
+├── PortDataType.cs     # Four port data types
 ├── PropertyId.cs       # Keyframe properties
-├── NodeSchema.cs       # Static schema queries
+├── NodeSchema.cs       # Static schema queries (InputSpec, OutputSpec, etc.)
 ├── PropertyIndex.cs    # Serialization mapping
-├── IterationConfig.cs
 ├── Storage/            # Data storage contracts
 │   └── KeyframeStore.cs  # (nodeId, propertyId) → Keyframe[] storage
 ├── Anchor/             # Creates initial state from position/rotation
@@ -41,13 +41,13 @@ Nodes/
 
 **Track nodes**: Force, Geometric, Curved, CopyPath, Bridge, Anchor, Reverse, ReversePath
 
-## Port Categories
+## Port System
 
-**PortId** types map to **PortDataType** categories:
-- `Scalar` → any scalar port (Duration, Radius, Arc, etc.)
-- `Vector` → any vector port (Position, Rotation)
-- `Anchor` → Anchor ports only
-- `Path` → Path ports only
+Ports are identified by `PortSpec(PortDataType, LocalIndex)`:
+- **PortDataType**: Scalar(0), Vector(1), Anchor(2), Path(3)
+- **LocalIndex**: 0-based index within ports of the same data type
+
+Example: Curved node has inputs `[Anchor0, Scalar0, Scalar1, Scalar2, Scalar3, Scalar4]`
 
 **PropertyId** - Keyframe curves: RollSpeed, NormalForce, LateralForce, PitchSpeed, YawSpeed, DrivenVelocity, HeartOffset, Friction, Resistance, TrackStyle
 

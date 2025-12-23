@@ -170,10 +170,6 @@ namespace KexEdit.UI.NodeGraph {
                 cap.Add(_edge);
             }
 
-            if (_data.Port.Type == PortType.Anchor) {
-                Add(new AnchorThumbControl(_data));
-            }
-
             RegisterCallback<MouseOverEvent>(OnMouseOver);
             RegisterCallback<MouseOutEvent>(OnMouseOut);
             RegisterCallback<MouseDownEvent>(OnMouseDown);

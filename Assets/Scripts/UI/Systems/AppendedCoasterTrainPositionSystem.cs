@@ -4,6 +4,8 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 using KexEdit.Legacy;
+using LegacyCoaster = KexEdit.Legacy.Coaster;
+
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     [BurstCompile]
@@ -16,7 +18,7 @@ namespace KexEdit.UI {
         [BurstCompile]
         public void OnCreate(ref SystemState state) {
             _editorCoasterQuery = SystemAPI.QueryBuilder()
-                .WithAll<Coaster, EditorCoasterTag>()
+                .WithAll<LegacyCoaster, EditorCoasterTag>()
                 .Build();
 
             _lastTrainSection = Entity.Null;
@@ -47,13 +49,13 @@ namespace KexEdit.UI {
             _lastTrainSection = editorFollower.Section;
             _lastTrainPosition = editorFollower.Index;
 
-            var editorRootNode = SystemAPI.GetComponent<Coaster>(editorCoaster).RootNode;
+            var editorRootNode = SystemAPI.GetComponent<LegacyCoaster>(editorCoaster).RootNode;
             if (editorRootNode == Entity.Null) return;
 
             float totalDistance = CalculateDistanceToSection(ref state, editorRootNode, editorFollower.Section) + editorFollower.Index;
 
             foreach (var (coaster, entity) in SystemAPI
-                .Query<RefRO<Coaster>>()
+                .Query<RefRO<LegacyCoaster>>()
                 .WithAll<AppendedCoasterTag>()
                 .WithEntityAccess()
             ) {

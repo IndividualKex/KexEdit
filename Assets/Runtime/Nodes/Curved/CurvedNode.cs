@@ -4,6 +4,15 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 namespace KexEdit.Nodes.Curved {
+    public static class CurvedPorts {
+        public const int Anchor = 0;
+        public const int Radius = 1;
+        public const int Arc = 2;
+        public const int Axis = 3;
+        public const int LeadIn = 4;
+        public const int LeadOut = 5;
+    }
+
     [BurstCompile]
     public static class CurvedNode {
         private const int MAX_ITERATIONS = 1_000_000;

@@ -37,7 +37,6 @@ KexEdit/
 │   │   ├── NodeGraph/  # KexEdit-aware graph extensions (KexEdit.NodeGraph)
 │   │   ├── Coaster/  # Application layer aggregate (KexEdit.Coaster)
 │   │   ├── Persistence/  # Chunk-based serialization (KexEdit.Persistence)
-│   │   ├── LegacyImport/  # Legacy .kex import adapter (KexEdit.LegacyImport)
 │   │   ├── Native/  # Rust FFI bindings (KexEdit.Native.RustCore)
 │   │   ├── Plugins/  # Native DLLs (kexedit_core.dll)
 │   │   ├── Legacy/  # Monolithic runtime being hollowed out (KexEdit.Legacy)
@@ -67,6 +66,8 @@ KexEdit/
 │   ├── kexedit-nodes/ # Node schema layer (Rust)
 │   └── kexedit-ffi/   # FFI adapter (Rust → C)
 ├── build-rust.sh  # Rust build script (builds submodule)
+├── tools/  # Development utilities (Python scripts)
+│   └── analyze_kex.py  # .kex binary format analyzer
 ├── layers/
 │   ├── structure.md  # Project-level context (Tier 1)
 │   └── context-template.md  # Template for context files
@@ -120,7 +121,6 @@ KexEdit/
 - KexEdit-aware graph extensions → `Assets/Runtime/NodeGraph/`
 - Coaster aggregate + evaluator → `Assets/Runtime/Coaster/`
 - New serialization format → `Assets/Runtime/Persistence/`
-- Legacy .kex import → `Assets/Runtime/LegacyImport/`
 - Portable physics/math (C#) → `Assets/Runtime/Core/`
 - Spline articulation (C#) → `Assets/Runtime/Core/Articulation/`
 - Portable physics/math (Rust) → `rust-backend/kexedit-core/`

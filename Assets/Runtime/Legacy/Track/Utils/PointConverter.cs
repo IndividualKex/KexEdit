@@ -178,31 +178,5 @@ namespace KexEdit.Legacy {
             }
             return result;
         }
-
-        public static NativeArray<CorePoint> ConvertPathBuffer(ref DynamicBuffer<PathPort> buffer, Allocator allocator) {
-            var result = new NativeArray<CorePoint>(buffer.Length, allocator);
-            for (int i = 0; i < buffer.Length; i++) {
-                PointData p = buffer[i].Value;
-                result[i] = new CorePoint(
-                    direction: p.Direction,
-                    lateral: p.Lateral,
-                    normal: p.Normal,
-                    heartPosition: p.HeartPosition,
-                    velocity: p.Velocity,
-                    energy: p.Energy,
-                    normalForce: p.NormalForce,
-                    lateralForce: p.LateralForce,
-                    heartArc: p.HeartArc,
-                    spineArc: p.SpineArc,
-                    heartAdvance: p.HeartAdvance,
-                    frictionOrigin: p.FrictionOrigin,
-                    rollSpeed: p.RollSpeed,
-                    heartOffset: p.HeartOffset,
-                    friction: p.Friction,
-                    resistance: p.Resistance
-                );
-            }
-            return result;
-        }
     }
 }

@@ -25,13 +25,13 @@ namespace KexEdit.NodeGraph {
             outputPortIds = new NativeArray<uint>(outputCount, allocator);
 
             for (int i = 0; i < inputCount; i++) {
-                PortId portType = NodeSchema.Input(nodeType, i);
-                inputPortIds[i] = graph.AddInputPort(nodeId, (uint)portType);
+                NodeSchema.InputSpec(nodeType, i, out PortSpec portSpec);
+                inputPortIds[i] = graph.AddInputPort(nodeId, portSpec.ToEncoded());
             }
 
             for (int i = 0; i < outputCount; i++) {
-                PortId portType = NodeSchema.Output(nodeType, i);
-                outputPortIds[i] = graph.AddOutputPort(nodeId, (uint)portType);
+                NodeSchema.OutputSpec(nodeType, i, out PortSpec portSpec);
+                outputPortIds[i] = graph.AddOutputPort(nodeId, portSpec.ToEncoded());
             }
 
             return nodeId;
@@ -48,51 +48,13 @@ namespace KexEdit.NodeGraph {
         }
 
         [BurstCompile]
-        public static bool TryGetPortType(in this Graph graph, uint portId, out PortId portType) {
+        public static bool TryGetPortSpec(in this Graph graph, uint portId, out PortSpec portSpec) {
             if (!graph.TryGetPortIndex(portId, out int index)) {
-                portType = default;
+                portSpec = default;
                 return false;
             }
-            portType = (PortId)graph.PortTypes[index];
+            PortSpec.FromEncoded(graph.PortTypes[index], out portSpec);
             return true;
-        }
-
-        [BurstCompile]
-        public static bool TryGetInputPort(
-            in this Graph graph, uint nodeId, PortId targetPortType, out uint portId
-        ) {
-            portId = 0;
-            graph.GetInputPorts(nodeId, out var inputPorts, Allocator.Temp);
-
-            for (int i = 0; i < inputPorts.Length; i++) {
-                if (graph.TryGetPortType(inputPorts[i], out var portType) && portType == targetPortType) {
-                    portId = inputPorts[i];
-                    inputPorts.Dispose();
-                    return true;
-                }
-            }
-
-            inputPorts.Dispose();
-            return false;
-        }
-
-        [BurstCompile]
-        public static bool TryGetOutputPort(
-            in this Graph graph, uint nodeId, PortId targetPortType, out uint portId
-        ) {
-            portId = 0;
-            graph.GetOutputPorts(nodeId, out var outputPorts, Allocator.Temp);
-
-            for (int i = 0; i < outputPorts.Length; i++) {
-                if (graph.TryGetPortType(outputPorts[i], out var portType) && portType == targetPortType) {
-                    portId = outputPorts[i];
-                    outputPorts.Dispose();
-                    return true;
-                }
-            }
-
-            outputPorts.Dispose();
-            return false;
         }
 
         [BurstCompile]
@@ -128,6 +90,92 @@ namespace KexEdit.NodeGraph {
                 graph.RemoveEdge(toRemove[i]);
             }
             toRemove.Dispose();
+        }
+
+        [BurstCompile]
+        public static bool TryGetInputBySpec(
+            in this Graph graph, uint nodeId, PortDataType dataType, int localIndex, out uint portId
+        ) {
+            portId = 0;
+            graph.GetInputPorts(nodeId, out var inputPorts, Allocator.Temp);
+
+            int matchCount = 0;
+            for (int i = 0; i < inputPorts.Length; i++) {
+                if (!graph.TryGetPortIndex(inputPorts[i], out int portIndex)) continue;
+
+                PortSpec.FromEncoded(graph.PortTypes[portIndex], out var spec);
+                if (spec.DataType == dataType) {
+                    if (matchCount == localIndex) {
+                        portId = inputPorts[i];
+                        inputPorts.Dispose();
+                        return true;
+                    }
+                    matchCount++;
+                }
+            }
+
+            inputPorts.Dispose();
+            return false;
+        }
+
+        [BurstCompile]
+        public static bool TryGetOutputBySpec(
+            in this Graph graph, uint nodeId, PortDataType dataType, int localIndex, out uint portId
+        ) {
+            portId = 0;
+            graph.GetOutputPorts(nodeId, out var outputPorts, Allocator.Temp);
+
+            int matchCount = 0;
+            for (int i = 0; i < outputPorts.Length; i++) {
+                if (!graph.TryGetPortIndex(outputPorts[i], out int portIndex)) continue;
+
+                PortSpec.FromEncoded(graph.PortTypes[portIndex], out var spec);
+                if (spec.DataType == dataType) {
+                    if (matchCount == localIndex) {
+                        portId = outputPorts[i];
+                        outputPorts.Dispose();
+                        return true;
+                    }
+                    matchCount++;
+                }
+            }
+
+            outputPorts.Dispose();
+            return false;
+        }
+
+        [BurstCompile]
+        public static bool TryGetInput(
+            in this Graph graph, uint nodeId, int index, out uint portId
+        ) {
+            portId = 0;
+            graph.GetInputPorts(nodeId, out var inputPorts, Allocator.Temp);
+
+            if (index < 0 || index >= inputPorts.Length) {
+                inputPorts.Dispose();
+                return false;
+            }
+
+            portId = inputPorts[index];
+            inputPorts.Dispose();
+            return true;
+        }
+
+        [BurstCompile]
+        public static bool TryGetOutput(
+            in this Graph graph, uint nodeId, int index, out uint portId
+        ) {
+            portId = 0;
+            graph.GetOutputPorts(nodeId, out var outputPorts, Allocator.Temp);
+
+            if (index < 0 || index >= outputPorts.Length) {
+                outputPorts.Dispose();
+                return false;
+            }
+
+            portId = outputPorts[index];
+            outputPorts.Dispose();
+            return true;
         }
     }
 }

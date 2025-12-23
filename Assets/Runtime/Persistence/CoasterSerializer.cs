@@ -197,7 +197,7 @@ namespace KexEdit.Persistence {
             WriteRotations(ref writer, coaster.Rotations);
             WriteDurations(ref writer, coaster.Durations);
             WriteSteering(ref writer, coaster.Steering);
-            WriteAnchors(ref writer, coaster.Anchors);
+            WriteDriven(ref writer, coaster.Driven);
 
             writer.EndChunk();
         }
@@ -209,7 +209,7 @@ namespace KexEdit.Persistence {
             ReadRotations(ref reader, ref coaster.Rotations);
             ReadDurations(ref reader, ref coaster.Durations);
             ReadSteering(ref reader, ref coaster.Steering);
-            ReadAnchors(ref reader, ref coaster.Anchors);
+            ReadDriven(ref reader, ref coaster.Driven);
         }
 
         static void WriteKeyframes(ref ChunkWriter writer, in KeyframeStore store) {
@@ -349,60 +349,18 @@ namespace KexEdit.Persistence {
             }
         }
 
-        static void WriteAnchors(ref ChunkWriter writer, in NativeHashMap<uint, Point> anchors) {
-            writer.WriteInt(anchors.Count);
-            foreach (var kv in anchors) {
-                writer.WriteUInt(kv.Key);
-                WritePoint(ref writer, kv.Value);
+        static void WriteDriven(ref ChunkWriter writer, in NativeHashSet<uint> driven) {
+            writer.WriteInt(driven.Count);
+            foreach (var id in driven) {
+                writer.WriteUInt(id);
             }
         }
 
-        static void WritePoint(ref ChunkWriter writer, in Point p) {
-            writer.WriteFloat3(p.HeartPosition);
-            writer.WriteFloat3(p.Direction);
-            writer.WriteFloat3(p.Normal);
-            writer.WriteFloat3(p.Lateral);
-            writer.WriteFloat(p.Velocity);
-            writer.WriteFloat(p.Energy);
-            writer.WriteFloat(p.NormalForce);
-            writer.WriteFloat(p.LateralForce);
-            writer.WriteFloat(p.HeartArc);
-            writer.WriteFloat(p.SpineArc);
-            writer.WriteFloat(p.HeartAdvance);
-            writer.WriteFloat(p.FrictionOrigin);
-            writer.WriteFloat(p.RollSpeed);
-            writer.WriteFloat(p.HeartOffset);
-            writer.WriteFloat(p.Friction);
-            writer.WriteFloat(p.Resistance);
-        }
-
-        static void ReadAnchors(ref ChunkReader reader, ref NativeHashMap<uint, Point> anchors) {
+        static void ReadDriven(ref ChunkReader reader, ref NativeHashSet<uint> driven) {
             int count = reader.ReadInt();
             for (int i = 0; i < count; i++) {
-                uint key = reader.ReadUInt();
-                anchors[key] = ReadPoint(ref reader);
+                driven.Add(reader.ReadUInt());
             }
-        }
-
-        static Point ReadPoint(ref ChunkReader reader) {
-            return new Point(
-                heartPosition: reader.ReadFloat3(),
-                direction: reader.ReadFloat3(),
-                normal: reader.ReadFloat3(),
-                lateral: reader.ReadFloat3(),
-                velocity: reader.ReadFloat(),
-                energy: reader.ReadFloat(),
-                normalForce: reader.ReadFloat(),
-                lateralForce: reader.ReadFloat(),
-                heartArc: reader.ReadFloat(),
-                spineArc: reader.ReadFloat(),
-                heartAdvance: reader.ReadFloat(),
-                frictionOrigin: reader.ReadFloat(),
-                rollSpeed: reader.ReadFloat(),
-                heartOffset: reader.ReadFloat(),
-                friction: reader.ReadFloat(),
-                resistance: reader.ReadFloat()
-            );
         }
     }
 }

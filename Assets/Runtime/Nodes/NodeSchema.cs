@@ -1,4 +1,5 @@
 using Unity.Burst;
+using Unity.Collections;
 
 namespace KexEdit.Nodes {
     [BurstCompile]
@@ -9,39 +10,13 @@ namespace KexEdit.Nodes {
             NodeType.Geometric => 2,
             NodeType.Curved => 6,
             NodeType.CopyPath => 4,
-            NodeType.Bridge => 3,
-            NodeType.Anchor => 2,
+            NodeType.Bridge => 4,
+            NodeType.Anchor => 6,
             NodeType.Reverse => 1,
             NodeType.ReversePath => 1,
             NodeType.Scalar => 0,
             NodeType.Vector => 0,
             _ => 0,
-        };
-
-        [BurstCompile]
-        public static PortId Input(NodeType type, int index) => (type, index) switch {
-            (NodeType.Force, 0) => PortId.Anchor,
-            (NodeType.Force, 1) => PortId.Duration,
-            (NodeType.Geometric, 0) => PortId.Anchor,
-            (NodeType.Geometric, 1) => PortId.Duration,
-            (NodeType.Curved, 0) => PortId.Anchor,
-            (NodeType.Curved, 1) => PortId.Radius,
-            (NodeType.Curved, 2) => PortId.Arc,
-            (NodeType.Curved, 3) => PortId.Axis,
-            (NodeType.Curved, 4) => PortId.LeadIn,
-            (NodeType.Curved, 5) => PortId.LeadOut,
-            (NodeType.CopyPath, 0) => PortId.Anchor,
-            (NodeType.CopyPath, 1) => PortId.Path,
-            (NodeType.CopyPath, 2) => PortId.Start,
-            (NodeType.CopyPath, 3) => PortId.End,
-            (NodeType.Bridge, 0) => PortId.Anchor,
-            (NodeType.Bridge, 1) => PortId.InWeight,
-            (NodeType.Bridge, 2) => PortId.OutWeight,
-            (NodeType.Anchor, 0) => PortId.Position,
-            (NodeType.Anchor, 1) => PortId.Rotation,
-            (NodeType.Reverse, 0) => PortId.Anchor,
-            (NodeType.ReversePath, 0) => PortId.Path,
-            _ => (PortId)255,
         };
 
         [BurstCompile]
@@ -57,26 +32,6 @@ namespace KexEdit.Nodes {
             NodeType.Scalar => 1,
             NodeType.Vector => 1,
             _ => 0,
-        };
-
-        [BurstCompile]
-        public static PortId Output(NodeType type, int index) => (type, index) switch {
-            (NodeType.Scalar, 0) => PortId.Scalar,
-            (NodeType.Vector, 0) => PortId.Vector,
-            (NodeType.Force, 0) => PortId.Anchor,
-            (NodeType.Force, 1) => PortId.Path,
-            (NodeType.Geometric, 0) => PortId.Anchor,
-            (NodeType.Geometric, 1) => PortId.Path,
-            (NodeType.Curved, 0) => PortId.Anchor,
-            (NodeType.Curved, 1) => PortId.Path,
-            (NodeType.CopyPath, 0) => PortId.Anchor,
-            (NodeType.CopyPath, 1) => PortId.Path,
-            (NodeType.Bridge, 0) => PortId.Anchor,
-            (NodeType.Bridge, 1) => PortId.Path,
-            (NodeType.Anchor, 0) => PortId.Anchor,
-            (NodeType.Reverse, 0) => PortId.Anchor,
-            (NodeType.ReversePath, 0) => PortId.Path,
-            _ => (PortId)255,
         };
 
         [BurstCompile]
@@ -122,6 +77,136 @@ namespace KexEdit.Nodes {
             (NodeType.Bridge, 3) => PropertyId.Resistance,
             (NodeType.Bridge, 4) => PropertyId.TrackStyle,
             _ => (PropertyId)255,
+        };
+
+        [BurstCompile]
+        public static void InputSpec(NodeType type, int index, out PortSpec result) {
+            result = (type, index) switch {
+                (NodeType.Force, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.Force, 1) => new PortSpec(PortDataType.Scalar, 0),
+                (NodeType.Geometric, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.Geometric, 1) => new PortSpec(PortDataType.Scalar, 0),
+                (NodeType.Curved, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.Curved, 1) => new PortSpec(PortDataType.Scalar, 0),
+                (NodeType.Curved, 2) => new PortSpec(PortDataType.Scalar, 1),
+                (NodeType.Curved, 3) => new PortSpec(PortDataType.Scalar, 2),
+                (NodeType.Curved, 4) => new PortSpec(PortDataType.Scalar, 3),
+                (NodeType.Curved, 5) => new PortSpec(PortDataType.Scalar, 4),
+                (NodeType.CopyPath, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.CopyPath, 1) => new PortSpec(PortDataType.Path, 0),
+                (NodeType.CopyPath, 2) => new PortSpec(PortDataType.Scalar, 0),
+                (NodeType.CopyPath, 3) => new PortSpec(PortDataType.Scalar, 1),
+                (NodeType.Bridge, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.Bridge, 1) => new PortSpec(PortDataType.Anchor, 1),
+                (NodeType.Bridge, 2) => new PortSpec(PortDataType.Scalar, 1),
+                (NodeType.Bridge, 3) => new PortSpec(PortDataType.Scalar, 0),
+                (NodeType.Anchor, 0) => new PortSpec(PortDataType.Vector, 0),
+                (NodeType.Anchor, 1) => new PortSpec(PortDataType.Vector, 1),
+                (NodeType.Anchor, 2) => new PortSpec(PortDataType.Scalar, 0),
+                (NodeType.Anchor, 3) => new PortSpec(PortDataType.Scalar, 1),
+                (NodeType.Anchor, 4) => new PortSpec(PortDataType.Scalar, 2),
+                (NodeType.Anchor, 5) => new PortSpec(PortDataType.Scalar, 3),
+                (NodeType.Reverse, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.ReversePath, 0) => new PortSpec(PortDataType.Path, 0),
+                _ => PortSpec.Invalid,
+            };
+        }
+
+        [BurstCompile]
+        public static void OutputSpec(NodeType type, int index, out PortSpec result) {
+            result = (type, index) switch {
+                (NodeType.Scalar, 0) => new PortSpec(PortDataType.Scalar, 0),
+                (NodeType.Vector, 0) => new PortSpec(PortDataType.Vector, 0),
+                (NodeType.Force, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.Force, 1) => new PortSpec(PortDataType.Path, 0),
+                (NodeType.Geometric, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.Geometric, 1) => new PortSpec(PortDataType.Path, 0),
+                (NodeType.Curved, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.Curved, 1) => new PortSpec(PortDataType.Path, 0),
+                (NodeType.CopyPath, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.CopyPath, 1) => new PortSpec(PortDataType.Path, 0),
+                (NodeType.Bridge, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.Bridge, 1) => new PortSpec(PortDataType.Path, 0),
+                (NodeType.Anchor, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.Reverse, 0) => new PortSpec(PortDataType.Anchor, 0),
+                (NodeType.ReversePath, 0) => new PortSpec(PortDataType.Path, 0),
+                _ => PortSpec.Invalid,
+            };
+        }
+
+        [BurstCompile]
+        public static void InputName(NodeType type, int index, out FixedString32Bytes result) {
+            result = (type, index) switch {
+                (NodeType.Force, 0) => "Anchor",
+                (NodeType.Force, 1) => "Duration",
+                (NodeType.Geometric, 0) => "Anchor",
+                (NodeType.Geometric, 1) => "Duration",
+                (NodeType.Curved, 0) => "Anchor",
+                (NodeType.Curved, 1) => "Radius",
+                (NodeType.Curved, 2) => "Arc",
+                (NodeType.Curved, 3) => "Axis",
+                (NodeType.Curved, 4) => "Lead In",
+                (NodeType.Curved, 5) => "Lead Out",
+                (NodeType.CopyPath, 0) => "Anchor",
+                (NodeType.CopyPath, 1) => "Path",
+                (NodeType.CopyPath, 2) => "Start",
+                (NodeType.CopyPath, 3) => "End",
+                (NodeType.Bridge, 0) => "Anchor",
+                (NodeType.Bridge, 1) => "Target",
+                (NodeType.Bridge, 2) => "Out Weight",
+                (NodeType.Bridge, 3) => "In Weight",
+                (NodeType.Anchor, 0) => "Position",
+                (NodeType.Anchor, 1) => "Rotation",
+                (NodeType.Anchor, 2) => "Velocity",
+                (NodeType.Anchor, 3) => "Heart",
+                (NodeType.Anchor, 4) => "Friction",
+                (NodeType.Anchor, 5) => "Resistance",
+                (NodeType.Reverse, 0) => "Anchor",
+                (NodeType.ReversePath, 0) => "Path",
+                _ => "",
+            };
+        }
+
+        [BurstCompile]
+        public static void OutputName(NodeType type, int index, out FixedString32Bytes result) {
+            result = (type, index) switch {
+                (NodeType.Scalar, 0) => "Scalar",
+                (NodeType.Vector, 0) => "Vector",
+                (NodeType.Force, 0) => "Anchor",
+                (NodeType.Force, 1) => "Path",
+                (NodeType.Geometric, 0) => "Anchor",
+                (NodeType.Geometric, 1) => "Path",
+                (NodeType.Curved, 0) => "Anchor",
+                (NodeType.Curved, 1) => "Path",
+                (NodeType.CopyPath, 0) => "Anchor",
+                (NodeType.CopyPath, 1) => "Path",
+                (NodeType.Bridge, 0) => "Anchor",
+                (NodeType.Bridge, 1) => "Path",
+                (NodeType.Anchor, 0) => "Anchor",
+                (NodeType.Reverse, 0) => "Anchor",
+                (NodeType.ReversePath, 0) => "Path",
+                _ => "",
+            };
+        }
+
+        [BurstCompile]
+        public static float DefaultInputValue(NodeType type, int index) => (type, index) switch {
+            (NodeType.Force, 1) => 5f,
+            (NodeType.Geometric, 1) => 5f,
+            (NodeType.Curved, 1) => 20f,
+            (NodeType.Curved, 2) => 90f,
+            (NodeType.Curved, 3) => 0f,
+            (NodeType.Curved, 4) => 0f,
+            (NodeType.Curved, 5) => 0f,
+            (NodeType.CopyPath, 2) => 0f,
+            (NodeType.CopyPath, 3) => 1f,
+            (NodeType.Bridge, 2) => 0.5f,
+            (NodeType.Bridge, 3) => 0.5f,
+            (NodeType.Anchor, 2) => 10f,      // Velocity
+            (NodeType.Anchor, 3) => 1.1f,     // Heart
+            (NodeType.Anchor, 4) => 0.021f,   // Friction
+            (NodeType.Anchor, 5) => 2e-5f,    // Resistance
+            _ => 0f,
         };
     }
 }

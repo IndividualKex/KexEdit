@@ -4,6 +4,11 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 namespace KexEdit.Nodes.Geometric {
+    public static class GeometricPorts {
+        public const int Anchor = 0;
+        public const int Duration = 1;
+    }
+
     [BurstCompile]
     public static class GeometricNode {
         private const int MAX_ITERATIONS = 1_000_000;

@@ -1,7 +1,6 @@
 using KexEdit.Core;
 using KexEdit.NodeGraph;
 using KexEdit.Nodes;
-using KexGraph;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -20,7 +19,6 @@ public class CoasterTests {
             Assert.AreEqual(0, coaster.Vectors.Count);
             Assert.AreEqual(0, coaster.Durations.Count);
             Assert.AreEqual(0, coaster.Steering.Count);
-            Assert.AreEqual(0, coaster.Anchors.Count);
         } finally {
             coaster.Dispose();
         }
@@ -122,18 +120,4 @@ public class CoasterTests {
         }
     }
 
-    [Test]
-    public void Anchor_StoresInitialPointState() {
-        var coaster = Coaster.Create(Allocator.Temp);
-        try {
-            uint nodeId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out _, Allocator.Temp);
-            var anchor = Point.Default;
-            coaster.Anchors[nodeId] = anchor;
-
-            Assert.AreEqual(anchor.HeartPosition, coaster.Anchors[nodeId].HeartPosition);
-            Assert.AreEqual(anchor.Velocity, coaster.Anchors[nodeId].Velocity);
-        } finally {
-            coaster.Dispose();
-        }
-    }
 }

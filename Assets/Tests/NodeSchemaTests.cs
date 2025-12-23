@@ -1,6 +1,7 @@
 using KexEdit.Nodes;
 using NUnit.Framework;
 using System;
+using Unity.Collections;
 
 namespace Tests {
     [TestFixture]
@@ -14,8 +15,8 @@ namespace Tests {
         [TestCase(NodeType.Geometric, 2)]
         [TestCase(NodeType.Curved, 6)]
         [TestCase(NodeType.CopyPath, 4)]
-        [TestCase(NodeType.Bridge, 3)]
-        [TestCase(NodeType.Anchor, 2)]
+        [TestCase(NodeType.Bridge, 4)]
+        [TestCase(NodeType.Anchor, 6)]
         [TestCase(NodeType.Reverse, 1)]
         [TestCase(NodeType.ReversePath, 1)]
         public void InputCount_AllNodeTypes_ReturnsExpectedCount(NodeType type, int expected) {
@@ -51,72 +52,6 @@ namespace Tests {
         public void PropertyCount_AllNodeTypes_ReturnsExpectedCount(NodeType type, int expected) {
             int actual = NodeSchema.PropertyCount(type);
             Assert.AreEqual(expected, actual, $"{type} property count mismatch");
-        }
-
-        [Test]
-        public void Input_Force_ReturnsAnchorAndDuration() {
-            Assert.AreEqual(PortId.Anchor, NodeSchema.Input(NodeType.Force, 0));
-            Assert.AreEqual(PortId.Duration, NodeSchema.Input(NodeType.Force, 1));
-        }
-
-        [Test]
-        public void Input_Geometric_ReturnsAnchorAndDuration() {
-            Assert.AreEqual(PortId.Anchor, NodeSchema.Input(NodeType.Geometric, 0));
-            Assert.AreEqual(PortId.Duration, NodeSchema.Input(NodeType.Geometric, 1));
-        }
-
-        [Test]
-        public void Input_Curved_ReturnsSixPorts() {
-            Assert.AreEqual(PortId.Anchor, NodeSchema.Input(NodeType.Curved, 0));
-            Assert.AreEqual(PortId.Radius, NodeSchema.Input(NodeType.Curved, 1));
-            Assert.AreEqual(PortId.Arc, NodeSchema.Input(NodeType.Curved, 2));
-            Assert.AreEqual(PortId.Axis, NodeSchema.Input(NodeType.Curved, 3));
-            Assert.AreEqual(PortId.LeadIn, NodeSchema.Input(NodeType.Curved, 4));
-            Assert.AreEqual(PortId.LeadOut, NodeSchema.Input(NodeType.Curved, 5));
-        }
-
-        [Test]
-        public void Input_CopyPath_ReturnsFourPorts() {
-            Assert.AreEqual(PortId.Anchor, NodeSchema.Input(NodeType.CopyPath, 0));
-            Assert.AreEqual(PortId.Path, NodeSchema.Input(NodeType.CopyPath, 1));
-            Assert.AreEqual(PortId.Start, NodeSchema.Input(NodeType.CopyPath, 2));
-            Assert.AreEqual(PortId.End, NodeSchema.Input(NodeType.CopyPath, 3));
-        }
-
-        [Test]
-        public void Input_Bridge_ReturnsThreePorts() {
-            Assert.AreEqual(PortId.Anchor, NodeSchema.Input(NodeType.Bridge, 0));
-            Assert.AreEqual(PortId.InWeight, NodeSchema.Input(NodeType.Bridge, 1));
-            Assert.AreEqual(PortId.OutWeight, NodeSchema.Input(NodeType.Bridge, 2));
-        }
-
-        [Test]
-        public void Input_Anchor_ReturnsPositionAndRotation() {
-            Assert.AreEqual(PortId.Position, NodeSchema.Input(NodeType.Anchor, 0));
-            Assert.AreEqual(PortId.Rotation, NodeSchema.Input(NodeType.Anchor, 1));
-        }
-
-        [Test]
-        public void Output_Force_ReturnsAnchorAndPath() {
-            Assert.AreEqual(PortId.Anchor, NodeSchema.Output(NodeType.Force, 0));
-            Assert.AreEqual(PortId.Path, NodeSchema.Output(NodeType.Force, 1));
-        }
-
-        [Test]
-        public void Output_Anchor_ReturnsAnchor() {
-            Assert.AreEqual(PortId.Anchor, NodeSchema.Output(NodeType.Anchor, 0));
-        }
-
-        [Test]
-        public void Input_InvalidIndex_Returns255() {
-            PortId result = NodeSchema.Input(NodeType.Force, 99);
-            Assert.AreEqual((PortId)255, result);
-        }
-
-        [Test]
-        public void Output_InvalidIndex_Returns255() {
-            PortId result = NodeSchema.Output(NodeType.Force, 99);
-            Assert.AreEqual((PortId)255, result);
         }
 
         [Test]
@@ -173,64 +108,12 @@ namespace Tests {
         }
 
         [Test]
-        public void AllNodeTypes_HaveValidInputs() {
-            foreach (NodeType type in AllNodeTypes) {
-                int count = NodeSchema.InputCount(type);
-                for (int i = 0; i < count; i++) {
-                    PortId port = NodeSchema.Input(type, i);
-                    Assert.AreNotEqual((PortId)255, port, $"{type} input {i} should be valid");
-                }
-            }
-        }
-
-        [Test]
-        public void AllNodeTypes_HaveValidOutputs() {
-            foreach (NodeType type in AllNodeTypes) {
-                int count = NodeSchema.OutputCount(type);
-                for (int i = 0; i < count; i++) {
-                    PortId port = NodeSchema.Output(type, i);
-                    Assert.AreNotEqual((PortId)255, port, $"{type} output {i} should be valid");
-                }
-            }
-        }
-
-        [Test]
         public void AllNodeTypes_HaveValidProperties() {
             foreach (NodeType type in AllNodeTypes) {
                 int count = NodeSchema.PropertyCount(type);
                 for (int i = 0; i < count; i++) {
                     PropertyId prop = NodeSchema.Property(type, i);
                     Assert.AreNotEqual((PropertyId)255, prop, $"{type} property {i} should be valid");
-                }
-            }
-        }
-
-        [Test]
-        public void AllNodeTypes_InputIndexesAreContiguous() {
-            foreach (NodeType type in AllNodeTypes) {
-                int count = NodeSchema.InputCount(type);
-                for (int i = 0; i < count; i++) {
-                    PortId port = NodeSchema.Input(type, i);
-                    Assert.AreNotEqual((PortId)255, port, $"{type} missing input at index {i}");
-                }
-                if (count > 0) {
-                    PortId invalid = NodeSchema.Input(type, count);
-                    Assert.AreEqual((PortId)255, invalid, $"{type} should return 255 at index {count}");
-                }
-            }
-        }
-
-        [Test]
-        public void AllNodeTypes_OutputIndexesAreContiguous() {
-            foreach (NodeType type in AllNodeTypes) {
-                int count = NodeSchema.OutputCount(type);
-                for (int i = 0; i < count; i++) {
-                    PortId port = NodeSchema.Output(type, i);
-                    Assert.AreNotEqual((PortId)255, port, $"{type} missing output at index {i}");
-                }
-                if (count > 0) {
-                    PortId invalid = NodeSchema.Output(type, count);
-                    Assert.AreEqual((PortId)255, invalid, $"{type} should return 255 at index {count}");
                 }
             }
         }
@@ -246,6 +129,240 @@ namespace Tests {
                 if (count > 0) {
                     PropertyId invalid = NodeSchema.Property(type, count);
                     Assert.AreEqual((PropertyId)255, invalid, $"{type} should return 255 at index {count}");
+                }
+            }
+        }
+    }
+
+    [TestFixture]
+    [Category("Schema")]
+    public class PortSpecSchemaTests {
+        [Test]
+        public void InputSpec_Force_ReturnsCorrectSpecs() {
+            NodeSchema.InputSpec(NodeType.Force, 0, out var anchor);
+            Assert.AreEqual(PortDataType.Anchor, anchor.DataType);
+            Assert.AreEqual(0, anchor.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.Force, 1, out var duration);
+            Assert.AreEqual(PortDataType.Scalar, duration.DataType);
+            Assert.AreEqual(0, duration.LocalIndex);
+        }
+
+        [Test]
+        public void InputSpec_Curved_ScalarsHaveIncrementingIndices() {
+            // Curved: Anchor(0), Radius(Scalar0), Arc(Scalar1), Axis(Scalar2), LeadIn(Scalar3), LeadOut(Scalar4)
+            NodeSchema.InputSpec(NodeType.Curved, 0, out var anchor);
+            Assert.AreEqual(PortDataType.Anchor, anchor.DataType);
+            Assert.AreEqual(0, anchor.LocalIndex);
+
+            for (int i = 1; i <= 5; i++) {
+                NodeSchema.InputSpec(NodeType.Curved, i, out var spec);
+                Assert.AreEqual(PortDataType.Scalar, spec.DataType, $"Input {i} should be Scalar");
+                Assert.AreEqual(i - 1, spec.LocalIndex, $"Input {i} should have LocalIndex {i - 1}");
+            }
+        }
+
+        [Test]
+        public void InputSpec_Bridge_HasTwoAnchors() {
+            // Bridge: Anchor(Anchor0), Target(Anchor1), OutWeight(Scalar1), InWeight(Scalar0)
+            NodeSchema.InputSpec(NodeType.Bridge, 0, out var anchor);
+            Assert.AreEqual(PortDataType.Anchor, anchor.DataType);
+            Assert.AreEqual(0, anchor.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.Bridge, 1, out var target);
+            Assert.AreEqual(PortDataType.Anchor, target.DataType);
+            Assert.AreEqual(1, target.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.Bridge, 2, out var outWeight);
+            Assert.AreEqual(PortDataType.Scalar, outWeight.DataType);
+            Assert.AreEqual(1, outWeight.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.Bridge, 3, out var inWeight);
+            Assert.AreEqual(PortDataType.Scalar, inWeight.DataType);
+            Assert.AreEqual(0, inWeight.LocalIndex);
+        }
+
+        [Test]
+        public void InputSpec_Anchor_HasVectors() {
+            // Anchor: Position(Vector0), Rotation(Vector1), Velocity(Scalar0)
+            NodeSchema.InputSpec(NodeType.Anchor, 0, out var position);
+            Assert.AreEqual(PortDataType.Vector, position.DataType);
+            Assert.AreEqual(0, position.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.Anchor, 1, out var rotation);
+            Assert.AreEqual(PortDataType.Vector, rotation.DataType);
+            Assert.AreEqual(1, rotation.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.Anchor, 2, out var velocity);
+            Assert.AreEqual(PortDataType.Scalar, velocity.DataType);
+            Assert.AreEqual(0, velocity.LocalIndex);
+        }
+
+        [Test]
+        public void InputSpec_CopyPath_HasPathAndScalars() {
+            // CopyPath: Anchor(Anchor0), Path(Path0), Start(Scalar0), End(Scalar1)
+            NodeSchema.InputSpec(NodeType.CopyPath, 0, out var anchor);
+            Assert.AreEqual(PortDataType.Anchor, anchor.DataType);
+
+            NodeSchema.InputSpec(NodeType.CopyPath, 1, out var path);
+            Assert.AreEqual(PortDataType.Path, path.DataType);
+            Assert.AreEqual(0, path.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.CopyPath, 2, out var start);
+            Assert.AreEqual(PortDataType.Scalar, start.DataType);
+            Assert.AreEqual(0, start.LocalIndex);
+
+            NodeSchema.InputSpec(NodeType.CopyPath, 3, out var end);
+            Assert.AreEqual(PortDataType.Scalar, end.DataType);
+            Assert.AreEqual(1, end.LocalIndex);
+        }
+
+        [Test]
+        public void OutputSpec_Force_ReturnsAnchorAndPath() {
+            NodeSchema.OutputSpec(NodeType.Force, 0, out var anchor);
+            Assert.AreEqual(PortDataType.Anchor, anchor.DataType);
+            Assert.AreEqual(0, anchor.LocalIndex);
+
+            NodeSchema.OutputSpec(NodeType.Force, 1, out var path);
+            Assert.AreEqual(PortDataType.Path, path.DataType);
+            Assert.AreEqual(0, path.LocalIndex);
+        }
+
+        [Test]
+        public void OutputSpec_Scalar_ReturnsScalar() {
+            NodeSchema.OutputSpec(NodeType.Scalar, 0, out var scalar);
+            Assert.AreEqual(PortDataType.Scalar, scalar.DataType);
+            Assert.AreEqual(0, scalar.LocalIndex);
+        }
+
+        [Test]
+        public void OutputSpec_Vector_ReturnsVector() {
+            NodeSchema.OutputSpec(NodeType.Vector, 0, out var vector);
+            Assert.AreEqual(PortDataType.Vector, vector.DataType);
+            Assert.AreEqual(0, vector.LocalIndex);
+        }
+
+        [Test]
+        public void InputSpec_InvalidIndex_ReturnsInvalid() {
+            NodeSchema.InputSpec(NodeType.Force, 99, out var invalid);
+            Assert.IsFalse(invalid.IsValid);
+        }
+
+        [Test]
+        public void OutputSpec_InvalidIndex_ReturnsInvalid() {
+            NodeSchema.OutputSpec(NodeType.Force, 99, out var invalid);
+            Assert.IsFalse(invalid.IsValid);
+        }
+
+        [Test]
+        public void InputName_Force_ReturnsCorrectNames() {
+            NodeSchema.InputName(NodeType.Force, 0, out var name0);
+            NodeSchema.InputName(NodeType.Force, 1, out var name1);
+            Assert.AreEqual("Anchor", name0.ToString());
+            Assert.AreEqual("Duration", name1.ToString());
+        }
+
+        [Test]
+        public void InputName_Curved_ReturnsCorrectNames() {
+            NodeSchema.InputName(NodeType.Curved, 0, out var name0);
+            NodeSchema.InputName(NodeType.Curved, 1, out var name1);
+            NodeSchema.InputName(NodeType.Curved, 2, out var name2);
+            NodeSchema.InputName(NodeType.Curved, 3, out var name3);
+            NodeSchema.InputName(NodeType.Curved, 4, out var name4);
+            NodeSchema.InputName(NodeType.Curved, 5, out var name5);
+            Assert.AreEqual("Anchor", name0.ToString());
+            Assert.AreEqual("Radius", name1.ToString());
+            Assert.AreEqual("Arc", name2.ToString());
+            Assert.AreEqual("Axis", name3.ToString());
+            Assert.AreEqual("Lead In", name4.ToString());
+            Assert.AreEqual("Lead Out", name5.ToString());
+        }
+
+        [Test]
+        public void InputName_Bridge_ReturnsCorrectNames() {
+            NodeSchema.InputName(NodeType.Bridge, 0, out var name0);
+            NodeSchema.InputName(NodeType.Bridge, 1, out var name1);
+            NodeSchema.InputName(NodeType.Bridge, 2, out var name2);
+            NodeSchema.InputName(NodeType.Bridge, 3, out var name3);
+            Assert.AreEqual("Anchor", name0.ToString());
+            Assert.AreEqual("Target", name1.ToString());
+            Assert.AreEqual("Out Weight", name2.ToString());
+            Assert.AreEqual("In Weight", name3.ToString());
+        }
+
+        [Test]
+        public void InputName_Anchor_ReturnsCorrectNames() {
+            NodeSchema.InputName(NodeType.Anchor, 0, out var name0);
+            NodeSchema.InputName(NodeType.Anchor, 1, out var name1);
+            NodeSchema.InputName(NodeType.Anchor, 2, out var name2);
+            Assert.AreEqual("Position", name0.ToString());
+            Assert.AreEqual("Rotation", name1.ToString());
+            Assert.AreEqual("Velocity", name2.ToString());
+        }
+
+        [Test]
+        public void OutputName_Force_ReturnsCorrectNames() {
+            NodeSchema.OutputName(NodeType.Force, 0, out var name0);
+            NodeSchema.OutputName(NodeType.Force, 1, out var name1);
+            Assert.AreEqual("Anchor", name0.ToString());
+            Assert.AreEqual("Path", name1.ToString());
+        }
+
+        [Test]
+        public void DefaultInputValue_Duration_Returns5() {
+            Assert.AreEqual(5f, NodeSchema.DefaultInputValue(NodeType.Force, 1));
+        }
+
+        [Test]
+        public void DefaultInputValue_CurvedRadius_Returns20() {
+            Assert.AreEqual(20f, NodeSchema.DefaultInputValue(NodeType.Curved, 1));
+        }
+
+        [Test]
+        public void DefaultInputValue_CurvedArc_Returns90() {
+            Assert.AreEqual(90f, NodeSchema.DefaultInputValue(NodeType.Curved, 2));
+        }
+
+        [Test]
+        public void DefaultInputValue_BridgeWeights_Return0Point5() {
+            Assert.AreEqual(0.5f, NodeSchema.DefaultInputValue(NodeType.Bridge, 2));
+            Assert.AreEqual(0.5f, NodeSchema.DefaultInputValue(NodeType.Bridge, 3));
+        }
+
+        [Test]
+        public void DefaultInputValue_CopyPathStartEnd_Return0And1() {
+            Assert.AreEqual(0f, NodeSchema.DefaultInputValue(NodeType.CopyPath, 2));
+            Assert.AreEqual(1f, NodeSchema.DefaultInputValue(NodeType.CopyPath, 3));
+        }
+
+        [Test]
+        public void AllNodeTypes_InputSpecsMatchInputCount() {
+            var allTypes = (NodeType[])Enum.GetValues(typeof(NodeType));
+            foreach (NodeType type in allTypes) {
+                int count = NodeSchema.InputCount(type);
+                for (int i = 0; i < count; i++) {
+                    NodeSchema.InputSpec(type, i, out var spec);
+                    Assert.IsTrue(spec.IsValid, $"{type} input {i} should have valid spec");
+                }
+                if (count > 0) {
+                    NodeSchema.InputSpec(type, count, out var invalid);
+                    Assert.IsFalse(invalid.IsValid, $"{type} should return invalid spec at index {count}");
+                }
+            }
+        }
+
+        [Test]
+        public void AllNodeTypes_OutputSpecsMatchOutputCount() {
+            var allTypes = (NodeType[])Enum.GetValues(typeof(NodeType));
+            foreach (NodeType type in allTypes) {
+                int count = NodeSchema.OutputCount(type);
+                for (int i = 0; i < count; i++) {
+                    NodeSchema.OutputSpec(type, i, out var spec);
+                    Assert.IsTrue(spec.IsValid, $"{type} output {i} should have valid spec");
+                }
+                if (count > 0) {
+                    NodeSchema.OutputSpec(type, count, out var invalid);
+                    Assert.IsFalse(invalid.IsValid, $"{type} should return invalid spec at index {count}");
                 }
             }
         }

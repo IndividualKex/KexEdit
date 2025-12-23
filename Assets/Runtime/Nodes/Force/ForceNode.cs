@@ -4,6 +4,11 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 namespace KexEdit.Nodes.Force {
+    public static class ForcePorts {
+        public const int Anchor = 0;
+        public const int Duration = 1;
+    }
+
     [BurstCompile]
     public static class ForceNode {
         private const float MIN_VELOCITY = 1e-3f;

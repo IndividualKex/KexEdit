@@ -3,6 +3,15 @@ using Unity.Burst;
 using Unity.Mathematics;
 
 namespace KexEdit.Nodes.Anchor {
+    public static class AnchorPorts {
+        public const int Position = 0;
+        public const int Rotation = 1;
+        public const int Velocity = 2;
+        public const int Heart = 3;
+        public const int Friction = 4;
+        public const int Resistance = 5;
+    }
+
     [BurstCompile]
     public static class AnchorNode {
         [BurstCompile]

@@ -12,6 +12,12 @@ using static KexEdit.Legacy.Constants;
 using static KexEdit.UI.Timeline.Constants;
 
 using KexEdit.Legacy;
+using LegacyCoaster = KexEdit.Legacy.Coaster;
+using CoasterAggregate = KexEdit.Coaster.Coaster;
+using CoreDuration = KexEdit.Coaster.Duration;
+using CoreKeyframe = KexEdit.Core.Keyframe;
+using CoreInterpolationType = KexEdit.Core.InterpolationType;
+
 namespace KexEdit.UI.Timeline {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
     public partial class TimelineControlSystem : SystemBase, IEditableHandler {
@@ -24,7 +30,7 @@ namespace KexEdit.UI.Timeline {
         private EntityQuery _nodeQuery;
 
         protected override void OnCreate() {
-            _coasterQuery = GetEntityQuery(typeof(Coaster), typeof(EditorCoasterTag));
+            _coasterQuery = GetEntityQuery(typeof(LegacyCoaster), typeof(EditorCoasterTag));
             _nodeQuery = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<Node, CoasterReference>()
                 .WithAll<CorePointBuffer>()
@@ -671,7 +677,76 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void MarkTrackDirty() {
+            SyncKeyframesToCoaster();
             SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
+        }
+
+        private ref CoasterAggregate GetCoasterRef() {
+            var coasterEntity = SystemAPI.GetComponent<CoasterReference>(_data.Entity).Value;
+            return ref SystemAPI.GetComponentRW<CoasterData>(coasterEntity).ValueRW.Value;
+        }
+
+        private void SyncKeyframesToCoaster() {
+            if (_data.Entity == Entity.Null) return;
+            if (!SystemAPI.HasComponent<CoasterReference>(_data.Entity)) return;
+
+            ref var coaster = ref GetCoasterRef();
+            uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
+
+            SyncKeyframeBuffer<RollSpeedKeyframe>(nodeId, KexEdit.Nodes.PropertyId.RollSpeed, ref coaster.Keyframes);
+            SyncKeyframeBuffer<NormalForceKeyframe>(nodeId, KexEdit.Nodes.PropertyId.NormalForce, ref coaster.Keyframes);
+            SyncKeyframeBuffer<LateralForceKeyframe>(nodeId, KexEdit.Nodes.PropertyId.LateralForce, ref coaster.Keyframes);
+            SyncKeyframeBuffer<PitchSpeedKeyframe>(nodeId, KexEdit.Nodes.PropertyId.PitchSpeed, ref coaster.Keyframes);
+            SyncKeyframeBuffer<YawSpeedKeyframe>(nodeId, KexEdit.Nodes.PropertyId.YawSpeed, ref coaster.Keyframes);
+            SyncKeyframeBuffer<FixedVelocityKeyframe>(nodeId, KexEdit.Nodes.PropertyId.DrivenVelocity, ref coaster.Keyframes);
+            SyncKeyframeBuffer<HeartKeyframe>(nodeId, KexEdit.Nodes.PropertyId.HeartOffset, ref coaster.Keyframes);
+            SyncKeyframeBuffer<FrictionKeyframe>(nodeId, KexEdit.Nodes.PropertyId.Friction, ref coaster.Keyframes);
+            SyncKeyframeBuffer<ResistanceKeyframe>(nodeId, KexEdit.Nodes.PropertyId.Resistance, ref coaster.Keyframes);
+            SyncKeyframeBuffer<TrackStyleKeyframe>(nodeId, KexEdit.Nodes.PropertyId.TrackStyle, ref coaster.Keyframes);
+        }
+
+        private void SyncKeyframeBuffer<T>(uint nodeId, KexEdit.Nodes.PropertyId propertyId, ref KexEdit.Nodes.Storage.KeyframeStore keyframes)
+            where T : unmanaged, IBufferElementData
+        {
+            if (!EntityManager.HasBuffer<T>(_data.Entity)) return;
+
+            var buffer = EntityManager.GetBuffer<T>(_data.Entity);
+            if (buffer.Length == 0) {
+                keyframes.Remove(nodeId, propertyId);
+                return;
+            }
+
+            var converted = new NativeArray<CoreKeyframe>(buffer.Length, Allocator.Temp);
+            for (int i = 0; i < buffer.Length; i++) {
+                var legacy = GetKeyframeValue(buffer[i]);
+                converted[i] = new CoreKeyframe(
+                    time: legacy.Time,
+                    value: legacy.Value,
+                    inInterpolation: (CoreInterpolationType)legacy.InInterpolation,
+                    outInterpolation: (CoreInterpolationType)legacy.OutInterpolation,
+                    inTangent: legacy.InTangent,
+                    outTangent: legacy.OutTangent,
+                    inWeight: legacy.InWeight,
+                    outWeight: legacy.OutWeight
+                );
+            }
+
+            keyframes.Set(nodeId, propertyId, in converted);
+            converted.Dispose();
+        }
+
+        private static Keyframe GetKeyframeValue<T>(T element) where T : unmanaged {
+            if (element is RollSpeedKeyframe rs) return rs.Value;
+            if (element is NormalForceKeyframe nf) return nf.Value;
+            if (element is LateralForceKeyframe lf) return lf.Value;
+            if (element is PitchSpeedKeyframe ps) return ps.Value;
+            if (element is YawSpeedKeyframe ys) return ys.Value;
+            if (element is FixedVelocityKeyframe fv) return fv.Value;
+            if (element is HeartKeyframe h) return h.Value;
+            if (element is FrictionKeyframe f) return f.Value;
+            if (element is ResistanceKeyframe r) return r.Value;
+            if (element is TrackStyleKeyframe ts) return ts.Value;
+            throw new ArgumentException($"Unknown keyframe type: {typeof(T)}");
         }
 
         private float EvaluateAt(PropertyType type, float time) {
@@ -1039,6 +1114,12 @@ namespace KexEdit.UI.Timeline {
 
                     ref var durationPort = ref SystemAPI.GetComponentRW<DurationPort>(portRef.Value).ValueRW;
                     durationPort.Value = duration;
+
+                    uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
+                    ref var coaster = ref GetCoasterRef();
+                    if (coaster.Durations.TryGetValue(nodeId, out var existingDuration)) {
+                        coaster.Durations[nodeId] = new CoreDuration(duration, existingDuration.Type);
+                    }
 
                     SystemAPI.SetComponentEnabled<Dirty>(portRef.Value, true);
 

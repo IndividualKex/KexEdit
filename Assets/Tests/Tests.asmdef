@@ -28,7 +28,6 @@
         "KexEdit.NodeGraph",
         "KexGraph",
         "KexEdit.Coaster",
-        "KexEdit.LegacyImport",
         "KexEdit.Persistence"
     ],
     "includePlatforms": [

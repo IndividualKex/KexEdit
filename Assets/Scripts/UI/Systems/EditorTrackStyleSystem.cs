@@ -3,6 +3,8 @@ using Unity.Collections;
 using Unity.Entities;
 
 using KexEdit.Legacy;
+using LegacyCoaster = KexEdit.Legacy.Coaster;
+
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UIPresentationSystemGroup))]
     public partial class EditorTrackStyleSystem : SystemBase {
@@ -20,7 +22,7 @@ namespace KexEdit.UI {
 
             using var ecb = new EntityCommandBuffer(Allocator.Temp);
             if (SystemAPI.HasComponent<TrackStyleSettings>(singleton.Settings)) {
-                foreach (var (_, coaster) in SystemAPI.Query<Coaster>().WithAll<EditorCoasterTag>().WithEntityAccess()) {
+                foreach (var (_, coaster) in SystemAPI.Query<LegacyCoaster>().WithAll<EditorCoasterTag>().WithEntityAccess()) {
                     if (SystemAPI.HasComponent<TrackStyleSettingsReference>(coaster)) {
                         var settings = SystemAPI.GetComponent<TrackStyleSettingsReference>(coaster);
                         if (settings.Value.Equals(singleton.Settings)) continue;
