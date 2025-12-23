@@ -4,7 +4,7 @@
 
 Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant components that duplicate Coaster aggregate data.
 
-**Key Insight**: The serialization format is extensible (like .glb) - core domain data is serialized by the Coaster aggregate, while UI-specific metadata (node positions, keyframe flags, etc.) is stored in extensions that the core format doesn't need to understand.
+**Key Insight**: The serialization format is extensible (like .glb) - core domain data is serialized by the Coaster aggregate, while UI-specific metadata (node positions, keyframe flags, etc.) is stored in extensions.
 
 ## Phase Summary
 
@@ -13,150 +13,353 @@ Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant 
 | 1 | Component & System Audit | ✅ COMPLETE |
 | 2 | Validation Foundation | ✅ COMPLETE |
 | 3 | Extensible Serialization | ✅ COMPLETE |
-| 4 | UI → Coaster Pathway | ⏸️ Next |
+| 4A | KEXD Write Path | ⏸️ Next |
+| 4B | KEXD Read Path | ⏸️ Pending |
+| 4C | Switch to KEXD-Only | ⏸️ Pending |
 | 5 | Pruning | ⏸️ Pending |
-| 6 | UI Layer Migration | ⏸️ Deferred |
-| 7 | Cleanup | ⏸️ Pending |
+| 6 | Cleanup | ⏸️ Pending |
 
 ---
 
-# Completed Phases (Summary)
+# Completed Phases
 
-## Phase 1: Component & System Audit ✅
+## Phase 1-3: Summary
 
-- **107 ECS components** identified; **36 ECS systems**
-- **35 removable components**: 25 port value + 10 keyframe components duplicate Coaster data
-- **1 primary sync**: CoasterSyncSystem (Coaster → CorePointBuffer)
+- **107 ECS components** audited; **35 removable** (port values + keyframe duplicates)
+- Round-trip tests pass with CoasterSerializer
+- Extension system implemented: UIMetadataChunk for node positions
 
-## Phase 2: Validation Foundation ✅
-
-- Round-trip tests pass with 100% success rate
-- Test corpus: veloci.kex, shuttle.kex, all_types.kex
-- CoasterSerializer (chunk-based format) is lossless
-
-## Phase 3: Extensible Serialization ✅
-
-Data-driven extension system implemented for Rust FFI compatibility.
-
-### Extension Architecture
+### KEXD File Format
 
 ```
 KEXD File Format
-├── File Header (magic + version)
+├── File Header (magic "KEXD" + version)
 ├── CORE chunk (domain data)
 │   ├── GRPH sub-chunk - Node/port/edge topology
 │   └── DATA sub-chunk - Keyframes, scalars, vectors, durations, flags
 │
-└── Extension chunks (UI metadata, optional)
-    ├── UIMD - Node UI positions (float2 per node)
-    └── KFMD - Keyframe metadata (Id, HandleType, Flags) [future]
+└── Extension chunks (UI metadata)
+    └── UIMD - Node UI positions (uint nodeId → float2 position)
 ```
-
-### Design: Data-Driven (No Interfaces)
-
-Following the Rust `NodeSchema` pattern:
-
-```
-Assets/Runtime/Persistence/Extensions/
-├── ExtensionSchema.cs      # Static schema (chunk types, versions)
-├── UIMetadataChunk.cs      # Pure data struct
-├── UIMetadataIO.cs         # Static read/write functions
-├── ExtensionSerializer.cs  # Orchestration (explicit dispatch)
-└── ExtensionData.cs        # Container for all extensions
-```
-
-**Key principles**:
-- No interfaces (virtual dispatch incompatible with Rust FFI)
-- Pure data structs + static functions
-- Explicit dispatch via switch (like Rust pattern matching)
-- Separation: chunk format (IO) separate from runtime storage
-
-### Validation Tools
-
-- `tools/analyze_kexd.py` - Python script to validate KEXD chunk structure
-- `ExtensionSerializerTests.cs` - Round-trip tests for extensions
 
 ---
 
-# Phase 4: UI → Coaster Pathway
+# Phase 4A: KEXD Write Path
 
-**Goal**: UI reads/writes directly to Coaster aggregate
+**Goal**: Add KEXD output for validation without changing load behavior
 
-## Partial Progress
+## Strategy: Parallel Output
 
-**Completed** ✅:
-- `NodeGraphControlSystem.ApplyInputPortValue()` - Writes to Coaster only
-- `NodeGraphControlSystem.RebuildAnchorInCoaster()` - Reads from Coaster
-- `NodeGraphControlSystem.CopySelectedNodes()` - Uses Coaster
+Write KEXD alongside existing operations for testing. This lets us validate the new format before switching.
 
-**Remaining**:
-- Wire up `ExtensionSerializer` to save/load UI metadata
-- Update `SerializationSystem` to use new extension system
+## Tasks
+
+### 1. Create SerializeToKEXD method
+
+`SerializationSystem.cs`:
+
+```csharp
+public byte[] SerializeToKEXD(Entity target) {
+    ref readonly var coasterData = ref SystemAPI.GetComponentRW<CoasterData>(target).ValueRO.Value;
+
+    // Build UI metadata from ECS Node.Position
+    var uiMeta = new UIMetadataChunk(Allocator.Temp);
+    using var nodeEntities = _nodeQuery.ToEntityArray(Allocator.Temp);
+    foreach (var entity in nodeEntities) {
+        if (SystemAPI.GetComponent<CoasterReference>(entity).Value != target) continue;
+        var node = SystemAPI.GetComponent<Node>(entity);
+        uiMeta.Positions[node.Id] = node.Position;
+    }
+
+    // Write KEXD format
+    var writer = new ChunkWriter(Allocator.Temp);
+    CoasterSerializer.Write(writer, in coasterData);
+    ExtensionSerializer.WriteUIMetadata(ref writer, in uiMeta);
+
+    var data = writer.ToArray();
+    var result = data.ToArray(); // Copy to managed array
+
+    writer.Dispose();
+    uiMeta.Dispose();
+    data.Dispose();
+
+    return result;
+}
+```
+
+### 2. Add Validation Test
+
+`KexdRoundTripTests.cs`:
+
+```csharp
+[Test]
+public void SerializeToKEXD_ProducesValidFormat() {
+    // Create coaster entity with nodes
+    // Call SerializeToKEXD()
+    // Validate with ChunkReader (correct magic, chunks present)
+    // Parse with CoasterSerializer + ExtensionSerializer
+    // Verify node count, positions match
+}
+```
+
+### 3. Python Validation
+
+Extend `tools/analyze_kexd.py` to:
+- Accept file path argument
+- Report chunk structure, node count, positions
+- Validate checksums if applicable
+
+### 4. Integration Hook
+
+Add debug flag to write both formats during save:
+
+```csharp
+#if DEBUG_KEXD_FORMAT
+var kexdData = SerializeToKEXD(target);
+File.WriteAllBytes(path + ".kexd", kexdData);
+#endif
+```
+
+## Definition of Done
+
+- [ ] `SerializeToKEXD()` implemented and tested
+- [ ] Python tool validates KEXD output
+- [ ] Round-trip test passes
+- [ ] Legacy save/load unchanged
+
+---
+
+# Phase 4B: KEXD Read Path
+
+**Goal**: Add ability to load KEXD files with format detection
+
+## Strategy: Format Detection + Adapter
+
+Detect format by magic number. For KEXD, use an adapter to convert Coaster → SerializedGraph, allowing reuse of existing DeserializeNode.
+
+## Tasks
+
+### 1. Add Format Detection
+
+```csharp
+private static bool IsKEXDFormat(byte[] data) {
+    return data.Length >= 4 &&
+           data[0] == 'K' && data[1] == 'E' &&
+           data[2] == 'X' && data[3] == 'D';
+}
+```
+
+### 2. Create KEXD → SerializedGraph Adapter
+
+`KexdAdapter.cs`:
+
+```csharp
+public static class KexdAdapter {
+    public static SerializedGraph ToSerializedGraph(
+        in Coaster coaster,
+        in ExtensionData extensions,
+        Allocator allocator) {
+        // Build SerializedNode[] from Coaster.Graph
+        // Extract keyframes from coaster.Keyframes
+        // Extract port values from coaster.Scalars/Vectors
+        // Apply positions from extensions.UIMetadata
+        // Return SerializedGraph
+    }
+}
+```
+
+### 3. Update DeserializeGraph
+
+```csharp
+public Entity DeserializeGraph(byte[] data, bool restoreUIState = true) {
+    if (IsKEXDFormat(data)) {
+        return DeserializeFromKEXD(data, restoreUIState);
+    }
+    // ... existing legacy path
+}
+
+private Entity DeserializeFromKEXD(byte[] data, bool restoreUIState) {
+    var reader = new ChunkReader(data);
+    var coaster = CoasterSerializer.Read(reader, Allocator.Persistent);
+    reader.Dispose();
+
+    var reader2 = new ChunkReader(data);
+    var extensions = ExtensionSerializer.ReadExtensions(ref reader2, Allocator.Temp);
+    reader2.Dispose();
+
+    var serializedGraph = KexdAdapter.ToSerializedGraph(in coaster, in extensions, Allocator.Temp);
+    extensions.Dispose();
+
+    // Create ECS entity, reuse existing node creation logic
+    var coasterEntity = EntityManager.CreateEntity(typeof(Coaster), typeof(CoasterData));
+    EntityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+
+    // ... create ECS entities via existing DeserializeNode
+    // ... restore UI state if needed
+
+    serializedGraph.Dispose();
+    return coasterEntity;
+}
+```
+
+### 4. Add Bi-directional Test
+
+```csharp
+[Test]
+public void KEXD_RoundTrip_PreservesAllData() {
+    // Create coaster with nodes, keyframes, positions
+    // SerializeToKEXD()
+    // DeserializeFromKEXD()
+    // Verify all data matches
+}
+```
+
+## Definition of Done
+
+- [ ] Format detection works
+- [ ] KexdAdapter converts Coaster → SerializedGraph
+- [ ] DeserializeFromKEXD creates correct ECS entities
+- [ ] Bi-directional round-trip test passes
+- [ ] Both formats loadable (backwards compatibility)
+
+---
+
+# Phase 4C: Switch to KEXD-Only
+
+**Goal**: Make KEXD the default format, remove legacy write path
+
+## Tasks
+
+### 1. Switch SerializeGraph
+
+```csharp
+public byte[] SerializeGraph(Entity target) {
+    return SerializeToKEXD(target);
+}
+```
+
+### 2. Remove Legacy Write Code
+
+- Remove `GraphSerializer.Serialize` calls from write path
+- Keep `GraphSerializer.Deserialize` for reading old files
+- Keep `SerializeNode`/`DeserializeNode` for copy/paste (uses SerializedNode)
+
+### 3. Update File Extension
+
+Consider `.kexd` extension for new files (optional, `.kex` still works).
+
+### 4. Validation
+
+```bash
+./run-tests.sh  # All tests pass
+# Manual test: Create coaster, save, reload, verify
+```
+
+## Definition of Done
+
+- [ ] New files saved in KEXD format
+- [ ] Old files still loadable
+- [ ] Undo/redo works with KEXD format
+- [ ] Copy/paste unchanged (uses SerializedNode)
+- [ ] All tests pass
 
 ---
 
 # Phase 5: Pruning
 
-**Goal**: Delete redundant ECS components
+**Goal**: Remove redundant ECS components now that Coaster is source of truth
 
-**Prerequisites**: Phases 3 & 4 complete
+**Prerequisites**: Phase 4C complete (all data flows through Coaster/KEXD)
 
 ## Components to Remove (35 total)
 
-### Port Components (22 files)
-VelocityPort, RollPort, PitchPort, YawPort, FrictionPort, ResistancePort, HeartPort, DurationPort, PositionPort, RotationPort, ScalePort, RadiusPort, ArcPort, AxisPort, LeadInPort, LeadOutPort, InWeightPort, OutWeightPort, StartPort, EndPort, AnchorPort
+### Port Value Components (21 files)
+VelocityPort, RollPort, PitchPort, YawPort, FrictionPort, ResistancePort, HeartPort, DurationPort, PositionPort, RotationPort, ScalePort, RadiusPort, ArcPort, AxisPort, LeadInPort, LeadOutPort, InWeightPort, OutWeightPort, StartPort, EndPort
 
-**Keep**: `Port.cs` (base topology component)
+**Keep**: `Port.cs` (base topology), `AnchorPort.cs` (output computed values)
 
 ### Keyframe Components (10 files)
 RollSpeedKeyframe, NormalForceKeyframe, LateralForceKeyframe, PitchSpeedKeyframe, YawSpeedKeyframe, FixedVelocityKeyframe, HeartKeyframe, FrictionKeyframe, ResistanceKeyframe, TrackStyleKeyframe
 
-### Other Components (3 files)
-Duration, Steering, CurveData
+### Other Duplicate Components (4 files)
+Duration, Steering, CurveData, PropertyOverrides
 
-## Approach
-- Batch delete by category
-- Fix compiler errors as found
-- Test once per batch
+## Pruning Strategy
+
+### Batch 1: Port Value Components
+1. Delete files
+2. Fix compiler errors (update SerializeNode, DeserializeNode, KexdAdapter)
+3. Test: `./run-tests.sh`
+
+### Batch 2: Keyframe Components
+1. Delete files
+2. Fix compiler errors (remove buffer management from DeserializeNode)
+3. Test: `./run-tests.sh`
+
+### Batch 3: Other Components
+1. Delete Duration, Steering, etc.
+2. Update systems that read these (redirect to Coaster)
+3. Test: `./run-tests.sh`
+
+## Definition of Done
+
+- [ ] 35 redundant component files deleted
+- [ ] ECS entities are topology-only (Node, Port, Connection)
+- [ ] All data reads/writes go through Coaster aggregate
+- [ ] All tests pass
 
 ---
 
-# Phase 6: UI Layer Migration (Deferred)
-
-Move UI state components to `Assets/Scripts/UI/`
-
----
-
-# Phase 7: Cleanup
+# Phase 6: Cleanup
 
 1. Remove `VALIDATE_COASTER_PARITY` conditional code
 2. Delete `CoasterPointBuffer`, `ParityValidationSystem`
-3. Update `context.md` files
-4. Archive `PLAN.md`
+3. Remove `LegacyImporter` (if no longer needed for old file import)
+4. Update `context.md` files
+5. Archive this plan
 
 ---
 
 # Key Files
 
-## Serialization
-- `Assets/Runtime/Persistence/` - Chunk-based format
-- `Assets/Runtime/Persistence/Extensions/` - Data-driven extension system
-- `Assets/Runtime/Legacy/Persistence/Serialization/SerializationSystem.cs` - ECS bridge
+## New Files (Phase 4)
+- `Assets/Runtime/Legacy/Persistence/Serialization/KexdAdapter.cs` - Coaster → SerializedGraph
+- `Assets/Tests/KexdRoundTripTests.cs` - Format validation
 
-## Coaster Aggregate
-- `Assets/Runtime/Coaster/Coaster.cs` - Aggregate definition
-- `Assets/Runtime/Core/Keyframe.cs` - Domain keyframe struct
-- `Assets/Runtime/Nodes/Storage/KeyframeStore.cs` - Keyframe storage
+## Modified Files
+- `Assets/Runtime/Legacy/Persistence/Serialization/SerializationSystem.cs` - KEXD read/write
+- `tools/analyze_kexd.py` - Extended validation
 
-## Legacy Components (to remove)
-- `Assets/Runtime/Legacy/Track/Components/` - Port components
-- `Assets/Runtime/Legacy/Physics/Components/` - Keyframe components
+## Reference (Existing)
+- `Assets/Runtime/Persistence/CoasterSerializer.cs` - CORE chunk
+- `Assets/Runtime/Persistence/Extensions/ExtensionSerializer.cs` - UIMD chunk
+- `Assets/Runtime/Legacy/LegacyImporter.cs` - SerializedGraph → Coaster (keep for old files)
+
+---
+
+# Testing Strategy
+
+## Per-Phase Tests
+
+| Phase | Test Type | Purpose |
+|-------|-----------|---------|
+| 4A | Unit | SerializeToKEXD produces valid chunks |
+| 4A | Python | External format validation |
+| 4B | Unit | DeserializeFromKEXD creates correct entities |
+| 4B | Integration | Both formats loadable |
+| 4C | Integration | Undo/redo with KEXD |
+| 5 | Regression | All existing tests pass after pruning |
+
+## Test Corpus
+- `veloci.kex`, `shuttle.kex`, `all_types.kex` (existing)
+- New KEXD files generated from each
 
 ---
 
 # Next Steps
 
-1. **Wire up extension system** in SerializationSystem
-2. **Validate** with round-trip tests including UI metadata
-3. **Proceed to Phase 4** - complete UI → Coaster pathway
-4. **Phase 5** - prune redundant ECS components
+1. Implement Phase 4A: SerializeToKEXD + validation
+2. Run tests, validate with Python tool
+3. Implement Phase 4B: Format detection + adapter
+4. Implement Phase 4C: Switch default format
+5. Phase 5: Prune redundant components
