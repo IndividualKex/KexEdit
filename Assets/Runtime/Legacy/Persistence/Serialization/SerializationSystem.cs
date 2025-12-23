@@ -68,6 +68,7 @@ namespace KexEdit.Legacy.Serialization {
             var current = SerializeGraph(target);
             var prev = _undoStack.Pop();
             _redoStack.Push(current);
+            DestroyCoasterEntities(target);
             return DeserializeGraph(prev, restoreUIState: false);
         }
 
@@ -76,7 +77,33 @@ namespace KexEdit.Legacy.Serialization {
             var current = SerializeGraph(target);
             var next = _redoStack.Pop();
             _undoStack.Push(current);
+            DestroyCoasterEntities(target);
             return DeserializeGraph(next, restoreUIState: false);
+        }
+
+        private void DestroyCoasterEntities(Entity coasterEntity) {
+            using var nodesToDestroy = _nodeQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in nodesToDestroy) {
+                if (SystemAPI.GetComponent<CoasterReference>(entity).Value == coasterEntity) {
+                    EntityManager.DestroyEntity(entity);
+                }
+            }
+
+            using var portsToDestroy = _portQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in portsToDestroy) {
+                EntityManager.DestroyEntity(entity);
+            }
+
+            using var connectionsToDestroy = _connectionQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in connectionsToDestroy) {
+                if (SystemAPI.GetComponent<CoasterReference>(entity).Value == coasterEntity) {
+                    EntityManager.DestroyEntity(entity);
+                }
+            }
+
+            if (EntityManager.Exists(coasterEntity)) {
+                EntityManager.DestroyEntity(coasterEntity);
+            }
         }
 
         public void Clear() {
@@ -212,40 +239,15 @@ namespace KexEdit.Legacy.Serialization {
                 serializedGraph.UIState.ToState(out timelineState, out nodeGraphState, out cameraState);
             }
 
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var node in serializedGraph.Nodes) {
-                DeserializeNode(node, coaster, ref ecb, restoreUIState);
-            }
-
-            ecb.Playback(EntityManager);
-            ecb.Dispose();
-
-            using var ports = _portQuery.ToEntityArray(Allocator.Temp);
-            var portMap = new NativeHashMap<uint, Entity>(ports.Length, Allocator.Temp);
-            foreach (var port in ports) {
-                uint id = SystemAPI.GetComponent<Port>(port).Id;
-                portMap[id] = port;
-            }
-
-            ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var edge in serializedGraph.Edges) {
-                var source = portMap[edge.SourceId];
-                var target = portMap[edge.TargetId];
-                var connection = ecb.CreateEntity();
-                ecb.AddComponent<Dirty>(connection);
-                ecb.AddComponent<CoasterReference>(connection, coaster);
-                ecb.AddComponent(connection, new Connection {
-                    Id = edge.Id,
-                    Source = source,
-                    Target = target,
-                    Selected = edge.Selected,
-                });
-                ecb.SetName(connection, "Connection");
-            }
-            ecb.Playback(EntityManager);
-            ecb.Dispose();
-
-            portMap.Dispose();
+            var uiMetadata = new KexEdit.Persistence.UIMetadataChunk(Allocator.Temp);
+            KexdAdapter.ImportToEcs(
+                in coasterAggregate,
+                in uiMetadata,
+                coaster,
+                EntityManager,
+                restoreUIState
+            );
+            uiMetadata.Dispose();
             serializedGraph.Dispose();
 
             return coaster;
