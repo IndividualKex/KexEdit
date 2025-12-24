@@ -29,6 +29,8 @@ namespace KexEdit.Coaster {
         public NativeHashMap<uint, int> Facing;
         public NativeHashSet<uint> Steering;
         public NativeHashSet<uint> Driven;
+        public NativeHashMap<uint, int> Priority;
+        public NativeHashSet<uint> Render;
 
         public static Coaster Create(Allocator allocator) {
             return new Coaster {
@@ -40,6 +42,8 @@ namespace KexEdit.Coaster {
                 Facing = new NativeHashMap<uint, int>(16, allocator),
                 Steering = new NativeHashSet<uint>(8, allocator),
                 Driven = new NativeHashSet<uint>(8, allocator),
+                Priority = new NativeHashMap<uint, int>(16, allocator),
+                Render = new NativeHashSet<uint>(8, allocator),
             };
         }
 
@@ -52,6 +56,8 @@ namespace KexEdit.Coaster {
             if (Facing.IsCreated) Facing.Dispose();
             if (Steering.IsCreated) Steering.Dispose();
             if (Driven.IsCreated) Driven.Dispose();
+            if (Priority.IsCreated) Priority.Dispose();
+            if (Render.IsCreated) Render.Dispose();
         }
     }
 }

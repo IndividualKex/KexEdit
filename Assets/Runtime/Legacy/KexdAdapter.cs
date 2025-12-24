@@ -73,12 +73,14 @@ namespace KexEdit.Legacy {
 
             var legacyType = CoreToLegacyNodeType((Nodes.NodeType)coreNodeType);
 
+            int priority = coaster.Priority.TryGetValue(nodeId, out int p) ? p : 0;
+
             var node = new Node {
                 Id = nodeId,
                 Type = legacyType,
                 Position = position,
                 Selected = false,
-                Priority = 0
+                Priority = priority
             };
 
             BuildInputPorts(in coaster, (Nodes.NodeType)coreNodeType, nodeId, nodeIndex, allocator, out var inputPorts);
@@ -87,6 +89,7 @@ namespace KexEdit.Legacy {
             BuildAnchor(in coaster, nodeId, out var anchor);
             ExtractDuration(in coaster, nodeId, out var duration);
             bool steering = coaster.Steering.Contains(nodeId);
+            bool render = !coaster.Render.Contains(nodeId);
 
             ExtractRollSpeedKeyframes(in coaster, nodeId, allocator, out var rollSpeedKf);
             ExtractNormalForceKeyframes(in coaster, nodeId, allocator, out var normalForceKf);
@@ -103,6 +106,7 @@ namespace KexEdit.Legacy {
                 legacyType,
                 duration.Type != DurationType.Time,
                 steering,
+                render,
                 hasPropertyOverrides: false,
                 hasCurveData: false,
                 hasMeshFilePath: false
@@ -112,7 +116,7 @@ namespace KexEdit.Legacy {
                 Node = node,
                 Anchor = anchor,
                 FieldFlags = fieldFlags,
-                BooleanFlags = BuildBooleanFlags(steering),
+                BooleanFlags = BuildBooleanFlags(steering, render),
                 Duration = duration,
                 InputPorts = inputPorts,
                 OutputPorts = outputPorts,
@@ -405,8 +409,11 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static NodeFlags BuildBooleanFlags(bool steering) {
-            var flags = NodeFlags.Render;
+        private static NodeFlags BuildBooleanFlags(bool steering, bool render) {
+            var flags = NodeFlags.None;
+            if (render) {
+                flags |= NodeFlags.Render;
+            }
             if (steering) {
                 flags |= NodeFlags.Steering;
             }
@@ -418,6 +425,7 @@ namespace KexEdit.Legacy {
             Legacy.NodeType nodeType,
             bool hasDistanceDuration,
             bool hasSteering,
+            bool hasRender,
             bool hasPropertyOverrides,
             bool hasCurveData,
             bool hasMeshFilePath
@@ -429,6 +437,9 @@ namespace KexEdit.Legacy {
             }
             if (hasSteering) {
                 flags |= NodeFieldFlags.HasSteering;
+            }
+            if (hasRender) {
+                flags |= NodeFieldFlags.HasRender;
             }
             if (hasPropertyOverrides) {
                 flags |= NodeFieldFlags.HasPropertyOverrides;

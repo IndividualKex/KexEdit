@@ -255,5 +255,36 @@ namespace Tests {
             loaded.Dispose();
             original.Dispose();
         }
+
+        [Test]
+        public void Priority_And_Render_RoundTrip_PreservesValues() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+            var n2 = original.Graph.AddNode((uint)NodeType.Geometric, new float2(100, 0));
+            var n3 = original.Graph.AddNode((uint)NodeType.Curved, new float2(200, 0));
+
+            original.Priority[n2] = 5;
+            original.Priority[n3] = -2;
+            original.Render.Add(n2);
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            using var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+
+            Assert.IsFalse(loaded.Priority.ContainsKey(n1));
+            Assert.IsTrue(loaded.Priority.TryGetValue(n2, out int priority2));
+            Assert.AreEqual(5, priority2);
+            Assert.IsTrue(loaded.Priority.TryGetValue(n3, out int priority3));
+            Assert.AreEqual(-2, priority3);
+            Assert.IsFalse(loaded.Render.Contains(n1));
+            Assert.IsTrue(loaded.Render.Contains(n2));
+            Assert.IsFalse(loaded.Render.Contains(n3));
+
+            loaded.Dispose();
+            original.Dispose();
+        }
     }
 }

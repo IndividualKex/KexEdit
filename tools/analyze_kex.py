@@ -66,6 +66,11 @@ class NodeFieldFlags(IntEnum):
     HasMeshFilePath = 1 << 6
     HasSteering = 1 << 7
 
+class NodeFlags(IntEnum):
+    Render = 1 << 0
+    Selected = 1 << 1
+    Steering = 1 << 2
+
 @dataclass
 class PointData:
     heart_position: tuple  # float3
@@ -127,6 +132,10 @@ class SerializedNode:
     boolean_flags: int
     input_ports: List[SerializedPort]
     output_ports: List[SerializedPort]
+
+    @property
+    def render(self) -> bool:
+        return (self.boolean_flags & NodeFlags.Render) != 0
 
 class KexReader:
     def __init__(self, data: bytes):
@@ -389,6 +398,8 @@ def analyze(filepath: str):
     for i, sn in enumerate(nodes):
         print(f"[{i}] Node {sn.node.id}: {get_node_type_name(sn.node.type)}")
         print(f"    Position: ({sn.node.position[0]:.1f}, {sn.node.position[1]:.1f})")
+        print(f"    Priority: {sn.node.priority}")
+        print(f"    Render: {'Yes' if sn.render else 'No'}")
 
         if sn.input_ports:
             print(f"    Input ports ({len(sn.input_ports)}):")
@@ -400,6 +411,17 @@ def analyze(filepath: str):
             for j, p in enumerate(sn.output_ports):
                 print(f"      [{j}] Port {p.port.id}: {get_port_type_name(p.port.type)}")
         print()
+
+    # Priority/Render analysis
+    print("=== PRIORITY/RENDER ANALYSIS ===\n")
+    priorities = set(sn.node.priority for sn in nodes)
+    render_counts = {
+        True: sum(1 for sn in nodes if sn.render),
+        False: sum(1 for sn in nodes if not sn.render)
+    }
+    print(f"Priority variation: {sorted(priorities)}")
+    print(f"Render: {render_counts[True]} nodes with render=true, {render_counts[False]} nodes with render=false")
+    print()
 
     # Analyze Bridge nodes specifically
     bridges = [sn for sn in nodes if sn.node.type == NodeType.Bridge]

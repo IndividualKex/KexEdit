@@ -221,6 +221,8 @@ namespace KexEdit.Legacy {
                 ImportSteering(in node, nodeId, ref coaster);
                 ImportDriven(in node, nodeId, ref coaster);
                 ImportFacing(in node, nodeId, ref coaster);
+                ImportPriority(in node, nodeId, ref coaster);
+                ImportRender(in node, nodeId, ref coaster);
                 ImportPortValues(in node, nodeId, ref coaster, in portIdRemap);
                 ImportAnchorData(in node, nodeId, ref coaster);
             }
@@ -300,6 +302,22 @@ namespace KexEdit.Legacy {
             int facing = node.Anchor.Facing;
             if (facing != 1) {
                 coaster.Facing[nodeId] = facing;
+            }
+        }
+
+        [BurstCompile]
+        private static void ImportPriority(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
+            int priority = node.Node.Priority;
+            if (priority != 0) {
+                coaster.Priority[nodeId] = priority;
+            }
+        }
+
+        [BurstCompile]
+        private static void ImportRender(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
+            bool render = node.Render;
+            if (!render) {
+                coaster.Render.Add(nodeId);
             }
         }
 
