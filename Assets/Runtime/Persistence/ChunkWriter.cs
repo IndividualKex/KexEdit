@@ -130,6 +130,37 @@ namespace KexEdit.Persistence {
             }
         }
 
+        public void WriteHashSet(in NativeHashSet<uint> set) {
+            WriteInt(set.Count);
+            foreach (var id in set) {
+                WriteUInt(id);
+            }
+        }
+
+        public void WriteHashMap(in NativeHashMap<uint, int> map) {
+            WriteInt(map.Count);
+            foreach (var kv in map) {
+                WriteUInt(kv.Key);
+                WriteInt(kv.Value);
+            }
+        }
+
+        public void WriteHashMap(in NativeHashMap<uint, float> map) {
+            WriteInt(map.Count);
+            foreach (var kv in map) {
+                WriteUInt(kv.Key);
+                WriteFloat(kv.Value);
+            }
+        }
+
+        public void WriteHashMap(in NativeHashMap<uint, float3> map) {
+            WriteInt(map.Count);
+            foreach (var kv in map) {
+                WriteUInt(kv.Key);
+                WriteFloat3(kv.Value);
+            }
+        }
+
         public NativeArray<byte> ToArray() {
             var result = new NativeArray<byte>(_buffer.Length, _allocator);
             NativeArray<byte>.Copy(_buffer.AsArray(), result);

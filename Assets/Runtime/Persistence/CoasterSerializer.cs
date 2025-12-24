@@ -1,6 +1,5 @@
 using KexEdit.Core;
 using KexEdit.Nodes.Storage;
-using KexGraph;
 using Unity.Collections;
 using Unity.Mathematics;
 using CoasterData = KexEdit.Coaster.Coaster;
@@ -11,7 +10,6 @@ namespace KexEdit.Persistence {
     public static class CoasterSerializer {
         private const uint FileVersion = 1;
         private const uint CoreVersion = 1;
-        private const uint GraphVersion = 1;
         private const uint DataVersion = 1;
 
         public static void Write(ChunkWriter writer, in CoasterData coaster) {
@@ -27,7 +25,7 @@ namespace KexEdit.Persistence {
                 if (!reader.TryReadHeader(out var header)) break;
 
                 if (header.TypeString == "CORE") {
-                    ReadCoreChunk(ref reader, ref coaster, allocator, header);
+                    ReadCoreChunk(ref reader, ref coaster, header);
                 } else {
                     reader.SkipChunk(header);
                 }
@@ -54,145 +52,67 @@ namespace KexEdit.Persistence {
                 throw new System.InvalidOperationException("Invalid file magic");
             }
 
-            uint version = reader.ReadUInt();
+            reader.ReadUInt();
         }
 
         private static void WriteCoreChunk(ref ChunkWriter writer, in CoasterData coaster) {
             writer.BeginChunk("CORE", CoreVersion);
-            WriteGraphSubChunk(ref writer, coaster.Graph);
-            WriteDataSubChunk(ref writer, in coaster);
+
+            writer.BeginChunk("GRPH", GraphCodec.Version);
+            GraphCodec.Write(ref writer, in coaster.Graph);
+            writer.EndChunk();
+
+            writer.BeginChunk("DATA", DataVersion);
+            WriteKeyframes(ref writer, coaster.Keyframes);
+            writer.WriteHashMap(in coaster.Scalars);
+            writer.WriteHashMap(in coaster.Vectors);
+            WriteDurations(ref writer, coaster.Durations);
+            writer.WriteHashMap(in coaster.Facing);
+            writer.WriteHashSet(in coaster.Steering);
+            writer.WriteHashSet(in coaster.Driven);
+            writer.WriteHashMap(in coaster.Priority);
+            writer.WriteHashSet(in coaster.Render);
+            writer.EndChunk();
+
             writer.EndChunk();
         }
 
-        private static void ReadCoreChunk(ref ChunkReader reader, ref CoasterData coaster, Allocator allocator, ChunkHeader coreHeader) {
+        private static void ReadCoreChunk(ref ChunkReader reader, ref CoasterData coaster, ChunkHeader coreHeader) {
             int endPos = reader.Position + (int)coreHeader.Length;
 
             while (reader.Position < endPos) {
                 if (!reader.TryReadHeader(out var subHeader)) break;
 
                 if (subHeader.TypeString == "GRPH") {
-                    ReadGraphSubChunk(ref reader, ref coaster.Graph, allocator);
+                    GraphCodec.Read(ref reader, ref coaster.Graph);
                 } else if (subHeader.TypeString == "DATA") {
-                    ReadDataSubChunk(ref reader, ref coaster, allocator);
+                    ReadKeyframes(ref reader, ref coaster.Keyframes);
+                    reader.ReadHashMap(ref coaster.Scalars);
+                    reader.ReadHashMap(ref coaster.Vectors);
+                    ReadDurations(ref reader, ref coaster.Durations);
+                    reader.ReadHashMap(ref coaster.Facing);
+                    reader.ReadHashSet(ref coaster.Steering);
+                    reader.ReadHashSet(ref coaster.Driven);
+                    reader.ReadHashMap(ref coaster.Priority);
+                    reader.ReadHashSet(ref coaster.Render);
                 } else {
                     reader.SkipChunk(subHeader);
                 }
             }
         }
 
-        private static void WriteGraphSubChunk(ref ChunkWriter writer, in Graph graph) {
-            writer.BeginChunk("GRPH", GraphVersion);
-
-            writer.WriteInt(graph.NodeIds.Length);
-            writer.WriteInt(graph.PortIds.Length);
-            writer.WriteInt(graph.EdgeIds.Length);
-
-            for (int i = 0; i < graph.NodeIds.Length; i++) {
-                writer.WriteUInt(graph.NodeIds[i]);
-                writer.WriteUInt(graph.NodeTypes[i]);
-                writer.WriteInt(graph.NodeInputCount[i]);
-                writer.WriteInt(graph.NodeOutputCount[i]);
-            }
-
-            for (int i = 0; i < graph.PortIds.Length; i++) {
-                writer.WriteUInt(graph.PortIds[i]);
-                writer.WriteUInt(graph.PortTypes[i]);
-                writer.WriteUInt(graph.PortOwners[i]);
-                writer.WriteBool(graph.PortIsInput[i]);
-            }
-
-            for (int i = 0; i < graph.EdgeIds.Length; i++) {
-                writer.WriteUInt(graph.EdgeIds[i]);
-                writer.WriteUInt(graph.EdgeSources[i]);
-                writer.WriteUInt(graph.EdgeTargets[i]);
-            }
-
-            writer.WriteUInt(graph.NextNodeId);
-            writer.WriteUInt(graph.NextPortId);
-            writer.WriteUInt(graph.NextEdgeId);
-
-            writer.EndChunk();
-        }
-
-        private static void ReadGraphSubChunk(ref ChunkReader reader, ref Graph graph, Allocator allocator) {
-            int nodeCount = reader.ReadInt();
-            int portCount = reader.ReadInt();
-            int edgeCount = reader.ReadInt();
-
-            for (int i = 0; i < nodeCount; i++) {
-                uint id = reader.ReadUInt();
-                uint type = reader.ReadUInt();
-                int inputCount = reader.ReadInt();
-                int outputCount = reader.ReadInt();
-
-                graph.NodeIds.Add(id);
-                graph.NodeTypes.Add(type);
-                graph.NodeInputCount.Add(inputCount);
-                graph.NodeOutputCount.Add(outputCount);
-                graph.NodePositions.Add(float2.zero);
-            }
-
-            for (int i = 0; i < portCount; i++) {
-                uint id = reader.ReadUInt();
-                uint type = reader.ReadUInt();
-                uint owner = reader.ReadUInt();
-                bool isInput = reader.ReadBool();
-
-                graph.PortIds.Add(id);
-                graph.PortTypes.Add(type);
-                graph.PortOwners.Add(owner);
-                graph.PortIsInput.Add(isInput);
-            }
-
-            for (int i = 0; i < edgeCount; i++) {
-                uint id = reader.ReadUInt();
-                uint source = reader.ReadUInt();
-                uint target = reader.ReadUInt();
-
-                graph.EdgeIds.Add(id);
-                graph.EdgeSources.Add(source);
-                graph.EdgeTargets.Add(target);
-            }
-
-            graph.NextNodeId = reader.ReadUInt();
-            graph.NextPortId = reader.ReadUInt();
-            graph.NextEdgeId = reader.ReadUInt();
-
-            graph.RebuildIndexMaps();
-        }
-
-        private static void WriteDataSubChunk(ref ChunkWriter writer, in CoasterData coaster) {
-            writer.BeginChunk("DATA", DataVersion);
-
-            WriteKeyframes(ref writer, coaster.Keyframes);
-            WriteScalars(ref writer, coaster.Scalars);
-            WriteVectors(ref writer, coaster.Vectors);
-            WriteDurations(ref writer, coaster.Durations);
-            WriteFacing(ref writer, coaster.Facing);
-            WriteSteering(ref writer, coaster.Steering);
-            WriteDriven(ref writer, coaster.Driven);
-            WritePriority(ref writer, coaster.Priority);
-            WriteRender(ref writer, coaster.Render);
-
-            writer.EndChunk();
-        }
-
-        private static void ReadDataSubChunk(ref ChunkReader reader, ref CoasterData coaster, Allocator allocator) {
-            ReadKeyframes(ref reader, ref coaster.Keyframes, allocator);
-            ReadScalars(ref reader, ref coaster.Scalars);
-            ReadVectors(ref reader, ref coaster.Vectors);
-            ReadDurations(ref reader, ref coaster.Durations);
-            ReadFacing(ref reader, ref coaster.Facing);
-            ReadSteering(ref reader, ref coaster.Steering);
-            ReadDriven(ref reader, ref coaster.Driven);
-            ReadPriority(ref reader, ref coaster.Priority);
-            ReadRender(ref reader, ref coaster.Render);
-        }
-
         private static void WriteKeyframes(ref ChunkWriter writer, in KeyframeStore store) {
             writer.WriteInt(store.Keyframes.Length);
             for (int i = 0; i < store.Keyframes.Length; i++) {
-                WriteKeyframe(ref writer, store.Keyframes[i]);
+                var kf = store.Keyframes[i];
+                writer.WriteFloat(kf.Time);
+                writer.WriteFloat(kf.Value);
+                writer.WriteByte((byte)kf.InInterpolation);
+                writer.WriteByte((byte)kf.OutInterpolation);
+                writer.WriteFloat(kf.InTangent);
+                writer.WriteFloat(kf.OutTangent);
+                writer.WriteFloat(kf.InWeight);
+                writer.WriteFloat(kf.OutWeight);
             }
 
             int rangeCount = store.Ranges.Count;
@@ -204,21 +124,18 @@ namespace KexEdit.Persistence {
             }
         }
 
-        private static void WriteKeyframe(ref ChunkWriter writer, in Keyframe kf) {
-            writer.WriteFloat(kf.Time);
-            writer.WriteFloat(kf.Value);
-            writer.WriteByte((byte)kf.InInterpolation);
-            writer.WriteByte((byte)kf.OutInterpolation);
-            writer.WriteFloat(kf.InTangent);
-            writer.WriteFloat(kf.OutTangent);
-            writer.WriteFloat(kf.InWeight);
-            writer.WriteFloat(kf.OutWeight);
-        }
-
-        private static void ReadKeyframes(ref ChunkReader reader, ref KeyframeStore store, Allocator allocator) {
+        private static void ReadKeyframes(ref ChunkReader reader, ref KeyframeStore store) {
             int keyframeCount = reader.ReadInt();
             for (int i = 0; i < keyframeCount; i++) {
-                store.Keyframes.Add(ReadKeyframe(ref reader));
+                float time = reader.ReadFloat();
+                float value = reader.ReadFloat();
+                var inInterp = (InterpolationType)reader.ReadByte();
+                var outInterp = (InterpolationType)reader.ReadByte();
+                float inTangent = reader.ReadFloat();
+                float outTangent = reader.ReadFloat();
+                float inWeight = reader.ReadFloat();
+                float outWeight = reader.ReadFloat();
+                store.Keyframes.Add(new Keyframe(time, value, inInterp, outInterp, inTangent, outTangent, inWeight, outWeight));
             }
 
             int rangeCount = reader.ReadInt();
@@ -227,52 +144,6 @@ namespace KexEdit.Persistence {
                 int start = reader.ReadInt();
                 int length = reader.ReadInt();
                 store.Ranges[key] = new int2(start, length);
-            }
-        }
-
-        private static Keyframe ReadKeyframe(ref ChunkReader reader) {
-            float time = reader.ReadFloat();
-            float value = reader.ReadFloat();
-            var inInterp = (InterpolationType)reader.ReadByte();
-            var outInterp = (InterpolationType)reader.ReadByte();
-            float inTangent = reader.ReadFloat();
-            float outTangent = reader.ReadFloat();
-            float inWeight = reader.ReadFloat();
-            float outWeight = reader.ReadFloat();
-            return new Keyframe(time, value, inInterp, outInterp, inTangent, outTangent, inWeight, outWeight);
-        }
-
-        private static void WriteScalars(ref ChunkWriter writer, in NativeHashMap<uint, float> scalars) {
-            writer.WriteInt(scalars.Count);
-            foreach (var kv in scalars) {
-                writer.WriteUInt(kv.Key);
-                writer.WriteFloat(kv.Value);
-            }
-        }
-
-        private static void ReadScalars(ref ChunkReader reader, ref NativeHashMap<uint, float> scalars) {
-            int count = reader.ReadInt();
-            for (int i = 0; i < count; i++) {
-                uint key = reader.ReadUInt();
-                float value = reader.ReadFloat();
-                scalars[key] = value;
-            }
-        }
-
-        private static void WriteVectors(ref ChunkWriter writer, in NativeHashMap<uint, float3> vectors) {
-            writer.WriteInt(vectors.Count);
-            foreach (var kv in vectors) {
-                writer.WriteUInt(kv.Key);
-                writer.WriteFloat3(kv.Value);
-            }
-        }
-
-        private static void ReadVectors(ref ChunkReader reader, ref NativeHashMap<uint, float3> vectors) {
-            int count = reader.ReadInt();
-            for (int i = 0; i < count; i++) {
-                uint key = reader.ReadUInt();
-                float3 value = reader.ReadFloat3();
-                vectors[key] = value;
             }
         }
 
@@ -292,82 +163,6 @@ namespace KexEdit.Persistence {
                 float value = reader.ReadFloat();
                 var type = (DurationType)reader.ReadByte();
                 durations[key] = new Duration(value, type);
-            }
-        }
-
-        private static void WriteFacing(ref ChunkWriter writer, in NativeHashMap<uint, int> facing) {
-            writer.WriteInt(facing.Count);
-            foreach (var kv in facing) {
-                writer.WriteUInt(kv.Key);
-                writer.WriteInt(kv.Value);
-            }
-        }
-
-        private static void ReadFacing(ref ChunkReader reader, ref NativeHashMap<uint, int> facing) {
-            int count = reader.ReadInt();
-            for (int i = 0; i < count; i++) {
-                uint key = reader.ReadUInt();
-                int value = reader.ReadInt();
-                facing[key] = value;
-            }
-        }
-
-        private static void WriteSteering(ref ChunkWriter writer, in NativeHashSet<uint> steering) {
-            writer.WriteInt(steering.Count);
-            foreach (var id in steering) {
-                writer.WriteUInt(id);
-            }
-        }
-
-        private static void ReadSteering(ref ChunkReader reader, ref NativeHashSet<uint> steering) {
-            int count = reader.ReadInt();
-            for (int i = 0; i < count; i++) {
-                steering.Add(reader.ReadUInt());
-            }
-        }
-
-        private static void WriteDriven(ref ChunkWriter writer, in NativeHashSet<uint> driven) {
-            writer.WriteInt(driven.Count);
-            foreach (var id in driven) {
-                writer.WriteUInt(id);
-            }
-        }
-
-        private static void ReadDriven(ref ChunkReader reader, ref NativeHashSet<uint> driven) {
-            int count = reader.ReadInt();
-            for (int i = 0; i < count; i++) {
-                driven.Add(reader.ReadUInt());
-            }
-        }
-
-        private static void WritePriority(ref ChunkWriter writer, in NativeHashMap<uint, int> priority) {
-            writer.WriteInt(priority.Count);
-            foreach (var kv in priority) {
-                writer.WriteUInt(kv.Key);
-                writer.WriteInt(kv.Value);
-            }
-        }
-
-        private static void ReadPriority(ref ChunkReader reader, ref NativeHashMap<uint, int> priority) {
-            int count = reader.ReadInt();
-            for (int i = 0; i < count; i++) {
-                uint key = reader.ReadUInt();
-                int value = reader.ReadInt();
-                priority[key] = value;
-            }
-        }
-
-        private static void WriteRender(ref ChunkWriter writer, in NativeHashSet<uint> render) {
-            writer.WriteInt(render.Count);
-            foreach (var id in render) {
-                writer.WriteUInt(id);
-            }
-        }
-
-        private static void ReadRender(ref ChunkReader reader, ref NativeHashSet<uint> render) {
-            int count = reader.ReadInt();
-            for (int i = 0; i < count; i++) {
-                render.Add(reader.ReadUInt());
             }
         }
     }

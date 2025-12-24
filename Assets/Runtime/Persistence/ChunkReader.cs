@@ -113,6 +113,40 @@ namespace KexEdit.Persistence {
             return ReadArray<T>(count, allocator);
         }
 
+        public void ReadHashSet(ref NativeHashSet<uint> set) {
+            int count = ReadInt();
+            for (int i = 0; i < count; i++) {
+                set.Add(ReadUInt());
+            }
+        }
+
+        public void ReadHashMap(ref NativeHashMap<uint, int> map) {
+            int count = ReadInt();
+            for (int i = 0; i < count; i++) {
+                uint key = ReadUInt();
+                int value = ReadInt();
+                map[key] = value;
+            }
+        }
+
+        public void ReadHashMap(ref NativeHashMap<uint, float> map) {
+            int count = ReadInt();
+            for (int i = 0; i < count; i++) {
+                uint key = ReadUInt();
+                float value = ReadFloat();
+                map[key] = value;
+            }
+        }
+
+        public void ReadHashMap(ref NativeHashMap<uint, float3> map) {
+            int count = ReadInt();
+            for (int i = 0; i < count; i++) {
+                uint key = ReadUInt();
+                float3 value = ReadFloat3();
+                map[key] = value;
+            }
+        }
+
         public void Dispose() {
             // Reader doesn't own the data, so nothing to dispose
         }

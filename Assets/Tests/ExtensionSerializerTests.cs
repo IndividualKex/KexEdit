@@ -17,7 +17,11 @@ namespace Tests {
 
             var writer = new ChunkWriter(Allocator.Temp);
             writer.BeginChunk(ExtensionSchema.UIMetadataType, ExtensionSchema.UIMetadataVersion);
-            UIMetadataIO.Write(ref writer, in original);
+            writer.WriteInt(original.Positions.Count);
+            foreach (var kvp in original.Positions) {
+                writer.WriteUInt(kvp.Key);
+                writer.WriteFloat2(kvp.Value);
+            }
             writer.EndChunk();
 
             var data = writer.ToArray();
@@ -26,7 +30,13 @@ namespace Tests {
             var reader = new ChunkReader(data);
             reader.TryReadHeader(out var header);
 
-            var loaded = UIMetadataIO.Read(ref reader, header.Version, Allocator.Temp);
+            var loaded = new UIMetadataChunk(Allocator.Temp);
+            int count = reader.ReadInt();
+            for (int i = 0; i < count; i++) {
+                uint nodeId = reader.ReadUInt();
+                var position = reader.ReadFloat2();
+                loaded.Positions[nodeId] = position;
+            }
             reader.Dispose();
             data.Dispose();
 
@@ -45,9 +55,7 @@ namespace Tests {
             var original = new UIMetadataChunk(Allocator.Temp);
 
             var writer = new ChunkWriter(Allocator.Temp);
-            writer.BeginChunk(ExtensionSchema.UIMetadataType, ExtensionSchema.UIMetadataVersion);
-            UIMetadataIO.Write(ref writer, in original);
-            writer.EndChunk();
+            UIMetadataCodec.WriteChunk(ref writer, in original);
 
             var data = writer.ToArray();
             writer.Dispose();
@@ -55,7 +63,13 @@ namespace Tests {
             var reader = new ChunkReader(data);
             reader.TryReadHeader(out var header);
 
-            var loaded = UIMetadataIO.Read(ref reader, header.Version, Allocator.Temp);
+            var loaded = new UIMetadataChunk(Allocator.Temp);
+            int count = reader.ReadInt();
+            for (int i = 0; i < count; i++) {
+                uint nodeId = reader.ReadUInt();
+                var position = reader.ReadFloat2();
+                loaded.Positions[nodeId] = position;
+            }
             reader.Dispose();
             data.Dispose();
 
@@ -77,7 +91,7 @@ namespace Tests {
 
             var writer = new ChunkWriter(Allocator.Temp);
             CoasterSerializer.Write(writer, in original);
-            ExtensionSerializer.WriteUIMetadata(ref writer, in uiMeta);
+            UIMetadataCodec.WriteChunk(ref writer, in uiMeta);
 
             var data = writer.ToArray();
             writer.Dispose();
@@ -87,14 +101,14 @@ namespace Tests {
             reader.Dispose();
 
             var reader2 = new ChunkReader(data);
-            var loadedMeta = ExtensionSerializer.ReadExtensions(ref reader2, Allocator.Temp);
+            UIMetadataCodec.TryReadFromFile(ref reader2, Allocator.Temp, out var loadedMeta);
             reader2.Dispose();
             data.Dispose();
 
             Assert.AreEqual(2, loaded.Graph.NodeIds.Length);
-            Assert.AreEqual(2, loadedMeta.UIMetadata.Positions.Count);
-            Assert.AreEqual(100f, loadedMeta.UIMetadata.Positions[node1].x, 0.001f);
-            Assert.AreEqual(300f, loadedMeta.UIMetadata.Positions[node2].x, 0.001f);
+            Assert.AreEqual(2, loadedMeta.Positions.Count);
+            Assert.AreEqual(100f, loadedMeta.Positions[node1].x, 0.001f);
+            Assert.AreEqual(300f, loadedMeta.Positions[node2].x, 0.001f);
 
             loadedMeta.Dispose();
             loaded.Dispose();
@@ -113,15 +127,13 @@ namespace Tests {
             var writer = new ChunkWriter(Allocator.Temp);
             CoasterSerializer.Write(writer, in original);
 
-            // Unknown chunk before UIMD
             writer.BeginChunk("UNKN", 1);
             writer.WriteUInt(999);
             writer.WriteUInt(888);
             writer.EndChunk();
 
-            ExtensionSerializer.WriteUIMetadata(ref writer, in uiMeta);
+            UIMetadataCodec.WriteChunk(ref writer, in uiMeta);
 
-            // Another unknown chunk after UIMD
             writer.BeginChunk("TEST", 2);
             writer.WriteFloat(3.14f);
             writer.EndChunk();
@@ -134,12 +146,12 @@ namespace Tests {
             reader.Dispose();
 
             var reader2 = new ChunkReader(data);
-            var loadedMeta = ExtensionSerializer.ReadExtensions(ref reader2, Allocator.Temp);
+            UIMetadataCodec.TryReadFromFile(ref reader2, Allocator.Temp, out var loadedMeta);
             reader2.Dispose();
             data.Dispose();
 
-            Assert.AreEqual(1, loadedMeta.UIMetadata.Positions.Count);
-            Assert.AreEqual(100f, loadedMeta.UIMetadata.Positions[nodeId].x, 0.001f);
+            Assert.AreEqual(1, loadedMeta.Positions.Count);
+            Assert.AreEqual(100f, loadedMeta.Positions[nodeId].x, 0.001f);
 
             loadedMeta.Dispose();
             loaded.Dispose();

@@ -145,7 +145,7 @@ namespace KexEdit.Legacy.Serialization {
 
             var writer = new KexEdit.Persistence.ChunkWriter(Allocator.Temp);
             KexEdit.Persistence.CoasterSerializer.Write(writer, in coasterData);
-            KexEdit.Persistence.ExtensionSerializer.WriteUIMetadata(ref writer, in uiMeta);
+            KexEdit.Persistence.UIMetadataCodec.WriteChunk(ref writer, in uiMeta);
 
             var data = writer.ToArray();
             var result = data.ToArray();
@@ -201,7 +201,7 @@ namespace KexEdit.Legacy.Serialization {
             buffer.Dispose();
             buffer = new NativeArray<byte>(data, Allocator.Temp);
             reader = new KexEdit.Persistence.ChunkReader(buffer);
-            var extensions = KexEdit.Persistence.ExtensionSerializer.ReadExtensions(ref reader, Allocator.Temp);
+            KexEdit.Persistence.UIMetadataCodec.TryReadFromFile(ref reader, Allocator.Temp, out var uiMetadata);
             reader.Dispose();
 
             EntityManager.SetComponentData(coaster, new CoasterData {
@@ -210,14 +210,14 @@ namespace KexEdit.Legacy.Serialization {
 
             KexdAdapter.ImportToEcs(
                 in coasterAggregate,
-                in extensions.UIMetadata,
+                in uiMetadata,
                 coaster,
                 EntityManager,
                 restoreUIState
             );
 
             buffer.Dispose();
-            extensions.Dispose();
+            uiMetadata.Dispose();
             return coaster;
         }
 

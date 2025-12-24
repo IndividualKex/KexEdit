@@ -126,12 +126,12 @@ namespace Tests {
 
             var nativeData = new NativeArray<byte>(kexdData, Allocator.Temp);
             var reader = new ChunkReader(nativeData);
-            var extensions = ExtensionSerializer.ReadExtensions(ref reader, Allocator.Temp);
+            bool hasUIMetadata = UIMetadataCodec.TryReadFromFile(ref reader, Allocator.Temp, out var uiMetadata);
 
-            Assert.IsTrue(extensions.HasUIMetadata, "KEXD file must contain UI metadata");
-            Assert.AreEqual(2, extensions.UIMetadata.Positions.Count);
-            Assert.IsTrue(extensions.UIMetadata.Positions.TryGetValue(node1Id, out var pos1));
-            Assert.IsTrue(extensions.UIMetadata.Positions.TryGetValue(node2Id, out var pos2));
+            Assert.IsTrue(hasUIMetadata, "KEXD file must contain UI metadata");
+            Assert.AreEqual(2, uiMetadata.Positions.Count);
+            Assert.IsTrue(uiMetadata.Positions.TryGetValue(node1Id, out var pos1));
+            Assert.IsTrue(uiMetadata.Positions.TryGetValue(node2Id, out var pos2));
 
             Assert.AreEqual(100, pos1.x, 0.001f);
             Assert.AreEqual(200, pos1.y, 0.001f);
@@ -140,7 +140,7 @@ namespace Tests {
 
             reader.Dispose();
             nativeData.Dispose();
-            extensions.Dispose();
+            uiMetadata.Dispose();
             entityManager.DestroyEntity(coasterEntity);
             entityManager.DestroyEntity(node1Entity);
             entityManager.DestroyEntity(node2Entity);
