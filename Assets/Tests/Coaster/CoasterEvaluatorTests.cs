@@ -2,6 +2,7 @@ using KexEdit.Coaster;
 using KexEdit.Core;
 using KexEdit.NodeGraph;
 using KexEdit.Nodes;
+using KexEdit.Nodes.Anchor;
 using KexGraph;
 using NUnit.Framework;
 using Unity.Collections;
@@ -30,7 +31,7 @@ public class CoasterEvaluatorTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint nodeId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out _, Allocator.Temp);
-            coaster.Vectors[nodeId] = new float3(10f, 20f, 30f);
+            coaster.Vectors[Coaster.InputKey(nodeId, AnchorPorts.Position)] = new float3(10f, 20f, 30f);
             // Rotation defaults to zero in scalars
 
             CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
@@ -55,7 +56,7 @@ public class CoasterEvaluatorTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-            coaster.Vectors[anchorId] = new float3(0f, 10f, 0f);
+            coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
             // Rotation defaults to zero in scalars
 
             uint forceId = coaster.Graph.CreateNode(NodeType.Force, new float2(100f, 0f), out var forceInputs, out _, Allocator.Temp);
@@ -89,7 +90,7 @@ public class CoasterEvaluatorTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-            coaster.Vectors[anchorId] = new float3(0f, 10f, 0f);
+            coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
             // Rotation defaults to zero in scalars
 
             uint geoId = coaster.Graph.CreateNode(NodeType.Geometric, new float2(100f, 0f), out var geoInputs, out _, Allocator.Temp);
@@ -120,11 +121,11 @@ public class CoasterEvaluatorTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-            coaster.Vectors[anchorId] = new float3(0f, 10f, 0f);
+            coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
             // Rotation defaults to zero in scalars
 
             uint curvedId = coaster.Graph.CreateNode(NodeType.Curved, new float2(100f, 0f), out var curvedInputs, out _, Allocator.Temp);
-            coaster.Scalars[curvedId] = 20f;
+            coaster.Scalars[Coaster.InputKey(curvedId, 1)] = 20f;
 
             coaster.Graph.AddEdge(anchorOutputs[0], curvedInputs[0]);
 
@@ -151,7 +152,7 @@ public class CoasterEvaluatorTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-            coaster.Vectors[anchorId] = new float3(0f, 10f, 0f);
+            coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
             // Rotation defaults to zero in scalars
 
             uint reverseId = coaster.Graph.CreateNode(NodeType.Reverse, new float2(100f, 0f), out var reverseInputs, out _, Allocator.Temp);
@@ -184,7 +185,7 @@ public class CoasterEvaluatorTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-            coaster.Vectors[anchorId] = new float3(0f, 10f, 0f);
+            coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
 
             uint forceId = coaster.Graph.CreateNode(NodeType.Force, new float2(100f, 0f), out var forceInputs, out var forceOutputs, Allocator.Temp);
             coaster.Durations[forceId] = new Duration(0.5f, DurationType.Time);
@@ -221,13 +222,13 @@ public class CoasterEvaluatorTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-            coaster.Vectors[anchorId] = new float3(0f, 10f, 0f);
+            coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
 
             uint forceId = coaster.Graph.CreateNode(NodeType.Force, new float2(100f, 0f), out var forceInputs, out var forceOutputs, Allocator.Temp);
             coaster.Durations[forceId] = new Duration(0.5f, DurationType.Time);
 
             uint anchor2Id = coaster.Graph.CreateNode(NodeType.Anchor, new float2(0f, 100f), out _, out var anchor2Outputs, Allocator.Temp);
-            coaster.Vectors[anchor2Id] = new float3(50f, 10f, 0f);
+            coaster.Vectors[Coaster.InputKey(anchor2Id, AnchorPorts.Position)] = new float3(50f, 10f, 0f);
 
             uint copyId = coaster.Graph.CreateNode(NodeType.CopyPath, new float2(200f, 0f), out var copyInputs, out _, Allocator.Temp);
 
@@ -261,11 +262,11 @@ public class CoasterEvaluatorTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint anchor1Id = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchor1Outputs, Allocator.Temp);
-            coaster.Vectors[anchor1Id] = new float3(0f, 10f, 0f);
+            coaster.Vectors[Coaster.InputKey(anchor1Id, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
             // Rotation defaults to zero in scalars
 
             uint anchor2Id = coaster.Graph.CreateNode(NodeType.Anchor, new float2(0f, 100f), out _, out var anchor2Outputs, Allocator.Temp);
-            coaster.Vectors[anchor2Id] = new float3(0f, 10f, 50f);
+            coaster.Vectors[Coaster.InputKey(anchor2Id, AnchorPorts.Position)] = new float3(0f, 10f, 50f);
             // Rotation defaults to zero in scalars
 
             uint bridgeId = coaster.Graph.CreateNode(NodeType.Bridge, new float2(100f, 0f), out var bridgeInputs, out _, Allocator.Temp);
@@ -297,10 +298,10 @@ public class CoasterEvaluatorTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-            coaster.Vectors[anchorId] = new float3(0f, 10f, 0f);
+            coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
 
             uint scalarId = coaster.Graph.CreateNode(NodeType.Scalar, new float2(-100f, 0f), out _, out var scalarOutputs, Allocator.Temp);
-            coaster.Scalars[scalarId] = 5f;
+            coaster.Scalars[Coaster.InputKey(scalarId, 0)] = 5f;
 
             uint curvedId = coaster.Graph.CreateNode(NodeType.Curved, new float2(100f, 0f), out var curvedInputs, out _, Allocator.Temp);
 

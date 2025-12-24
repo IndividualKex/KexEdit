@@ -175,7 +175,7 @@ namespace KexEdit.Legacy {
                     IsInput = true
                 };
 
-                ExtractPortValue(in coaster, nodeId, portId, portType, out var value);
+                ExtractInputPortValue(in coaster, nodeId, i, portType, out var value);
 
                 result[i] = new SerializedPort {
                     Port = port,
@@ -207,11 +207,9 @@ namespace KexEdit.Legacy {
                     IsInput = false
                 };
 
-                ExtractPortValue(in coaster, nodeId, portId, portType, out var value);
-
                 result[i] = new SerializedPort {
                     Port = port,
-                    Value = value
+                    Value = default
                 };
             }
         }
@@ -282,27 +280,30 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ExtractPortValue(
+        private static void ExtractInputPortValue(
             in CoasterAggregate coaster,
             uint nodeId,
-            uint portId,
+            int inputIndex,
             Legacy.PortType portType,
             out PointData result
         ) {
+            ulong key = CoasterAggregate.InputKey(nodeId, inputIndex);
+
             switch (portType) {
                 case Legacy.PortType.Anchor:
-                    BuildAnchorPortValue(in coaster, nodeId, out result);
+                case Legacy.PortType.Path:
+                    result = default;
                     return;
 
                 case Legacy.PortType.Position:
-                    var pos = coaster.Vectors.TryGetValue(nodeId, out var p) ? p : float3.zero;
+                    var pos = coaster.Vectors.TryGetValue(key, out var p) ? p : float3.zero;
                     result = new PointData { HeartPosition = pos };
                     return;
 
                 case Legacy.PortType.Roll:
                 case Legacy.PortType.Pitch:
                 case Legacy.PortType.Yaw:
-                    if (coaster.Scalars.TryGetValue(portId, out float rotValue)) {
+                    if (coaster.Scalars.TryGetValue(key, out float rotValue)) {
                         result = new PointData { Roll = math.degrees(rotValue) };
                         return;
                     }
@@ -318,7 +319,7 @@ namespace KexEdit.Legacy {
                     return;
 
                 case Legacy.PortType.Friction:
-                    if (coaster.Scalars.TryGetValue(portId, out float frictionPhysics)) {
+                    if (coaster.Scalars.TryGetValue(key, out float frictionPhysics)) {
                         result = new PointData { Roll = frictionPhysics * Constants.FRICTION_PHYSICS_TO_UI_SCALE };
                         return;
                     }
@@ -326,7 +327,7 @@ namespace KexEdit.Legacy {
                     return;
 
                 case Legacy.PortType.Resistance:
-                    if (coaster.Scalars.TryGetValue(portId, out float resistancePhysics)) {
+                    if (coaster.Scalars.TryGetValue(key, out float resistancePhysics)) {
                         result = new PointData { Roll = resistancePhysics * Constants.RESISTANCE_PHYSICS_TO_UI_SCALE };
                         return;
                     }
@@ -344,7 +345,7 @@ namespace KexEdit.Legacy {
                 case Legacy.PortType.End:
                 case Legacy.PortType.OutWeight:
                 case Legacy.PortType.InWeight:
-                    if (coaster.Scalars.TryGetValue(portId, out float value)) {
+                    if (coaster.Scalars.TryGetValue(key, out float value)) {
                         result = new PointData { Roll = value };
                         return;
                     }
@@ -359,18 +360,12 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         private static void BuildAnchorPortValue(in CoasterAggregate coaster, uint nodeId, out PointData result) {
-            var position = coaster.Vectors.TryGetValue(nodeId, out var p) ? p : float3.zero;
+            ulong posKey = CoasterAggregate.InputKey(nodeId, AnchorPorts.Position);
+            var position = coaster.Vectors.TryGetValue(posKey, out var p) ? p : float3.zero;
 
-            float roll = 0f, pitch = 0f, yaw = 0f;
-            if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Roll, out uint rollPortId)) {
-                coaster.Scalars.TryGetValue(rollPortId, out roll);
-            }
-            if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Pitch, out uint pitchPortId)) {
-                coaster.Scalars.TryGetValue(pitchPortId, out pitch);
-            }
-            if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Yaw, out uint yawPortId)) {
-                coaster.Scalars.TryGetValue(yawPortId, out yaw);
-            }
+            coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Roll), out float roll);
+            coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Pitch), out float pitch);
+            coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Yaw), out float yaw);
 
             var frame = Frame.FromEuler(pitch, yaw, roll);
 

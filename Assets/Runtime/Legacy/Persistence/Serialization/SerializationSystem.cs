@@ -264,13 +264,10 @@ namespace KexEdit.Legacy.Serialization {
             for (int i = 0; i < inputPortBuffer.Length; i++) {
                 var portEntity = inputPortBuffer[i];
                 Port port = SystemAPI.GetComponent<Port>(portEntity);
-                uint portId = port.Id;
+                ulong key = CoasterAggregate.InputKey(nodeId, i);
                 SerializedPort portData = new() { Port = port };
                 switch (port.Type) {
                     case PortType.Anchor:
-                        PointData anchorValue = SystemAPI.GetComponent<AnchorPort>(portEntity).Value;
-                        portData.Value = anchorValue;
-                        break;
                     case PortType.Path:
                         break;
                     case PortType.Duration:
@@ -278,85 +275,84 @@ namespace KexEdit.Legacy.Serialization {
                         portData.Value.Roll = durationValue;
                         break;
                     case PortType.Position:
-                        float3 positionValue = coaster.Vectors.TryGetValue(nodeId, out var pos) ? pos : float3.zero;
+                        float3 positionValue = coaster.Vectors.TryGetValue(key, out var pos) ? pos : float3.zero;
                         portData.Value.Roll = positionValue.x;
                         portData.Value.Velocity = positionValue.y;
                         portData.Value.Energy = positionValue.z;
                         break;
                     case PortType.Roll:
-                        float rollValue = coaster.Scalars.TryGetValue(portId, out var roll) ? roll : 0f;
+                        float rollValue = coaster.Scalars.TryGetValue(key, out var roll) ? roll : 0f;
                         portData.Value.Roll = rollValue;
                         break;
                     case PortType.Pitch:
-                        float pitchValue = coaster.Scalars.TryGetValue(portId, out var pitch) ? pitch : 0f;
+                        float pitchValue = coaster.Scalars.TryGetValue(key, out var pitch) ? pitch : 0f;
                         portData.Value.Roll = pitchValue;
                         break;
                     case PortType.Yaw:
-                        float yawValue = coaster.Scalars.TryGetValue(portId, out var yaw) ? yaw : 0f;
+                        float yawValue = coaster.Scalars.TryGetValue(key, out var yaw) ? yaw : 0f;
                         portData.Value.Roll = yawValue;
                         break;
                     case PortType.Velocity:
-                        float velocityValue = coaster.Scalars.TryGetValue(portId, out var velocity) ? velocity : 0f;
+                        float velocityValue = coaster.Scalars.TryGetValue(key, out var velocity) ? velocity : 0f;
                         portData.Value.Roll = velocityValue;
                         break;
                     case PortType.Heart:
-                        float heartValue = coaster.Scalars.TryGetValue(portId, out var heart) ? heart : 0f;
+                        float heartValue = coaster.Scalars.TryGetValue(key, out var heart) ? heart : 0f;
                         portData.Value.Roll = heartValue;
                         break;
                     case PortType.Friction:
-                        float frictionPhysicsValue = coaster.Scalars.TryGetValue(portId, out var friction) ? friction : 0f;
+                        float frictionPhysicsValue = coaster.Scalars.TryGetValue(key, out var friction) ? friction : 0f;
                         float frictionUIValue = frictionPhysicsValue * FRICTION_PHYSICS_TO_UI_SCALE;
                         portData.Value.Roll = frictionUIValue;
                         break;
                     case PortType.Resistance:
-                        float resistancePhysicsValue = coaster.Scalars.TryGetValue(portId, out var resistance) ? resistance : 0f;
+                        float resistancePhysicsValue = coaster.Scalars.TryGetValue(key, out var resistance) ? resistance : 0f;
                         float resistanceUIValue = resistancePhysicsValue * RESISTANCE_PHYSICS_TO_UI_SCALE;
                         portData.Value.Roll = resistanceUIValue;
                         break;
                     case PortType.Radius:
-                        float radiusValue = coaster.Scalars.TryGetValue(portId, out var radius) ? radius : 0f;
+                        float radiusValue = coaster.Scalars.TryGetValue(key, out var radius) ? radius : 0f;
                         portData.Value.Roll = radiusValue;
                         break;
                     case PortType.Arc:
-                        float arcValue = coaster.Scalars.TryGetValue(portId, out var arc) ? arc : 0f;
+                        float arcValue = coaster.Scalars.TryGetValue(key, out var arc) ? arc : 0f;
                         portData.Value.Roll = arcValue;
                         break;
                     case PortType.Axis:
-                        float axisValue = coaster.Scalars.TryGetValue(portId, out var axis) ? axis : 0f;
+                        float axisValue = coaster.Scalars.TryGetValue(key, out var axis) ? axis : 0f;
                         portData.Value.Roll = axisValue;
                         break;
                     case PortType.InWeight:
-                        float inWeightValue = coaster.Scalars.TryGetValue(portId, out var inWeight) ? inWeight : 0f;
+                        float inWeightValue = coaster.Scalars.TryGetValue(key, out var inWeight) ? inWeight : 0f;
                         portData.Value.Roll = inWeightValue;
                         break;
                     case PortType.OutWeight:
-                        float outWeightValue = coaster.Scalars.TryGetValue(portId, out var outWeight) ? outWeight : 0f;
+                        float outWeightValue = coaster.Scalars.TryGetValue(key, out var outWeight) ? outWeight : 0f;
                         portData.Value.Roll = outWeightValue;
                         break;
                     case PortType.LeadIn:
-                        float leadInValue = coaster.Scalars.TryGetValue(portId, out var leadIn) ? leadIn : 0f;
+                        float leadInValue = coaster.Scalars.TryGetValue(key, out var leadIn) ? leadIn : 0f;
                         portData.Value.Roll = leadInValue;
                         break;
                     case PortType.LeadOut:
-                        float leadOutValue = coaster.Scalars.TryGetValue(portId, out var leadOut) ? leadOut : 0f;
+                        float leadOutValue = coaster.Scalars.TryGetValue(key, out var leadOut) ? leadOut : 0f;
                         portData.Value.Roll = leadOutValue;
                         break;
                     case PortType.Rotation:
-                        // Rotation is now stored as separate Roll/Pitch/Yaw scalars
                         portData.Value.Roll = 0f;
                         portData.Value.Velocity = 0f;
                         portData.Value.Energy = 0f;
                         break;
                     case PortType.Scale:
-                        float scaleValue = coaster.Scalars.TryGetValue(portId, out var scale) ? scale : 0f;
+                        float scaleValue = coaster.Scalars.TryGetValue(key, out var scale) ? scale : 0f;
                         portData.Value.Roll = scaleValue;
                         break;
                     case PortType.Start:
-                        float startValue = coaster.Scalars.TryGetValue(portId, out var start) ? start : 0f;
+                        float startValue = coaster.Scalars.TryGetValue(key, out var start) ? start : 0f;
                         portData.Value.Roll = startValue;
                         break;
                     case PortType.End:
-                        float endValue = coaster.Scalars.TryGetValue(portId, out var end) ? end : 0f;
+                        float endValue = coaster.Scalars.TryGetValue(key, out var end) ? end : 0f;
                         portData.Value.Roll = endValue;
                         break;
                     default:
@@ -511,8 +507,7 @@ namespace KexEdit.Legacy.Serialization {
                 Port port = SystemAPI.GetComponent<Port>(portEntity);
                 SerializedPort portData = new() { Port = port };
                 if (port.Type == PortType.Anchor) {
-                    PointData anchorValue = SystemAPI.GetComponent<AnchorPort>(portEntity).Value;
-                    portData.Value = anchorValue;
+                    portData.Value = anchor.Value;
                 }
                 outputPorts[i] = portData;
             }
@@ -568,9 +563,6 @@ namespace KexEdit.Legacy.Serialization {
                 var portEntity = ecb.CreateEntity();
                 ecb.AddComponent<Port>(portEntity, port.Port);
                 ecb.AddComponent<Dirty>(portEntity);
-                if (port.Port.Type == PortType.Anchor) {
-                    ecb.AddComponent<AnchorPort>(portEntity, port.Value);
-                }
                 ecb.AppendToBuffer<InputPortReference>(entity, portEntity);
                 ecb.SetName(portEntity, "Input Port");
             }
@@ -705,9 +697,6 @@ namespace KexEdit.Legacy.Serialization {
                 var portEntity = ecb.CreateEntity();
                 ecb.AddComponent<Port>(portEntity, port.Port);
                 ecb.AddComponent<Dirty>(portEntity);
-                if (port.Port.Type == PortType.Anchor) {
-                    ecb.AddComponent<AnchorPort>(portEntity, port.Value);
-                }
                 ecb.AppendToBuffer<OutputPortReference>(entity, portEntity);
                 ecb.SetName(portEntity, "Output Port");
             }

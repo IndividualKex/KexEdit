@@ -45,11 +45,10 @@ KEXD File Format
 **Result**: 20 files deleted, 458 tests passing
 
 ### Removed Components
-VelocityPort, RollPort, PitchPort, YawPort, FrictionPort, ResistancePort, HeartPort, DurationPort, PositionPort, RotationPort, ScalePort, RadiusPort, ArcPort, AxisPort, LeadInPort, LeadOutPort, InWeightPort, OutWeightPort, StartPort, EndPort
+VelocityPort, RollPort, PitchPort, YawPort, FrictionPort, ResistancePort, HeartPort, DurationPort, PositionPort, RotationPort, ScalePort, RadiusPort, ArcPort, AxisPort, LeadInPort, LeadOutPort, InWeightPort, OutWeightPort, StartPort, EndPort, AnchorPort
 
 ### Kept Components
 - `Port.cs` - Base topology component (Id, Type, IsInput)
-- `AnchorPort.cs` - Computed output anchor values (derived data, not duplicate)
 
 ### Files Modified
 - `SerializationSystem.cs` - Simplified port serialization/deserialization

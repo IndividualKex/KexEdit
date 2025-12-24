@@ -161,6 +161,22 @@ namespace KexEdit.Persistence {
             }
         }
 
+        public void WriteHashMap(in NativeHashMap<ulong, float> map) {
+            WriteInt(map.Count);
+            foreach (var kv in map) {
+                WriteULong(kv.Key);
+                WriteFloat(kv.Value);
+            }
+        }
+
+        public void WriteHashMap(in NativeHashMap<ulong, float3> map) {
+            WriteInt(map.Count);
+            foreach (var kv in map) {
+                WriteULong(kv.Key);
+                WriteFloat3(kv.Value);
+            }
+        }
+
         public NativeArray<byte> ToArray() {
             var result = new NativeArray<byte>(_buffer.Length, _allocator);
             NativeArray<byte>.Copy(_buffer.AsArray(), result);

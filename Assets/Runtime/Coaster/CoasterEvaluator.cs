@@ -173,14 +173,15 @@ namespace KexEdit.Coaster {
 
         [BurstCompile]
         private static void EvaluateAnchorNode(in Coaster coaster, uint nodeId, ref EvaluationResult result) {
-            float3 position = coaster.Vectors.TryGetValue(nodeId, out var pos) ? pos : float3.zero;
-            float roll = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Roll, 0f);
-            float pitch = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Pitch, 0f);
-            float yaw = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Yaw, 0f);
-            float velocity = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Velocity, DEFAULT_VELOCITY);
-            float heart = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Heart, DEFAULT_HEART_OFFSET);
-            float friction = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Friction, DEFAULT_FRICTION);
-            float resistance = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, AnchorPorts.Resistance, DEFAULT_RESISTANCE);
+            ulong posKey = Coaster.InputKey(nodeId, AnchorPorts.Position);
+            float3 position = coaster.Vectors.TryGetValue(posKey, out var pos) ? pos : float3.zero;
+            float roll = GetScalar(in coaster.Scalars, nodeId, AnchorPorts.Roll, 0f);
+            float pitch = GetScalar(in coaster.Scalars, nodeId, AnchorPorts.Pitch, 0f);
+            float yaw = GetScalar(in coaster.Scalars, nodeId, AnchorPorts.Yaw, 0f);
+            float velocity = GetScalar(in coaster.Scalars, nodeId, AnchorPorts.Velocity, DEFAULT_VELOCITY);
+            float heart = GetScalar(in coaster.Scalars, nodeId, AnchorPorts.Heart, DEFAULT_HEART_OFFSET);
+            float friction = GetScalar(in coaster.Scalars, nodeId, AnchorPorts.Friction, DEFAULT_FRICTION);
+            float resistance = GetScalar(in coaster.Scalars, nodeId, AnchorPorts.Resistance, DEFAULT_RESISTANCE);
 
             Frame frame = Frame.FromEuler(pitch, yaw, roll);
             float centerY = frame.SpinePosition(position, heart * 0.9f).y;
@@ -283,11 +284,11 @@ namespace KexEdit.Coaster {
                 return;
             }
 
-            float radius = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, CurvedPorts.Radius, 10f);
-            float arc = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, CurvedPorts.Arc, 90f);
-            float axis = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, CurvedPorts.Axis, 0f);
-            float leadIn = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, CurvedPorts.LeadIn, 0f);
-            float leadOut = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, CurvedPorts.LeadOut, 0f);
+            float radius = GetScalar(in coaster.Scalars, nodeId, CurvedPorts.Radius, 10f);
+            float arc = GetScalar(in coaster.Scalars, nodeId, CurvedPorts.Arc, 90f);
+            float axis = GetScalar(in coaster.Scalars, nodeId, CurvedPorts.Axis, 0f);
+            float leadIn = GetScalar(in coaster.Scalars, nodeId, CurvedPorts.LeadIn, 0f);
+            float leadOut = GetScalar(in coaster.Scalars, nodeId, CurvedPorts.LeadOut, 0f);
 
             bool driven = coaster.Driven.Contains(nodeId);
 
@@ -322,8 +323,8 @@ namespace KexEdit.Coaster {
                 return;
             }
 
-            float inWeight = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, BridgePorts.InWeight, 0.5f);
-            float outWeight = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, BridgePorts.OutWeight, 0.5f);
+            float inWeight = GetScalar(in coaster.Scalars, nodeId, BridgePorts.InWeight, 0.5f);
+            float outWeight = GetScalar(in coaster.Scalars, nodeId, BridgePorts.OutWeight, 0.5f);
             bool driven = coaster.Driven.Contains(nodeId);
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.DrivenVelocity, out var drivenVelocity);
@@ -356,8 +357,8 @@ namespace KexEdit.Coaster {
                 return;
             }
 
-            float start = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, CopyPathPorts.Start, -1f);
-            float end = GetScalar(in coaster.Graph, in coaster.Scalars, nodeId, CopyPathPorts.End, -1f);
+            float start = GetScalar(in coaster.Scalars, nodeId, CopyPathPorts.Start, -1f);
+            float end = GetScalar(in coaster.Scalars, nodeId, CopyPathPorts.End, -1f);
             bool driven = coaster.Driven.Contains(nodeId);
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.DrivenVelocity, out var drivenVelocity);
@@ -437,32 +438,11 @@ namespace KexEdit.Coaster {
 
         [BurstCompile]
         private static float GetScalar(
-            in Graph graph, in NativeHashMap<uint, float> scalars,
-            uint nodeId, int index, float defaultValue
+            in NativeHashMap<ulong, float> scalars,
+            uint nodeId, int inputIndex, float defaultValue
         ) {
-            if (!graph.TryGetInput(nodeId, index, out uint portId)) return defaultValue;
-            return GetScalarFromPort(in graph, in scalars, portId, defaultValue);
-        }
-
-        [BurstCompile]
-        private static float GetScalarFromPort(
-            in Graph graph, in NativeHashMap<uint, float> scalars,
-            uint portId, float defaultValue
-        ) {
-            for (int i = 0; i < graph.EdgeIds.Length; i++) {
-                if (graph.EdgeTargets[i] != portId) continue;
-
-                uint sourcePortId = graph.EdgeSources[i];
-                if (scalars.TryGetValue(sourcePortId, out float value)) {
-                    return value;
-                }
-            }
-
-            if (scalars.TryGetValue(portId, out float inlineValue)) {
-                return inlineValue;
-            }
-
-            return defaultValue;
+            ulong key = Coaster.InputKey(nodeId, inputIndex);
+            return scalars.TryGetValue(key, out float value) ? value : defaultValue;
         }
 
         [BurstCompile]

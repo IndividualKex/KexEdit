@@ -23,8 +23,8 @@ namespace KexEdit.Coaster {
     public struct Coaster : IDisposable {
         public Graph Graph;
         public KeyframeStore Keyframes;
-        public NativeHashMap<uint, float> Scalars;
-        public NativeHashMap<uint, float3> Vectors;
+        public NativeHashMap<ulong, float> Scalars;
+        public NativeHashMap<ulong, float3> Vectors;
         public NativeHashMap<uint, Duration> Durations;
         public NativeHashMap<uint, int> Facing;
         public NativeHashSet<uint> Steering;
@@ -32,12 +32,22 @@ namespace KexEdit.Coaster {
         public NativeHashMap<uint, int> Priority;
         public NativeHashSet<uint> Render;
 
+        [BurstCompile]
+        public static ulong InputKey(uint nodeId, int inputIndex) =>
+            ((ulong)nodeId << 8) | (byte)inputIndex;
+
+        [BurstCompile]
+        public static void UnpackInputKey(ulong key, out uint nodeId, out int inputIndex) {
+            nodeId = (uint)(key >> 8);
+            inputIndex = (int)(key & 0xFF);
+        }
+
         public static Coaster Create(Allocator allocator) {
             return new Coaster {
                 Graph = Graph.Create(allocator),
                 Keyframes = KeyframeStore.Create(allocator),
-                Scalars = new NativeHashMap<uint, float>(16, allocator),
-                Vectors = new NativeHashMap<uint, float3>(16, allocator),
+                Scalars = new NativeHashMap<ulong, float>(16, allocator),
+                Vectors = new NativeHashMap<ulong, float3>(16, allocator),
                 Durations = new NativeHashMap<uint, Duration>(16, allocator),
                 Facing = new NativeHashMap<uint, int>(16, allocator),
                 Steering = new NativeHashSet<uint>(8, allocator),

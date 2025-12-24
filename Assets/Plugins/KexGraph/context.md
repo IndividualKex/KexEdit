@@ -12,8 +12,7 @@ Generic graph data structure with nodes, ports, and edges. No domain knowledge. 
 KexGraph/
 ├── context.md                      # This file
 ├── KexGraph.asmdef                 # Assembly definition
-├── Graph.cs                        # Graph struct with SoA layout
-└── GraphSerializationExtensions.cs # Index map rebuild for deserialization
+└── Graph.cs                        # Graph struct with SoA layout
 ```
 
 ## Scope

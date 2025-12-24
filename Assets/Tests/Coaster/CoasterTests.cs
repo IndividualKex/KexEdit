@@ -43,15 +43,20 @@ public class CoasterTests {
             float roll = 0.1f, pitch = 0.2f, yaw = 0.3f;
             uint nodeId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out var inputPorts, out _, Allocator.Temp);
 
-            coaster.Vectors[nodeId] = position;
-            coaster.Scalars[inputPorts[AnchorPorts.Roll]] = roll;
-            coaster.Scalars[inputPorts[AnchorPorts.Pitch]] = pitch;
-            coaster.Scalars[inputPorts[AnchorPorts.Yaw]] = yaw;
+            ulong posKey = Coaster.InputKey(nodeId, AnchorPorts.Position);
+            ulong rollKey = Coaster.InputKey(nodeId, AnchorPorts.Roll);
+            ulong pitchKey = Coaster.InputKey(nodeId, AnchorPorts.Pitch);
+            ulong yawKey = Coaster.InputKey(nodeId, AnchorPorts.Yaw);
 
-            Assert.AreEqual(position, coaster.Vectors[nodeId]);
-            Assert.AreEqual(roll, coaster.Scalars[inputPorts[AnchorPorts.Roll]]);
-            Assert.AreEqual(pitch, coaster.Scalars[inputPorts[AnchorPorts.Pitch]]);
-            Assert.AreEqual(yaw, coaster.Scalars[inputPorts[AnchorPorts.Yaw]]);
+            coaster.Vectors[posKey] = position;
+            coaster.Scalars[rollKey] = roll;
+            coaster.Scalars[pitchKey] = pitch;
+            coaster.Scalars[yawKey] = yaw;
+
+            Assert.AreEqual(position, coaster.Vectors[posKey]);
+            Assert.AreEqual(roll, coaster.Scalars[rollKey]);
+            Assert.AreEqual(pitch, coaster.Scalars[pitchKey]);
+            Assert.AreEqual(yaw, coaster.Scalars[yawKey]);
 
             inputPorts.Dispose();
         } finally {
@@ -105,9 +110,10 @@ public class CoasterTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint nodeId = coaster.Graph.CreateNode(NodeType.Scalar, float2.zero, out _, out _, Allocator.Temp);
-            coaster.Scalars[nodeId] = 42.5f;
+            ulong key = Coaster.InputKey(nodeId, 0);
+            coaster.Scalars[key] = 42.5f;
 
-            Assert.AreEqual(42.5f, coaster.Scalars[nodeId]);
+            Assert.AreEqual(42.5f, coaster.Scalars[key]);
         } finally {
             coaster.Dispose();
         }
@@ -118,10 +124,11 @@ public class CoasterTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint nodeId = coaster.Graph.CreateNode(NodeType.Vector, float2.zero, out _, out _, Allocator.Temp);
+            ulong key = Coaster.InputKey(nodeId, 0);
             var value = new float3(1f, 2f, 3f);
-            coaster.Vectors[nodeId] = value;
+            coaster.Vectors[key] = value;
 
-            Assert.AreEqual(value, coaster.Vectors[nodeId]);
+            Assert.AreEqual(value, coaster.Vectors[key]);
         } finally {
             coaster.Dispose();
         }

@@ -24,7 +24,7 @@ namespace KexEdit.Legacy {
             var nodeIdRemap = new NativeHashMap<int, uint>(16, Allocator.Temp);
             var portIdRemap = new NativeHashMap<uint, uint>(64, Allocator.Temp);
             ImportGraph(in serializedGraph, ref coaster.Graph, allocator, ref nodeIdRemap, ref portIdRemap);
-            ImportNodeData(in serializedGraph, ref coaster, in nodeIdRemap, in portIdRemap);
+            ImportNodeData(in serializedGraph, ref coaster, in nodeIdRemap);
             ImportBridgeTargets(in serializedGraph, ref coaster, allocator, in nodeIdRemap);
             nodeIdRemap.Dispose();
             portIdRemap.Dispose();
@@ -211,7 +211,7 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ImportNodeData(in SerializedGraph serializedGraph, ref CoasterAggregate coaster, in NativeHashMap<int, uint> nodeIdRemap, in NativeHashMap<uint, uint> portIdRemap) {
+        private static void ImportNodeData(in SerializedGraph serializedGraph, ref CoasterAggregate coaster, in NativeHashMap<int, uint> nodeIdRemap) {
             for (int i = 0; i < serializedGraph.Nodes.Length; i++) {
                 var node = serializedGraph.Nodes[i];
                 uint nodeId = nodeIdRemap.TryGetValue(i, out uint remappedId) ? remappedId : node.Node.Id;
@@ -223,7 +223,7 @@ namespace KexEdit.Legacy {
                 ImportFacing(in node, nodeId, ref coaster);
                 ImportPriority(in node, nodeId, ref coaster);
                 ImportRender(in node, nodeId, ref coaster);
-                ImportPortValues(in node, nodeId, ref coaster, in portIdRemap);
+                ImportPortValues(in node, nodeId, ref coaster);
                 ImportAnchorData(in node, nodeId, ref coaster);
             }
         }
@@ -322,28 +322,26 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ImportPortValues(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster, in NativeHashMap<uint, uint> portIdRemap) {
+        private static void ImportPortValues(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
             for (int i = 0; i < node.InputPorts.Length; i++) {
                 var port = node.InputPorts[i];
                 var portType = port.Port.Type;
-                var originalPortId = port.Port.Id;
                 var value = port.Value;
-
-                // Use remapped port ID if available
-                uint portId = portIdRemap.TryGetValue(originalPortId, out uint remappedId) ? remappedId : originalPortId;
+                ulong key = CoasterAggregate.InputKey(nodeId, i);
 
                 switch (portType) {
                     case PortType.Anchor:
+                    case PortType.Path:
                         break;
                     case PortType.Position:
-                        coaster.Vectors[nodeId] = new float3(value.Roll, value.Velocity, value.Energy);
+                        coaster.Vectors[key] = new float3(value.Roll, value.Velocity, value.Energy);
                         break;
                     case PortType.Rotation:
                         break;
                     case PortType.Roll:
                     case PortType.Pitch:
                     case PortType.Yaw:
-                        coaster.Scalars[portId] = math.radians(value.Roll);
+                        coaster.Scalars[key] = math.radians(value.Roll);
                         break;
                     case PortType.Axis:
                     case PortType.Radius:
@@ -358,7 +356,7 @@ namespace KexEdit.Legacy {
                     case PortType.Heart:
                     case PortType.Friction:
                     case PortType.Resistance:
-                        coaster.Scalars[portId] = value.Roll;
+                        coaster.Scalars[key] = value.Roll;
                         break;
                 }
             }
@@ -368,24 +366,16 @@ namespace KexEdit.Legacy {
         private static void ImportAnchorData(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
             if (node.Node.Type != Legacy.NodeType.Anchor) return;
 
-            if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Velocity, out uint velocityPortId)) {
-                coaster.Scalars[velocityPortId] = node.Anchor.Velocity;
-            }
-            if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Heart, out uint heartPortId)) {
-                coaster.Scalars[heartPortId] = node.Anchor.HeartOffset;
-            }
-            if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Friction, out uint frictionPortId)) {
-                coaster.Scalars[frictionPortId] = node.Anchor.Friction;
-            }
-            if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Resistance, out uint resistancePortId)) {
-                coaster.Scalars[resistancePortId] = node.Anchor.Resistance;
-            }
+            coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Velocity)] = node.Anchor.Velocity;
+            coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Heart)] = node.Anchor.HeartOffset;
+            coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Friction)] = node.Anchor.Friction;
+            coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Resistance)] = node.Anchor.Resistance;
 
             bool hasPosition = !math.all(node.Anchor.HeartPosition == float3.zero);
             bool hasDirection = !math.all(node.Anchor.Direction == float3.zero);
 
             if (hasPosition) {
-                coaster.Vectors[nodeId] = node.Anchor.HeartPosition;
+                coaster.Vectors[CoasterAggregate.InputKey(nodeId, AnchorPorts.Position)] = node.Anchor.HeartPosition;
             }
 
             if (hasDirection) {
@@ -394,15 +384,9 @@ namespace KexEdit.Legacy {
                     math.normalizesafe(node.Anchor.Normal, math.down()),
                     math.normalizesafe(node.Anchor.Lateral, math.right())
                 );
-                if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Roll, out uint rollPortId)) {
-                    coaster.Scalars[rollPortId] = frame.Roll;
-                }
-                if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Pitch, out uint pitchPortId)) {
-                    coaster.Scalars[pitchPortId] = frame.Pitch;
-                }
-                if (coaster.Graph.TryGetInput(nodeId, AnchorPorts.Yaw, out uint yawPortId)) {
-                    coaster.Scalars[yawPortId] = frame.Yaw;
-                }
+                coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Roll)] = frame.Roll;
+                coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Pitch)] = frame.Pitch;
+                coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Yaw)] = frame.Yaw;
             }
         }
 
@@ -434,35 +418,20 @@ namespace KexEdit.Legacy {
                 float2 anchorPos = node.Node.Position + new float2(-100f, 50f);
                 uint anchorNodeId = coaster.Graph.CreateNode(Nodes.NodeType.Anchor, anchorPos, out _, out var anchorOutputs, allocator);
 
-                coaster.Vectors[anchorNodeId] = anchor.HeartPosition;
+                coaster.Vectors[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Position)] = anchor.HeartPosition;
 
                 var frame = new Core.Frame(
                     math.normalizesafe(anchor.Direction, math.back()),
                     math.normalizesafe(anchor.Normal, math.down()),
                     math.normalizesafe(anchor.Lateral, math.right())
                 );
-                if (coaster.Graph.TryGetInput(anchorNodeId, AnchorPorts.Roll, out uint rollPortId)) {
-                    coaster.Scalars[rollPortId] = frame.Roll;
-                }
-                if (coaster.Graph.TryGetInput(anchorNodeId, AnchorPorts.Pitch, out uint pitchPortId)) {
-                    coaster.Scalars[pitchPortId] = frame.Pitch;
-                }
-                if (coaster.Graph.TryGetInput(anchorNodeId, AnchorPorts.Yaw, out uint yawPortId)) {
-                    coaster.Scalars[yawPortId] = frame.Yaw;
-                }
-
-                if (coaster.Graph.TryGetInput(anchorNodeId, AnchorPorts.Velocity, out uint velocityPortId)) {
-                    coaster.Scalars[velocityPortId] = anchor.Velocity;
-                }
-                if (coaster.Graph.TryGetInput(anchorNodeId, AnchorPorts.Heart, out uint heartPortId)) {
-                    coaster.Scalars[heartPortId] = anchor.HeartOffset;
-                }
-                if (coaster.Graph.TryGetInput(anchorNodeId, AnchorPorts.Friction, out uint frictionPortId)) {
-                    coaster.Scalars[frictionPortId] = anchor.Friction;
-                }
-                if (coaster.Graph.TryGetInput(anchorNodeId, AnchorPorts.Resistance, out uint resistancePortId)) {
-                    coaster.Scalars[resistancePortId] = anchor.Resistance;
-                }
+                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Roll)] = frame.Roll;
+                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Pitch)] = frame.Pitch;
+                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Yaw)] = frame.Yaw;
+                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Velocity)] = anchor.Velocity;
+                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Heart)] = anchor.HeartOffset;
+                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Friction)] = anchor.Friction;
+                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Resistance)] = anchor.Resistance;
 
                 if (coaster.Graph.TryGetInput(nodeId, BridgePorts.Target, out uint bridgeTargetPortId)) {
                     coaster.Graph.AddEdge(anchorOutputs[0], bridgeTargetPortId);
