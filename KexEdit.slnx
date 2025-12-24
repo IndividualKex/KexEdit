@@ -32,9 +32,9 @@
   <Project Path="Unity.InternalAPIEngineBridge.002.csproj" />
   <Project Path="Unity.ResourceManager.csproj" />
   <Project Path="Unity.VisualScripting.Core.csproj" />
-  <Project Path="KexEdit.Legacy.csproj" />
   <Project Path="Unity.VisualScripting.State.Editor.csproj" />
   <Project Path="Unity.Physics.Hybrid.csproj" />
+  <Project Path="KexEdit.Legacy.csproj" />
   <Project Path="Unity.Burst.CodeGen.csproj" />
   <Project Path="Unity.Cinemachine.csproj" />
   <Project Path="Tests.csproj" />

@@ -510,57 +510,10 @@ namespace KexEdit.Legacy.Serialization {
                 var portEntity = outputPortBuffer[i];
                 Port port = SystemAPI.GetComponent<Port>(portEntity);
                 SerializedPort portData = new() { Port = port };
-                switch (port.Type) {
-                    case PortType.Anchor:
-                        PointData anchorValue = SystemAPI.GetComponent<AnchorPort>(portEntity).Value;
-                        portData.Value = anchorValue;
-                        break;
-                    case PortType.Path:
-                        break;
-                    case PortType.Duration:
-                        float durationValue = SystemAPI.GetComponent<DurationPort>(portEntity).Value;
-                        portData.Value.Roll = durationValue;
-                        break;
-                    case PortType.Position:
-                        float3 positionValue = SystemAPI.GetComponent<PositionPort>(portEntity).Value;
-                        portData.Value.Roll = positionValue.x;
-                        portData.Value.Velocity = positionValue.y;
-                        portData.Value.Energy = positionValue.z;
-                        break;
-                    case PortType.Roll:
-                        float rollValue = SystemAPI.GetComponent<RollPort>(portEntity).Value;
-                        portData.Value.Roll = rollValue;
-                        break;
-                    case PortType.Pitch:
-                        float pitchValue = SystemAPI.GetComponent<PitchPort>(portEntity).Value;
-                        portData.Value.Roll = pitchValue;
-                        break;
-                    case PortType.Yaw:
-                        float yawValue = SystemAPI.GetComponent<YawPort>(portEntity).Value;
-                        portData.Value.Roll = yawValue;
-                        break;
-                    case PortType.Velocity:
-                        float velocityValue = SystemAPI.GetComponent<VelocityPort>(portEntity).Value;
-                        portData.Value.Roll = velocityValue;
-                        break;
-                    case PortType.Heart:
-                        float heartValue = SystemAPI.GetComponent<HeartPort>(portEntity).Value;
-                        portData.Value.Roll = heartValue;
-                        break;
-                    case PortType.Friction:
-                        float frictionPhysicsValue = SystemAPI.GetComponent<FrictionPort>(portEntity).Value;
-                        float frictionUIValue = frictionPhysicsValue * FRICTION_PHYSICS_TO_UI_SCALE;
-                        portData.Value.Roll = frictionUIValue;
-                        break;
-                    case PortType.Resistance:
-                        float resistancePhysicsValue = SystemAPI.GetComponent<ResistancePort>(portEntity).Value;
-                        float resistanceUIValue = resistancePhysicsValue * RESISTANCE_PHYSICS_TO_UI_SCALE;
-                        portData.Value.Roll = resistanceUIValue;
-                        break;
-                    default:
-                        throw new NotImplementedException();
+                if (port.Type == PortType.Anchor) {
+                    PointData anchorValue = SystemAPI.GetComponent<AnchorPort>(portEntity).Value;
+                    portData.Value = anchorValue;
                 }
-
                 outputPorts[i] = portData;
             }
 
@@ -615,78 +568,8 @@ namespace KexEdit.Legacy.Serialization {
                 var portEntity = ecb.CreateEntity();
                 ecb.AddComponent<Port>(portEntity, port.Port);
                 ecb.AddComponent<Dirty>(portEntity);
-                switch (port.Port.Type) {
-                    case PortType.Anchor:
-                        ecb.AddComponent<AnchorPort>(portEntity, port.Value);
-                        break;
-                    case PortType.Path:
-                        break;
-                    case PortType.Duration:
-                        ecb.AddComponent<DurationPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Position:
-                        float3 positionValue = new(port.Value.Roll, port.Value.Velocity, port.Value.Energy);
-                        ecb.AddComponent<PositionPort>(portEntity, positionValue);
-                        break;
-                    case PortType.Roll:
-                        ecb.AddComponent<RollPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Pitch:
-                        ecb.AddComponent<PitchPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Yaw:
-                        ecb.AddComponent<YawPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Velocity:
-                        ecb.AddComponent<VelocityPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Heart:
-                        ecb.AddComponent<HeartPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Friction:
-                        float frictionPhysicsValue = port.Value.Roll * FRICTION_UI_TO_PHYSICS_SCALE;
-                        ecb.AddComponent<FrictionPort>(portEntity, frictionPhysicsValue);
-                        break;
-                    case PortType.Resistance:
-                        float resistancePhysicsValue = port.Value.Roll * RESISTANCE_UI_TO_PHYSICS_SCALE;
-                        ecb.AddComponent<ResistancePort>(portEntity, resistancePhysicsValue);
-                        break;
-                    case PortType.Radius:
-                        ecb.AddComponent<RadiusPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Arc:
-                        ecb.AddComponent<ArcPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Axis:
-                        ecb.AddComponent<AxisPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.InWeight:
-                        ecb.AddComponent<InWeightPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.OutWeight:
-                        ecb.AddComponent<OutWeightPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.LeadIn:
-                        ecb.AddComponent<LeadInPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.LeadOut:
-                        ecb.AddComponent<LeadOutPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Rotation:
-                        float3 rotationValue = new(port.Value.Roll, port.Value.Velocity, port.Value.Energy);
-                        ecb.AddComponent<RotationPort>(portEntity, rotationValue);
-                        break;
-                    case PortType.Scale:
-                        ecb.AddComponent<ScalePort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Start:
-                        ecb.AddComponent<StartPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.End:
-                        ecb.AddComponent<EndPort>(portEntity, port.Value.Roll);
-                        break;
-                    default:
-                        throw new NotImplementedException();
+                if (port.Port.Type == PortType.Anchor) {
+                    ecb.AddComponent<AnchorPort>(portEntity, port.Value);
                 }
                 ecb.AppendToBuffer<InputPortReference>(entity, portEntity);
                 ecb.SetName(portEntity, "Input Port");
@@ -822,44 +705,8 @@ namespace KexEdit.Legacy.Serialization {
                 var portEntity = ecb.CreateEntity();
                 ecb.AddComponent<Port>(portEntity, port.Port);
                 ecb.AddComponent<Dirty>(portEntity);
-                switch (port.Port.Type) {
-                    case PortType.Anchor:
-                        ecb.AddComponent<AnchorPort>(portEntity, port.Value);
-                        break;
-                    case PortType.Path:
-                        break;
-                    case PortType.Duration:
-                        ecb.AddComponent<DurationPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Position:
-                        float3 positionValue = new(port.Value.Roll, port.Value.Velocity, port.Value.Energy);
-                        ecb.AddComponent<PositionPort>(portEntity, positionValue);
-                        break;
-                    case PortType.Roll:
-                        ecb.AddComponent<RollPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Pitch:
-                        ecb.AddComponent<PitchPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Yaw:
-                        ecb.AddComponent<YawPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Velocity:
-                        ecb.AddComponent<VelocityPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Heart:
-                        ecb.AddComponent<HeartPort>(portEntity, port.Value.Roll);
-                        break;
-                    case PortType.Friction:
-                        float frictionPhysicsValue = port.Value.Roll * FRICTION_UI_TO_PHYSICS_SCALE;
-                        ecb.AddComponent<FrictionPort>(portEntity, frictionPhysicsValue);
-                        break;
-                    case PortType.Resistance:
-                        float resistancePhysicsValue = port.Value.Roll * RESISTANCE_UI_TO_PHYSICS_SCALE;
-                        ecb.AddComponent<ResistancePort>(portEntity, resistancePhysicsValue);
-                        break;
-                    default:
-                        throw new NotImplementedException();
+                if (port.Port.Type == PortType.Anchor) {
+                    ecb.AddComponent<AnchorPort>(portEntity, port.Value);
                 }
                 ecb.AppendToBuffer<OutputPortReference>(entity, portEntity);
                 ecb.SetName(portEntity, "Output Port");

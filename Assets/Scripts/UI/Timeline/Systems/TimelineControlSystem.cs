@@ -1105,28 +1105,14 @@ namespace KexEdit.UI.Timeline {
 
             duration = math.max(0.1f, duration);
 
-            var inputPorts = SystemAPI.GetBuffer<InputPortReference>(_data.Entity);
-
-            foreach (var portRef in inputPorts) {
-                if (SystemAPI.HasComponent<Port>(portRef.Value) &&
-                    SystemAPI.GetComponent<Port>(portRef.Value).Type == PortType.Duration &&
-                    SystemAPI.HasComponent<DurationPort>(portRef.Value)) {
-
-                    ref var durationPort = ref SystemAPI.GetComponentRW<DurationPort>(portRef.Value).ValueRW;
-                    durationPort.Value = duration;
-
-                    uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
-                    ref var coaster = ref GetCoasterRef();
-                    if (coaster.Durations.TryGetValue(nodeId, out var existingDuration)) {
-                        coaster.Durations[nodeId] = new CoreDuration(duration, existingDuration.Type);
-                    }
-
-                    SystemAPI.SetComponentEnabled<Dirty>(portRef.Value, true);
-
-                    MarkTrackDirty();
-                    return;
-                }
+            uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
+            ref var coaster = ref GetCoasterRef();
+            if (coaster.Durations.TryGetValue(nodeId, out var existingDuration)) {
+                coaster.Durations[nodeId] = new CoreDuration(duration, existingDuration.Type);
             }
+
+            SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
+            MarkTrackDirty();
         }
 
         private void OnPropertyClick(PropertyClickEvent evt) {

@@ -92,42 +92,22 @@ namespace Tests {
             Assert.AreEqual(position.y, loadedPosition.y, 0.001f, "Position.y mismatch");
             Assert.AreEqual(position.z, loadedPosition.z, 0.001f, "Position.z mismatch");
 
-            // Rotation is now stored in scalars - verify via port values in ECS
-            var portQuery = _entityManager.CreateEntityQuery(typeof(Port));
-            using var ports = portQuery.ToEntityArray(Allocator.Temp);
-            Assert.AreEqual(9, ports.Length, "Expected 9 ports (8 input + 1 output)");
+            // Verify scalar values are preserved in Coaster
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(velocityPort, out var loadedVelocity),
+                "Velocity scalar should be preserved");
+            Assert.AreEqual(velocity, loadedVelocity, 0.001f, "Velocity mismatch");
 
-            bool foundVelocity = false, foundHeart = false, foundFriction = false, foundResistance = false;
-            foreach (var portEntity in ports) {
-                var port = _entityManager.GetComponentData<Port>(portEntity);
-                if (!port.IsInput) continue;
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(heartPort, out var loadedHeart),
+                "Heart scalar should be preserved");
+            Assert.AreEqual(heart, loadedHeart, 0.001f, "Heart mismatch");
 
-                if (_entityManager.HasComponent<VelocityPort>(portEntity)) {
-                    float v = _entityManager.GetComponentData<VelocityPort>(portEntity).Value;
-                    Assert.AreEqual(velocity, v, 0.001f, "Velocity mismatch");
-                    foundVelocity = true;
-                }
-                if (_entityManager.HasComponent<HeartPort>(portEntity)) {
-                    float h = _entityManager.GetComponentData<HeartPort>(portEntity).Value;
-                    Assert.AreEqual(heart, h, 0.001f, "Heart mismatch");
-                    foundHeart = true;
-                }
-                if (_entityManager.HasComponent<FrictionPort>(portEntity)) {
-                    float f = _entityManager.GetComponentData<FrictionPort>(portEntity).Value;
-                    Assert.AreEqual(friction, f, 0.001f, "Friction mismatch");
-                    foundFriction = true;
-                }
-                if (_entityManager.HasComponent<ResistancePort>(portEntity)) {
-                    float r = _entityManager.GetComponentData<ResistancePort>(portEntity).Value;
-                    Assert.AreEqual(resistance, r, 0.001f, "Resistance mismatch");
-                    foundResistance = true;
-                }
-            }
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(frictionPort, out var loadedFriction),
+                "Friction scalar should be preserved");
+            Assert.AreEqual(friction, loadedFriction, 0.001f, "Friction mismatch");
 
-            Assert.IsTrue(foundVelocity, "VelocityPort not found");
-            Assert.IsTrue(foundHeart, "HeartPort not found");
-            Assert.IsTrue(foundFriction, "FrictionPort not found");
-            Assert.IsTrue(foundResistance, "ResistancePort not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(resistancePort, out var loadedResistance),
+                "Resistance scalar should be preserved");
+            Assert.AreEqual(resistance, loadedResistance, 0.001f, "Resistance mismatch");
 
             _entityManager.DestroyEntity(loadedEntity);
         }
@@ -168,13 +148,6 @@ namespace Tests {
             Assert.IsTrue(loadedCoaster.Durations.TryGetValue(nodeId, out var loadedDuration),
                 "Duration should be preserved");
             Assert.AreEqual(durationValue, loadedDuration.Value, 0.001f, "Duration value mismatch");
-
-            var portQuery = _entityManager.CreateEntityQuery(typeof(Port), typeof(DurationPort));
-            using var ports = portQuery.ToEntityArray(Allocator.Temp);
-            Assert.AreEqual(1, ports.Length, "Should have exactly one DurationPort");
-
-            var durationPortValue = _entityManager.GetComponentData<DurationPort>(ports[0]).Value;
-            Assert.AreEqual(durationValue, durationPortValue, 0.001f, "DurationPort component value mismatch");
 
             _entityManager.DestroyEntity(loadedEntity);
         }
@@ -218,46 +191,22 @@ namespace Tests {
             _entityManager.DestroyEntity(nodeEntity);
 
             var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
+            var loadedCoaster = _entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
 
-            var portQuery = _entityManager.CreateEntityQuery(typeof(Port));
-            using var ports = portQuery.ToEntityArray(Allocator.Temp);
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(radiusPort, out var loadedRadius), "Radius not found");
+            Assert.AreEqual(radius, loadedRadius, 0.001f, "Radius mismatch");
 
-            bool foundRadius = false, foundArc = false, foundAxis = false;
-            bool foundLeadIn = false, foundLeadOut = false;
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(arcPort, out var loadedArc), "Arc not found");
+            Assert.AreEqual(arc, loadedArc, 0.001f, "Arc mismatch");
 
-            foreach (var portEntity in ports) {
-                if (_entityManager.HasComponent<RadiusPort>(portEntity)) {
-                    float v = _entityManager.GetComponentData<RadiusPort>(portEntity).Value;
-                    Assert.AreEqual(radius, v, 0.001f, "Radius mismatch");
-                    foundRadius = true;
-                }
-                if (_entityManager.HasComponent<ArcPort>(portEntity)) {
-                    float v = _entityManager.GetComponentData<ArcPort>(portEntity).Value;
-                    Assert.AreEqual(arc, v, 0.001f, "Arc mismatch");
-                    foundArc = true;
-                }
-                if (_entityManager.HasComponent<AxisPort>(portEntity)) {
-                    float v = _entityManager.GetComponentData<AxisPort>(portEntity).Value;
-                    Assert.AreEqual(axis, v, 0.001f, "Axis mismatch");
-                    foundAxis = true;
-                }
-                if (_entityManager.HasComponent<LeadInPort>(portEntity)) {
-                    float v = _entityManager.GetComponentData<LeadInPort>(portEntity).Value;
-                    Assert.AreEqual(leadIn, v, 0.001f, "LeadIn mismatch");
-                    foundLeadIn = true;
-                }
-                if (_entityManager.HasComponent<LeadOutPort>(portEntity)) {
-                    float v = _entityManager.GetComponentData<LeadOutPort>(portEntity).Value;
-                    Assert.AreEqual(leadOut, v, 0.001f, "LeadOut mismatch");
-                    foundLeadOut = true;
-                }
-            }
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(axisPort, out var loadedAxis), "Axis not found");
+            Assert.AreEqual(axis, loadedAxis, 0.001f, "Axis mismatch");
 
-            Assert.IsTrue(foundRadius, "RadiusPort not found");
-            Assert.IsTrue(foundArc, "ArcPort not found");
-            Assert.IsTrue(foundAxis, "AxisPort not found");
-            Assert.IsTrue(foundLeadIn, "LeadInPort not found");
-            Assert.IsTrue(foundLeadOut, "LeadOutPort not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(leadInPort, out var loadedLeadIn), "LeadIn not found");
+            Assert.AreEqual(leadIn, loadedLeadIn, 0.001f, "LeadIn mismatch");
+
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(leadOutPort, out var loadedLeadOut), "LeadOut not found");
+            Assert.AreEqual(leadOut, loadedLeadOut, 0.001f, "LeadOut mismatch");
 
             _entityManager.DestroyEntity(loadedEntity);
         }
@@ -296,27 +245,13 @@ namespace Tests {
             _entityManager.DestroyEntity(nodeEntity);
 
             var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
+            var loadedCoaster = _entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
 
-            var portQuery = _entityManager.CreateEntityQuery(typeof(Port));
-            using var ports = portQuery.ToEntityArray(Allocator.Temp);
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(outWeightPort, out var loadedOutWeight), "OutWeight not found");
+            Assert.AreEqual(outWeight, loadedOutWeight, 0.001f, "OutWeight mismatch");
 
-            bool foundOutWeight = false, foundInWeight = false;
-
-            foreach (var portEntity in ports) {
-                if (_entityManager.HasComponent<OutWeightPort>(portEntity)) {
-                    float v = _entityManager.GetComponentData<OutWeightPort>(portEntity).Value;
-                    Assert.AreEqual(outWeight, v, 0.001f, "OutWeight mismatch");
-                    foundOutWeight = true;
-                }
-                if (_entityManager.HasComponent<InWeightPort>(portEntity)) {
-                    float v = _entityManager.GetComponentData<InWeightPort>(portEntity).Value;
-                    Assert.AreEqual(inWeight, v, 0.001f, "InWeight mismatch");
-                    foundInWeight = true;
-                }
-            }
-
-            Assert.IsTrue(foundOutWeight, "OutWeightPort not found");
-            Assert.IsTrue(foundInWeight, "InWeightPort not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(inWeightPort, out var loadedInWeight), "InWeight not found");
+            Assert.AreEqual(inWeight, loadedInWeight, 0.001f, "InWeight mismatch");
 
             _entityManager.DestroyEntity(loadedEntity);
         }
@@ -355,27 +290,13 @@ namespace Tests {
             _entityManager.DestroyEntity(nodeEntity);
 
             var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
+            var loadedCoaster = _entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
 
-            var portQuery = _entityManager.CreateEntityQuery(typeof(Port));
-            using var ports = portQuery.ToEntityArray(Allocator.Temp);
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(startPort, out var loadedStart), "Start not found");
+            Assert.AreEqual(start, loadedStart, 0.001f, "Start mismatch");
 
-            bool foundStart = false, foundEnd = false;
-
-            foreach (var portEntity in ports) {
-                if (_entityManager.HasComponent<StartPort>(portEntity)) {
-                    float v = _entityManager.GetComponentData<StartPort>(portEntity).Value;
-                    Assert.AreEqual(start, v, 0.001f, "Start mismatch");
-                    foundStart = true;
-                }
-                if (_entityManager.HasComponent<EndPort>(portEntity)) {
-                    float v = _entityManager.GetComponentData<EndPort>(portEntity).Value;
-                    Assert.AreEqual(end, v, 0.001f, "End mismatch");
-                    foundEnd = true;
-                }
-            }
-
-            Assert.IsTrue(foundStart, "StartPort not found");
-            Assert.IsTrue(foundEnd, "EndPort not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(endPort, out var loadedEnd), "End not found");
+            Assert.AreEqual(end, loadedEnd, 0.001f, "End mismatch");
 
             _entityManager.DestroyEntity(loadedEntity);
         }
