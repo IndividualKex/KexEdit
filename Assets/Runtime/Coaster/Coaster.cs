@@ -33,9 +33,9 @@ namespace KexEdit.Coaster {
     public struct Coaster : IDisposable {
         public Graph Graph;
         public KeyframeStore Keyframes;
-        public NativeHashMap<ulong, int> Flags;
         public NativeHashMap<ulong, float> Scalars;
         public NativeHashMap<ulong, float3> Vectors;
+        public NativeHashMap<ulong, int> Flags;
 
         [BurstCompile]
         public static ulong InputKey(uint nodeId, int inputIndex) =>
@@ -51,18 +51,18 @@ namespace KexEdit.Coaster {
             return new Coaster {
                 Graph = Graph.Create(allocator),
                 Keyframes = KeyframeStore.Create(allocator),
-                Flags = new NativeHashMap<ulong, int>(16, allocator),
                 Scalars = new NativeHashMap<ulong, float>(16, allocator),
                 Vectors = new NativeHashMap<ulong, float3>(16, allocator),
+                Flags = new NativeHashMap<ulong, int>(16, allocator),
             };
         }
 
         public void Dispose() {
             if (Graph.NodeIds.IsCreated) Graph.Dispose();
             if (Keyframes.Keyframes.IsCreated) Keyframes.Dispose();
-            if (Flags.IsCreated) Flags.Dispose();
             if (Scalars.IsCreated) Scalars.Dispose();
             if (Vectors.IsCreated) Vectors.Dispose();
+            if (Flags.IsCreated) Flags.Dispose();
         }
     }
 }
