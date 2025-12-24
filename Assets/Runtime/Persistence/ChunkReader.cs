@@ -1,4 +1,3 @@
-using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
@@ -6,7 +5,7 @@ using Unity.Mathematics;
 
 namespace KexEdit.Persistence {
     [BurstCompile]
-    public struct ChunkReader : IDisposable {
+    public struct ChunkReader {
         private NativeArray<byte> _data;
         private int _position;
 
@@ -172,10 +171,6 @@ namespace KexEdit.Persistence {
                 int value = ReadInt();
                 map[key] = value;
             }
-        }
-
-        public void Dispose() {
-            // Reader doesn't own the data, so nothing to dispose
         }
     }
 }

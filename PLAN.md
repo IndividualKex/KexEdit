@@ -28,7 +28,7 @@ Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant 
 
 **Goal**: Remove keyframe buffers and other duplicate ECS components
 
-**Prerequisite**: View state now serialized via VWST extension (timeline/graph/camera state)
+**Prerequisite**: View state now serialized via UIST extension (unified UI state)
 
 ### Components to Remove
 - Duration, Steering, Render ECS components
@@ -37,10 +37,10 @@ Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant 
 ### Progress
 
 **Foundation Complete (Phases 1-2)**:
-- ✅ KeyframeUIChunk/KeyframeUICodec - UI state storage (KFUI extension chunk)
+- ✅ UIStateChunk/UIExtensionCodec - UI state storage (UIST extension chunk)
 - ✅ PropertyMapping - PropertyType ↔ PropertyId bidirectional mapping
 - ✅ KeyframeConversion - Core.Keyframe ↔ Legacy.Keyframe conversion
-- ✅ CoasterKeyframeManager - Unified Coaster.KeyframeStore + KeyframeUIChunk API
+- ✅ CoasterKeyframeManager - Unified Coaster.KeyframeStore + UIStateChunk API
 
 **Remaining Work**:
 - ⏳ Phase 3: Rewrite PropertyAdapter to use CoasterKeyframeManager (HIGH RISK)
@@ -50,15 +50,15 @@ Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant 
 
 ### Key Design Decisions
 
-**UI State Storage**: KeyframeUIChunk stores sparse UI-only metadata (Id, HandleType, Flags) separately from Core.Keyframe domain data. Selection state is transient (not persisted).
+**UI State Storage**: UIStateChunk stores all UI state in one chunk: node positions, view state (timeline/graph/camera), and keyframe UI metadata (Id, HandleType, Flags). Selection state is transient (not persisted).
 
 **ID Assignment**: Persistent keyframe IDs generated using composite key: `(nodeId << 16) | (counter & 0xFFFF)`. IDs maintained across add/remove operations via index tracking.
 
 **PropertyType Mapping**: FixedVelocity↔DrivenVelocity, Heart↔HeartOffset due to enum name differences between UI and Core layers.
 
 ### Files Created
-1. `Assets/Runtime/Persistence/Extensions/KeyframeUIChunk.cs`
-2. `Assets/Runtime/Persistence/Extensions/KeyframeUICodec.cs`
+1. `Assets/Runtime/Persistence/Extensions/UIStateChunk.cs`
+2. `Assets/Runtime/Persistence/Extensions/UIExtensionCodec.cs`
 3. `Assets/Scripts/UI/Timeline/PropertyMapping.cs`
 4. `Assets/Scripts/UI/Timeline/KeyframeConversion.cs`
 5. `Assets/Scripts/UI/Timeline/CoasterKeyframeManager.cs`

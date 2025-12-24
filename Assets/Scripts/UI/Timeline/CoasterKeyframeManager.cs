@@ -7,10 +7,10 @@ using Unity.Collections;
 namespace KexEdit.UI.Timeline {
     public class CoasterKeyframeManager {
         private Coaster.Coaster _coaster;
-        private KeyframeUIChunk _uiState;
+        private UIStateChunk _uiState;
         private readonly Dictionary<uint, uint> _nextKeyframeIds;
 
-        public CoasterKeyframeManager(Coaster.Coaster coaster, KeyframeUIChunk uiState) {
+        public CoasterKeyframeManager(Coaster.Coaster coaster, UIStateChunk uiState) {
             _coaster = coaster;
             _uiState = uiState;
             _nextKeyframeIds = new Dictionary<uint, uint>();
@@ -35,16 +35,16 @@ namespace KexEdit.UI.Timeline {
                 HandleType handleType;
                 KeyframeFlags flags;
 
-                if (_uiState.TryGet(nodeId, (byte)propertyId, i, out var uiState)) {
-                    id = uiState.Id;
-                    handleType = (HandleType)uiState.HandleType;
-                    flags = (KeyframeFlags)uiState.Flags;
+                if (_uiState.TryGetKeyframeState(nodeId, (byte)propertyId, i, out var uiStateEntry)) {
+                    id = uiStateEntry.Id;
+                    handleType = (HandleType)uiStateEntry.HandleType;
+                    flags = (KeyframeFlags)uiStateEntry.Flags;
                 } else {
                     id = AllocateKeyframeId(nodeId);
                     handleType = HandleType.Aligned;
                     flags = KeyframeFlags.None;
 
-                    _uiState.Set(new KeyframeUIState {
+                    _uiState.SetKeyframeState(new KeyframeUIState {
                         NodeId = nodeId,
                         PropertyId = (byte)propertyId,
                         KeyframeIndex = i,
@@ -67,7 +67,7 @@ namespace KexEdit.UI.Timeline {
             }
 
             for (int i = 0; i < coreKeyframes.Length; i++) {
-                if (_uiState.TryGet(nodeId, (byte)propertyId, i, out var uiState) && uiState.Id == keyframe.Id) {
+                if (_uiState.TryGetKeyframeState(nodeId, (byte)propertyId, i, out var uiStateEntry) && uiStateEntry.Id == keyframe.Id) {
                     var tempArray = new NativeArray<Core.Keyframe>(coreKeyframes.Length, Allocator.Temp);
                     for (int j = 0; j < coreKeyframes.Length; j++) {
                         tempArray[j] = j == i ? KeyframeConversion.ToCore(keyframe) : coreKeyframes[j];
@@ -76,7 +76,7 @@ namespace KexEdit.UI.Timeline {
                     _coaster.Keyframes.Set(nodeId, propertyId, in tempArray);
                     tempArray.Dispose();
 
-                    _uiState.Set(new KeyframeUIState {
+                    _uiState.SetKeyframeState(new KeyframeUIState {
                         NodeId = nodeId,
                         PropertyId = (byte)propertyId,
                         KeyframeIndex = i,
@@ -117,7 +117,7 @@ namespace KexEdit.UI.Timeline {
             UpdateUIStateIndices(nodeId, propertyId, insertIndex, +1);
 
             uint id = keyframe.Id != 0 ? keyframe.Id : AllocateKeyframeId(nodeId);
-            _uiState.Set(new KeyframeUIState {
+            _uiState.SetKeyframeState(new KeyframeUIState {
                 NodeId = nodeId,
                 PropertyId = (byte)propertyId,
                 KeyframeIndex = insertIndex,
@@ -135,7 +135,7 @@ namespace KexEdit.UI.Timeline {
             }
 
             for (int i = coreKeyframes.Length - 1; i >= 0; i--) {
-                if (_uiState.TryGet(nodeId, (byte)propertyId, i, out var uiState) && uiState.Id == id) {
+                if (_uiState.TryGetKeyframeState(nodeId, (byte)propertyId, i, out var uiStateEntry) && uiStateEntry.Id == id) {
                     var newArray = new NativeArray<Core.Keyframe>(coreKeyframes.Length - 1, Allocator.Temp);
 
                     for (int j = 0; j < i; j++) {
@@ -152,7 +152,7 @@ namespace KexEdit.UI.Timeline {
                     }
                     newArray.Dispose();
 
-                    _uiState.Remove(nodeId, (byte)propertyId, i);
+                    _uiState.RemoveKeyframeState(nodeId, (byte)propertyId, i);
                     UpdateUIStateIndices(nodeId, propertyId, i, -1);
                     return;
                 }
@@ -179,16 +179,16 @@ namespace KexEdit.UI.Timeline {
         private void UpdateUIStateIndices(uint nodeId, PropertyId propertyId, int fromIndex, int delta) {
             var statesToUpdate = new List<(int oldIndex, KeyframeUIState state)>();
 
-            for (int i = 0; i < _uiState.States.Length; i++) {
-                var state = _uiState.States[i];
+            for (int i = 0; i < _uiState.KeyframeStates.Length; i++) {
+                var state = _uiState.KeyframeStates[i];
                 if (state.NodeId == nodeId && state.PropertyId == (byte)propertyId && state.KeyframeIndex >= fromIndex) {
                     statesToUpdate.Add((state.KeyframeIndex, state));
                 }
             }
 
             foreach (var (oldIndex, state) in statesToUpdate) {
-                _uiState.Remove(nodeId, (byte)propertyId, oldIndex);
-                _uiState.Set(new KeyframeUIState {
+                _uiState.RemoveKeyframeState(nodeId, (byte)propertyId, oldIndex);
+                _uiState.SetKeyframeState(new KeyframeUIState {
                     NodeId = state.NodeId,
                     PropertyId = state.PropertyId,
                     KeyframeIndex = state.KeyframeIndex + delta,

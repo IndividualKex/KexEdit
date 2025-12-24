@@ -164,7 +164,7 @@ namespace Tests {
 
                             try {
                                 var reader = new KexEdit.Persistence.ChunkReader(serializedData);
-                                var deserialized = KexEdit.Persistence.CoasterSerializer.Read(reader, Allocator.TempJob);
+                                var deserialized = KexEdit.Persistence.CoasterSerializer.Read(ref reader, Allocator.TempJob);
 
                                 try {
                                     int coasterFacingCount = 0;

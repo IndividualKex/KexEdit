@@ -84,8 +84,8 @@ namespace Tests {
                         var serializedData = writer.ToArray();
 
                         // Deserialize back
-                        using var reader = new KexEdit.Persistence.ChunkReader(serializedData);
-                        var restored = KexEdit.Persistence.CoasterSerializer.Read(reader, Allocator.TempJob);
+                        var reader = new KexEdit.Persistence.ChunkReader(serializedData);
+                        var restored = KexEdit.Persistence.CoasterSerializer.Read(ref reader, Allocator.TempJob);
 
                         try {
                             // Compare

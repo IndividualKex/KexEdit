@@ -3,31 +3,30 @@ using Unity.Mathematics;
 
 namespace KexEdit.Legacy.Serialization {
     public static class ViewStateAdapter {
-        public static ViewStateChunk Capture(
+        public static void Capture(
+            ref UIStateChunk chunk,
             in TimelineState timeline,
             in NodeGraphState nodeGraph,
             in CameraState camera
         ) {
-            return new ViewStateChunk {
-                TimelineOffset = timeline.Offset,
-                TimelineZoom = timeline.Zoom,
-                GraphPanX = nodeGraph.Pan.x,
-                GraphPanY = nodeGraph.Pan.y,
-                GraphZoom = nodeGraph.Zoom,
-                CameraPosition = camera.Position,
-                CameraTargetPosition = camera.TargetPosition,
-                CameraDistance = camera.Distance,
-                CameraTargetDistance = camera.TargetDistance,
-                CameraPitch = camera.Pitch,
-                CameraTargetPitch = camera.TargetPitch,
-                CameraYaw = camera.Yaw,
-                CameraTargetYaw = camera.TargetYaw,
-                CameraSpeedMultiplier = camera.SpeedMultiplier
-            };
+            chunk.TimelineOffset = timeline.Offset;
+            chunk.TimelineZoom = timeline.Zoom;
+            chunk.GraphPanX = nodeGraph.Pan.x;
+            chunk.GraphPanY = nodeGraph.Pan.y;
+            chunk.GraphZoom = nodeGraph.Zoom;
+            chunk.CameraPosition = camera.Position;
+            chunk.CameraTargetPosition = camera.TargetPosition;
+            chunk.CameraDistance = camera.Distance;
+            chunk.CameraTargetDistance = camera.TargetDistance;
+            chunk.CameraPitch = camera.Pitch;
+            chunk.CameraTargetPitch = camera.TargetPitch;
+            chunk.CameraYaw = camera.Yaw;
+            chunk.CameraTargetYaw = camera.TargetYaw;
+            chunk.CameraSpeedMultiplier = camera.SpeedMultiplier;
         }
 
         public static void Apply(
-            in ViewStateChunk chunk,
+            in UIStateChunk chunk,
             ref TimelineState timeline,
             ref NodeGraphState nodeGraph,
             ref CameraState camera

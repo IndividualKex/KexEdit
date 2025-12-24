@@ -18,7 +18,7 @@ namespace KexEdit.Legacy {
     public static class KexdAdapter {
         public static void ImportToEcs(
             in CoasterAggregate coaster,
-            in KexEdit.Persistence.UIMetadataChunk uiMetadata,
+            in KexEdit.Persistence.UIStateChunk uiState,
             Entity coasterEntity,
             EntityManager entityManager,
             bool restoreUIState
@@ -28,7 +28,7 @@ namespace KexEdit.Legacy {
             for (int i = 0; i < coaster.Graph.NodeIds.Length; i++) {
                 BuildSerializedNode(
                     in coaster,
-                    in uiMetadata,
+                    in uiState,
                     i,
                     Allocator.Temp,
                     out var serializedNode
@@ -53,7 +53,7 @@ namespace KexEdit.Legacy {
         [BurstCompile]
         private static void BuildSerializedNode(
             in CoasterAggregate coaster,
-            in KexEdit.Persistence.UIMetadataChunk uiMetadata,
+            in KexEdit.Persistence.UIStateChunk uiState,
             int nodeIndex,
             Allocator allocator,
             out SerializedNode result
@@ -61,10 +61,9 @@ namespace KexEdit.Legacy {
             uint nodeId = coaster.Graph.NodeIds[nodeIndex];
             uint coreNodeType = coaster.Graph.NodeTypes[nodeIndex];
 
-            // Try UIMD first, fall back to Graph.NodePositions for synthetic nodes
             float2 position = float2.zero;
-            if (uiMetadata.Positions.IsCreated && uiMetadata.Positions.TryGetValue(nodeId, out position)) {
-                // Position found in UIMD
+            if (uiState.NodePositions.IsCreated && uiState.NodePositions.TryGetValue(nodeId, out position)) {
+                // Position found in UI state
             } else if (nodeIndex < coaster.Graph.NodePositions.Length) {
                 position = coaster.Graph.NodePositions[nodeIndex];
             }

@@ -15,8 +15,12 @@ namespace KexEdit.Persistence {
             WriteCoreChunk(ref writer, in coaster);
         }
 
-        public static CoasterData Read(ChunkReader reader, Allocator allocator) {
+        public static CoasterData Read(ref ChunkReader reader, Allocator allocator) {
             ReadFileHeader(ref reader);
+            return ReadChunks(ref reader, allocator);
+        }
+
+        public static CoasterData ReadChunks(ref ChunkReader reader, Allocator allocator) {
             var coaster = CoasterData.Create(allocator);
 
             while (reader.HasData) {
@@ -24,9 +28,9 @@ namespace KexEdit.Persistence {
 
                 if (header.TypeString == "CORE") {
                     ReadCoreChunk(ref reader, ref coaster, header);
-                } else {
-                    reader.SkipChunk(header);
+                    break;
                 }
+                reader.SkipChunk(header);
             }
 
             return coaster;

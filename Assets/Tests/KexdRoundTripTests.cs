@@ -67,7 +67,7 @@ namespace Tests {
             Assert.GreaterOrEqual(version, 1);
 
             var hasCore = false;
-            var hasUIMetadata = false;
+            var hasUIState = false;
 
             while (reader.HasData) {
                 if (!reader.TryReadHeader(out var header)) break;
@@ -75,8 +75,8 @@ namespace Tests {
                 if (header.TypeString == "CORE") {
                     hasCore = true;
                     reader.SkipChunk(header);
-                } else if (header.TypeString == ExtensionSchema.UIMetadataType) {
-                    hasUIMetadata = true;
+                } else if (header.TypeString == ExtensionSchema.UIStateType) {
+                    hasUIState = true;
                     reader.SkipChunk(header);
                 } else {
                     reader.SkipChunk(header);
@@ -84,9 +84,8 @@ namespace Tests {
             }
 
             Assert.IsTrue(hasCore, "KEXD file must contain CORE chunk");
-            Assert.IsTrue(hasUIMetadata, "KEXD file must contain UIMD chunk");
+            Assert.IsTrue(hasUIState, "KEXD file must contain UIST chunk");
 
-            reader.Dispose();
             nativeData.Dispose();
             entityManager.DestroyEntity(coasterEntity);
             entityManager.DestroyEntity(nodeEntity);
@@ -126,21 +125,21 @@ namespace Tests {
 
             var nativeData = new NativeArray<byte>(kexdData, Allocator.Temp);
             var reader = new ChunkReader(nativeData);
-            bool hasUIMetadata = UIMetadataCodec.TryReadFromFile(ref reader, Allocator.Temp, out var uiMetadata);
+            CoasterSerializer.Read(ref reader, Allocator.Temp).Dispose();
+            bool hasUIState = UIExtensionCodec.TryRead(ref reader, Allocator.Temp, out var uiState);
 
-            Assert.IsTrue(hasUIMetadata, "KEXD file must contain UI metadata");
-            Assert.AreEqual(2, uiMetadata.Positions.Count);
-            Assert.IsTrue(uiMetadata.Positions.TryGetValue(node1Id, out var pos1));
-            Assert.IsTrue(uiMetadata.Positions.TryGetValue(node2Id, out var pos2));
+            Assert.IsTrue(hasUIState, "KEXD file must contain UI state");
+            Assert.AreEqual(2, uiState.NodePositions.Count);
+            Assert.IsTrue(uiState.NodePositions.TryGetValue(node1Id, out var pos1));
+            Assert.IsTrue(uiState.NodePositions.TryGetValue(node2Id, out var pos2));
 
             Assert.AreEqual(100, pos1.x, 0.001f);
             Assert.AreEqual(200, pos1.y, 0.001f);
             Assert.AreEqual(300, pos2.x, 0.001f);
             Assert.AreEqual(400, pos2.y, 0.001f);
 
-            reader.Dispose();
             nativeData.Dispose();
-            uiMetadata.Dispose();
+            uiState.Dispose();
             entityManager.DestroyEntity(coasterEntity);
             entityManager.DestroyEntity(node1Entity);
             entityManager.DestroyEntity(node2Entity);
@@ -172,7 +171,7 @@ namespace Tests {
 
             var nativeData = new NativeArray<byte>(kexdData, Allocator.Temp);
             var reader = new ChunkReader(nativeData);
-            var loadedCoaster = CoasterSerializer.Read(reader, Allocator.Temp);
+            var loadedCoaster = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.AreEqual(1, loadedCoaster.Graph.NodeIds.Length);
             Assert.AreEqual(nodeId, loadedCoaster.Graph.NodeIds[0]);
@@ -183,7 +182,6 @@ namespace Tests {
             Assert.AreEqual(2, vectorValue.y, 0.001f);
             Assert.AreEqual(3, vectorValue.z, 0.001f);
 
-            reader.Dispose();
             nativeData.Dispose();
             loadedCoaster.Dispose();
             entityManager.DestroyEntity(coasterEntity);

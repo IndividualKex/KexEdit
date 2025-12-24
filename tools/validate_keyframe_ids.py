@@ -419,17 +419,40 @@ def create_test_file(filepath: str):
 
     end_chunk(buf, core_start)
 
-    # UIMD chunk
-    uimd_start = begin_chunk(buf, "UIMD", 1)
-    write_int(buf, 2)  # count
+    # UIST chunk (unified UI state)
+    uist_start = begin_chunk(buf, "UIST", 1)
 
+    # Node positions
+    write_int(buf, 2)  # count
     write_uint(buf, 1)  # node id
     write_float2(buf, 100.0, 50.0)
-
     write_uint(buf, 2)  # node id
     write_float2(buf, 300.0, 50.0)
 
-    end_chunk(buf, uimd_start)
+    # View state (defaults)
+    write_float(buf, 0.0)   # timeline_offset
+    write_float(buf, 1.0)   # timeline_zoom
+    write_float(buf, 0.0)   # graph_pan_x
+    write_float(buf, 0.0)   # graph_pan_y
+    write_float(buf, 1.0)   # graph_zoom
+    write_float(buf, 0.0)   # camera_position x
+    write_float(buf, 0.0)   # camera_position y
+    write_float(buf, 0.0)   # camera_position z
+    write_float(buf, 0.0)   # camera_target_position x
+    write_float(buf, 0.0)   # camera_target_position y
+    write_float(buf, 0.0)   # camera_target_position z
+    write_float(buf, 50.0)  # camera_distance
+    write_float(buf, 50.0)  # camera_target_distance
+    write_float(buf, 30.0)  # camera_pitch
+    write_float(buf, 30.0)  # camera_target_pitch
+    write_float(buf, 0.0)   # camera_yaw
+    write_float(buf, 0.0)   # camera_target_yaw
+    write_float(buf, 1.0)   # camera_speed_multiplier
+
+    # Keyframe states (empty)
+    write_int(buf, 0)
+
+    end_chunk(buf, uist_start)
 
     with open(filepath, "wb") as f:
         f.write(buf.getvalue())

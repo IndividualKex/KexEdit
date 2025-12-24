@@ -22,8 +22,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.AreEqual(0, loaded.Graph.NodeIds.Length);
             Assert.AreEqual(0, loaded.Scalars.Count);
@@ -41,8 +41,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.AreEqual(1, loaded.Graph.NodeIds.Length);
             Assert.AreEqual(nodeId, loaded.Graph.NodeIds[0]);
@@ -66,8 +66,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.AreEqual(2, loaded.Graph.NodeIds.Length);
             Assert.AreEqual(2, loaded.Graph.PortIds.Length);
@@ -87,8 +87,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Scalars.TryGetValue(nodeId, out float value));
             Assert.AreEqual(42.5f, value, 0.001f);
@@ -107,8 +107,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Vectors.TryGetValue(nodeId, out float3 value));
             Assert.AreEqual(1f, value.x, 0.001f);
@@ -131,8 +131,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.AreEqual(10f, loaded.Scalars[rollPortId], 0.001f);
             Assert.AreEqual(20f, loaded.Scalars[pitchPortId], 0.001f);
@@ -153,8 +153,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Scalars.TryGetValue(durKey, out float durationValue));
             Assert.AreEqual(5.5f, durationValue, 0.001f);
@@ -176,8 +176,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Flags.TryGetValue(steeringKey1, out int s1) && s1 == 1);
             Assert.IsFalse(loaded.Flags.TryGetValue(steeringKey2, out int s2) && s2 == 1);
@@ -201,8 +201,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Keyframes.TryGet(nodeId, PropertyId.RollSpeed, out var loadedKeyframes));
             Assert.AreEqual(2, loadedKeyframes.Length);
@@ -248,8 +248,8 @@ namespace Tests {
 
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.AreEqual(1, loaded.Graph.NodeIds.Length);
             Assert.IsTrue(loaded.Scalars.TryGetValue(nodeId, out float value));
@@ -274,8 +274,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Flags.TryGetValue(drivenKey1, out int d1) && d1 == 1, "Node 1 should have Driven flag");
             Assert.IsFalse(loaded.Flags.TryGetValue(drivenKey2, out int d2) && d2 == 1, "Node 2 should not have Driven flag");
@@ -296,8 +296,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Flags.TryGetValue(heartKey, out int h) && h == 1, "OverrideHeart flag should be preserved");
 
@@ -317,8 +317,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Flags.TryGetValue(frictionKey, out int f) && f == 1, "OverrideFriction flag should be preserved");
 
@@ -338,8 +338,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Flags.TryGetValue(resistanceKey, out int r) && r == 1, "OverrideResistance flag should be preserved");
 
@@ -359,8 +359,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Flags.TryGetValue(trackStyleKey, out int t) && t == 1, "OverrideTrackStyle flag should be preserved");
 
@@ -389,8 +389,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsTrue(loaded.Flags.TryGetValue(drivenKey, out int d) && d == 1, "Driven flag should be preserved");
             Assert.IsTrue(loaded.Flags.TryGetValue(heartKey, out int h) && h == 1, "OverrideHeart flag should be preserved");
@@ -424,8 +424,8 @@ namespace Tests {
             CoasterSerializer.Write(writer, in original);
             var data = writer.ToArray();
 
-            using var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+            var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.IsFalse(loaded.Scalars.ContainsKey(priorityKey1));
             Assert.IsTrue(loaded.Scalars.TryGetValue(priorityKey2, out float priority2));

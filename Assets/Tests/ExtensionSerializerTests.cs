@@ -10,109 +10,81 @@ namespace Tests {
     [TestFixture]
     public class ExtensionSerializerTests {
         [Test]
-        public void UIMetadataChunk_RoundTrip_PreservesPositions() {
-            var original = new UIMetadataChunk(Allocator.Temp);
-            original.Positions[1] = new float2(100, 200);
-            original.Positions[2] = new float2(300, 400);
+        public void UIStateChunk_RoundTrip_PreservesPositions() {
+            var original = UIStateChunk.Create(Allocator.Temp);
+            original.NodePositions[1] = new float2(100, 200);
+            original.NodePositions[2] = new float2(300, 400);
 
             var writer = new ChunkWriter(Allocator.Temp);
-            writer.BeginChunk(ExtensionSchema.UIMetadataType, ExtensionSchema.UIMetadataVersion);
-            writer.WriteInt(original.Positions.Count);
-            foreach (var kvp in original.Positions) {
-                writer.WriteUInt(kvp.Key);
-                writer.WriteFloat2(kvp.Value);
-            }
-            writer.EndChunk();
+            UIExtensionCodec.Write(ref writer, in original);
 
             var data = writer.ToArray();
             writer.Dispose();
 
             var reader = new ChunkReader(data);
-            reader.TryReadHeader(out var header);
-
-            var loaded = new UIMetadataChunk(Allocator.Temp);
-            int count = reader.ReadInt();
-            for (int i = 0; i < count; i++) {
-                uint nodeId = reader.ReadUInt();
-                var position = reader.ReadFloat2();
-                loaded.Positions[nodeId] = position;
-            }
-            reader.Dispose();
+            UIExtensionCodec.TryRead(ref reader, Allocator.Temp, out var loaded);
             data.Dispose();
 
-            Assert.AreEqual(2, loaded.Positions.Count);
-            Assert.AreEqual(100f, loaded.Positions[1].x, 0.001f);
-            Assert.AreEqual(200f, loaded.Positions[1].y, 0.001f);
-            Assert.AreEqual(300f, loaded.Positions[2].x, 0.001f);
-            Assert.AreEqual(400f, loaded.Positions[2].y, 0.001f);
+            Assert.AreEqual(2, loaded.NodePositions.Count);
+            Assert.AreEqual(100f, loaded.NodePositions[1].x, 0.001f);
+            Assert.AreEqual(200f, loaded.NodePositions[1].y, 0.001f);
+            Assert.AreEqual(300f, loaded.NodePositions[2].x, 0.001f);
+            Assert.AreEqual(400f, loaded.NodePositions[2].y, 0.001f);
 
             loaded.Dispose();
             original.Dispose();
         }
 
         [Test]
-        public void UIMetadataChunk_Empty_RoundTrips() {
-            var original = new UIMetadataChunk(Allocator.Temp);
+        public void UIStateChunk_Empty_RoundTrips() {
+            var original = UIStateChunk.Create(Allocator.Temp);
 
             var writer = new ChunkWriter(Allocator.Temp);
-            UIMetadataCodec.WriteChunk(ref writer, in original);
+            UIExtensionCodec.Write(ref writer, in original);
 
             var data = writer.ToArray();
             writer.Dispose();
 
             var reader = new ChunkReader(data);
-            reader.TryReadHeader(out var header);
-
-            var loaded = new UIMetadataChunk(Allocator.Temp);
-            int count = reader.ReadInt();
-            for (int i = 0; i < count; i++) {
-                uint nodeId = reader.ReadUInt();
-                var position = reader.ReadFloat2();
-                loaded.Positions[nodeId] = position;
-            }
-            reader.Dispose();
+            UIExtensionCodec.TryRead(ref reader, Allocator.Temp, out var loaded);
             data.Dispose();
 
-            Assert.AreEqual(0, loaded.Positions.Count);
+            Assert.AreEqual(0, loaded.NodePositions.Count);
 
             loaded.Dispose();
             original.Dispose();
         }
 
         [Test]
-        public void CoasterWithExtensions_RoundTrip_PreservesAll() {
+        public void CoasterWithUIState_RoundTrip_PreservesAll() {
             var original = Coaster.Create(Allocator.Temp);
             var node1 = original.Graph.AddNode((uint)NodeType.Anchor, float2.zero);
             var node2 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
 
-            var uiMeta = new UIMetadataChunk(Allocator.Temp);
-            uiMeta.Positions[node1] = new float2(100, 50);
-            uiMeta.Positions[node2] = new float2(300, 50);
+            var uiState = UIStateChunk.Create(Allocator.Temp);
+            uiState.NodePositions[node1] = new float2(100, 50);
+            uiState.NodePositions[node2] = new float2(300, 50);
 
             var writer = new ChunkWriter(Allocator.Temp);
             CoasterSerializer.Write(writer, in original);
-            UIMetadataCodec.WriteChunk(ref writer, in uiMeta);
+            UIExtensionCodec.Write(ref writer, in uiState);
 
             var data = writer.ToArray();
             writer.Dispose();
 
             var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
-            reader.Dispose();
-
-            var reader2 = new ChunkReader(data);
-            UIMetadataCodec.TryReadFromFile(ref reader2, Allocator.Temp, out var loadedMeta);
-            reader2.Dispose();
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
+            UIExtensionCodec.TryRead(ref reader, Allocator.Temp, out var loadedState);
             data.Dispose();
 
             Assert.AreEqual(2, loaded.Graph.NodeIds.Length);
-            Assert.AreEqual(2, loadedMeta.Positions.Count);
-            Assert.AreEqual(100f, loadedMeta.Positions[node1].x, 0.001f);
-            Assert.AreEqual(300f, loadedMeta.Positions[node2].x, 0.001f);
+            Assert.AreEqual(2, loadedState.NodePositions.Count);
+            Assert.AreEqual(100f, loadedState.NodePositions[node1].x, 0.001f);
+            Assert.AreEqual(300f, loadedState.NodePositions[node2].x, 0.001f);
 
-            loadedMeta.Dispose();
+            loadedState.Dispose();
             loaded.Dispose();
-            uiMeta.Dispose();
+            uiState.Dispose();
             original.Dispose();
         }
 
@@ -121,8 +93,8 @@ namespace Tests {
             var original = Coaster.Create(Allocator.Temp);
             var nodeId = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
 
-            var uiMeta = new UIMetadataChunk(Allocator.Temp);
-            uiMeta.Positions[nodeId] = new float2(100, 200);
+            var uiState = UIStateChunk.Create(Allocator.Temp);
+            uiState.NodePositions[nodeId] = new float2(100, 200);
 
             var writer = new ChunkWriter(Allocator.Temp);
             CoasterSerializer.Write(writer, in original);
@@ -132,7 +104,7 @@ namespace Tests {
             writer.WriteUInt(888);
             writer.EndChunk();
 
-            UIMetadataCodec.WriteChunk(ref writer, in uiMeta);
+            UIExtensionCodec.Write(ref writer, in uiState);
 
             writer.BeginChunk("TEST", 2);
             writer.WriteFloat(3.14f);
@@ -142,20 +114,16 @@ namespace Tests {
             writer.Dispose();
 
             var reader = new ChunkReader(data);
-            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
-            reader.Dispose();
-
-            var reader2 = new ChunkReader(data);
-            UIMetadataCodec.TryReadFromFile(ref reader2, Allocator.Temp, out var loadedMeta);
-            reader2.Dispose();
+            var loaded = CoasterSerializer.Read(ref reader, Allocator.Temp);
+            UIExtensionCodec.TryRead(ref reader, Allocator.Temp, out var loadedState);
             data.Dispose();
 
-            Assert.AreEqual(1, loadedMeta.Positions.Count);
-            Assert.AreEqual(100f, loadedMeta.Positions[nodeId].x, 0.001f);
+            Assert.AreEqual(1, loadedState.NodePositions.Count);
+            Assert.AreEqual(100f, loadedState.NodePositions[nodeId].x, 0.001f);
 
-            loadedMeta.Dispose();
+            loadedState.Dispose();
             loaded.Dispose();
-            uiMeta.Dispose();
+            uiState.Dispose();
             original.Dispose();
         }
     }

@@ -7,18 +7,18 @@ using Unity.Collections;
 
 namespace Tests {
     [TestFixture]
-    public class KeyframeUIChunkTests {
+    public class KeyframeUIStateTests {
         [Test]
-        public void KeyframeUIChunk_CreateAndDispose_NoLeaks() {
-            var chunk = KeyframeUIChunk.Create(Allocator.Temp);
-            Assert.IsTrue(chunk.States.IsCreated);
-            Assert.AreEqual(0, chunk.States.Length);
+        public void UIStateChunk_CreateAndDispose_NoLeaks() {
+            var chunk = UIStateChunk.Create(Allocator.Temp);
+            Assert.IsTrue(chunk.KeyframeStates.IsCreated);
+            Assert.AreEqual(0, chunk.KeyframeStates.Length);
             chunk.Dispose();
         }
 
         [Test]
-        public void KeyframeUIChunk_SetAndGet_RoundTrips() {
-            var chunk = KeyframeUIChunk.Create(Allocator.Temp);
+        public void UIStateChunk_SetAndGetKeyframe_RoundTrips() {
+            var chunk = UIStateChunk.Create(Allocator.Temp);
 
             var state = new KeyframeUIState {
                 NodeId = 42,
@@ -28,9 +28,9 @@ namespace Tests {
                 HandleType = 1,
                 Flags = 2
             };
-            chunk.Set(state);
+            chunk.SetKeyframeState(state);
 
-            Assert.IsTrue(chunk.TryGet(42, 3, 1, out var retrieved));
+            Assert.IsTrue(chunk.TryGetKeyframeState(42, 3, 1, out var retrieved));
             Assert.AreEqual(42u, retrieved.NodeId);
             Assert.AreEqual(3, retrieved.PropertyId);
             Assert.AreEqual(1, retrieved.KeyframeIndex);
@@ -42,69 +42,69 @@ namespace Tests {
         }
 
         [Test]
-        public void KeyframeUIChunk_SetExisting_Updates() {
-            var chunk = KeyframeUIChunk.Create(Allocator.Temp);
+        public void UIStateChunk_SetExistingKeyframe_Updates() {
+            var chunk = UIStateChunk.Create(Allocator.Temp);
 
-            chunk.Set(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 0, Id = 100 });
-            Assert.AreEqual(1, chunk.States.Length);
+            chunk.SetKeyframeState(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 0, Id = 100 });
+            Assert.AreEqual(1, chunk.KeyframeStates.Length);
 
-            chunk.Set(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 0, Id = 200 });
-            Assert.AreEqual(1, chunk.States.Length);
+            chunk.SetKeyframeState(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 0, Id = 200 });
+            Assert.AreEqual(1, chunk.KeyframeStates.Length);
 
-            Assert.IsTrue(chunk.TryGet(1, 0, 0, out var state));
+            Assert.IsTrue(chunk.TryGetKeyframeState(1, 0, 0, out var state));
             Assert.AreEqual(200u, state.Id);
 
             chunk.Dispose();
         }
 
         [Test]
-        public void KeyframeUIChunk_Remove_DeletesEntry() {
-            var chunk = KeyframeUIChunk.Create(Allocator.Temp);
+        public void UIStateChunk_RemoveKeyframe_DeletesEntry() {
+            var chunk = UIStateChunk.Create(Allocator.Temp);
 
-            chunk.Set(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 0, Id = 100 });
-            chunk.Set(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 1, Id = 101 });
-            Assert.AreEqual(2, chunk.States.Length);
+            chunk.SetKeyframeState(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 0, Id = 100 });
+            chunk.SetKeyframeState(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 1, Id = 101 });
+            Assert.AreEqual(2, chunk.KeyframeStates.Length);
 
-            chunk.Remove(1, 0, 0);
-            Assert.AreEqual(1, chunk.States.Length);
-            Assert.IsFalse(chunk.TryGet(1, 0, 0, out _));
-            Assert.IsTrue(chunk.TryGet(1, 0, 1, out _));
-
-            chunk.Dispose();
-        }
-
-        [Test]
-        public void KeyframeUIChunk_RemoveNode_DeletesAllEntriesForNode() {
-            var chunk = KeyframeUIChunk.Create(Allocator.Temp);
-
-            chunk.Set(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 0, Id = 100 });
-            chunk.Set(new KeyframeUIState { NodeId = 1, PropertyId = 1, KeyframeIndex = 0, Id = 101 });
-            chunk.Set(new KeyframeUIState { NodeId = 2, PropertyId = 0, KeyframeIndex = 0, Id = 200 });
-            Assert.AreEqual(3, chunk.States.Length);
-
-            chunk.RemoveNode(1);
-            Assert.AreEqual(1, chunk.States.Length);
-            Assert.IsFalse(chunk.TryGet(1, 0, 0, out _));
-            Assert.IsFalse(chunk.TryGet(1, 1, 0, out _));
-            Assert.IsTrue(chunk.TryGet(2, 0, 0, out _));
+            chunk.RemoveKeyframeState(1, 0, 0);
+            Assert.AreEqual(1, chunk.KeyframeStates.Length);
+            Assert.IsFalse(chunk.TryGetKeyframeState(1, 0, 0, out _));
+            Assert.IsTrue(chunk.TryGetKeyframeState(1, 0, 1, out _));
 
             chunk.Dispose();
         }
 
         [Test]
-        public void KeyframeUIChunk_RemoveProperty_DeletesAllEntriesForProperty() {
-            var chunk = KeyframeUIChunk.Create(Allocator.Temp);
+        public void UIStateChunk_RemoveNode_DeletesAllEntriesForNode() {
+            var chunk = UIStateChunk.Create(Allocator.Temp);
 
-            chunk.Set(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 0, Id = 100 });
-            chunk.Set(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 1, Id = 101 });
-            chunk.Set(new KeyframeUIState { NodeId = 1, PropertyId = 1, KeyframeIndex = 0, Id = 102 });
-            Assert.AreEqual(3, chunk.States.Length);
+            chunk.SetKeyframeState(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 0, Id = 100 });
+            chunk.SetKeyframeState(new KeyframeUIState { NodeId = 1, PropertyId = 1, KeyframeIndex = 0, Id = 101 });
+            chunk.SetKeyframeState(new KeyframeUIState { NodeId = 2, PropertyId = 0, KeyframeIndex = 0, Id = 200 });
+            Assert.AreEqual(3, chunk.KeyframeStates.Length);
 
-            chunk.RemoveProperty(1, 0);
-            Assert.AreEqual(1, chunk.States.Length);
-            Assert.IsFalse(chunk.TryGet(1, 0, 0, out _));
-            Assert.IsFalse(chunk.TryGet(1, 0, 1, out _));
-            Assert.IsTrue(chunk.TryGet(1, 1, 0, out _));
+            chunk.RemoveNodeKeyframeStates(1);
+            Assert.AreEqual(1, chunk.KeyframeStates.Length);
+            Assert.IsFalse(chunk.TryGetKeyframeState(1, 0, 0, out _));
+            Assert.IsFalse(chunk.TryGetKeyframeState(1, 1, 0, out _));
+            Assert.IsTrue(chunk.TryGetKeyframeState(2, 0, 0, out _));
+
+            chunk.Dispose();
+        }
+
+        [Test]
+        public void UIStateChunk_RemoveProperty_DeletesAllEntriesForProperty() {
+            var chunk = UIStateChunk.Create(Allocator.Temp);
+
+            chunk.SetKeyframeState(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 0, Id = 100 });
+            chunk.SetKeyframeState(new KeyframeUIState { NodeId = 1, PropertyId = 0, KeyframeIndex = 1, Id = 101 });
+            chunk.SetKeyframeState(new KeyframeUIState { NodeId = 1, PropertyId = 1, KeyframeIndex = 0, Id = 102 });
+            Assert.AreEqual(3, chunk.KeyframeStates.Length);
+
+            chunk.RemovePropertyKeyframeStates(1, 0);
+            Assert.AreEqual(1, chunk.KeyframeStates.Length);
+            Assert.IsFalse(chunk.TryGetKeyframeState(1, 0, 0, out _));
+            Assert.IsFalse(chunk.TryGetKeyframeState(1, 0, 1, out _));
+            Assert.IsTrue(chunk.TryGetKeyframeState(1, 1, 0, out _));
 
             chunk.Dispose();
         }
@@ -267,13 +267,13 @@ namespace Tests {
     [TestFixture]
     public class CoasterKeyframeManagerTests {
         private KexEdit.Coaster.Coaster _coaster;
-        private KeyframeUIChunk _uiState;
+        private UIStateChunk _uiState;
         private CoasterKeyframeManager _manager;
 
         [SetUp]
         public void SetUp() {
             _coaster = KexEdit.Coaster.Coaster.Create(Allocator.Persistent);
-            _uiState = KeyframeUIChunk.Create(Allocator.Persistent);
+            _uiState = UIStateChunk.Create(Allocator.Persistent);
             _manager = new CoasterKeyframeManager(_coaster, _uiState);
         }
 

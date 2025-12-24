@@ -27,7 +27,7 @@ Timeline/
 ├── PropertyAdapter.cs  # Editable property adapters
 ├── PropertyMapping.cs  # PropertyType ↔ PropertyId mapping
 ├── KeyframeConversion.cs  # Core.Keyframe ↔ Legacy.Keyframe conversion
-└── CoasterKeyframeManager.cs  # Coaster.KeyframeStore + KeyframeUIChunk access layer
+└── CoasterKeyframeManager.cs  # Coaster.KeyframeStore + UIStateChunk access layer
 ```
 
 ## Scope

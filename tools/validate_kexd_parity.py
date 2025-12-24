@@ -226,13 +226,15 @@ def parse_kexd(data: bytes) -> GraphData:
                 else:
                     reader.pos = sub_end
 
-        elif chunk_type == "UIMD":
+        elif chunk_type == "UIST":
             count = reader.read_int()
             for _ in range(count):
                 node_id = reader.read_uint()
                 pos = reader.read_float2()
                 if node_id in node_map:
                     node_map[node_id].position = pos
+            # Skip remaining UIST fields (view state, keyframe states)
+            reader.pos = chunk_end
         else:
             reader.pos = chunk_end
 

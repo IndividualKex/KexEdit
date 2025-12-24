@@ -128,38 +128,35 @@ namespace KexEdit.Legacy.Serialization {
         public byte[] SerializeToKEXD(Entity target) {
             ref readonly var coasterData = ref SystemAPI.GetComponentRW<CoasterData>(target).ValueRO.Value;
 
-            var uiMeta = new KexEdit.Persistence.UIMetadataChunk(Allocator.Temp);
+            var uiState = KexEdit.Persistence.UIStateChunk.Create(Allocator.Temp);
 
-            // First, add all positions from Coaster.Graph (includes synthetic nodes)
             ref readonly var graph = ref coasterData.Graph;
             for (int i = 0; i < graph.NodeIds.Length; i++) {
-                uiMeta.Positions[graph.NodeIds[i]] = graph.NodePositions[i];
+                uiState.NodePositions[graph.NodeIds[i]] = graph.NodePositions[i];
             }
 
-            // Then, override with positions from ECS entities (they may have moved in the UI)
             using var nodeEntities = _nodeQuery.ToEntityArray(Allocator.Temp);
             foreach (var entity in nodeEntities) {
                 if (SystemAPI.GetComponent<CoasterReference>(entity).Value != target) continue;
                 var node = SystemAPI.GetComponent<Node>(entity);
-                uiMeta.Positions[node.Id] = node.Position;
+                uiState.NodePositions[node.Id] = node.Position;
             }
-
-            var writer = new KexEdit.Persistence.ChunkWriter(Allocator.Temp);
-            KexEdit.Persistence.CoasterSerializer.Write(writer, in coasterData);
-            KexEdit.Persistence.UIMetadataCodec.WriteChunk(ref writer, in uiMeta);
 
             if (SystemAPI.TryGetSingleton<TimelineState>(out var timeline) &&
                 SystemAPI.TryGetSingleton<NodeGraphState>(out var nodeGraph) &&
                 SystemAPI.TryGetSingleton<CameraState>(out var camera)) {
-                var viewState = ViewStateAdapter.Capture(in timeline, in nodeGraph, in camera);
-                KexEdit.Persistence.ViewStateCodec.WriteChunk(ref writer, in viewState);
+                ViewStateAdapter.Capture(ref uiState, in timeline, in nodeGraph, in camera);
             }
+
+            var writer = new KexEdit.Persistence.ChunkWriter(Allocator.Temp);
+            KexEdit.Persistence.CoasterSerializer.Write(writer, in coasterData);
+            KexEdit.Persistence.UIExtensionCodec.Write(ref writer, in uiState);
 
             var data = writer.ToArray();
             var result = data.ToArray();
 
             writer.Dispose();
-            uiMeta.Dispose();
+            uiState.Dispose();
             data.Dispose();
 
             return result;
@@ -201,22 +198,10 @@ namespace KexEdit.Legacy.Serialization {
 
         private Entity DeserializeKexd(byte[] data, Entity coaster, bool restoreUIState) {
             var buffer = new NativeArray<byte>(data, Allocator.Temp);
-
             var reader = new KexEdit.Persistence.ChunkReader(buffer);
-            var coasterAggregate = KexEdit.Persistence.CoasterSerializer.Read(reader, Allocator.Persistent);
-            reader.Dispose();
 
-            buffer.Dispose();
-            buffer = new NativeArray<byte>(data, Allocator.Temp);
-            reader = new KexEdit.Persistence.ChunkReader(buffer);
-            KexEdit.Persistence.UIMetadataCodec.TryReadFromFile(ref reader, Allocator.Temp, out var uiMetadata);
-            reader.Dispose();
-
-            buffer.Dispose();
-            buffer = new NativeArray<byte>(data, Allocator.Temp);
-            reader = new KexEdit.Persistence.ChunkReader(buffer);
-            bool hasViewState = KexEdit.Persistence.ViewStateCodec.TryReadFromFile(ref reader, out var viewState);
-            reader.Dispose();
+            var coasterAggregate = KexEdit.Persistence.CoasterSerializer.Read(ref reader, Allocator.Persistent);
+            bool hasUIState = KexEdit.Persistence.UIExtensionCodec.TryRead(ref reader, Allocator.Temp, out var uiState);
 
             EntityManager.SetComponentData(coaster, new CoasterData {
                 Value = coasterAggregate
@@ -224,21 +209,21 @@ namespace KexEdit.Legacy.Serialization {
 
             KexdAdapter.ImportToEcs(
                 in coasterAggregate,
-                in uiMetadata,
+                in uiState,
                 coaster,
                 EntityManager,
                 restoreUIState
             );
 
-            if (restoreUIState && hasViewState) {
+            if (restoreUIState && hasUIState) {
                 ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
                 ref var nodeGraphState = ref SystemAPI.GetSingletonRW<NodeGraphState>().ValueRW;
                 ref var cameraState = ref SystemAPI.GetSingletonRW<CameraState>().ValueRW;
-                ViewStateAdapter.Apply(in viewState, ref timelineState, ref nodeGraphState, ref cameraState);
+                ViewStateAdapter.Apply(in uiState, ref timelineState, ref nodeGraphState, ref cameraState);
             }
 
             buffer.Dispose();
-            uiMetadata.Dispose();
+            uiState.Dispose();
             return coaster;
         }
 
@@ -260,15 +245,15 @@ namespace KexEdit.Legacy.Serialization {
                 serializedGraph.UIState.ToState(out timelineState, out nodeGraphState, out cameraState);
             }
 
-            var uiMetadata = new KexEdit.Persistence.UIMetadataChunk(Allocator.Temp);
+            var uiState = KexEdit.Persistence.UIStateChunk.Create(Allocator.Temp);
             KexdAdapter.ImportToEcs(
                 in coasterAggregate,
-                in uiMetadata,
+                in uiState,
                 coaster,
                 EntityManager,
                 restoreUIState
             );
-            uiMetadata.Dispose();
+            uiState.Dispose();
             serializedGraph.Dispose();
 
             return coaster;

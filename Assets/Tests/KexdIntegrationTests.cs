@@ -96,13 +96,12 @@ namespace Tests {
 
             var nativeData = new NativeArray<byte>(kexdFileData, Allocator.Temp);
             var reader = new ChunkReader(nativeData);
-            var loadedCoaster = CoasterSerializer.Read(reader, Allocator.Temp);
+            var loadedCoaster = CoasterSerializer.Read(ref reader, Allocator.Temp);
 
             Assert.AreEqual(1, loadedCoaster.Graph.NodeIds.Length);
             Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(nodeId, out float value));
             Assert.AreEqual(42.5f, value, 0.001f);
 
-            reader.Dispose();
             nativeData.Dispose();
             loadedCoaster.Dispose();
             entityManager.DestroyEntity(coasterEntity);

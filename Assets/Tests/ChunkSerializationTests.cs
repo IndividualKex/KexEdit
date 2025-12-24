@@ -50,7 +50,7 @@ namespace Tests {
             writer.EndChunk();
 
             var data = writer.ToArray();
-            using var reader = new ChunkReader(data);
+            var reader = new ChunkReader(data);
 
             Assert.IsTrue(reader.TryReadHeader(out var header));
             Assert.AreEqual("TEST", header.TypeString);
@@ -67,7 +67,7 @@ namespace Tests {
             writer.EndChunk();
 
             var data = writer.ToArray();
-            using var reader = new ChunkReader(data);
+            var reader = new ChunkReader(data);
 
             Assert.IsTrue(reader.TryReadHeader(out var header));
             Assert.AreEqual(12345u, reader.ReadUInt());
@@ -88,7 +88,7 @@ namespace Tests {
             writer.EndChunk();
 
             var data = writer.ToArray();
-            using var reader = new ChunkReader(data);
+            var reader = new ChunkReader(data);
 
             Assert.IsTrue(reader.TryReadHeader(out var header1));
             Assert.AreEqual("SKIP", header1.TypeString);
@@ -117,7 +117,7 @@ namespace Tests {
             writer.EndChunk();
 
             var data = writer.ToArray();
-            using var reader = new ChunkReader(data);
+            var reader = new ChunkReader(data);
 
             Assert.IsTrue(reader.TryReadHeader(out var coreHeader));
             Assert.AreEqual("CORE", coreHeader.TypeString);
@@ -139,7 +139,7 @@ namespace Tests {
             writer.EndChunk();
 
             var data = writer.ToArray();
-            using var reader = new ChunkReader(data);
+            var reader = new ChunkReader(data);
 
             Assert.IsTrue(reader.TryReadHeader(out _));
             var read = reader.ReadArrayWithLength<uint>(Allocator.Temp);

@@ -18,12 +18,12 @@ Save/load, serialization, and import/export
 
 - `GraphSerializer` - Legacy node graph serialization (read-only for old files)
 - `SerializedGraph` - Legacy intermediate format
-- KEXD format - Chunk-based format with CORE + UIMD extensions
+- KEXD format - Chunk-based format with CORE + UIST extensions
 
 ## Data Flow
 
 ```
-KEXD Save:   ECS entities → Coaster + UI metadata → KEXD chunks
+KEXD Save:   ECS entities → Coaster + UI state → KEXD chunks
 KEXD Load:   KEXD bytes → Coaster → KexdAdapter → ECS entities
 Legacy Load: Legacy bytes → SerializedGraph → LegacyImporter → Coaster → ECS entities
 ```
