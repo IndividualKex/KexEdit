@@ -6,7 +6,7 @@ Application layer aggregate root and evaluator.
 
 - `Coaster` - Aggregate: graph + node data (keyframes, scalars, vectors, flags)
 - `CoasterEvaluator` - Use case: topologically evaluate graph → paths and output anchors
-- `NodeMeta` - Reserved property indices (248-254) for node-level metadata
+- `NodeMeta` - Reserved property indices (240-254) for node-level metadata
 
 ## Layout
 

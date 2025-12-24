@@ -837,6 +837,13 @@ namespace KexEdit.UI.NodeGraph {
         private void OnRenderToggleChange(RenderToggleChangeEvent evt) {
             ref var render = ref SystemAPI.GetComponentRW<Render>(evt.Node).ValueRW;
             render.Value = evt.Render;
+
+            uint nodeId = SystemAPI.GetComponent<Node>(evt.Node).Id;
+            ref var coaster = ref GetCoasterRef();
+            ulong renderKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Render);
+            coaster.Flags[renderKey] = evt.Render ? 0 : 1;
+
+            SystemAPI.SetComponentEnabled<Dirty>(evt.Node, true);
         }
 
         private void OnSteeringToggleChange(SteeringToggleChangeEvent evt) {

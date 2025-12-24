@@ -232,9 +232,9 @@ namespace KexEdit.UI.Timeline {
             var pointBuffer = SystemAPI.GetBuffer<CorePointBuffer>(_data.Entity);
             if (pointBuffer.Length < 2) return;
 
-            if (SystemAPI.HasComponent<Duration>(_data.Entity)) {
-                var duration = SystemAPI.GetComponent<Duration>(_data.Entity);
-                if (duration.Type == DurationType.Time) {
+            if (HasEditableDuration()) {
+                var durationType = GetDurationType();
+                if (durationType == DurationType.Time) {
                     playheadFollower.Index = _data.Time * HZ;
                     return;
                 }
@@ -614,8 +614,13 @@ namespace KexEdit.UI.Timeline {
         }
 
         private float GetDuration() {
-            if (SystemAPI.HasComponent<Duration>(_data.Entity)) {
-                return SystemAPI.GetComponent<Duration>(_data.Entity).Value;
+            if (HasEditableDuration()) {
+                uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
+                ref var coaster = ref GetCoasterRef();
+                ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                if (coaster.Scalars.TryGetValue(durKey, out float duration)) {
+                    return duration;
+                }
             }
 
             if (SystemAPI.HasBuffer<CorePointBuffer>(_data.Entity)) {
@@ -627,12 +632,19 @@ namespace KexEdit.UI.Timeline {
         }
 
         private bool HasEditableDuration() {
-            return SystemAPI.HasComponent<Duration>(_data.Entity);
+            if (_data.Entity == Entity.Null) return false;
+            var nodeType = SystemAPI.GetComponent<Node>(_data.Entity).Type;
+            return nodeType == NodeType.ForceSection || nodeType == NodeType.GeometricSection;
         }
 
         private DurationType GetDurationType() {
-            if (_data.Active && SystemAPI.HasComponent<Duration>(_data.Entity)) {
-                return SystemAPI.GetComponent<Duration>(_data.Entity).Type;
+            if (_data.Active && HasEditableDuration()) {
+                uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
+                ref var coaster = ref GetCoasterRef();
+                ulong durTypeKey = CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType);
+                if (coaster.Flags.TryGetValue(durTypeKey, out int durType) && durType == 1) {
+                    return DurationType.Distance;
+                }
             }
             return DurationType.Time;
         }
@@ -768,27 +780,44 @@ namespace KexEdit.UI.Timeline {
 
         private void SetPropertyOverride(PropertyType type, bool value) {
             ref var overrides = ref SystemAPI.GetComponentRW<PropertyOverrides>(_data.Entity).ValueRW;
+            ref var coaster = ref GetCoasterRef();
+            uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
+
             switch (type) {
                 case PropertyType.FixedVelocity:
                     overrides.FixedVelocity = value;
+                    SetCoasterFlag(ref coaster, nodeId, NodeMeta.Driven, value);
                     break;
                 case PropertyType.Heart:
                     overrides.Heart = value;
+                    SetCoasterFlag(ref coaster, nodeId, NodeMeta.OverrideHeart, value);
                     break;
                 case PropertyType.Friction:
                     overrides.Friction = value;
+                    SetCoasterFlag(ref coaster, nodeId, NodeMeta.OverrideFriction, value);
                     break;
                 case PropertyType.Resistance:
                     overrides.Resistance = value;
+                    SetCoasterFlag(ref coaster, nodeId, NodeMeta.OverrideResistance, value);
                     break;
                 case PropertyType.TrackStyle:
                     overrides.TrackStyle = value;
+                    SetCoasterFlag(ref coaster, nodeId, NodeMeta.OverrideTrackStyle, value);
                     break;
                 default:
                     throw new System.NotImplementedException($"Property override not implemented for {type}");
             }
 
             SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
+        }
+
+        private static void SetCoasterFlag(ref CoasterAggregate coaster, uint nodeId, int metaIndex, bool value) {
+            ulong key = CoasterAggregate.InputKey(nodeId, metaIndex);
+            if (value) {
+                coaster.Flags[key] = 1;
+            } else {
+                coaster.Flags.Remove(key);
+            }
         }
 
         private void SelectProperty(PropertyType type) {
@@ -1094,7 +1123,7 @@ namespace KexEdit.UI.Timeline {
         }
 
         private void OnDurationChange(DurationChangeEvent evt) {
-            if (!SystemAPI.HasComponent<Duration>(_data.Entity)) {
+            if (!HasEditableDuration()) {
                 throw new Exception("No entity or duration component found");
             }
 
@@ -1730,9 +1759,9 @@ namespace KexEdit.UI.Timeline {
             }
 
             float position;
-            if (SystemAPI.HasComponent<Duration>(_data.Entity)) {
-                var duration = SystemAPI.GetComponent<Duration>(_data.Entity);
-                if (duration.Type == DurationType.Time) {
+            if (HasEditableDuration()) {
+                var durationType = GetDurationType();
+                if (durationType == DurationType.Time) {
                     position = time * HZ;
                 }
                 else {
@@ -1959,6 +1988,15 @@ namespace KexEdit.UI.Timeline {
         private void AddProperty(PropertyType type) {
             Undo.Record();
             SetPropertyOverride(type, true);
+
+            var anchor = SystemAPI.GetComponent<Anchor>(_data.Entity).Value;
+            float initialValue = type.Previous(0f, anchor);
+
+            var adapter = PropertyAdapter.GetAdapter(type);
+            var keyframe = Keyframe.Create(0f, initialValue);
+            adapter.AddKeyframe(_data.Entity, keyframe);
+
+            UpdateKeyframes();
             MarkTrackDirty();
         }
 

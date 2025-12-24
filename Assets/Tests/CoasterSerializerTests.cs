@@ -260,6 +260,149 @@ namespace Tests {
         }
 
         [Test]
+        public void PropertyOverrides_RoundTrip_PreservesDrivenFlag() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+            var n2 = original.Graph.AddNode((uint)NodeType.Geometric, new float2(100, 0));
+
+            ulong drivenKey1 = Coaster.InputKey(n1, NodeMeta.Driven);
+            ulong drivenKey2 = Coaster.InputKey(n2, NodeMeta.Driven);
+
+            original.Flags[drivenKey1] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            using var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(drivenKey1, out int d1) && d1 == 1, "Node 1 should have Driven flag");
+            Assert.IsFalse(loaded.Flags.TryGetValue(drivenKey2, out int d2) && d2 == 1, "Node 2 should not have Driven flag");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void PropertyOverrides_RoundTrip_PreservesOverrideHeart() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+
+            ulong heartKey = Coaster.InputKey(n1, NodeMeta.OverrideHeart);
+            original.Flags[heartKey] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            using var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(heartKey, out int h) && h == 1, "OverrideHeart flag should be preserved");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void PropertyOverrides_RoundTrip_PreservesOverrideFriction() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+
+            ulong frictionKey = Coaster.InputKey(n1, NodeMeta.OverrideFriction);
+            original.Flags[frictionKey] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            using var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(frictionKey, out int f) && f == 1, "OverrideFriction flag should be preserved");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void PropertyOverrides_RoundTrip_PreservesOverrideResistance() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+
+            ulong resistanceKey = Coaster.InputKey(n1, NodeMeta.OverrideResistance);
+            original.Flags[resistanceKey] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            using var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(resistanceKey, out int r) && r == 1, "OverrideResistance flag should be preserved");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void PropertyOverrides_RoundTrip_PreservesOverrideTrackStyle() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+
+            ulong trackStyleKey = Coaster.InputKey(n1, NodeMeta.OverrideTrackStyle);
+            original.Flags[trackStyleKey] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            using var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(trackStyleKey, out int t) && t == 1, "OverrideTrackStyle flag should be preserved");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
+        public void PropertyOverrides_RoundTrip_PreservesAllOverrides() {
+            var original = Coaster.Create(Allocator.Temp);
+            var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
+
+            ulong drivenKey = Coaster.InputKey(n1, NodeMeta.Driven);
+            ulong heartKey = Coaster.InputKey(n1, NodeMeta.OverrideHeart);
+            ulong frictionKey = Coaster.InputKey(n1, NodeMeta.OverrideFriction);
+            ulong resistanceKey = Coaster.InputKey(n1, NodeMeta.OverrideResistance);
+            ulong trackStyleKey = Coaster.InputKey(n1, NodeMeta.OverrideTrackStyle);
+
+            original.Flags[drivenKey] = 1;
+            original.Flags[heartKey] = 1;
+            original.Flags[frictionKey] = 1;
+            original.Flags[resistanceKey] = 1;
+            original.Flags[trackStyleKey] = 1;
+
+            using var writer = new ChunkWriter(Allocator.Temp);
+            CoasterSerializer.Write(writer, in original);
+            var data = writer.ToArray();
+
+            using var reader = new ChunkReader(data);
+            var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
+
+            Assert.IsTrue(loaded.Flags.TryGetValue(drivenKey, out int d) && d == 1, "Driven flag should be preserved");
+            Assert.IsTrue(loaded.Flags.TryGetValue(heartKey, out int h) && h == 1, "OverrideHeart flag should be preserved");
+            Assert.IsTrue(loaded.Flags.TryGetValue(frictionKey, out int f) && f == 1, "OverrideFriction flag should be preserved");
+            Assert.IsTrue(loaded.Flags.TryGetValue(resistanceKey, out int r) && r == 1, "OverrideResistance flag should be preserved");
+            Assert.IsTrue(loaded.Flags.TryGetValue(trackStyleKey, out int t) && t == 1, "OverrideTrackStyle flag should be preserved");
+
+            loaded.Dispose();
+            original.Dispose();
+        }
+
+        [Test]
         public void Priority_And_Render_RoundTrip_PreservesValues() {
             var original = Coaster.Create(Allocator.Temp);
             var n1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);

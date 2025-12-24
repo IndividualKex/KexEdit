@@ -101,12 +101,15 @@ namespace KexEdit.Legacy {
             ExtractResistanceKeyframes(in coaster, nodeId, allocator, out var resistanceKf);
             ExtractTrackStyleKeyframes(in coaster, nodeId, allocator, out var trackStyleKf);
 
+            ExtractPropertyOverrides(in coaster, nodeId, out var propertyOverrides);
+            bool hasPropertyOverrides = propertyOverrides.Flags != PropertyOverrideFlags.None;
+
             var fieldFlags = BuildFieldFlags(
                 legacyType,
                 duration.Type != DurationType.Time,
                 steering,
                 render,
-                hasPropertyOverrides: false,
+                hasPropertyOverrides,
                 hasCurveData: false,
                 hasMeshFilePath: false
             );
@@ -129,11 +132,27 @@ namespace KexEdit.Legacy {
                 FrictionKeyframes = frictionKf,
                 ResistanceKeyframes = resistanceKf,
                 TrackStyleKeyframes = trackStyleKf,
-                PropertyOverrides = default,
+                PropertyOverrides = propertyOverrides,
                 SelectedProperties = default,
                 CurveData = default,
                 MeshFilePath = default
             };
+        }
+
+        [BurstCompile]
+        private static void ExtractPropertyOverrides(in CoasterAggregate coaster, uint nodeId, out PropertyOverrides result) {
+            bool driven = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.Driven), out int d) && d == 1;
+            bool heart = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideHeart), out int h) && h == 1;
+            bool friction = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideFriction), out int f) && f == 1;
+            bool resistance = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideResistance), out int r) && r == 1;
+            bool trackStyle = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideTrackStyle), out int t) && t == 1;
+
+            result = new PropertyOverrides();
+            result.FixedVelocity = driven;
+            result.Heart = heart;
+            result.Friction = friction;
+            result.Resistance = resistance;
+            result.TrackStyle = trackStyle;
         }
 
         [BurstCompile]

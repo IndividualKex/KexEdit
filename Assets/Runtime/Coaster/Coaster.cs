@@ -20,6 +20,10 @@ namespace KexEdit.Coaster {
     }
 
     public static class NodeMeta {
+        public const int OverrideHeart = 240;
+        public const int OverrideFriction = 241;
+        public const int OverrideResistance = 242;
+        public const int OverrideTrackStyle = 243;
         public const int Duration = 248;
         public const int Priority = 249;
         public const int DurationType = 250;

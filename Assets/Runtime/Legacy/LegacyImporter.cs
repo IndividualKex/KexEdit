@@ -217,7 +217,7 @@ namespace KexEdit.Legacy {
                 ImportKeyframes(in node, nodeId, ref coaster.Keyframes);
                 ImportDuration(in node, nodeId, ref coaster);
                 ImportSteering(in node, nodeId, ref coaster);
-                ImportDriven(in node, nodeId, ref coaster);
+                ImportPropertyOverrides(in node, nodeId, ref coaster);
                 ImportFacing(in node, nodeId, ref coaster);
                 ImportPriority(in node, nodeId, ref coaster);
                 ImportRender(in node, nodeId, ref coaster);
@@ -291,9 +291,23 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ImportDriven(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
-            if ((node.FieldFlags & NodeFieldFlags.HasPropertyOverrides) != 0 && node.PropertyOverrides.FixedVelocity) {
+        private static void ImportPropertyOverrides(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
+            if ((node.FieldFlags & NodeFieldFlags.HasPropertyOverrides) == 0) return;
+
+            if (node.PropertyOverrides.FixedVelocity) {
                 coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Driven)] = 1;
+            }
+            if (node.PropertyOverrides.Heart) {
+                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideHeart)] = 1;
+            }
+            if (node.PropertyOverrides.Friction) {
+                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideFriction)] = 1;
+            }
+            if (node.PropertyOverrides.Resistance) {
+                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideResistance)] = 1;
+            }
+            if (node.PropertyOverrides.TrackStyle) {
+                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideTrackStyle)] = 1;
             }
         }
 
