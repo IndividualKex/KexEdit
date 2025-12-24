@@ -482,6 +482,7 @@ namespace KexEdit.Legacy {
             for (int i = 0; i < kfs.Length; i++) {
                 var coreKf = kfs[i];
                 CoreToLegacyKeyframe(in coreKf, out var legacyKf);
+                legacyKf.Id = math.hash(new uint3(nodeId, (uint)PropertyId.RollSpeed, (uint)i));
                 result[i] = legacyKf;
             }
         }
@@ -502,6 +503,7 @@ namespace KexEdit.Legacy {
             for (int i = 0; i < kfs.Length; i++) {
                 var coreKf = kfs[i];
                 CoreToLegacyKeyframe(in coreKf, out var legacyKf);
+                legacyKf.Id = math.hash(new uint3(nodeId, (uint)PropertyId.NormalForce, (uint)i));
                 result[i] = legacyKf;
             }
         }
@@ -522,6 +524,7 @@ namespace KexEdit.Legacy {
             for (int i = 0; i < kfs.Length; i++) {
                 var coreKf = kfs[i];
                 CoreToLegacyKeyframe(in coreKf, out var legacyKf);
+                legacyKf.Id = math.hash(new uint3(nodeId, (uint)PropertyId.LateralForce, (uint)i));
                 result[i] = legacyKf;
             }
         }
@@ -542,6 +545,7 @@ namespace KexEdit.Legacy {
             for (int i = 0; i < kfs.Length; i++) {
                 var coreKf = kfs[i];
                 CoreToLegacyKeyframe(in coreKf, out var legacyKf);
+                legacyKf.Id = math.hash(new uint3(nodeId, (uint)PropertyId.PitchSpeed, (uint)i));
                 result[i] = legacyKf;
             }
         }
@@ -562,6 +566,7 @@ namespace KexEdit.Legacy {
             for (int i = 0; i < kfs.Length; i++) {
                 var coreKf = kfs[i];
                 CoreToLegacyKeyframe(in coreKf, out var legacyKf);
+                legacyKf.Id = math.hash(new uint3(nodeId, (uint)PropertyId.YawSpeed, (uint)i));
                 result[i] = legacyKf;
             }
         }
@@ -582,6 +587,7 @@ namespace KexEdit.Legacy {
             for (int i = 0; i < kfs.Length; i++) {
                 var coreKf = kfs[i];
                 CoreToLegacyKeyframe(in coreKf, out var legacyKf);
+                legacyKf.Id = math.hash(new uint3(nodeId, (uint)PropertyId.DrivenVelocity, (uint)i));
                 result[i] = legacyKf;
             }
         }
@@ -602,6 +608,7 @@ namespace KexEdit.Legacy {
             for (int i = 0; i < kfs.Length; i++) {
                 var coreKf = kfs[i];
                 CoreToLegacyKeyframe(in coreKf, out var legacyKf);
+                legacyKf.Id = math.hash(new uint3(nodeId, (uint)PropertyId.HeartOffset, (uint)i));
                 result[i] = legacyKf;
             }
         }
@@ -622,6 +629,7 @@ namespace KexEdit.Legacy {
             for (int i = 0; i < kfs.Length; i++) {
                 var coreKf = kfs[i];
                 CoreToLegacyKeyframe(in coreKf, out var legacyKf);
+                legacyKf.Id = math.hash(new uint3(nodeId, (uint)PropertyId.Friction, (uint)i));
                 result[i] = legacyKf;
             }
         }
@@ -642,6 +650,7 @@ namespace KexEdit.Legacy {
             for (int i = 0; i < kfs.Length; i++) {
                 var coreKf = kfs[i];
                 CoreToLegacyKeyframe(in coreKf, out var legacyKf);
+                legacyKf.Id = math.hash(new uint3(nodeId, (uint)PropertyId.Resistance, (uint)i));
                 result[i] = legacyKf;
             }
         }
@@ -664,7 +673,7 @@ namespace KexEdit.Legacy {
                 CoreToLegacyKeyframe(in coreKf, out var legacyKf);
                 result[i] = new TrackStyleKeyframe {
                     Value = new Legacy.Keyframe {
-                        Id = legacyKf.Id,
+                        Id = math.hash(new uint3(nodeId, (uint)PropertyId.TrackStyle, (uint)i)),
                         Time = legacyKf.Time,
                         Value = (uint)legacyKf.Value,
                         InInterpolation = legacyKf.InInterpolation,

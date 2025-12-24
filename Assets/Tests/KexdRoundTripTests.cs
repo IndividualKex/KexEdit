@@ -343,5 +343,56 @@ namespace Tests {
 
             entityManager.DestroyEntity(loadedEntity);
         }
+
+        [Test]
+        public void KeyframeIds_RoundTrip_AreUnique() {
+            var entityManager = _world.EntityManager;
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            entityManager.SetName(coasterEntity, "Coaster");
+
+            var coaster = Coaster.Create(Allocator.Persistent);
+            var forceNodeId = coaster.Graph.AddNode((uint)KexEdit.Nodes.NodeType.Force, new float2(100, 100));
+
+            // Add 2 keyframes for NormalForce property
+            var keyframes = new NativeArray<KexEdit.Core.Keyframe>(2, Allocator.Temp);
+            keyframes[0] = new KexEdit.Core.Keyframe(0f, 1f);
+            keyframes[1] = new KexEdit.Core.Keyframe(1f, 2f);
+            coaster.Keyframes.Set(forceNodeId, KexEdit.Nodes.PropertyId.NormalForce, keyframes);
+            keyframes.Dispose();
+
+            entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+
+            var nodeEntity = entityManager.CreateEntity();
+            entityManager.AddComponentData(nodeEntity, new Node {
+                Id = forceNodeId,
+                Type = LegacyNodeType.ForceSection,
+                Position = new float2(100, 100),
+                Selected = false
+            });
+            entityManager.AddComponentData(nodeEntity, new CoasterReference { Value = coasterEntity });
+
+            var kexdData = _serializationSystem.SerializeToKEXD(coasterEntity);
+            entityManager.DestroyEntity(coasterEntity);
+            entityManager.DestroyEntity(nodeEntity);
+
+            var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
+
+            // Find the force node and check its keyframes
+            var query = entityManager.CreateEntityQuery(typeof(Node), typeof(CoasterReference), typeof(NormalForceKeyframe));
+            using var nodes = query.ToEntityArray(Allocator.Temp);
+            Assert.AreEqual(1, nodes.Length, "Expected 1 Force node with keyframes");
+
+            var buffer = entityManager.GetBuffer<NormalForceKeyframe>(nodes[0]);
+            Assert.AreEqual(2, buffer.Length, "Expected 2 keyframes");
+
+            var id0 = buffer[0].Value.Id;
+            var id1 = buffer[1].Value.Id;
+
+            Assert.AreNotEqual(0u, id0, "Keyframe 0 should have non-zero ID");
+            Assert.AreNotEqual(0u, id1, "Keyframe 1 should have non-zero ID");
+            Assert.AreNotEqual(id0, id1, "Keyframes should have unique IDs");
+
+            entityManager.DestroyEntity(loadedEntity);
+        }
     }
 }

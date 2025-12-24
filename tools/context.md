@@ -13,8 +13,9 @@ tools/
 ├── analyze_kexd.py          # KEXD chunk format analyzer
 ├── validate_coaster_state.py
 ├── validate_facing.py
+├── validate_keyframe_ids.py # Keyframe DATA chunk validation
 ├── validate_kexd_parity.py
-├── validate_property_overrides.py  # PropertyOverride flag validation
+├── validate_property_overrides.py
 └── validate_veloci_structure.py
 ```
 
