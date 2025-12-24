@@ -24,7 +24,9 @@ Persistence/
     ├── UIMetadataChunk.cs      # Node positions (UIMD chunk)
     ├── UIMetadataCodec.cs      # UIMD read/write
     ├── ViewStateChunk.cs       # Timeline/graph/camera state (VWST chunk)
-    └── ViewStateCodec.cs       # VWST read/write
+    ├── ViewStateCodec.cs       # VWST read/write
+    ├── KeyframeUIChunk.cs      # Keyframe UI metadata (KFUI chunk)
+    └── KeyframeUICodec.cs      # KFUI read/write
 ```
 
 ## Architecture
@@ -46,6 +48,7 @@ Persistence/
 - `CoasterSerializer.Write/Read` - Core coaster data
 - `UIMetadataCodec.WriteChunk/TryReadFromFile` - Node positions extension
 - `ViewStateCodec.WriteChunk/TryReadFromFile` - View state extension
+- `KeyframeUICodec.WriteChunk/TryReadFromFile` - Keyframe UI metadata extension
 
 ## Dependencies
 

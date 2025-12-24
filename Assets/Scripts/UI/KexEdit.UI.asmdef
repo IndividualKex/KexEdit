@@ -24,7 +24,8 @@
         "KexEdit.Coaster",
         "KexEdit.NodeGraph",
         "KexEdit.Nodes",
-        "KexEdit.Nodes.Anchor"
+        "KexEdit.Nodes.Anchor",
+        "KexEdit.Persistence"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

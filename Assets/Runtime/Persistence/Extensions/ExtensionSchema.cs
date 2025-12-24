@@ -8,5 +8,8 @@ namespace KexEdit.Persistence {
 
         public const string ViewStateType = "VWST";
         public const uint ViewStateVersion = 1;
+
+        public const string KeyframeUIType = "KFUI";
+        public const uint KeyframeUIVersion = 1;
     }
 }
