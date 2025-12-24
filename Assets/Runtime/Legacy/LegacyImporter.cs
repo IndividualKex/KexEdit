@@ -220,6 +220,7 @@ namespace KexEdit.Legacy {
                 ImportDuration(in node, nodeId, ref coaster);
                 ImportSteering(in node, nodeId, ref coaster);
                 ImportDriven(in node, nodeId, ref coaster);
+                ImportFacing(in node, nodeId, ref coaster);
                 ImportPortValues(in node, nodeId, ref coaster, in portIdRemap);
                 ImportAnchorData(in node, nodeId, ref coaster);
             }
@@ -291,6 +292,14 @@ namespace KexEdit.Legacy {
         private static void ImportDriven(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
             if ((node.FieldFlags & NodeFieldFlags.HasPropertyOverrides) != 0 && node.PropertyOverrides.FixedVelocity) {
                 coaster.Driven.Add(nodeId);
+            }
+        }
+
+        [BurstCompile]
+        private static void ImportFacing(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
+            int facing = node.Anchor.Facing;
+            if (facing != 1) {
+                coaster.Facing[nodeId] = facing;
             }
         }
 

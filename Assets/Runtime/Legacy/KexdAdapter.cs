@@ -384,6 +384,7 @@ namespace KexEdit.Legacy {
         [BurstCompile]
         private static void BuildAnchor(in CoasterAggregate coaster, uint nodeId, out PointData result) {
             BuildAnchorPortValue(in coaster, nodeId, out result);
+            result.Facing = coaster.Facing.TryGetValue(nodeId, out int facing) ? facing : 1;
         }
 
         [BurstCompile]

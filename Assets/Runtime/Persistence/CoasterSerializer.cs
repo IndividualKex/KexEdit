@@ -12,7 +12,7 @@ namespace KexEdit.Persistence {
         const uint FileVersion = 1;
         const uint CoreVersion = 1;
         const uint GraphVersion = 2;
-        const uint DataVersion = 1;
+        const uint DataVersion = 2;
 
         public static void Write(ChunkWriter writer, in CoasterData coaster) {
             WriteFileHeader(ref writer);
@@ -175,6 +175,7 @@ namespace KexEdit.Persistence {
             WriteScalars(ref writer, coaster.Scalars);
             WriteVectors(ref writer, coaster.Vectors);
             WriteDurations(ref writer, coaster.Durations);
+            WriteFacing(ref writer, coaster.Facing);
             WriteSteering(ref writer, coaster.Steering);
             WriteDriven(ref writer, coaster.Driven);
 
@@ -186,6 +187,9 @@ namespace KexEdit.Persistence {
             ReadScalars(ref reader, ref coaster.Scalars);
             ReadVectors(ref reader, ref coaster.Vectors);
             ReadDurations(ref reader, ref coaster.Durations);
+            if (header.Version >= 2) {
+                ReadFacing(ref reader, ref coaster.Facing);
+            }
             ReadSteering(ref reader, ref coaster.Steering);
             ReadDriven(ref reader, ref coaster.Driven);
         }
@@ -293,6 +297,23 @@ namespace KexEdit.Persistence {
                 float value = reader.ReadFloat();
                 var type = (DurationType)reader.ReadByte();
                 durations[key] = new Duration(value, type);
+            }
+        }
+
+        static void WriteFacing(ref ChunkWriter writer, in NativeHashMap<uint, int> facing) {
+            writer.WriteInt(facing.Count);
+            foreach (var kv in facing) {
+                writer.WriteUInt(kv.Key);
+                writer.WriteInt(kv.Value);
+            }
+        }
+
+        static void ReadFacing(ref ChunkReader reader, ref NativeHashMap<uint, int> facing) {
+            int count = reader.ReadInt();
+            for (int i = 0; i < count; i++) {
+                uint key = reader.ReadUInt();
+                int value = reader.ReadInt();
+                facing[key] = value;
             }
         }
 
