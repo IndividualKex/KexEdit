@@ -5,9 +5,8 @@ Compares graph structure, node types, port types, scalar values, and UI position
 """
 import struct
 import sys
-from pathlib import Path
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple, Set
+from typing import List, Dict, Tuple
 from enum import IntEnum
 
 
@@ -85,17 +84,17 @@ class BinaryReader:
         return val
 
     def read_uint(self) -> int:
-        val = struct.unpack_from('<I', self.data, self.pos)[0]
+        val = struct.unpack_from("<I", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_int(self) -> int:
-        val = struct.unpack_from('<i', self.data, self.pos)[0]
+        val = struct.unpack_from("<i", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_float(self) -> float:
-        val = struct.unpack_from('<f', self.data, self.pos)[0]
+        val = struct.unpack_from("<f", self.data, self.pos)[0]
         self.pos += 4
         return val
 
@@ -114,7 +113,7 @@ class BinaryReader:
             b = self.read_byte()
             if b != 0:
                 chars.append(chr(b))
-        return ''.join(chars)
+        return "".join(chars)
 
     def skip(self, count: int):
         self.pos += count
@@ -124,7 +123,7 @@ class BinaryReader:
 
 
 def is_kexd(data: bytes) -> bool:
-    return len(data) >= 4 and data[:4] == b'KEXD'
+    return len(data) >= 4 and data[:4] == b"KEXD"
 
 
 def parse_kexd(data: bytes) -> GraphData:
@@ -142,7 +141,7 @@ def parse_kexd(data: bytes) -> GraphData:
 
     while reader.remaining() > 12:
         chunk_type = reader.read_chunk_type()
-        chunk_version = reader.read_uint()
+        _chunk_version = reader.read_uint()
         chunk_length = reader.read_uint()
         chunk_end = reader.pos + chunk_length
 
@@ -165,8 +164,8 @@ def parse_kexd(data: bytes) -> GraphData:
                             pos = reader.read_float2()
                         else:
                             pos = (0.0, 0.0)
-                        input_count = reader.read_int()
-                        output_count = reader.read_int()
+                        _input_count = reader.read_int()
+                        _output_count = reader.read_int()
                         node = NodeData(node_id, node_type, pos)
                         result.nodes.append(node)
                         node_map[node_id] = node
@@ -254,7 +253,7 @@ def validate_kexd_file(filepath: str) -> bool:
     print(f"Validating: {filepath}\n")
 
     try:
-        with open(filepath, 'rb') as f:
+        with open(filepath, "rb") as f:
             data = f.read()
     except Exception as e:
         print(f"ERROR: Cannot read file: {e}")
@@ -269,6 +268,7 @@ def validate_kexd_file(filepath: str) -> bool:
     except Exception as e:
         print(f"ERROR: Failed to parse KEXD: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -363,10 +363,12 @@ def validate_kexd_file(filepath: str) -> bool:
 
 
 POINTDATA_SIZE = 120  # 4 float3 (48) + 17 floats (68) + 1 int (4) = 120 bytes
-KEYFRAME_SIZE = 48    # KeyframeV1 struct size
+KEYFRAME_SIZE = 48  # KeyframeV1 struct size
 
 
-def read_point_data(reader: BinaryReader) -> Tuple[Tuple[float, float, float], float, float]:
+def read_point_data(
+    reader: BinaryReader,
+) -> Tuple[Tuple[float, float, float], float, float]:
     """Read PointData and return (position, roll, velocity)."""
     position = reader.read_float3()  # HeartPosition (12 bytes)
     reader.skip(36)  # Direction, Lateral, Normal (3 * 12 bytes)
@@ -407,8 +409,8 @@ def parse_legacy(data: bytes) -> GraphData:
 
         pos = reader.read_float2()
         node_type = reader.read_int()
-        priority = reader.read_int()
-        selected = reader.read_bool()
+        _priority = reader.read_int()
+        _selected = reader.read_bool()
         reader.skip(3)  # padding
         reader.skip(16)  # next + prev entities (2 * Entity = 2 * 8)
 
@@ -441,7 +443,7 @@ def parse_legacy(data: bytes) -> GraphData:
         for _ in range(input_port_count):
             port_id = reader.read_uint()
             port_type = reader.read_int()
-            is_input = reader.read_bool()
+            _is_input = reader.read_bool()
             reader.skip(3)  # padding
 
             # Read port value PointData
@@ -463,7 +465,7 @@ def parse_legacy(data: bytes) -> GraphData:
         for _ in range(output_port_count):
             port_id = reader.read_uint()
             port_type = reader.read_int()
-            is_input = reader.read_bool()
+            _is_input = reader.read_bool()
             reader.skip(3)  # padding
             skip_point_data(reader)
             output_ports.append(PortData(port_id, port_type, node_id, False))
@@ -483,7 +485,7 @@ def parse_legacy(data: bytes) -> GraphData:
         edge_id = reader.read_uint()
         source = reader.read_uint()
         target = reader.read_uint()
-        selected = reader.read_bool()
+        _selected = reader.read_bool()
         reader.skip(3)  # padding
         result.edges.append((edge_id, source, target))
 
@@ -504,7 +506,9 @@ def get_port_type_name(t: int) -> str:
         return f"Unknown({t})"
 
 
-def compare_graphs(legacy: GraphData, kexd: GraphData, tolerance: float = 0.001) -> List[str]:
+def compare_graphs(
+    legacy: GraphData, kexd: GraphData, tolerance: float = 0.001
+) -> List[str]:
     """Compare two graphs and return list of differences."""
     differences = []
 
@@ -516,7 +520,9 @@ def compare_graphs(legacy: GraphData, kexd: GraphData, tolerance: float = 0.001)
 
     # Node count
     if len(legacy.nodes) != len(kexd.nodes):
-        differences.append(f"Node count mismatch: legacy={len(legacy.nodes)}, kexd={len(kexd.nodes)}")
+        differences.append(
+            f"Node count mismatch: legacy={len(legacy.nodes)}, kexd={len(kexd.nodes)}"
+        )
         return differences  # Can't continue comparison
 
     # Build node maps
@@ -542,7 +548,7 @@ def compare_graphs(legacy: GraphData, kexd: GraphData, tolerance: float = 0.001)
 
         # UI Position
         l_pos, k_pos = l_node.position, k_node.position
-        pos_diff = ((l_pos[0] - k_pos[0])**2 + (l_pos[1] - k_pos[1])**2) ** 0.5
+        pos_diff = ((l_pos[0] - k_pos[0]) ** 2 + (l_pos[1] - k_pos[1]) ** 2) ** 0.5
         if pos_diff > tolerance:
             differences.append(
                 f"Node {node_id}: position drift: "
@@ -569,9 +575,11 @@ def compare_graphs(legacy: GraphData, kexd: GraphData, tolerance: float = 0.001)
         k_input_types = [p.port_type for p in k_node.input_ports]
 
         # Check for Roll/Pitch/Yaw -> Rotation consolidation
-        has_legacy_rotation = (PortType.Roll in l_input_types or
-                                PortType.Pitch in l_input_types or
-                                PortType.Yaw in l_input_types)
+        has_legacy_rotation = (
+            PortType.Roll in l_input_types
+            or PortType.Pitch in l_input_types
+            or PortType.Yaw in l_input_types
+        )
         has_kexd_rotation = PortType.Rotation in k_input_types
 
         if has_legacy_rotation and has_kexd_rotation:
@@ -583,7 +591,9 @@ def compare_graphs(legacy: GraphData, kexd: GraphData, tolerance: float = 0.001)
 
     # Edge count
     if len(legacy.edges) != len(kexd.edges):
-        differences.append(f"Edge count mismatch: legacy={len(legacy.edges)}, kexd={len(kexd.edges)}")
+        differences.append(
+            f"Edge count mismatch: legacy={len(legacy.edges)}, kexd={len(kexd.edges)}"
+        )
 
     # Scalar values
     all_port_ids = set(legacy.scalars.keys()) | set(kexd.scalars.keys())
@@ -633,7 +643,9 @@ def validate_index_integrity(graph: GraphData, name: str) -> List[str]:
 
     for pid, occurrences in port_id_counts.items():
         if len(occurrences) > 1:
-            details = ", ".join(f"node {nid} ({get_port_type_name(pt)})" for nid, pt in occurrences)
+            details = ", ".join(
+                f"node {nid} ({get_port_type_name(pt)})" for nid, pt in occurrences
+            )
             errors.append(f"[{name}] DUPLICATE PORT ID: {pid} appears in {details}")
 
     # Check for duplicate edge IDs
@@ -662,13 +674,13 @@ def validate_index_integrity(graph: GraphData, name: str) -> List[str]:
     return errors
 
 
-def compare_legacy_to_kexd_roundtrip(legacy_path: str, tolerance: float = 0.001):
+def compare_legacy_to_kexd_roundtrip(legacy_path: str):
     """Load legacy file, parse both formats, and compare."""
-    print(f"=== LEGACY vs KEXD PARITY CHECK ===\n")
+    print("=== LEGACY vs KEXD PARITY CHECK ===\n")
     print(f"File: {legacy_path}\n")
 
     try:
-        with open(legacy_path, 'rb') as f:
+        with open(legacy_path, "rb") as f:
             data = f.read()
     except Exception as e:
         print(f"ERROR: Cannot read file: {e}")
@@ -694,6 +706,7 @@ def compare_legacy_to_kexd_roundtrip(legacy_path: str, tolerance: float = 0.001)
         except Exception as e:
             print(f"ERROR: Failed to parse KEXD: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -706,6 +719,7 @@ def compare_legacy_to_kexd_roundtrip(legacy_path: str, tolerance: float = 0.001)
     except Exception as e:
         print(f"ERROR: Failed to parse legacy: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -719,11 +733,17 @@ def compare_legacy_to_kexd_roundtrip(legacy_path: str, tolerance: float = 0.001)
     # For now, just show legacy stats - KEXD comparison requires Unity round-trip
     print("\nLEGACY FILE DETAILS:\n")
     for node in legacy.nodes:
-        print(f"Node {node.node_id}: {get_node_type_name(node.node_type)} @ ({node.position[0]:.1f}, {node.position[1]:.1f})")
+        print(
+            f"Node {node.node_id}: {get_node_type_name(node.node_type)} @ ({node.position[0]:.1f}, {node.position[1]:.1f})"
+        )
         if node.input_ports:
-            print(f"  Inputs: {[f'{get_port_type_name(p.port_type)}({p.port_id})' for p in node.input_ports]}")
+            print(
+                f"  Inputs: {[f'{get_port_type_name(p.port_type)}({p.port_id})' for p in node.input_ports]}"
+            )
         if node.output_ports:
-            print(f"  Outputs: {[f'{get_port_type_name(p.port_type)}({p.port_id})' for p in node.output_ports]}")
+            print(
+                f"  Outputs: {[f'{get_port_type_name(p.port_type)}({p.port_id})' for p in node.output_ports]}"
+            )
 
     print("\nTo test round-trip parity:")
     print("1. Load this file in Unity")
@@ -743,7 +763,7 @@ def main():
 
     if len(sys.argv) == 2:
         filepath = sys.argv[1]
-        with open(filepath, 'rb') as f:
+        with open(filepath, "rb") as f:
             data = f.read()
 
         if is_kexd(data):
@@ -757,13 +777,13 @@ def main():
         legacy_path = sys.argv[1]
         kexd_path = sys.argv[2]
 
-        print(f"Comparing legacy vs KEXD round-trip:\n")
+        print("Comparing legacy vs KEXD round-trip:\n")
         print(f"Legacy: {legacy_path}")
         print(f"KEXD:   {kexd_path}\n")
 
-        with open(legacy_path, 'rb') as f:
+        with open(legacy_path, "rb") as f:
             legacy_data = f.read()
-        with open(kexd_path, 'rb') as f:
+        with open(kexd_path, "rb") as f:
             kexd_data = f.read()
 
         try:
@@ -784,6 +804,7 @@ def main():
         except Exception as e:
             print(f"ERROR: {e}")
             import traceback
+
             traceback.print_exc()
             sys.exit(1)
 

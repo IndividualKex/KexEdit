@@ -13,9 +13,8 @@ NodeMeta indices (from Coaster.cs):
 """
 import struct
 import sys
-from pathlib import Path
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple
 from enum import IntEnum
 
 
@@ -95,22 +94,22 @@ class KexdReader:
         return val
 
     def read_uint(self) -> int:
-        val = struct.unpack_from('<I', self.data, self.pos)[0]
+        val = struct.unpack_from("<I", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_int(self) -> int:
-        val = struct.unpack_from('<i', self.data, self.pos)[0]
+        val = struct.unpack_from("<i", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_ulong(self) -> int:
-        val = struct.unpack_from('<Q', self.data, self.pos)[0]
+        val = struct.unpack_from("<Q", self.data, self.pos)[0]
         self.pos += 8
         return val
 
     def read_float(self) -> float:
-        val = struct.unpack_from('<f', self.data, self.pos)[0]
+        val = struct.unpack_from("<f", self.data, self.pos)[0]
         self.pos += 4
         return val
 
@@ -126,7 +125,7 @@ class KexdReader:
             b = self.read_byte()
             if b != 0:
                 chars.append(chr(b))
-        return ''.join(chars)
+        return "".join(chars)
 
     def skip(self, count: int):
         self.pos += count
@@ -153,22 +152,22 @@ def keyframe_key(node_id: int, property_id: int) -> int:
 
 
 def parse_kexd(filepath: str) -> KexdData:
-    with open(filepath, 'rb') as f:
+    with open(filepath, "rb") as f:
         data = f.read()
 
     reader = KexdReader(data)
     result = KexdData()
 
     # Read file header
-    magic = ''.join([chr(reader.read_byte()) for _ in range(4)])
-    if magic != 'KEXD':
+    magic = "".join([chr(reader.read_byte()) for _ in range(4)])
+    if magic != "KEXD":
         raise ValueError(f"Invalid magic: {magic}")
 
-    file_version = reader.read_uint()
+    _file_version = reader.read_uint()
 
     while reader.remaining() > 0:
         chunk_type = reader.read_chunk_type()
-        version = reader.read_uint()
+        _version = reader.read_uint()
         length = reader.read_uint()
         chunk_end = reader.pos + length
 
@@ -191,8 +190,8 @@ def parse_kexd(filepath: str) -> KexdData:
                         # Version 2 has no positions in graph
                         if sub_version == 1:
                             reader.skip(8)  # position
-                        input_count = reader.read_int()
-                        output_count = reader.read_int()
+                        _input_count = reader.read_int()
+                        _output_count = reader.read_int()
                         result.nodes.append(NodeInfo(node_id, NodeType(node_type)))
 
                     # Skip ports
@@ -210,7 +209,9 @@ def parse_kexd(filepath: str) -> KexdData:
                     # Read keyframes
                     kf_count = reader.read_int()
                     for _ in range(kf_count):
-                        reader.skip(4 + 4 + 1 + 1 + 4 + 4 + 4 + 4)  # time, value, in_interp, out_interp, tangents, weights
+                        reader.skip(
+                            4 + 4 + 1 + 1 + 4 + 4 + 4 + 4
+                        )  # time, value, in_interp, out_interp, tangents, weights
 
                     # Read ranges
                     range_count = reader.read_int()
@@ -291,6 +292,7 @@ def analyze(filepath: str):
     except Exception as e:
         print(f"Error parsing file: {e}")
         import traceback
+
         traceback.print_exc()
         return
 
@@ -298,7 +300,13 @@ def analyze(filepath: str):
 
     for node in kexd.nodes:
         # Only check section nodes (Force, Geometric, Curved, CopyPath, Bridge)
-        if node.node_type not in [NodeType.Force, NodeType.Geometric, NodeType.Curved, NodeType.CopyPath, NodeType.Bridge]:
+        if node.node_type not in [
+            NodeType.Force,
+            NodeType.Geometric,
+            NodeType.Curved,
+            NodeType.CopyPath,
+            NodeType.Bridge,
+        ]:
             continue
 
         overrides = get_property_overrides(kexd, node.node_id)
@@ -307,9 +315,13 @@ def analyze(filepath: str):
 
         # Check FixedVelocity
         has_fv_kf = has_keyframes(kexd, node.node_id, PropertyId.DrivenVelocity)
-        print(f"  FixedVelocity: override={overrides.fixed_velocity}, has_keyframes={has_fv_kf}")
+        print(
+            f"  FixedVelocity: override={overrides.fixed_velocity}, has_keyframes={has_fv_kf}"
+        )
         if has_fv_kf and not overrides.fixed_velocity:
-            print(f"    WARNING: Has keyframes but Driven flag not set - velocity override won't work!")
+            print(
+                "    WARNING: Has keyframes but Driven flag not set - velocity override won't work!"
+            )
 
         # Check Heart
         has_heart_kf = has_keyframes(kexd, node.node_id, PropertyId.HeartOffset)
@@ -317,19 +329,25 @@ def analyze(filepath: str):
 
         # Check Friction
         has_friction_kf = has_keyframes(kexd, node.node_id, PropertyId.Friction)
-        print(f"  Friction: override={overrides.friction}, has_keyframes={has_friction_kf}")
+        print(
+            f"  Friction: override={overrides.friction}, has_keyframes={has_friction_kf}"
+        )
 
         # Check Resistance
         has_resistance_kf = has_keyframes(kexd, node.node_id, PropertyId.Resistance)
-        print(f"  Resistance: override={overrides.resistance}, has_keyframes={has_resistance_kf}")
+        print(
+            f"  Resistance: override={overrides.resistance}, has_keyframes={has_resistance_kf}"
+        )
 
         # Check TrackStyle
         has_style_kf = has_keyframes(kexd, node.node_id, PropertyId.TrackStyle)
-        print(f"  TrackStyle: override={overrides.track_style}, has_keyframes={has_style_kf}")
+        print(
+            f"  TrackStyle: override={overrides.track_style}, has_keyframes={has_style_kf}"
+        )
 
         print()
 
-    print(f"=== ALL FLAGS ===\n")
+    print("=== ALL FLAGS ===\n")
     for key, value in sorted(kexd.flags.items()):
         node_id, meta = unpack_input_key(key)
         try:
@@ -343,8 +361,12 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: validate_property_overrides.py <file.kex>")
         print()
-        print("Validates that property override flags are correctly stored in KEXD files.")
-        print("This helps diagnose issues where property overrides are lost on save/load.")
+        print(
+            "Validates that property override flags are correctly stored in KEXD files."
+        )
+        print(
+            "This helps diagnose issues where property overrides are lost on save/load."
+        )
         sys.exit(1)
 
     analyze(sys.argv[1])

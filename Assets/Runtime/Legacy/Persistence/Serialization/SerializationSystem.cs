@@ -148,6 +148,13 @@ namespace KexEdit.Legacy.Serialization {
             KexEdit.Persistence.CoasterSerializer.Write(writer, in coasterData);
             KexEdit.Persistence.UIMetadataCodec.WriteChunk(ref writer, in uiMeta);
 
+            if (SystemAPI.TryGetSingleton<TimelineState>(out var timeline) &&
+                SystemAPI.TryGetSingleton<NodeGraphState>(out var nodeGraph) &&
+                SystemAPI.TryGetSingleton<CameraState>(out var camera)) {
+                var viewState = ViewStateAdapter.Capture(in timeline, in nodeGraph, in camera);
+                KexEdit.Persistence.ViewStateCodec.WriteChunk(ref writer, in viewState);
+            }
+
             var data = writer.ToArray();
             var result = data.ToArray();
 
@@ -205,6 +212,12 @@ namespace KexEdit.Legacy.Serialization {
             KexEdit.Persistence.UIMetadataCodec.TryReadFromFile(ref reader, Allocator.Temp, out var uiMetadata);
             reader.Dispose();
 
+            buffer.Dispose();
+            buffer = new NativeArray<byte>(data, Allocator.Temp);
+            reader = new KexEdit.Persistence.ChunkReader(buffer);
+            bool hasViewState = KexEdit.Persistence.ViewStateCodec.TryReadFromFile(ref reader, out var viewState);
+            reader.Dispose();
+
             EntityManager.SetComponentData(coaster, new CoasterData {
                 Value = coasterAggregate
             });
@@ -216,6 +229,13 @@ namespace KexEdit.Legacy.Serialization {
                 EntityManager,
                 restoreUIState
             );
+
+            if (restoreUIState && hasViewState) {
+                ref var timelineState = ref SystemAPI.GetSingletonRW<TimelineState>().ValueRW;
+                ref var nodeGraphState = ref SystemAPI.GetSingletonRW<NodeGraphState>().ValueRW;
+                ref var cameraState = ref SystemAPI.GetSingletonRW<CameraState>().ValueRW;
+                ViewStateAdapter.Apply(in viewState, ref timelineState, ref nodeGraphState, ref cameraState);
+            }
 
             buffer.Dispose();
             uiMetadata.Dispose();

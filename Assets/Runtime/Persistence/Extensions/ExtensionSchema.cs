@@ -5,5 +5,8 @@ namespace KexEdit.Persistence {
 
         public const string KeyframeMetadataType = "KEYM";
         public const uint KeyframeMetadataVersion = 1;
+
+        public const string ViewStateType = "VWST";
+        public const uint ViewStateVersion = 1;
     }
 }

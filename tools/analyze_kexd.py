@@ -5,9 +5,8 @@ Validates chunk structure and extension data for migration testing.
 """
 import struct
 import sys
-from pathlib import Path
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple
+from typing import List, Optional, Tuple
 from enum import IntEnum
 
 
@@ -39,6 +38,24 @@ class NodeUIMetadata:
 
 
 @dataclass
+class ViewStateData:
+    timeline_offset: float = 0.0
+    timeline_zoom: float = 1.0
+    graph_pan_x: float = 0.0
+    graph_pan_y: float = 0.0
+    graph_zoom: float = 1.0
+    camera_position: Tuple[float, float, float] = (0.0, 0.0, 0.0)
+    camera_target_position: Tuple[float, float, float] = (0.0, 0.0, 0.0)
+    camera_distance: float = 50.0
+    camera_target_distance: float = 50.0
+    camera_pitch: float = 30.0
+    camera_target_pitch: float = 30.0
+    camera_yaw: float = 0.0
+    camera_target_yaw: float = 0.0
+    camera_speed_multiplier: float = 1.0
+
+
+@dataclass
 class GraphData:
     node_ids: List[int] = field(default_factory=list)
     node_types: List[int] = field(default_factory=list)
@@ -65,6 +82,7 @@ class KexdFile:
     data_version: int = 0
     graph: GraphData = field(default_factory=GraphData)
     ui_metadata: List[NodeUIMetadata] = field(default_factory=list)
+    view_state: Optional[ViewStateData] = None
     unknown_chunks: List[str] = field(default_factory=list)
 
 
@@ -79,17 +97,17 @@ class KexdReader:
         return val
 
     def read_uint(self) -> int:
-        val = struct.unpack_from('<I', self.data, self.pos)[0]
+        val = struct.unpack_from("<I", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_int(self) -> int:
-        val = struct.unpack_from('<i', self.data, self.pos)[0]
+        val = struct.unpack_from("<i", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_float(self) -> float:
-        val = struct.unpack_from('<f', self.data, self.pos)[0]
+        val = struct.unpack_from("<f", self.data, self.pos)[0]
         self.pos += 4
         return val
 
@@ -105,7 +123,7 @@ class KexdReader:
             b = self.read_byte()
             if b != 0:
                 chars.append(chr(b))
-        return ''.join(chars)
+        return "".join(chars)
 
     def read_chunk_header(self) -> Optional[ChunkHeader]:
         if self.pos + CHUNK_HEADER_SIZE > len(self.data):
@@ -128,7 +146,7 @@ def read_file_header(reader: KexdReader) -> int:
     x = reader.read_byte()
     d = reader.read_byte()
 
-    if chr(k) != 'K' or chr(e) != 'E' or chr(x) != 'X' or chr(d) != 'D':
+    if chr(k) != "K" or chr(e) != "E" or chr(x) != "X" or chr(d) != "D":
         raise ValueError(f"Invalid magic: {chr(k)}{chr(e)}{chr(x)}{chr(d)}")
 
     return reader.read_uint()
@@ -203,8 +221,31 @@ def read_uimd_chunk(reader: KexdReader, header: ChunkHeader) -> List[NodeUIMetad
     return metadata
 
 
+def read_vwst_chunk(reader: KexdReader, header: ChunkHeader) -> ViewStateData:
+    return ViewStateData(
+        timeline_offset=reader.read_float(),
+        timeline_zoom=reader.read_float(),
+        graph_pan_x=reader.read_float(),
+        graph_pan_y=reader.read_float(),
+        graph_zoom=reader.read_float(),
+        camera_position=(reader.read_float(), reader.read_float(), reader.read_float()),
+        camera_target_position=(
+            reader.read_float(),
+            reader.read_float(),
+            reader.read_float(),
+        ),
+        camera_distance=reader.read_float(),
+        camera_target_distance=reader.read_float(),
+        camera_pitch=reader.read_float(),
+        camera_target_pitch=reader.read_float(),
+        camera_yaw=reader.read_float(),
+        camera_target_yaw=reader.read_float(),
+        camera_speed_multiplier=reader.read_float(),
+    )
+
+
 def parse_kexd(filepath: str) -> KexdFile:
-    with open(filepath, 'rb') as f:
+    with open(filepath, "rb") as f:
         data = f.read()
 
     reader = KexdReader(data)
@@ -239,6 +280,9 @@ def parse_kexd(filepath: str) -> KexdFile:
         elif header.type == "UIMD":
             result.ui_metadata = read_uimd_chunk(reader, header)
 
+        elif header.type == "VWST":
+            result.view_state = read_vwst_chunk(reader, header)
+
         else:
             result.unknown_chunks.append(header.type)
             reader.skip(header.length)
@@ -261,6 +305,7 @@ def analyze(filepath: str):
     except Exception as e:
         print(f"Error parsing file: {e}")
         import traceback
+
         traceback.print_exc()
         return
 
@@ -273,28 +318,38 @@ def analyze(filepath: str):
     if kexd.unknown_chunks:
         print(f"Unknown Chunks: {kexd.unknown_chunks}")
 
-    print(f"\n=== GRAPH ===\n")
+    print("\n=== GRAPH ===\n")
     print(f"Nodes: {len(kexd.graph.node_ids)}")
     print(f"Ports: {len(kexd.graph.port_ids)}")
     print(f"Edges: {len(kexd.graph.edge_ids)}")
-    print(f"Next IDs: node={kexd.graph.next_node_id}, port={kexd.graph.next_port_id}, edge={kexd.graph.next_edge_id}")
+    print(
+        f"Next IDs: node={kexd.graph.next_node_id}, port={kexd.graph.next_port_id}, edge={kexd.graph.next_edge_id}"
+    )
 
-    print(f"\n=== NODES ===\n")
-    for i, (nid, ntype, pos, inp, outp) in enumerate(zip(
-        kexd.graph.node_ids,
-        kexd.graph.node_types,
-        kexd.graph.node_positions,
-        kexd.graph.node_input_counts,
-        kexd.graph.node_output_counts
-    )):
-        pos_str = f"({pos[0]:.1f}, {pos[1]:.1f})" if pos != (0.0, 0.0) else "(from UIMD)"
-        print(f"  [{i}] Node {nid}: {get_node_type_name(ntype)} @ {pos_str} (in={inp}, out={outp})")
+    print("\n=== NODES ===\n")
+    for i, (nid, ntype, pos, inp, outp) in enumerate(
+        zip(
+            kexd.graph.node_ids,
+            kexd.graph.node_types,
+            kexd.graph.node_positions,
+            kexd.graph.node_input_counts,
+            kexd.graph.node_output_counts,
+        )
+    ):
+        pos_str = (
+            f"({pos[0]:.1f}, {pos[1]:.1f})" if pos != (0.0, 0.0) else "(from UIMD)"
+        )
+        print(
+            f"  [{i}] Node {nid}: {get_node_type_name(ntype)} @ {pos_str} (in={inp}, out={outp})"
+        )
 
     if kexd.ui_metadata:
-        print(f"\n=== UI METADATA (UIMD) ===\n")
+        print("\n=== UI METADATA (UIMD) ===\n")
         print(f"Entries: {len(kexd.ui_metadata)}")
         for meta in kexd.ui_metadata:
-            print(f"  Node {meta.node_id}: ({meta.position[0]:.1f}, {meta.position[1]:.1f})")
+            print(
+                f"  Node {meta.node_id}: ({meta.position[0]:.1f}, {meta.position[1]:.1f})"
+            )
 
         # Validate: check if all nodes have UI metadata
         node_ids_set = set(kexd.graph.node_ids)
@@ -307,30 +362,53 @@ def analyze(filepath: str):
         if extra:
             print(f"\n  WARNING: UI metadata for non-existent nodes: {extra}")
 
+    if kexd.view_state:
+        vs = kexd.view_state
+        print("\n=== VIEW STATE (VWST) ===\n")
+        print("Timeline:")
+        print(f"  Offset: {vs.timeline_offset:.2f}")
+        print(f"  Zoom: {vs.timeline_zoom:.2f}")
+        print("NodeGraph:")
+        print(f"  Pan: ({vs.graph_pan_x:.1f}, {vs.graph_pan_y:.1f})")
+        print(f"  Zoom: {vs.graph_zoom:.2f}")
+        print("Camera:")
+        print(
+            f"  Position: ({vs.camera_position[0]:.1f}, {vs.camera_position[1]:.1f}, {vs.camera_position[2]:.1f})"
+        )
+        print(
+            f"  Target: ({vs.camera_target_position[0]:.1f}, {vs.camera_target_position[1]:.1f}, {vs.camera_target_position[2]:.1f})"
+        )
+        print(
+            f"  Distance: {vs.camera_distance:.1f} (target: {vs.camera_target_distance:.1f})"
+        )
+        print(f"  Pitch: {vs.camera_pitch:.1f} (target: {vs.camera_target_pitch:.1f})")
+        print(f"  Yaw: {vs.camera_yaw:.1f} (target: {vs.camera_target_yaw:.1f})")
+        print(f"  Speed: {vs.camera_speed_multiplier:.2f}")
+
 
 def create_test_file(filepath: str, include_extension: bool = True):
     """Create a test KEXD file for validation."""
     from io import BytesIO
 
     def write_uint(f, val):
-        f.write(struct.pack('<I', val))
+        f.write(struct.pack("<I", val))
 
     def write_int(f, val):
-        f.write(struct.pack('<i', val))
+        f.write(struct.pack("<i", val))
 
     def write_float(f, val):
-        f.write(struct.pack('<f', val))
+        f.write(struct.pack("<f", val))
 
     def write_float2(f, x, y):
         write_float(f, x)
         write_float(f, y)
 
     def write_bool(f, val):
-        f.write(struct.pack('B', 1 if val else 0))
+        f.write(struct.pack("B", 1 if val else 0))
 
     def write_chunk_type(f, t):
-        for c in t.ljust(4, '\0')[:4]:
-            f.write(struct.pack('B', ord(c)))
+        for c in t.ljust(4, "\0")[:4]:
+            f.write(struct.pack("B", ord(c)))
 
     def begin_chunk(f, chunk_type, version):
         start = f.tell()
@@ -349,14 +427,14 @@ def create_test_file(filepath: str, include_extension: bool = True):
     buf = BytesIO()
 
     # File header
-    buf.write(b'KEXD')
+    buf.write(b"KEXD")
     write_uint(buf, 1)
 
     # CORE chunk
-    core_start = begin_chunk(buf, 'CORE', 1)
+    core_start = begin_chunk(buf, "CORE", 1)
 
     # GRPH sub-chunk (version 2 - no positions in graph)
-    grph_start = begin_chunk(buf, 'GRPH', 2)
+    grph_start = begin_chunk(buf, "GRPH", 2)
 
     # 2 nodes
     write_int(buf, 2)  # node count
@@ -366,14 +444,14 @@ def create_test_file(filepath: str, include_extension: bool = True):
     # Node 1: Anchor
     write_uint(buf, 1)  # id
     write_uint(buf, 5)  # type (Anchor)
-    write_int(buf, 0)   # input count
-    write_int(buf, 1)   # output count
+    write_int(buf, 0)  # input count
+    write_int(buf, 1)  # output count
 
     # Node 2: Force
     write_uint(buf, 2)  # id
     write_uint(buf, 0)  # type (Force)
-    write_int(buf, 1)   # input count
-    write_int(buf, 1)   # output count
+    write_int(buf, 1)  # input count
+    write_int(buf, 1)  # output count
 
     # Port 1: output from Anchor
     write_uint(buf, 1)  # id
@@ -399,7 +477,7 @@ def create_test_file(filepath: str, include_extension: bool = True):
     end_chunk(buf, grph_start)
 
     # DATA sub-chunk (minimal)
-    data_start = begin_chunk(buf, 'DATA', 1)
+    data_start = begin_chunk(buf, "DATA", 1)
     write_int(buf, 0)  # keyframe count
     write_int(buf, 0)  # range count
     write_int(buf, 0)  # scalars count
@@ -414,7 +492,7 @@ def create_test_file(filepath: str, include_extension: bool = True):
 
     # UIMD extension chunk
     if include_extension:
-        uimd_start = begin_chunk(buf, 'UIMD', 1)
+        uimd_start = begin_chunk(buf, "UIMD", 1)
         write_int(buf, 2)  # count
 
         write_uint(buf, 1)  # node id
@@ -425,7 +503,34 @@ def create_test_file(filepath: str, include_extension: bool = True):
 
         end_chunk(buf, uimd_start)
 
-    with open(filepath, 'wb') as f:
+        # VWST extension chunk
+        vwst_start = begin_chunk(buf, "VWST", 1)
+        # Timeline
+        write_float(buf, 10.0)  # offset
+        write_float(buf, 2.0)  # zoom
+        # NodeGraph
+        write_float(buf, -150.0)  # pan x
+        write_float(buf, 75.0)  # pan y
+        write_float(buf, 1.5)  # zoom
+        # Camera Position
+        write_float(buf, 25.0)
+        write_float(buf, 15.0)
+        write_float(buf, -40.0)
+        # Camera Target Position
+        write_float(buf, 0.0)
+        write_float(buf, 5.0)
+        write_float(buf, 0.0)
+        # Camera parameters
+        write_float(buf, 50.0)  # distance
+        write_float(buf, 50.0)  # target distance
+        write_float(buf, 30.0)  # pitch
+        write_float(buf, 30.0)  # target pitch
+        write_float(buf, 45.0)  # yaw
+        write_float(buf, 45.0)  # target yaw
+        write_float(buf, 1.0)  # speed multiplier
+        end_chunk(buf, vwst_start)
+
+    with open(filepath, "wb") as f:
         f.write(buf.getvalue())
 
     print(f"Created test file: {filepath}")

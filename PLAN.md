@@ -28,7 +28,7 @@ Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant 
 
 **Goal**: Remove keyframe buffers and other duplicate ECS components
 
-**Prerequisite**: Phase 4E complete (Duration/Render now read from Coaster)
+**Prerequisite**: View state now serialized via VWST extension (timeline/graph/camera state)
 
 ### Components to Remove
 - Duration, Steering, Render ECS components

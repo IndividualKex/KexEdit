@@ -5,10 +5,10 @@ Based on C# serialization format from GraphSerializer.cs and struct definitions.
 """
 import struct
 import sys
-from pathlib import Path
 from dataclasses import dataclass
-from typing import List, Dict, Optional
+from typing import List, Dict
 from enum import IntEnum
+
 
 class NodeType(IntEnum):
     ForceSection = 0
@@ -21,6 +21,7 @@ class NodeType(IntEnum):
     Bridge = 7
     Mesh = 8
     Append = 9
+
 
 class PortType(IntEnum):
     Anchor = 0
@@ -46,6 +47,7 @@ class PortType(IntEnum):
     Start = 20
     End = 21
 
+
 class SerializationVersion:
     INITIAL = 1
     PRECISION_MIGRATION = 2
@@ -55,6 +57,7 @@ class SerializationVersion:
     NODE_ID = 6
     BRIDGE_WEIGHT_PORTS = 7
     CURRENT = BRIDGE_WEIGHT_PORTS
+
 
 class NodeFieldFlags(IntEnum):
     HasRender = 1 << 0
@@ -66,17 +69,19 @@ class NodeFieldFlags(IntEnum):
     HasMeshFilePath = 1 << 6
     HasSteering = 1 << 7
 
+
 class NodeFlags(IntEnum):
     Render = 1 << 0
     Selected = 1 << 1
     Steering = 1 << 2
 
+
 @dataclass
 class PointData:
     heart_position: tuple  # float3
-    direction: tuple       # float3
-    lateral: tuple         # float3
-    normal: tuple          # float3
+    direction: tuple  # float3
+    lateral: tuple  # float3
+    normal: tuple  # float3
     roll: float
     velocity: float
     energy: float
@@ -96,16 +101,19 @@ class PointData:
     resistance: float
     facing: int
 
+
 @dataclass
 class Port:
     id: int
     type: int
     is_input: bool
 
+
 @dataclass
 class SerializedPort:
     port: Port
     value: PointData
+
 
 @dataclass
 class Node:
@@ -117,12 +125,14 @@ class Node:
     next_entity: tuple  # (index, version)
     prev_entity: tuple
 
+
 @dataclass
 class SerializedEdge:
     id: int
     source_id: int
     target_id: int
     selected: bool
+
 
 @dataclass
 class SerializedNode:
@@ -137,33 +147,34 @@ class SerializedNode:
     def render(self) -> bool:
         return (self.boolean_flags & NodeFlags.Render) != 0
 
+
 class KexReader:
     def __init__(self, data: bytes):
         self.data = data
         self.pos = 0
 
     def read_int(self) -> int:
-        val = struct.unpack_from('<i', self.data, self.pos)[0]
+        val = struct.unpack_from("<i", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_uint(self) -> int:
-        val = struct.unpack_from('<I', self.data, self.pos)[0]
+        val = struct.unpack_from("<I", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_float(self) -> float:
-        val = struct.unpack_from('<f', self.data, self.pos)[0]
+        val = struct.unpack_from("<f", self.data, self.pos)[0]
         self.pos += 4
         return val
 
     def read_bool(self) -> bool:
-        val = struct.unpack_from('<B', self.data, self.pos)[0]
+        val = struct.unpack_from("<B", self.data, self.pos)[0]
         self.pos += 1
         return val != 0
 
     def read_byte(self) -> int:
-        val = struct.unpack_from('<B', self.data, self.pos)[0]
+        val = struct.unpack_from("<B", self.data, self.pos)[0]
         self.pos += 1
         return val
 
@@ -214,7 +225,7 @@ class KexReader:
             heart_offset=self.read_float(),
             friction=self.read_float(),
             resistance=self.read_float(),
-            facing=self.read_int()
+            facing=self.read_int(),
         )
 
     def read_serialized_port(self) -> SerializedPort:
@@ -232,7 +243,9 @@ class KexReader:
             self.pos += 3  # padding
             next_entity = self.read_entity()
             prev_entity = self.read_entity()
-            return Node(counter, pos, type_val, priority, selected, next_entity, prev_entity)
+            return Node(
+                counter, pos, type_val, priority, selected, next_entity, prev_entity
+            )
         else:
             # Current format with node ID
             id = self.read_uint()
@@ -263,8 +276,9 @@ class KexReader:
             self.pos += count * 48
         return count
 
+
 def parse_kex(filepath: str):
-    with open(filepath, 'rb') as f:
+    with open(filepath, "rb") as f:
         data = f.read()
 
     reader = KexReader(data)
@@ -289,7 +303,11 @@ def parse_kex(filepath: str):
         field_flags = reader.read_uint()
 
         boolean_flags = 0
-        if field_flags & (NodeFieldFlags.HasRender | NodeFieldFlags.HasSelected | NodeFieldFlags.HasSteering):
+        if field_flags & (
+            NodeFieldFlags.HasRender
+            | NodeFieldFlags.HasSelected
+            | NodeFieldFlags.HasSteering
+        ):
             boolean_flags = reader.read_byte()
 
         if field_flags & NodeFieldFlags.HasPropertyOverrides:
@@ -310,12 +328,17 @@ def parse_kex(filepath: str):
             input_ports.append(reader.read_serialized_port())
 
         # Bridge migration for old files
-        if version < SerializationVersion.BRIDGE_WEIGHT_PORTS and node.type == NodeType.Bridge:
+        if (
+            version < SerializationVersion.BRIDGE_WEIGHT_PORTS
+            and node.type == NodeType.Bridge
+        ):
             has_in = any(p.port.type == PortType.InWeight for p in input_ports)
             has_out = any(p.port.type == PortType.OutWeight for p in input_ports)
             # Note: actual migration adds ports, we just log the issue
             if not has_in or not has_out:
-                print(f"  Note: Bridge node {node.id} missing weight ports (migrated on load)")
+                print(
+                    f"  Note: Bridge node {node.id} missing weight ports (migrated on load)"
+                )
 
         # Output ports
         output_port_count = reader.read_int()
@@ -324,7 +347,9 @@ def parse_kex(filepath: str):
             output_ports.append(reader.read_serialized_port())
 
         # Keyframes (9 arrays, or 10 if version >= 4)
-        num_keyframe_arrays = 10 if version >= SerializationVersion.TRACK_STYLE_PROPERTY else 9
+        num_keyframe_arrays = (
+            10 if version >= SerializationVersion.TRACK_STYLE_PROPERTY else 9
+        )
         for _ in range(num_keyframe_arrays):
             reader.read_keyframe_array(version)
 
@@ -334,7 +359,7 @@ def parse_kex(filepath: str):
             field_flags=field_flags,
             boolean_flags=boolean_flags,
             input_ports=input_ports,
-            output_ports=output_ports
+            output_ports=output_ports,
         )
         nodes.append(serialized_node)
 
@@ -348,17 +373,20 @@ def parse_kex(filepath: str):
 
     return version, nodes, edges
 
+
 def get_node_type_name(t: int) -> str:
     try:
         return NodeType(t).name
     except ValueError:
         return f"Unknown({t})"
 
+
 def get_port_type_name(t: int) -> str:
     try:
         return PortType(t).name
     except ValueError:
         return f"Unknown({t})"
+
 
 def analyze(filepath: str):
     print(f"Analyzing: {filepath}\n")
@@ -368,9 +396,21 @@ def analyze(filepath: str):
     port_to_node: Dict[int, tuple] = {}
     for sn in nodes:
         for i, port in enumerate(sn.input_ports):
-            port_to_node[port.port.id] = (sn.node.id, sn.node.type, i, True, port.port.type)
+            port_to_node[port.port.id] = (
+                sn.node.id,
+                sn.node.type,
+                i,
+                True,
+                port.port.type,
+            )
         for i, port in enumerate(sn.output_ports):
-            port_to_node[port.port.id] = (sn.node.id, sn.node.type, i, False, port.port.type)
+            port_to_node[port.port.id] = (
+                sn.node.id,
+                sn.node.type,
+                i,
+                False,
+                port.port.type,
+            )
 
     # Check for duplicate node IDs
     seen_ids = {}
@@ -387,8 +427,12 @@ def analyze(filepath: str):
             first = nodes[first_idx]
             dup = nodes[idx]
             print(f"Node ID {node_id} appears at indices {first_idx} and {idx}:")
-            print(f"  First [{first_idx}]: {get_node_type_name(first.node.type)} at {first.node.position}")
-            print(f"  Dup   [{idx}]: {get_node_type_name(dup.node.type)} at {dup.node.position}")
+            print(
+                f"  First [{first_idx}]: {get_node_type_name(first.node.type)} at {first.node.position}"
+            )
+            print(
+                f"  Dup   [{idx}]: {get_node_type_name(dup.node.type)} at {dup.node.position}"
+            )
             print(f"  First output ports: {[p.port.id for p in first.output_ports]}")
             print(f"  Dup output ports: {[p.port.id for p in dup.output_ports]}")
             print()
@@ -404,12 +448,16 @@ def analyze(filepath: str):
         if sn.input_ports:
             print(f"    Input ports ({len(sn.input_ports)}):")
             for j, p in enumerate(sn.input_ports):
-                print(f"      [{j}] Port {p.port.id}: {get_port_type_name(p.port.type)}")
+                print(
+                    f"      [{j}] Port {p.port.id}: {get_port_type_name(p.port.type)}"
+                )
 
         if sn.output_ports:
             print(f"    Output ports ({len(sn.output_ports)}):")
             for j, p in enumerate(sn.output_ports):
-                print(f"      [{j}] Port {p.port.id}: {get_port_type_name(p.port.type)}")
+                print(
+                    f"      [{j}] Port {p.port.id}: {get_port_type_name(p.port.type)}"
+                )
         print()
 
     # Priority/Render analysis
@@ -417,10 +465,12 @@ def analyze(filepath: str):
     priorities = set(sn.node.priority for sn in nodes)
     render_counts = {
         True: sum(1 for sn in nodes if sn.render),
-        False: sum(1 for sn in nodes if not sn.render)
+        False: sum(1 for sn in nodes if not sn.render),
     }
     print(f"Priority variation: {sorted(priorities)}")
-    print(f"Render: {render_counts[True]} nodes with render=true, {render_counts[False]} nodes with render=false")
+    print(
+        f"Render: {render_counts[True]} nodes with render=true, {render_counts[False]} nodes with render=false"
+    )
     print()
 
     # Analyze Bridge nodes specifically
@@ -430,8 +480,8 @@ def analyze(filepath: str):
         for bridge in bridges:
             print(f"Bridge Node {bridge.node.id}:")
             print(f"  Position: {bridge.node.position}")
-            print(f"  Expected schema: [Anchor, Target, OutWeight, InWeight]")
-            print(f"  Input ports:")
+            print("  Expected schema: [Anchor, Target, OutWeight, InWeight]")
+            print("  Input ports:")
             for j, p in enumerate(bridge.input_ports):
                 conn = "NOT CONNECTED"
                 for edge in edges:
@@ -443,7 +493,9 @@ def analyze(filepath: str):
                         else:
                             conn = f"Port {edge.source_id} (node not found!)"
                         break
-                print(f"    [{j}] {get_port_type_name(p.port.type)} (id={p.port.id}) <- {conn}")
+                print(
+                    f"    [{j}] {get_port_type_name(p.port.type)} (id={p.port.id}) <- {conn}"
+                )
             print()
 
     # Print edges
@@ -468,6 +520,7 @@ def analyze(filepath: str):
 
         print(f"Edge {edge.id}: {src_str} -> {tgt_str}{orphan_marker}")
 
+
 if __name__ == "__main__":
     filepath = sys.argv[1] if len(sys.argv) > 1 else "Assets/Tests/Assets/veloci.kex"
     try:
@@ -475,4 +528,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error at position: {e}")
         import traceback
+
         traceback.print_exc()

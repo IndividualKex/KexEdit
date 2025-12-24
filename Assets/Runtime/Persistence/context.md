@@ -21,8 +21,10 @@ Persistence/
 ├── CoasterSerializer.cs        # Coaster ↔ bytes (CORE chunk with GRPH/DATA sub-chunks)
 └── Extensions/
     ├── ExtensionSchema.cs      # Static schema (chunk types, versions)
-    ├── UIMetadataChunk.cs      # Pure data struct for node positions
-    └── UIMetadataCodec.cs      # Static read/write functions
+    ├── UIMetadataChunk.cs      # Node positions (UIMD chunk)
+    ├── UIMetadataCodec.cs      # UIMD read/write
+    ├── ViewStateChunk.cs       # Timeline/graph/camera state (VWST chunk)
+    └── ViewStateCodec.cs       # VWST read/write
 ```
 
 ## Architecture
@@ -31,7 +33,7 @@ Persistence/
 1. **Chunk primitives**: `ChunkWriter`, `ChunkReader` - domain-agnostic byte manipulation
 2. **GraphCodec**: Serializes `Graph` - uses chunk primitives, no coaster knowledge
 3. **CoasterSerializer**: Serializes `Coaster` - uses GraphCodec and chunk primitives
-4. **Extensions**: Optional chunks (UIMD, etc.) - each has its own Codec class
+4. **Extensions**: Optional chunks (UIMD, VWST) - each has its own Codec class
 
 **Extension model** (like glTF/glb):
 - Extensions are additional top-level chunks after CORE
@@ -41,10 +43,9 @@ Persistence/
 
 ## Entrypoints
 
-- `CoasterSerializer.Write(writer, coaster)` - Serialize coaster to bytes
-- `CoasterSerializer.Read(reader, allocator)` - Deserialize bytes to coaster
-- `UIMetadataCodec.WriteChunk(writer, chunk)` - Write UI metadata extension
-- `UIMetadataCodec.TryReadFromFile(reader, allocator, out chunk)` - Read UI metadata from file
+- `CoasterSerializer.Write/Read` - Core coaster data
+- `UIMetadataCodec.WriteChunk/TryReadFromFile` - Node positions extension
+- `ViewStateCodec.WriteChunk/TryReadFromFile` - View state extension
 
 ## Dependencies
 
