@@ -6,6 +6,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using static KexEdit.Legacy.Constants;
 using CoasterAggregate = KexEdit.Coaster.Coaster;
+using NodeMeta = KexEdit.Coaster.NodeMeta;
 
 namespace KexEdit.Legacy.Serialization {
     [UpdateInGroup(typeof(SimulationSystemGroup))]
@@ -271,7 +272,8 @@ namespace KexEdit.Legacy.Serialization {
                     case PortType.Path:
                         break;
                     case PortType.Duration:
-                        float durationValue = coaster.Durations.TryGetValue(nodeId, out var d) ? d.Value : 0f;
+                        ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                        float durationValue = coaster.Scalars.TryGetValue(durKey, out var d) ? d : 0f;
                         portData.Value.Roll = durationValue;
                         break;
                     case PortType.Position:

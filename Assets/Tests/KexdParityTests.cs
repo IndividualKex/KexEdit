@@ -12,6 +12,7 @@ using LegacyNodeType = KexEdit.Legacy.NodeType;
 using CoreNodeType = KexEdit.Nodes.NodeType;
 using CoreDuration = KexEdit.Coaster.Duration;
 using CoreDurationType = KexEdit.Coaster.DurationType;
+using NodeMeta = KexEdit.Coaster.NodeMeta;
 
 namespace Tests {
     [TestFixture]
@@ -122,7 +123,7 @@ namespace Tests {
             coaster.Graph.AddOutputPort(nodeId, new PortSpec(PortDataType.Path, 0).ToEncoded());
 
             float durationValue = 3.5f;
-            coaster.Durations[nodeId] = new CoreDuration(durationValue, CoreDurationType.Time);
+            coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = durationValue;
 
             var coasterEntity = _entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
             _entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
@@ -144,9 +145,10 @@ namespace Tests {
             var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
             var loadedCoaster = _entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
 
-            Assert.IsTrue(loadedCoaster.Durations.TryGetValue(nodeId, out var loadedDuration),
+            ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(durKey, out var loadedDuration),
                 "Duration should be preserved");
-            Assert.AreEqual(durationValue, loadedDuration.Value, 0.001f, "Duration value mismatch");
+            Assert.AreEqual(durationValue, loadedDuration, 0.001f, "Duration value mismatch");
 
             _entityManager.DestroyEntity(loadedEntity);
         }
@@ -310,8 +312,8 @@ namespace Tests {
             coaster.Graph.AddOutputPort(nodeId, new PortSpec(PortDataType.Anchor, 0).ToEncoded());
             coaster.Graph.AddOutputPort(nodeId, new PortSpec(PortDataType.Path, 0).ToEncoded());
 
-            coaster.Steering.Add(nodeId);
-            coaster.Durations[nodeId] = new CoreDuration(1f, CoreDurationType.Time);
+            coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Steering)] = 1;
+            coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = 1f;
 
             var coasterEntity = _entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
             _entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
@@ -333,7 +335,8 @@ namespace Tests {
             var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
             var loadedCoaster = _entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
 
-            Assert.IsTrue(loadedCoaster.Steering.Contains(nodeId), "Steering flag should be preserved");
+            ulong steeringKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Steering);
+            Assert.IsTrue(loadedCoaster.Flags.TryGetValue(steeringKey, out int s) && s == 1, "Steering flag should be preserved");
 
             var nodeQuery = _entityManager.CreateEntityQuery(typeof(Node), typeof(Steering));
             using var nodes = nodeQuery.ToEntityArray(Allocator.Temp);
@@ -375,8 +378,8 @@ namespace Tests {
             uint edge1 = coaster.Graph.AddEdge(anchorOutputPort, forceInputPort);
             uint edge2 = coaster.Graph.AddEdge(forceOutputPort, geoInputPort);
 
-            coaster.Durations[forceId] = new CoreDuration(2f, CoreDurationType.Time);
-            coaster.Durations[geoId] = new CoreDuration(3f, CoreDurationType.Time);
+            coaster.Scalars[CoasterAggregate.InputKey(forceId, NodeMeta.Duration)] = 2f;
+            coaster.Scalars[CoasterAggregate.InputKey(geoId, NodeMeta.Duration)] = 3f;
 
             var coasterEntity = _entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
             _entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });

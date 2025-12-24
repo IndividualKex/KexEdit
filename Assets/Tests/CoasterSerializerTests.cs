@@ -9,6 +9,7 @@ using Duration = KexEdit.Coaster.Duration;
 using DurationType = KexEdit.Coaster.DurationType;
 using InterpolationType = KexEdit.Core.InterpolationType;
 using Keyframe = KexEdit.Core.Keyframe;
+using NodeMeta = KexEdit.Coaster.NodeMeta;
 
 namespace Tests {
     [TestFixture]
@@ -145,7 +146,8 @@ namespace Tests {
         public void Durations_RoundTrip_PreservesValues() {
             var original = Coaster.Create(Allocator.Temp);
             var nodeId = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
-            original.Durations[nodeId] = new Duration(5.5f, DurationType.Time);
+            ulong durKey = Coaster.InputKey(nodeId, NodeMeta.Duration);
+            original.Scalars[durKey] = 5.5f;
 
             using var writer = new ChunkWriter(Allocator.Temp);
             CoasterSerializer.Write(writer, in original);
@@ -154,9 +156,8 @@ namespace Tests {
             using var reader = new ChunkReader(data);
             var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
 
-            Assert.IsTrue(loaded.Durations.TryGetValue(nodeId, out Duration duration));
-            Assert.AreEqual(5.5f, duration.Value, 0.001f);
-            Assert.AreEqual(DurationType.Time, duration.Type);
+            Assert.IsTrue(loaded.Scalars.TryGetValue(durKey, out float durationValue));
+            Assert.AreEqual(5.5f, durationValue, 0.001f);
 
             loaded.Dispose();
             original.Dispose();
@@ -167,7 +168,9 @@ namespace Tests {
             var original = Coaster.Create(Allocator.Temp);
             var node1 = original.Graph.AddNode((uint)NodeType.Force, float2.zero);
             var node2 = original.Graph.AddNode((uint)NodeType.Force, new float2(100, 0));
-            original.Steering.Add(node1);
+            ulong steeringKey1 = Coaster.InputKey(node1, NodeMeta.Steering);
+            ulong steeringKey2 = Coaster.InputKey(node2, NodeMeta.Steering);
+            original.Flags[steeringKey1] = 1;
 
             using var writer = new ChunkWriter(Allocator.Temp);
             CoasterSerializer.Write(writer, in original);
@@ -176,8 +179,8 @@ namespace Tests {
             using var reader = new ChunkReader(data);
             var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
 
-            Assert.IsTrue(loaded.Steering.Contains(node1));
-            Assert.IsFalse(loaded.Steering.Contains(node2));
+            Assert.IsTrue(loaded.Flags.TryGetValue(steeringKey1, out int s1) && s1 == 1);
+            Assert.IsFalse(loaded.Flags.TryGetValue(steeringKey2, out int s2) && s2 == 1);
 
             loaded.Dispose();
             original.Dispose();
@@ -263,9 +266,16 @@ namespace Tests {
             var n2 = original.Graph.AddNode((uint)NodeType.Geometric, new float2(100, 0));
             var n3 = original.Graph.AddNode((uint)NodeType.Curved, new float2(200, 0));
 
-            original.Priority[n2] = 5;
-            original.Priority[n3] = -2;
-            original.Render.Add(n2);
+            ulong priorityKey1 = Coaster.InputKey(n1, NodeMeta.Priority);
+            ulong priorityKey2 = Coaster.InputKey(n2, NodeMeta.Priority);
+            ulong priorityKey3 = Coaster.InputKey(n3, NodeMeta.Priority);
+            ulong renderKey1 = Coaster.InputKey(n1, NodeMeta.Render);
+            ulong renderKey2 = Coaster.InputKey(n2, NodeMeta.Render);
+            ulong renderKey3 = Coaster.InputKey(n3, NodeMeta.Render);
+
+            original.Scalars[priorityKey2] = 5f;
+            original.Scalars[priorityKey3] = -2f;
+            original.Flags[renderKey2] = 1;
 
             using var writer = new ChunkWriter(Allocator.Temp);
             CoasterSerializer.Write(writer, in original);
@@ -274,14 +284,14 @@ namespace Tests {
             using var reader = new ChunkReader(data);
             var loaded = CoasterSerializer.Read(reader, Allocator.Temp);
 
-            Assert.IsFalse(loaded.Priority.ContainsKey(n1));
-            Assert.IsTrue(loaded.Priority.TryGetValue(n2, out int priority2));
-            Assert.AreEqual(5, priority2);
-            Assert.IsTrue(loaded.Priority.TryGetValue(n3, out int priority3));
-            Assert.AreEqual(-2, priority3);
-            Assert.IsFalse(loaded.Render.Contains(n1));
-            Assert.IsTrue(loaded.Render.Contains(n2));
-            Assert.IsFalse(loaded.Render.Contains(n3));
+            Assert.IsFalse(loaded.Scalars.ContainsKey(priorityKey1));
+            Assert.IsTrue(loaded.Scalars.TryGetValue(priorityKey2, out float priority2));
+            Assert.AreEqual(5f, priority2, 0.001f);
+            Assert.IsTrue(loaded.Scalars.TryGetValue(priorityKey3, out float priority3));
+            Assert.AreEqual(-2f, priority3, 0.001f);
+            Assert.IsFalse(loaded.Flags.TryGetValue(renderKey1, out int r1) && r1 == 1);
+            Assert.IsTrue(loaded.Flags.TryGetValue(renderKey2, out int r2) && r2 == 1);
+            Assert.IsFalse(loaded.Flags.TryGetValue(renderKey3, out int r3) && r3 == 1);
 
             loaded.Dispose();
             original.Dispose();

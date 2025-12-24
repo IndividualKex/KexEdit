@@ -5,6 +5,8 @@ using NUnit.Framework;
 using System.IO;
 using Unity.Collections;
 using Unity.Mathematics;
+using NodeMeta = KexEdit.Coaster.NodeMeta;
+using CoasterAggregate = KexEdit.Coaster.Coaster;
 
 namespace Tests {
     [TestFixture]
@@ -139,10 +141,10 @@ namespace Tests {
                 LegacyImporter.Import(in serializedGraph, Allocator.Temp, out var coaster);
 
                 try {
-                    Assert.IsTrue(coaster.Durations.ContainsKey(1u));
-                    var duration = coaster.Durations[1u];
-                    Assert.AreEqual(5f, duration.Value, 0.001f);
-                    Assert.AreEqual(KexEdit.Coaster.DurationType.Time, duration.Type);
+                    ulong durKey = CoasterAggregate.InputKey(1u, NodeMeta.Duration);
+                    Assert.IsTrue(coaster.Scalars.ContainsKey(durKey));
+                    var durationValue = coaster.Scalars[durKey];
+                    Assert.AreEqual(5f, durationValue, 0.001f);
                 }
                 finally {
                     coaster.Dispose();
@@ -199,7 +201,8 @@ namespace Tests {
                 LegacyImporter.Import(in serializedGraph, Allocator.Temp, out var coaster);
 
                 try {
-                    Assert.IsTrue(coaster.Steering.Contains(1u));
+                    ulong steeringKey = CoasterAggregate.InputKey(1u, NodeMeta.Steering);
+                    Assert.IsTrue(coaster.Flags.TryGetValue(steeringKey, out int steeringVal) && steeringVal == 1);
                 }
                 finally {
                     coaster.Dispose();

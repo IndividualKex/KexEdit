@@ -6,6 +6,8 @@ using KexEdit.NodeGraph;
 using KexGraph;
 using NUnit.Framework;
 using Unity.Collections;
+using NodeMeta = KexEdit.Coaster.NodeMeta;
+using CoasterAggregate = KexEdit.Coaster.Coaster;
 
 namespace Tests {
     [TestFixture]
@@ -129,7 +131,8 @@ namespace Tests {
                 uint nodeId = coaster.Graph.NodeIds[i];
                 uint nodeType = coaster.Graph.NodeTypes[i];
                 string typeName = ((KexEdit.Nodes.NodeType)nodeType).ToString();
-                string durInfo = coaster.Durations.TryGetValue(nodeId, out var dur) ? $"dur={dur.Value}" : "no-dur";
+                ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                string durInfo = coaster.Scalars.TryGetValue(durKey, out var dur) ? $"dur={dur}" : "no-dur";
                 string vectorInfo = coaster.Vectors.TryGetValue(nodeId, out var vec) ? $"pos=({vec.x:F2},{vec.y:F2},{vec.z:F2})" : "no-vec";
 
                 string velInfo = "no-vel";

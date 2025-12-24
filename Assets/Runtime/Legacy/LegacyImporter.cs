@@ -10,8 +10,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using CoreKeyframe = KexEdit.Core.Keyframe;
 using CoreInterpolationType = KexEdit.Core.InterpolationType;
-using CoreDuration = KexEdit.Coaster.Duration;
-using CoreDurationType = KexEdit.Coaster.DurationType;
 using CoasterAggregate = KexEdit.Coaster.Coaster;
 
 namespace KexEdit.Legacy {
@@ -278,22 +276,24 @@ namespace KexEdit.Legacy {
         private static void ImportDuration(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
             if ((node.FieldFlags & NodeFieldFlags.HasDuration) != 0) {
                 var legacyDuration = node.Duration;
-                var duration = new CoreDuration(legacyDuration.Value, (CoreDurationType)legacyDuration.Type);
-                coaster.Durations[nodeId] = duration;
+                coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = legacyDuration.Value;
+                if (legacyDuration.Type == Legacy.DurationType.Distance) {
+                    coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType)] = 1;
+                }
             }
         }
 
         [BurstCompile]
         private static void ImportSteering(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
             if (node.Steering) {
-                coaster.Steering.Add(nodeId);
+                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Steering)] = 1;
             }
         }
 
         [BurstCompile]
         private static void ImportDriven(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
             if ((node.FieldFlags & NodeFieldFlags.HasPropertyOverrides) != 0 && node.PropertyOverrides.FixedVelocity) {
-                coaster.Driven.Add(nodeId);
+                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Driven)] = 1;
             }
         }
 
@@ -301,7 +301,7 @@ namespace KexEdit.Legacy {
         private static void ImportFacing(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
             int facing = node.Anchor.Facing;
             if (facing != 1) {
-                coaster.Facing[nodeId] = facing;
+                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Facing)] = facing;
             }
         }
 
@@ -309,7 +309,7 @@ namespace KexEdit.Legacy {
         private static void ImportPriority(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
             int priority = node.Node.Priority;
             if (priority != 0) {
-                coaster.Priority[nodeId] = priority;
+                coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Priority)] = priority;
             }
         }
 
@@ -317,7 +317,7 @@ namespace KexEdit.Legacy {
         private static void ImportRender(in SerializedNode node, uint nodeId, ref CoasterAggregate coaster) {
             bool render = node.Render;
             if (!render) {
-                coaster.Render.Add(nodeId);
+                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Render)] = 1;
             }
         }
 

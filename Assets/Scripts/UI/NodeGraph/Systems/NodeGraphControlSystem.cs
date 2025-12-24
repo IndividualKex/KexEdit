@@ -19,6 +19,7 @@ using CoreDuration = KexEdit.Coaster.Duration;
 using CoreDurationType = KexEdit.Coaster.DurationType;
 using CorePoint = KexEdit.Core.Point;
 using CoreNodeType = KexEdit.Nodes.NodeType;
+using NodeMeta = KexEdit.Coaster.NodeMeta;
 using PortSpec = KexEdit.Nodes.PortSpec;
 using PortDataType = KexEdit.Nodes.PortDataType;
 using AnchorNodeBuilder = KexEdit.Nodes.Anchor.AnchorNode;
@@ -127,10 +128,10 @@ namespace KexEdit.UI.NodeGraph {
             }
 
             if (type == NodeType.ForceSection || type == NodeType.GeometricSection) {
-                coaster.Durations[nodeId] = new CoreDuration(1f, CoreDurationType.Time);
+                coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = 1f;
             }
             if (type == NodeType.GeometricSection) {
-                coaster.Steering.Add(nodeId);
+                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Steering)] = 1;
             }
 
             InitializePortScalars(ref coaster, entity, type);
@@ -827,9 +828,8 @@ namespace KexEdit.UI.NodeGraph {
 
             uint nodeId = SystemAPI.GetComponent<Node>(evt.Node).Id;
             ref var coaster = ref GetCoasterRef();
-            if (coaster.Durations.TryGetValue(nodeId, out var existing)) {
-                coaster.Durations[nodeId] = new CoreDuration(existing.Value, (CoreDurationType)evt.DurationType);
-            }
+            ulong durTypeKey = CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType);
+            coaster.Flags[durTypeKey] = evt.DurationType == KexEdit.Legacy.DurationType.Distance ? 1 : 0;
 
             SystemAPI.SetComponentEnabled<Dirty>(evt.Node, true);
         }
@@ -845,11 +845,8 @@ namespace KexEdit.UI.NodeGraph {
 
             uint nodeId = SystemAPI.GetComponent<Node>(evt.Node).Id;
             ref var coaster = ref GetCoasterRef();
-            if (evt.Steering) {
-                coaster.Steering.Add(nodeId);
-            } else {
-                coaster.Steering.Remove(nodeId);
-            }
+            ulong steeringKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Steering);
+            coaster.Flags[steeringKey] = evt.Steering ? 1 : 0;
 
             SystemAPI.SetComponentEnabled<Dirty>(evt.Node, true);
         }
@@ -994,9 +991,10 @@ namespace KexEdit.UI.NodeGraph {
                 }
 
                 coaster.Graph.RemoveNodeCascade(nodeId);
-                coaster.Durations.Remove(nodeId);
-                coaster.Steering.Remove(nodeId);
-                coaster.Driven.Remove(nodeId);
+                coaster.Scalars.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.Duration));
+                coaster.Flags.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType));
+                coaster.Flags.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.Steering));
+                coaster.Flags.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.Driven));
 
                 ecb.DestroyEntity(entity);
             }
@@ -1069,8 +1067,9 @@ namespace KexEdit.UI.NodeGraph {
                 case PortType.Path:
                     break;
                 case PortType.Duration:
-                    if (coaster.Durations.TryGetValue(nodeId, out var duration)) {
-                        port.SetValue(duration.Value);
+                    ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                    if (coaster.Scalars.TryGetValue(durKey, out var durationVal)) {
+                        port.SetValue(durationVal);
                     }
                     break;
                 case PortType.Position:
@@ -1185,9 +1184,7 @@ namespace KexEdit.UI.NodeGraph {
                     break;
                 case PortType.Duration:
                     port.GetValue(out float durationValue);
-                    if (coaster.Durations.TryGetValue(nodeId, out var existingDuration)) {
-                        coaster.Durations[nodeId] = new CoreDuration(durationValue, existingDuration.Type);
-                    }
+                    coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = durationValue;
                     break;
                 case PortType.Position:
                     port.GetValue(out float3 positionValue);

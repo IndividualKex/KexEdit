@@ -3,14 +3,12 @@ using KexEdit.Nodes.Storage;
 using Unity.Collections;
 using Unity.Mathematics;
 using CoasterData = KexEdit.Coaster.Coaster;
-using Duration = KexEdit.Coaster.Duration;
-using DurationType = KexEdit.Coaster.DurationType;
 
 namespace KexEdit.Persistence {
     public static class CoasterSerializer {
         private const uint FileVersion = 1;
         private const uint CoreVersion = 1;
-        private const uint DataVersion = 1;
+        private const uint DataVersion = 2;
 
         public static void Write(ChunkWriter writer, in CoasterData coaster) {
             WriteFileHeader(ref writer);
@@ -66,12 +64,7 @@ namespace KexEdit.Persistence {
             WriteKeyframes(ref writer, coaster.Keyframes);
             writer.WriteHashMap(in coaster.Scalars);
             writer.WriteHashMap(in coaster.Vectors);
-            WriteDurations(ref writer, coaster.Durations);
-            writer.WriteHashMap(in coaster.Facing);
-            writer.WriteHashSet(in coaster.Steering);
-            writer.WriteHashSet(in coaster.Driven);
-            writer.WriteHashMap(in coaster.Priority);
-            writer.WriteHashSet(in coaster.Render);
+            writer.WriteHashMap(in coaster.Flags);
             writer.EndChunk();
 
             writer.EndChunk();
@@ -89,12 +82,7 @@ namespace KexEdit.Persistence {
                     ReadKeyframes(ref reader, ref coaster.Keyframes);
                     reader.ReadHashMap(ref coaster.Scalars);
                     reader.ReadHashMap(ref coaster.Vectors);
-                    ReadDurations(ref reader, ref coaster.Durations);
-                    reader.ReadHashMap(ref coaster.Facing);
-                    reader.ReadHashSet(ref coaster.Steering);
-                    reader.ReadHashSet(ref coaster.Driven);
-                    reader.ReadHashMap(ref coaster.Priority);
-                    reader.ReadHashSet(ref coaster.Render);
+                    reader.ReadHashMap(ref coaster.Flags);
                 } else {
                     reader.SkipChunk(subHeader);
                 }
@@ -144,25 +132,6 @@ namespace KexEdit.Persistence {
                 int start = reader.ReadInt();
                 int length = reader.ReadInt();
                 store.Ranges[key] = new int2(start, length);
-            }
-        }
-
-        private static void WriteDurations(ref ChunkWriter writer, in NativeHashMap<uint, Duration> durations) {
-            writer.WriteInt(durations.Count);
-            foreach (var kv in durations) {
-                writer.WriteUInt(kv.Key);
-                writer.WriteFloat(kv.Value.Value);
-                writer.WriteByte((byte)kv.Value.Type);
-            }
-        }
-
-        private static void ReadDurations(ref ChunkReader reader, ref NativeHashMap<uint, Duration> durations) {
-            int count = reader.ReadInt();
-            for (int i = 0; i < count; i++) {
-                uint key = reader.ReadUInt();
-                float value = reader.ReadFloat();
-                var type = (DurationType)reader.ReadByte();
-                durations[key] = new Duration(value, type);
             }
         }
     }

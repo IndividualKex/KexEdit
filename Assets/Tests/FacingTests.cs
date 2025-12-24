@@ -5,6 +5,8 @@ using KexEdit.Legacy.Serialization;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Entities;
+using NodeMeta = KexEdit.Coaster.NodeMeta;
+using CoasterAggregate = KexEdit.Coaster.Coaster;
 
 namespace Tests {
     [TestFixture]
@@ -31,7 +33,8 @@ namespace Tests {
                             uint nodeId = serializedNode.Node.Id;
 
                             int expectedFacing = serializedNode.Anchor.Facing;
-                            int actualFacing = coaster.Facing.TryGetValue(nodeId, out int f) ? f : 1;
+                            ulong facingKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Facing);
+                            int actualFacing = coaster.Flags.TryGetValue(facingKey, out int f) ? f : 1;
 
                             Assert.AreEqual(expectedFacing, actualFacing,
                                 $"Node {nodeId} facing mismatch. Expected {expectedFacing}, got {actualFacing}");
@@ -87,7 +90,8 @@ namespace Tests {
                                     em.SetComponentData(nodeEntity, new Node { Id = nodeId });
                                     em.SetComponentData(nodeEntity, new CoasterReference { Value = coasterEntity });
 
-                                    int expectedFacing = coaster.Facing.TryGetValue(nodeId, out int f) ? f : 1;
+                                    ulong facingKeyLocal = CoasterAggregate.InputKey(nodeId, NodeMeta.Facing);
+                                    int expectedFacing = coaster.Flags.TryGetValue(facingKeyLocal, out int f) ? f : 1;
 
                                     var pointBuffer = em.GetBuffer<CorePointBuffer>(nodeEntity);
                                     var path = result.Paths[nodeId];
@@ -163,17 +167,29 @@ namespace Tests {
                                 var deserialized = KexEdit.Persistence.CoasterSerializer.Read(reader, Allocator.TempJob);
 
                                 try {
-                                    Assert.AreEqual(coaster.Facing.Count, deserialized.Facing.Count,
+                                    int coasterFacingCount = 0;
+                                    int deserializedFacingCount = 0;
+                                    foreach (var kv in coaster.Flags) {
+                                        CoasterAggregate.UnpackInputKey(kv.Key, out _, out int idx);
+                                        if (idx == NodeMeta.Facing) coasterFacingCount++;
+                                    }
+                                    foreach (var kv in deserialized.Flags) {
+                                        CoasterAggregate.UnpackInputKey(kv.Key, out _, out int idx);
+                                        if (idx == NodeMeta.Facing) deserializedFacingCount++;
+                                    }
+                                    Assert.AreEqual(coasterFacingCount, deserializedFacingCount,
                                         "Facing count mismatch after round-trip");
 
-                                    foreach (var kv in coaster.Facing) {
-                                        Assert.IsTrue(deserialized.Facing.TryGetValue(kv.Key, out int deserializedFacing),
-                                            $"Node {kv.Key} facing not found after round-trip");
+                                    foreach (var kv in coaster.Flags) {
+                                        CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
+                                        if (idx != NodeMeta.Facing) continue;
+                                        Assert.IsTrue(deserialized.Flags.TryGetValue(kv.Key, out int deserializedFacing),
+                                            $"Node {nodeId} facing not found after round-trip");
                                         Assert.AreEqual(kv.Value, deserializedFacing,
-                                            $"Node {kv.Key} facing mismatch. Expected {kv.Value}, got {deserializedFacing}");
+                                            $"Node {nodeId} facing mismatch. Expected {kv.Value}, got {deserializedFacing}");
                                     }
 
-                                    UnityEngine.Debug.Log($"Round-trip serialization preserved facing for {coaster.Facing.Count} nodes");
+                                    UnityEngine.Debug.Log($"Round-trip serialization preserved facing for {coasterFacingCount} nodes");
                                 }
                                 finally {
                                     deserialized.Dispose();

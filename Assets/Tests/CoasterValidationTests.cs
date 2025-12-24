@@ -7,6 +7,8 @@ using KexEdit.Nodes;
 using NUnit.Framework;
 using Unity.Collections;
 using UnityEngine;
+using NodeMeta = KexEdit.Coaster.NodeMeta;
+using CoasterAggregate = KexEdit.Coaster.Coaster;
 
 namespace Tests {
     [TestFixture]
@@ -157,17 +159,19 @@ namespace Tests {
             sb.AppendLine("  },");
 
 
-            // Durations
+            // Durations (extracted from Scalars/Flags)
             sb.AppendLine("  \"durations\": {");
-            var durationEnumerator = coaster.Durations.GetEnumerator();
             bool firstDuration = true;
-            while (durationEnumerator.MoveNext()) {
+            foreach (var kv in coaster.Scalars) {
+                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
+                if (idx != NodeMeta.Duration) continue;
                 if (!firstDuration) sb.AppendLine(",");
                 firstDuration = false;
-                var dur = durationEnumerator.Current.Value;
-                sb.Append($"    \"{durationEnumerator.Current.Key}\": {{\"value\": {dur.Value}, \"type\": {(int)dur.Type}}}");
+                float durValue = kv.Value;
+                ulong durTypeKey = CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType);
+                int durType = coaster.Flags.TryGetValue(durTypeKey, out int t) ? t : 0;
+                sb.Append($"    \"{nodeId}\": {{\"value\": {durValue}, \"type\": {durType}}}");
             }
-            durationEnumerator.Dispose();
             sb.AppendLine();
             sb.AppendLine("  },");
 
@@ -187,29 +191,29 @@ namespace Tests {
             sb.AppendLine();
             sb.AppendLine("  },");
 
-            // Steering
+            // Steering (extracted from Flags)
             sb.AppendLine("  \"steering\": [");
-            var steeringEnumerator = coaster.Steering.GetEnumerator();
             bool firstSteering = true;
-            while (steeringEnumerator.MoveNext()) {
+            foreach (var kv in coaster.Flags) {
+                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
+                if (idx != NodeMeta.Steering || kv.Value != 1) continue;
                 if (!firstSteering) sb.Append(", ");
                 firstSteering = false;
-                sb.Append(steeringEnumerator.Current);
+                sb.Append(nodeId);
             }
-            steeringEnumerator.Dispose();
             sb.AppendLine();
             sb.AppendLine("  ],");
 
-            // Driven
+            // Driven (extracted from Flags)
             sb.AppendLine("  \"driven\": [");
-            var drivenEnumerator = coaster.Driven.GetEnumerator();
             bool firstDriven = true;
-            while (drivenEnumerator.MoveNext()) {
+            foreach (var kv in coaster.Flags) {
+                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
+                if (idx != NodeMeta.Driven || kv.Value != 1) continue;
                 if (!firstDriven) sb.Append(", ");
                 firstDriven = false;
-                sb.Append(drivenEnumerator.Current);
+                sb.Append(nodeId);
             }
-            drivenEnumerator.Dispose();
             sb.AppendLine();
             sb.AppendLine("  ]");
 
@@ -244,14 +248,6 @@ namespace Tests {
                 Assert.AreEqual(kv.Value.z, actualValue.z, 0.0001f, $"Vector.z mismatch for key {kv.Key}");
             }
 
-            // Durations
-            Assert.AreEqual(expected.Durations.Count, actual.Durations.Count, "Duration count mismatch");
-            foreach (var kv in expected.Durations) {
-                Assert.IsTrue(actual.Durations.TryGetValue(kv.Key, out var actualValue), $"Duration key {kv.Key} not found");
-                Assert.AreEqual(kv.Value.Value, actualValue.Value, 0.0001f, $"Duration value mismatch for key {kv.Key}");
-                Assert.AreEqual(kv.Value.Type, actualValue.Type, $"Duration type mismatch for key {kv.Key}");
-            }
-
             // Keyframes
             Assert.AreEqual(expected.Keyframes.Ranges.Count, actual.Keyframes.Ranges.Count, "Keyframe count mismatch");
             foreach (var kv in expected.Keyframes.Ranges) {
@@ -259,16 +255,11 @@ namespace Tests {
                 Assert.AreEqual(kv.Value.y, actualRange.y, $"Keyframe count mismatch for key {kv.Key}");
             }
 
-            // Steering
-            Assert.AreEqual(expected.Steering.Count, actual.Steering.Count, "Steering count mismatch");
-            foreach (var nodeId in expected.Steering) {
-                Assert.IsTrue(actual.Steering.Contains(nodeId), $"Steering node {nodeId} not found");
-            }
-
-            // Driven
-            Assert.AreEqual(expected.Driven.Count, actual.Driven.Count, "Driven count mismatch");
-            foreach (var nodeId in expected.Driven) {
-                Assert.IsTrue(actual.Driven.Contains(nodeId), $"Driven node {nodeId} not found");
+            // Flags (Steering, Driven, DurationType, etc.)
+            Assert.AreEqual(expected.Flags.Count, actual.Flags.Count, "Flags count mismatch");
+            foreach (var kv in expected.Flags) {
+                Assert.IsTrue(actual.Flags.TryGetValue(kv.Key, out var actualValue), $"Flag key {kv.Key} not found");
+                Assert.AreEqual(kv.Value, actualValue, $"Flag value mismatch for key {kv.Key}");
             }
         }
     }

@@ -19,18 +19,23 @@ namespace KexEdit.Coaster {
         }
     }
 
+    public static class NodeMeta {
+        public const int Duration = 248;
+        public const int Priority = 249;
+        public const int DurationType = 250;
+        public const int Facing = 251;
+        public const int Steering = 252;
+        public const int Driven = 253;
+        public const int Render = 254;
+    }
+
     [BurstCompile]
     public struct Coaster : IDisposable {
         public Graph Graph;
         public KeyframeStore Keyframes;
+        public NativeHashMap<ulong, int> Flags;
         public NativeHashMap<ulong, float> Scalars;
         public NativeHashMap<ulong, float3> Vectors;
-        public NativeHashMap<uint, Duration> Durations;
-        public NativeHashMap<uint, int> Facing;
-        public NativeHashSet<uint> Steering;
-        public NativeHashSet<uint> Driven;
-        public NativeHashMap<uint, int> Priority;
-        public NativeHashSet<uint> Render;
 
         [BurstCompile]
         public static ulong InputKey(uint nodeId, int inputIndex) =>
@@ -46,28 +51,18 @@ namespace KexEdit.Coaster {
             return new Coaster {
                 Graph = Graph.Create(allocator),
                 Keyframes = KeyframeStore.Create(allocator),
+                Flags = new NativeHashMap<ulong, int>(16, allocator),
                 Scalars = new NativeHashMap<ulong, float>(16, allocator),
                 Vectors = new NativeHashMap<ulong, float3>(16, allocator),
-                Durations = new NativeHashMap<uint, Duration>(16, allocator),
-                Facing = new NativeHashMap<uint, int>(16, allocator),
-                Steering = new NativeHashSet<uint>(8, allocator),
-                Driven = new NativeHashSet<uint>(8, allocator),
-                Priority = new NativeHashMap<uint, int>(16, allocator),
-                Render = new NativeHashSet<uint>(8, allocator),
             };
         }
 
         public void Dispose() {
             if (Graph.NodeIds.IsCreated) Graph.Dispose();
             if (Keyframes.Keyframes.IsCreated) Keyframes.Dispose();
+            if (Flags.IsCreated) Flags.Dispose();
             if (Scalars.IsCreated) Scalars.Dispose();
             if (Vectors.IsCreated) Vectors.Dispose();
-            if (Durations.IsCreated) Durations.Dispose();
-            if (Facing.IsCreated) Facing.Dispose();
-            if (Steering.IsCreated) Steering.Dispose();
-            if (Driven.IsCreated) Driven.Dispose();
-            if (Priority.IsCreated) Priority.Dispose();
-            if (Render.IsCreated) Render.Dispose();
         }
     }
 }

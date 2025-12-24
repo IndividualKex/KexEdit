@@ -203,15 +203,12 @@ namespace KexEdit.Coaster {
                 return;
             }
 
-            float duration = 1f;
-            var durationType = DurationType.Time;
-            if (coaster.Durations.TryGetValue(nodeId, out var dur)) {
-                duration = dur.Value;
-                durationType = dur.Type;
-            }
+            float duration = GetScalar(in coaster.Scalars, nodeId, NodeMeta.Duration, 1f);
+            var durationType = GetFlag(in coaster.Flags, nodeId, NodeMeta.DurationType) == 1
+                ? DurationType.Distance : DurationType.Time;
 
             var config = new IterationConfig(duration, (KexEdit.Nodes.DurationType)durationType);
-            bool driven = coaster.Driven.Contains(nodeId);
+            bool driven = GetFlag(in coaster.Flags, nodeId, NodeMeta.Driven) == 1;
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.RollSpeed, out var rollSpeed);
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.NormalForce, out var normalForce);
@@ -243,16 +240,13 @@ namespace KexEdit.Coaster {
                 return;
             }
 
-            float duration = 1f;
-            var durationType = DurationType.Time;
-            if (coaster.Durations.TryGetValue(nodeId, out var dur)) {
-                duration = dur.Value;
-                durationType = dur.Type;
-            }
+            float duration = GetScalar(in coaster.Scalars, nodeId, NodeMeta.Duration, 1f);
+            var durationType = GetFlag(in coaster.Flags, nodeId, NodeMeta.DurationType) == 1
+                ? DurationType.Distance : DurationType.Time;
 
             var config = new IterationConfig(duration, (KexEdit.Nodes.DurationType)durationType);
-            bool driven = coaster.Driven.Contains(nodeId);
-            bool steering = coaster.Steering.Contains(nodeId);
+            bool driven = GetFlag(in coaster.Flags, nodeId, NodeMeta.Driven) == 1;
+            bool steering = GetFlag(in coaster.Flags, nodeId, NodeMeta.Steering) == 1;
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.RollSpeed, out var rollSpeed);
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.PitchSpeed, out var pitchSpeed);
@@ -290,7 +284,7 @@ namespace KexEdit.Coaster {
             float leadIn = GetScalar(in coaster.Scalars, nodeId, CurvedPorts.LeadIn, 0f);
             float leadOut = GetScalar(in coaster.Scalars, nodeId, CurvedPorts.LeadOut, 0f);
 
-            bool driven = coaster.Driven.Contains(nodeId);
+            bool driven = GetFlag(in coaster.Flags, nodeId, NodeMeta.Driven) == 1;
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.RollSpeed, out var rollSpeed);
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.DrivenVelocity, out var drivenVelocity);
@@ -325,7 +319,7 @@ namespace KexEdit.Coaster {
 
             float inWeight = GetScalar(in coaster.Scalars, nodeId, BridgePorts.InWeight, 0.5f);
             float outWeight = GetScalar(in coaster.Scalars, nodeId, BridgePorts.OutWeight, 0.5f);
-            bool driven = coaster.Driven.Contains(nodeId);
+            bool driven = GetFlag(in coaster.Flags, nodeId, NodeMeta.Driven) == 1;
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.DrivenVelocity, out var drivenVelocity);
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.HeartOffset, out var heartOffset);
@@ -359,7 +353,7 @@ namespace KexEdit.Coaster {
 
             float start = GetScalar(in coaster.Scalars, nodeId, CopyPathPorts.Start, -1f);
             float end = GetScalar(in coaster.Scalars, nodeId, CopyPathPorts.End, -1f);
-            bool driven = coaster.Driven.Contains(nodeId);
+            bool driven = GetFlag(in coaster.Flags, nodeId, NodeMeta.Driven) == 1;
 
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.DrivenVelocity, out var drivenVelocity);
             GetKeyframes(in coaster.Keyframes, nodeId, PropertyId.HeartOffset, out var heartOffset);
@@ -443,6 +437,15 @@ namespace KexEdit.Coaster {
         ) {
             ulong key = Coaster.InputKey(nodeId, inputIndex);
             return scalars.TryGetValue(key, out float value) ? value : defaultValue;
+        }
+
+        [BurstCompile]
+        private static int GetFlag(
+            in NativeHashMap<ulong, int> flags,
+            uint nodeId, int propertyIndex
+        ) {
+            ulong key = Coaster.InputKey(nodeId, propertyIndex);
+            return flags.TryGetValue(key, out int value) ? value : 0;
         }
 
         [BurstCompile]

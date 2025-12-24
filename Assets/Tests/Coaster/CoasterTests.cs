@@ -8,6 +8,7 @@ using Unity.Mathematics;
 using Coaster = KexEdit.Coaster.Coaster;
 using Duration = KexEdit.Coaster.Duration;
 using DurationType = KexEdit.Coaster.DurationType;
+using NodeMeta = KexEdit.Coaster.NodeMeta;
 
 public class CoasterTests {
     [Test]
@@ -18,8 +19,7 @@ public class CoasterTests {
             Assert.AreEqual(0, coaster.Keyframes.Keyframes.Length);
             Assert.AreEqual(0, coaster.Scalars.Count);
             Assert.AreEqual(0, coaster.Vectors.Count);
-            Assert.AreEqual(0, coaster.Durations.Count);
-            Assert.AreEqual(0, coaster.Steering.Count);
+            Assert.AreEqual(0, coaster.Flags.Count);
         } finally {
             coaster.Dispose();
         }
@@ -69,8 +69,11 @@ public class CoasterTests {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint nodeId = coaster.Graph.CreateNode(NodeType.Force, float2.zero, out _, out _, Allocator.Temp);
-            var duration = new Duration(5f, DurationType.Time);
-            coaster.Durations[nodeId] = duration;
+            float durationValue = 5f;
+            ulong durKey = Coaster.InputKey(nodeId, NodeMeta.Duration);
+            ulong durTypeKey = Coaster.InputKey(nodeId, NodeMeta.DurationType);
+            coaster.Scalars[durKey] = durationValue;
+            coaster.Flags[durTypeKey] = 0;
 
             var keyframes = new NativeArray<Keyframe>(2, Allocator.Temp);
             keyframes[0] = new Keyframe(0f, 1f);
@@ -78,8 +81,8 @@ public class CoasterTests {
             coaster.Keyframes.Set(nodeId, PropertyId.NormalForce, keyframes);
             keyframes.Dispose();
 
-            Assert.AreEqual(duration.Value, coaster.Durations[nodeId].Value);
-            Assert.AreEqual(duration.Type, coaster.Durations[nodeId].Type);
+            Assert.AreEqual(durationValue, coaster.Scalars[durKey]);
+            Assert.AreEqual(0, coaster.Flags[durTypeKey]);
             Assert.IsTrue(coaster.Keyframes.TryGet(nodeId, PropertyId.NormalForce, out var retrieved));
             Assert.AreEqual(2, retrieved.Length);
         } finally {
@@ -88,18 +91,19 @@ public class CoasterTests {
     }
 
     [Test]
-    public void GeometricNode_SteeringSupportedViaHashSet() {
+    public void GeometricNode_SteeringSupportedViaFlags() {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
             uint nodeId = coaster.Graph.CreateNode(NodeType.Geometric, float2.zero, out _, out _, Allocator.Temp);
+            ulong steeringKey = Coaster.InputKey(nodeId, NodeMeta.Steering);
 
-            Assert.IsFalse(coaster.Steering.Contains(nodeId));
+            Assert.IsFalse(coaster.Flags.ContainsKey(steeringKey));
 
-            coaster.Steering.Add(nodeId);
-            Assert.IsTrue(coaster.Steering.Contains(nodeId));
+            coaster.Flags[steeringKey] = 1;
+            Assert.IsTrue(coaster.Flags.TryGetValue(steeringKey, out int val) && val == 1);
 
-            coaster.Steering.Remove(nodeId);
-            Assert.IsFalse(coaster.Steering.Contains(nodeId));
+            coaster.Flags.Remove(steeringKey);
+            Assert.IsFalse(coaster.Flags.ContainsKey(steeringKey));
         } finally {
             coaster.Dispose();
         }

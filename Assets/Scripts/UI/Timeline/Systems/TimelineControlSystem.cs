@@ -15,6 +15,7 @@ using KexEdit.Legacy;
 using LegacyCoaster = KexEdit.Legacy.Coaster;
 using CoasterAggregate = KexEdit.Coaster.Coaster;
 using CoreDuration = KexEdit.Coaster.Duration;
+using NodeMeta = KexEdit.Coaster.NodeMeta;
 using CoreKeyframe = KexEdit.Core.Keyframe;
 using CoreInterpolationType = KexEdit.Core.InterpolationType;
 
@@ -1107,9 +1108,7 @@ namespace KexEdit.UI.Timeline {
 
             uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
             ref var coaster = ref GetCoasterRef();
-            if (coaster.Durations.TryGetValue(nodeId, out var existingDuration)) {
-                coaster.Durations[nodeId] = new CoreDuration(duration, existingDuration.Type);
-            }
+            coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = duration;
 
             SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
             MarkTrackDirty();

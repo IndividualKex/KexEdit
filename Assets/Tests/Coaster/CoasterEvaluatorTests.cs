@@ -8,6 +8,7 @@ using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
 using DurationType = KexEdit.Coaster.DurationType;
+using NodeMeta = KexEdit.Coaster.NodeMeta;
 
 public class CoasterEvaluatorTests {
     [Test]
@@ -60,7 +61,7 @@ public class CoasterEvaluatorTests {
             // Rotation defaults to zero in scalars
 
             uint forceId = coaster.Graph.CreateNode(NodeType.Force, new float2(100f, 0f), out var forceInputs, out _, Allocator.Temp);
-            coaster.Durations[forceId] = new Duration(1f, DurationType.Time);
+            coaster.Scalars[Coaster.InputKey(forceId, NodeMeta.Duration)] = 1f;
 
             coaster.Graph.AddEdge(anchorOutputs[0], forceInputs[0]);
 
@@ -94,7 +95,7 @@ public class CoasterEvaluatorTests {
             // Rotation defaults to zero in scalars
 
             uint geoId = coaster.Graph.CreateNode(NodeType.Geometric, new float2(100f, 0f), out var geoInputs, out _, Allocator.Temp);
-            coaster.Durations[geoId] = new Duration(1f, DurationType.Time);
+            coaster.Scalars[Coaster.InputKey(geoId, NodeMeta.Duration)] = 1f;
 
             coaster.Graph.AddEdge(anchorOutputs[0], geoInputs[0]);
 
@@ -188,7 +189,7 @@ public class CoasterEvaluatorTests {
             coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
 
             uint forceId = coaster.Graph.CreateNode(NodeType.Force, new float2(100f, 0f), out var forceInputs, out var forceOutputs, Allocator.Temp);
-            coaster.Durations[forceId] = new Duration(0.5f, DurationType.Time);
+            coaster.Scalars[Coaster.InputKey(forceId, NodeMeta.Duration)] = 0.5f;
 
             uint reversePathId = coaster.Graph.CreateNode(NodeType.ReversePath, new float2(200f, 0f), out var rpInputs, out _, Allocator.Temp);
 
@@ -225,7 +226,7 @@ public class CoasterEvaluatorTests {
             coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
 
             uint forceId = coaster.Graph.CreateNode(NodeType.Force, new float2(100f, 0f), out var forceInputs, out var forceOutputs, Allocator.Temp);
-            coaster.Durations[forceId] = new Duration(0.5f, DurationType.Time);
+            coaster.Scalars[Coaster.InputKey(forceId, NodeMeta.Duration)] = 0.5f;
 
             uint anchor2Id = coaster.Graph.CreateNode(NodeType.Anchor, new float2(0f, 100f), out _, out var anchor2Outputs, Allocator.Temp);
             coaster.Vectors[Coaster.InputKey(anchor2Id, AnchorPorts.Position)] = new float3(50f, 10f, 0f);

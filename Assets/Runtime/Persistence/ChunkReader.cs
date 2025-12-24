@@ -165,6 +165,15 @@ namespace KexEdit.Persistence {
             }
         }
 
+        public void ReadHashMap(ref NativeHashMap<ulong, int> map) {
+            int count = ReadInt();
+            for (int i = 0; i < count; i++) {
+                ulong key = ReadULong();
+                int value = ReadInt();
+                map[key] = value;
+            }
+        }
+
         public void Dispose() {
             // Reader doesn't own the data, so nothing to dispose
         }

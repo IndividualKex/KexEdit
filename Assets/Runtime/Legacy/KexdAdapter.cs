@@ -10,8 +10,6 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using CoasterAggregate = KexEdit.Coaster.Coaster;
-using CoreDuration = KexEdit.Coaster.Duration;
-using CoreDurationType = KexEdit.Coaster.DurationType;
 using CoreKeyframe = KexEdit.Core.Keyframe;
 using CoreInterpolationType = KexEdit.Core.InterpolationType;
 
@@ -73,7 +71,8 @@ namespace KexEdit.Legacy {
 
             var legacyType = CoreToLegacyNodeType((Nodes.NodeType)coreNodeType);
 
-            int priority = coaster.Priority.TryGetValue(nodeId, out int p) ? p : 0;
+            ulong priorityKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Priority);
+            int priority = coaster.Scalars.TryGetValue(priorityKey, out float pf) ? (int)pf : 0;
 
             var node = new Node {
                 Id = nodeId,
@@ -88,8 +87,8 @@ namespace KexEdit.Legacy {
 
             BuildAnchor(in coaster, nodeId, out var anchor);
             ExtractDuration(in coaster, nodeId, out var duration);
-            bool steering = coaster.Steering.Contains(nodeId);
-            bool render = !coaster.Render.Contains(nodeId);
+            bool steering = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.Steering), out int s) && s == 1;
+            bool render = !coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.Render), out int r) || r == 0;
 
             ExtractRollSpeedKeyframes(in coaster, nodeId, allocator, out var rollSpeedKf);
             ExtractNormalForceKeyframes(in coaster, nodeId, allocator, out var normalForceKf);
@@ -311,8 +310,9 @@ namespace KexEdit.Legacy {
                     return;
 
                 case Legacy.PortType.Duration:
-                    if (coaster.Durations.TryGetValue(nodeId, out var dur)) {
-                        result = new PointData { Roll = dur.Value };
+                    ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                    if (coaster.Scalars.TryGetValue(durKey, out float durValue)) {
+                        result = new PointData { Roll = durValue };
                         return;
                     }
                     result = default;
@@ -383,23 +383,21 @@ namespace KexEdit.Legacy {
         [BurstCompile]
         private static void BuildAnchor(in CoasterAggregate coaster, uint nodeId, out PointData result) {
             BuildAnchorPortValue(in coaster, nodeId, out result);
-            result.Facing = coaster.Facing.TryGetValue(nodeId, out int facing) ? facing : 1;
+            ulong facingKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Facing);
+            result.Facing = coaster.Flags.TryGetValue(facingKey, out int facing) ? facing : 1;
         }
 
         [BurstCompile]
         private static void ExtractDuration(in CoasterAggregate coaster, uint nodeId, out Legacy.Duration result) {
-            if (coaster.Durations.TryGetValue(nodeId, out var dur)) {
-                result = new Legacy.Duration {
-                    Value = dur.Value,
-                    Type = dur.Type == CoreDurationType.Time
-                        ? Legacy.DurationType.Time
-                        : Legacy.DurationType.Distance
-                };
-                return;
-            }
+            ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+            ulong durTypeKey = CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType);
+
+            float value = coaster.Scalars.TryGetValue(durKey, out float v) ? v : 1f;
+            bool isDistance = coaster.Flags.TryGetValue(durTypeKey, out int t) && t == 1;
+
             result = new Legacy.Duration {
-                Value = 1f,
-                Type = Legacy.DurationType.Time
+                Value = value,
+                Type = isDistance ? Legacy.DurationType.Distance : Legacy.DurationType.Time
             };
         }
 
