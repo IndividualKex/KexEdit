@@ -37,6 +37,9 @@ namespace KexEdit.Persistence {
                 writer.WriteByte(state.Flags);
             }
 
+            writer.WriteHashSet(in chunk.SelectedNodeIds);
+            writer.WriteHashSet(in chunk.SelectedConnectionIds);
+
             writer.EndChunk();
         }
 
@@ -81,6 +84,9 @@ namespace KexEdit.Persistence {
                         };
                         result.KeyframeStates.Add(state);
                     }
+
+                    reader.ReadHashSet(ref result.SelectedNodeIds);
+                    reader.ReadHashSet(ref result.SelectedConnectionIds);
 
                     return true;
                 }

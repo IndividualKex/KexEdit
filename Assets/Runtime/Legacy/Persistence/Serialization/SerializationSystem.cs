@@ -141,6 +141,20 @@ namespace KexEdit.Legacy.Serialization {
                 uiState.NodePositions[node.Id] = node.Position;
             }
 
+            uiState.SelectedNodeIds.Clear();
+            uiState.SelectedConnectionIds.Clear();
+            foreach (var entity in nodeEntities) {
+                if (SystemAPI.GetComponent<CoasterReference>(entity).Value != target) continue;
+                var node = SystemAPI.GetComponent<Node>(entity);
+                if (node.Selected) uiState.SelectedNodeIds.Add(node.Id);
+            }
+            using var connectionEntities = _connectionQuery.ToEntityArray(Allocator.Temp);
+            foreach (var entity in connectionEntities) {
+                if (SystemAPI.GetComponent<CoasterReference>(entity).Value != target) continue;
+                var conn = SystemAPI.GetComponent<Connection>(entity);
+                if (conn.Selected) uiState.SelectedConnectionIds.Add(conn.Id);
+            }
+
             if (SystemAPI.TryGetSingleton<TimelineState>(out var timeline) &&
                 SystemAPI.TryGetSingleton<NodeGraphState>(out var nodeGraph) &&
                 SystemAPI.TryGetSingleton<CameraState>(out var camera)) {

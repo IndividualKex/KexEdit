@@ -47,7 +47,7 @@ namespace KexEdit.Legacy {
             ecb.Playback(entityManager);
             ecb.Dispose();
 
-            BuildConnections(coaster, coasterEntity, entityManager);
+            BuildConnections(coaster, coasterEntity, entityManager, in uiState);
         }
 
         [BurstCompile]
@@ -76,7 +76,7 @@ namespace KexEdit.Legacy {
                 Id = nodeId,
                 Type = legacyType,
                 Position = position,
-                Selected = false,
+                Selected = uiState.SelectedNodeIds.IsCreated && uiState.SelectedNodeIds.Contains(nodeId),
                 Priority = priority
             };
 
@@ -810,7 +810,7 @@ namespace KexEdit.Legacy {
             };
         }
 
-        private static void BuildConnections(CoasterAggregate coaster, Entity coasterEntity, EntityManager entityManager) {
+        private static void BuildConnections(CoasterAggregate coaster, Entity coasterEntity, EntityManager entityManager, in KexEdit.Persistence.UIStateChunk uiState) {
             var portQuery = entityManager.CreateEntityQuery(typeof(Port));
             using var ports = portQuery.ToEntityArray(Allocator.Temp);
 
@@ -836,7 +836,7 @@ namespace KexEdit.Legacy {
                     Id = edgeId,
                     Source = source,
                     Target = target,
-                    Selected = false
+                    Selected = uiState.SelectedConnectionIds.IsCreated && uiState.SelectedConnectionIds.Contains(edgeId)
                 });
                 ecb.SetName(connection, "Connection");
             }

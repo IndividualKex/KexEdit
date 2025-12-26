@@ -16,6 +16,8 @@ namespace KexEdit.Persistence {
     public struct UIStateChunk : IDisposable {
         public NativeHashMap<uint, float2> NodePositions;
         public NativeList<KeyframeUIState> KeyframeStates;
+        public NativeHashSet<uint> SelectedNodeIds;
+        public NativeHashSet<uint> SelectedConnectionIds;
 
         public float TimelineOffset;
         public float TimelineZoom;
@@ -36,6 +38,8 @@ namespace KexEdit.Persistence {
             return new UIStateChunk {
                 NodePositions = new NativeHashMap<uint, float2>(64, allocator),
                 KeyframeStates = new NativeList<KeyframeUIState>(allocator),
+                SelectedNodeIds = new NativeHashSet<uint>(16, allocator),
+                SelectedConnectionIds = new NativeHashSet<uint>(16, allocator),
                 TimelineOffset = 0f,
                 TimelineZoom = 1f,
                 GraphPanX = 0f,
@@ -56,11 +60,15 @@ namespace KexEdit.Persistence {
         public void Dispose() {
             if (NodePositions.IsCreated) NodePositions.Dispose();
             if (KeyframeStates.IsCreated) KeyframeStates.Dispose();
+            if (SelectedNodeIds.IsCreated) SelectedNodeIds.Dispose();
+            if (SelectedConnectionIds.IsCreated) SelectedConnectionIds.Dispose();
         }
 
         public void Clear() {
             NodePositions.Clear();
             KeyframeStates.Clear();
+            SelectedNodeIds.Clear();
+            SelectedConnectionIds.Clear();
         }
 
         public bool TryGetKeyframeState(uint nodeId, byte propertyId, int keyframeIndex, out KeyframeUIState state) {
