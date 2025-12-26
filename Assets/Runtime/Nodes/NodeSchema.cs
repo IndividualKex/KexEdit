@@ -2,6 +2,8 @@ using Unity.Burst;
 using Unity.Collections;
 
 namespace KexEdit.Nodes {
+    public enum PropertyKind { Unavailable = 0, Innate = 1, Override = 2 }
+
     [BurstCompile]
     public static class NodeSchema {
         [BurstCompile]
@@ -44,6 +46,44 @@ namespace KexEdit.Nodes {
             NodeType.CopyPath => 4,
             NodeType.Bridge => 5,
             _ => 0,
+        };
+
+        [BurstCompile]
+        public static PropertyKind GetPropertyKind(NodeType nodeType, PropertyId propertyId) => (nodeType, propertyId) switch {
+            (NodeType.Force, PropertyId.RollSpeed) => PropertyKind.Innate,
+            (NodeType.Force, PropertyId.NormalForce) => PropertyKind.Innate,
+            (NodeType.Force, PropertyId.LateralForce) => PropertyKind.Innate,
+            (NodeType.Force, PropertyId.DrivenVelocity) => PropertyKind.Override,
+            (NodeType.Force, PropertyId.HeartOffset) => PropertyKind.Override,
+            (NodeType.Force, PropertyId.Friction) => PropertyKind.Override,
+            (NodeType.Force, PropertyId.Resistance) => PropertyKind.Override,
+
+            (NodeType.Geometric, PropertyId.RollSpeed) => PropertyKind.Innate,
+            (NodeType.Geometric, PropertyId.PitchSpeed) => PropertyKind.Innate,
+            (NodeType.Geometric, PropertyId.YawSpeed) => PropertyKind.Innate,
+            (NodeType.Geometric, PropertyId.DrivenVelocity) => PropertyKind.Override,
+            (NodeType.Geometric, PropertyId.HeartOffset) => PropertyKind.Override,
+            (NodeType.Geometric, PropertyId.Friction) => PropertyKind.Override,
+            (NodeType.Geometric, PropertyId.Resistance) => PropertyKind.Override,
+
+            (NodeType.Curved, PropertyId.RollSpeed) => PropertyKind.Innate,
+            (NodeType.Curved, PropertyId.DrivenVelocity) => PropertyKind.Override,
+            (NodeType.Curved, PropertyId.HeartOffset) => PropertyKind.Override,
+            (NodeType.Curved, PropertyId.Friction) => PropertyKind.Override,
+            (NodeType.Curved, PropertyId.Resistance) => PropertyKind.Override,
+
+            (NodeType.CopyPath, PropertyId.DrivenVelocity) => PropertyKind.Override,
+            (NodeType.CopyPath, PropertyId.HeartOffset) => PropertyKind.Override,
+            (NodeType.CopyPath, PropertyId.Friction) => PropertyKind.Override,
+            (NodeType.CopyPath, PropertyId.Resistance) => PropertyKind.Override,
+
+            (NodeType.Bridge, PropertyId.DrivenVelocity) => PropertyKind.Override,
+            (NodeType.Bridge, PropertyId.HeartOffset) => PropertyKind.Override,
+            (NodeType.Bridge, PropertyId.Friction) => PropertyKind.Override,
+            (NodeType.Bridge, PropertyId.Resistance) => PropertyKind.Override,
+            (NodeType.Bridge, PropertyId.TrackStyle) => PropertyKind.Override,
+
+            _ => PropertyKind.Unavailable,
         };
 
         [BurstCompile]

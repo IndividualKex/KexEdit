@@ -16,6 +16,7 @@ Track construction and node graph management
 - `Segment` - Track segment data for rendering
 - `CorePointBuffer` - Computed track points from CoasterEvaluator
 - `CoasterData` - Holds KexEdit.Coaster.Coaster aggregate on coaster entity (source of truth)
+- `UIStateData` - Holds KexEdit.Persistence.UIStateChunk on coaster entity (UI metadata: node positions, keyframe IDs)
 - `Dirty` - Marks entities modified by UI for sync to Coaster
 - Section tags - `BridgeTag`, `ReverseTag`, etc.
 

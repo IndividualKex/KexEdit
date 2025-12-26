@@ -20,6 +20,11 @@ namespace KexEdit.UI.Timeline {
             _coaster = coaster;
         }
 
+        public bool HasKeyframes(uint nodeId, PropertyType type) {
+            var propertyId = PropertyMapping.ToPropertyId(type);
+            return _coaster.Keyframes.TryGet(nodeId, propertyId, out var keyframes) && keyframes.Length > 0;
+        }
+
         public void GetKeyframes(uint nodeId, PropertyType type, List<Keyframe> output) {
             output.Clear();
 
@@ -35,14 +40,17 @@ namespace KexEdit.UI.Timeline {
                 HandleType handleType;
                 KeyframeFlags flags;
 
+                bool selected;
                 if (_uiState.TryGetKeyframeState(nodeId, (byte)propertyId, i, out var uiStateEntry)) {
                     id = uiStateEntry.Id;
                     handleType = (HandleType)uiStateEntry.HandleType;
                     flags = (KeyframeFlags)uiStateEntry.Flags;
+                    selected = uiStateEntry.Selected != 0;
                 } else {
                     id = AllocateKeyframeId(nodeId);
                     handleType = HandleType.Aligned;
                     flags = KeyframeFlags.None;
+                    selected = false;
 
                     _uiState.SetKeyframeState(new KeyframeUIState {
                         NodeId = nodeId,
@@ -50,11 +58,12 @@ namespace KexEdit.UI.Timeline {
                         KeyframeIndex = i,
                         Id = id,
                         HandleType = (byte)handleType,
-                        Flags = (byte)flags
+                        Flags = (byte)flags,
+                        Selected = 0
                     });
                 }
 
-                var legacyKf = KeyframeConversion.ToLegacy(coreKf, id, handleType, flags, selected: false);
+                var legacyKf = KeyframeConversion.ToLegacy(coreKf, id, handleType, flags, selected);
                 output.Add(legacyKf);
             }
         }
@@ -82,7 +91,8 @@ namespace KexEdit.UI.Timeline {
                         KeyframeIndex = i,
                         Id = keyframe.Id,
                         HandleType = (byte)keyframe.HandleType,
-                        Flags = (byte)keyframe.Flags
+                        Flags = (byte)keyframe.Flags,
+                        Selected = (byte)(keyframe.Selected ? 1 : 0)
                     });
                     return;
                 }
@@ -123,7 +133,8 @@ namespace KexEdit.UI.Timeline {
                 KeyframeIndex = insertIndex,
                 Id = id,
                 HandleType = (byte)keyframe.HandleType,
-                Flags = (byte)keyframe.Flags
+                Flags = (byte)keyframe.Flags,
+                Selected = (byte)(keyframe.Selected ? 1 : 0)
             });
         }
 
@@ -194,7 +205,8 @@ namespace KexEdit.UI.Timeline {
                     KeyframeIndex = state.KeyframeIndex + delta,
                     Id = state.Id,
                     HandleType = state.HandleType,
-                    Flags = state.Flags
+                    Flags = state.Flags,
+                    Selected = state.Selected
                 });
             }
         }

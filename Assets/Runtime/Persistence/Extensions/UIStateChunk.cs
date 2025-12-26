@@ -10,6 +10,7 @@ namespace KexEdit.Persistence {
         public uint Id;
         public byte HandleType;
         public byte Flags;
+        public byte Selected;
     }
 
     public struct UIStateChunk : IDisposable {

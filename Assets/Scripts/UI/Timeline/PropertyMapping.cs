@@ -4,6 +4,18 @@ using KexEdit.Nodes;
 
 namespace KexEdit.UI.Timeline {
     public static class PropertyMapping {
+        public static Nodes.NodeType ToNodeType(Legacy.NodeType type) => type switch {
+            Legacy.NodeType.ForceSection => Nodes.NodeType.Force,
+            Legacy.NodeType.GeometricSection => Nodes.NodeType.Geometric,
+            Legacy.NodeType.CurvedSection => Nodes.NodeType.Curved,
+            Legacy.NodeType.CopyPathSection => Nodes.NodeType.CopyPath,
+            Legacy.NodeType.Anchor => Nodes.NodeType.Anchor,
+            Legacy.NodeType.Reverse => Nodes.NodeType.Reverse,
+            Legacy.NodeType.ReversePath => Nodes.NodeType.ReversePath,
+            Legacy.NodeType.Bridge => Nodes.NodeType.Bridge,
+            _ => Nodes.NodeType.Scalar
+        };
+
         public static PropertyId ToPropertyId(PropertyType type) => type switch {
             PropertyType.RollSpeed => PropertyId.RollSpeed,
             PropertyType.NormalForce => PropertyId.NormalForce,

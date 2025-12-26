@@ -36,59 +36,24 @@ Migrate from ECS-centric to Coaster-centric architecture, eliminating redundant 
 
 ### Progress
 
-**Foundation Complete (Phases 1-2)**:
-- ✅ UIStateChunk/UIExtensionCodec - UI state storage (UIST extension chunk)
-- ✅ PropertyMapping - PropertyType ↔ PropertyId bidirectional mapping
-- ✅ KeyframeConversion - Core.Keyframe ↔ Legacy.Keyframe conversion
-- ✅ CoasterKeyframeManager - Unified Coaster.KeyframeStore + UIStateChunk API
-
-**Remaining Work**:
-- ⏳ Phase 3: Rewrite PropertyAdapter to use CoasterKeyframeManager (HIGH RISK)
+**Progress**:
+- ✅ Phase 1-2: Foundation (UIStateChunk, PropertyMapping, KeyframeConversion, CoasterKeyframeManager)
+- ✅ Phase 3: PropertyAdapter rewrite (Timeline now reads/writes directly to Coaster)
 - ⏳ Phase 4: Remove ECS Dependencies (systems, gizmos)
 - ⏳ Phase 5: Remove Serialization Layer keyframe logic
 - ⏳ Phase 6: Delete 13 component files
 
-### Key Design Decisions
+### Phase 3 Complete
 
-**UI State Storage**: UIStateChunk stores all UI state in one chunk: node positions, view state (timeline/graph/camera), and keyframe UI metadata (Id, HandleType, Flags). Selection state is transient (not persisted).
+PropertyAdapter now delegates to CoasterKeyframeManager instead of ECS buffers:
+- UIStateData component persists UIStateChunk on coaster entity alongside CoasterData
+- TimelineControlSystem initializes CoasterKeyframeManager when entity changes
+- Removed SyncKeyframesToCoaster (keyframes now written directly)
+- Friction/Resistance scaling via ValueScale property
 
-**ID Assignment**: Persistent keyframe IDs generated using composite key: `(nodeId << 16) | (counter & 0xFFFF)`. IDs maintained across add/remove operations via index tracking.
+### Next Steps (Phase 4)
 
-**PropertyType Mapping**: FixedVelocity↔DrivenVelocity, Heart↔HeartOffset due to enum name differences between UI and Core layers.
-
-### Files Created
-1. `Assets/Runtime/Persistence/Extensions/UIStateChunk.cs`
-2. `Assets/Runtime/Persistence/Extensions/UIExtensionCodec.cs`
-3. `Assets/Scripts/UI/Timeline/PropertyMapping.cs`
-4. `Assets/Scripts/UI/Timeline/KeyframeConversion.cs`
-5. `Assets/Scripts/UI/Timeline/CoasterKeyframeManager.cs`
-6. `Assets/Tests/KeyframeUITests.cs` (21 unit tests)
-
-### Layer Separation
-KeyframeUIState uses primitive bytes for HandleType/Flags to maintain layer separation (Persistence doesn't depend on Legacy). Conversion to/from enums happens in CoasterKeyframeManager.
-
-### Next Steps
-
-**Phase 3** is critical - PropertyAdapter is the Timeline UI integration point. Must:
-1. Initialize CoasterKeyframeManager with Coaster reference
-2. Rewrite all 10 adapter classes to use CoasterKeyframeManager
-3. Update TimelineControlSystem to pass nodeId instead of Entity
-4. Mark Coaster dirty after modifications
-5. Thoroughly test Timeline/Curve editor for each property type
-
----
-
-## Phase 6: Cleanup
-
-1. Remove `VALIDATE_COASTER_PARITY` conditional code
-2. Delete `CoasterPointBuffer`, `ParityValidationSystem`
-3. Update `context.md` files
-4. Archive this plan
-
----
-
-## Key Files
-
-### Reference (for understanding patterns)
-- `Assets/Runtime/Coaster/Coaster.cs` - NodeMeta constants (240-254)
-- `Assets/Runtime/Legacy/KexdAdapter.cs:89-91` - Render flag inversion semantics
+Remove ECS dependencies that read from keyframe buffers:
+- Keyframe gizmo systems
+- Serialization path keyframe extraction
+- Any remaining buffer reads

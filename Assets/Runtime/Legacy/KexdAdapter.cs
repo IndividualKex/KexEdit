@@ -63,7 +63,6 @@ namespace KexEdit.Legacy {
 
             float2 position = float2.zero;
             if (uiState.NodePositions.IsCreated && uiState.NodePositions.TryGetValue(nodeId, out position)) {
-                // Position found in UI state
             } else if (nodeIndex < coaster.Graph.NodePositions.Length) {
                 position = coaster.Graph.NodePositions[nodeIndex];
             }
@@ -89,16 +88,22 @@ namespace KexEdit.Legacy {
             bool steering = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.Steering), out int s) && s == 1;
             bool render = !coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.Render), out int r) || r == 0;
 
-            ExtractRollSpeedKeyframes(in coaster, nodeId, allocator, out var rollSpeedKf);
-            ExtractNormalForceKeyframes(in coaster, nodeId, allocator, out var normalForceKf);
-            ExtractLateralForceKeyframes(in coaster, nodeId, allocator, out var lateralForceKf);
-            ExtractPitchSpeedKeyframes(in coaster, nodeId, allocator, out var pitchSpeedKf);
-            ExtractYawSpeedKeyframes(in coaster, nodeId, allocator, out var yawSpeedKf);
-            ExtractFixedVelocityKeyframes(in coaster, nodeId, allocator, out var fixedVelocityKf);
-            ExtractHeartKeyframes(in coaster, nodeId, allocator, out var heartKf);
-            ExtractFrictionKeyframes(in coaster, nodeId, allocator, out var frictionKf);
-            ExtractResistanceKeyframes(in coaster, nodeId, allocator, out var resistanceKf);
-            ExtractTrackStyleKeyframes(in coaster, nodeId, allocator, out var trackStyleKf);
+            ExtractKeyframesForNode(
+                in coaster,
+                (Nodes.NodeType)coreNodeType,
+                nodeId,
+                allocator,
+                out var rollSpeedKf,
+                out var normalForceKf,
+                out var lateralForceKf,
+                out var pitchSpeedKf,
+                out var yawSpeedKf,
+                out var fixedVelocityKf,
+                out var heartKf,
+                out var frictionKf,
+                out var resistanceKf,
+                out var trackStyleKf
+            );
 
             ExtractPropertyOverrides(in coaster, nodeId, out var propertyOverrides);
             bool hasPropertyOverrides = propertyOverrides.Flags != PropertyOverrideFlags.None;
@@ -136,6 +141,94 @@ namespace KexEdit.Legacy {
                 CurveData = default,
                 MeshFilePath = default
             };
+        }
+
+        [BurstCompile]
+        private static void ExtractKeyframesForNode(
+            in CoasterAggregate coaster,
+            Nodes.NodeType nodeType,
+            uint nodeId,
+            Allocator allocator,
+            out NativeArray<RollSpeedKeyframe> rollSpeed,
+            out NativeArray<NormalForceKeyframe> normalForce,
+            out NativeArray<LateralForceKeyframe> lateralForce,
+            out NativeArray<PitchSpeedKeyframe> pitchSpeed,
+            out NativeArray<YawSpeedKeyframe> yawSpeed,
+            out NativeArray<FixedVelocityKeyframe> fixedVelocity,
+            out NativeArray<HeartKeyframe> heart,
+            out NativeArray<FrictionKeyframe> friction,
+            out NativeArray<ResistanceKeyframe> resistance,
+            out NativeArray<TrackStyleKeyframe> trackStyle
+        ) {
+            bool HasProperty(PropertyId propertyId) {
+                int propertyCount = NodeSchema.PropertyCount(nodeType);
+                for (int i = 0; i < propertyCount; i++) {
+                    if (NodeSchema.Property(nodeType, i) == propertyId) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            if (HasProperty(PropertyId.RollSpeed)) {
+                ExtractRollSpeedKeyframes(in coaster, nodeId, allocator, out rollSpeed);
+            } else {
+                rollSpeed = new NativeArray<RollSpeedKeyframe>(0, allocator);
+            }
+
+            if (HasProperty(PropertyId.NormalForce)) {
+                ExtractNormalForceKeyframes(in coaster, nodeId, allocator, out normalForce);
+            } else {
+                normalForce = new NativeArray<NormalForceKeyframe>(0, allocator);
+            }
+
+            if (HasProperty(PropertyId.LateralForce)) {
+                ExtractLateralForceKeyframes(in coaster, nodeId, allocator, out lateralForce);
+            } else {
+                lateralForce = new NativeArray<LateralForceKeyframe>(0, allocator);
+            }
+
+            if (HasProperty(PropertyId.PitchSpeed)) {
+                ExtractPitchSpeedKeyframes(in coaster, nodeId, allocator, out pitchSpeed);
+            } else {
+                pitchSpeed = new NativeArray<PitchSpeedKeyframe>(0, allocator);
+            }
+
+            if (HasProperty(PropertyId.YawSpeed)) {
+                ExtractYawSpeedKeyframes(in coaster, nodeId, allocator, out yawSpeed);
+            } else {
+                yawSpeed = new NativeArray<YawSpeedKeyframe>(0, allocator);
+            }
+
+            if (HasProperty(PropertyId.DrivenVelocity)) {
+                ExtractFixedVelocityKeyframes(in coaster, nodeId, allocator, out fixedVelocity);
+            } else {
+                fixedVelocity = new NativeArray<FixedVelocityKeyframe>(0, allocator);
+            }
+
+            if (HasProperty(PropertyId.HeartOffset)) {
+                ExtractHeartKeyframes(in coaster, nodeId, allocator, out heart);
+            } else {
+                heart = new NativeArray<HeartKeyframe>(0, allocator);
+            }
+
+            if (HasProperty(PropertyId.Friction)) {
+                ExtractFrictionKeyframes(in coaster, nodeId, allocator, out friction);
+            } else {
+                friction = new NativeArray<FrictionKeyframe>(0, allocator);
+            }
+
+            if (HasProperty(PropertyId.Resistance)) {
+                ExtractResistanceKeyframes(in coaster, nodeId, allocator, out resistance);
+            } else {
+                resistance = new NativeArray<ResistanceKeyframe>(0, allocator);
+            }
+
+            if (HasProperty(PropertyId.TrackStyle)) {
+                ExtractTrackStyleKeyframes(in coaster, nodeId, allocator, out trackStyle);
+            } else {
+                trackStyle = new NativeArray<TrackStyleKeyframe>(0, allocator);
+            }
         }
 
         [BurstCompile]

@@ -50,7 +50,7 @@ namespace Tests {
         [Test]
         public void ParallelKEXD_SaveFlow_ProducesValidFile() {
             var entityManager = _world.EntityManager;
-            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             entityManager.SetName(coasterEntity, "Coaster");
 
             var coaster = Coaster.Create(Allocator.Persistent);
@@ -58,6 +58,7 @@ namespace Tests {
             coaster.Scalars[nodeId] = 42.5f;
 
             entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+            entityManager.SetComponentData(coasterEntity, new UIStateData { Value = UIStateChunk.Create(Allocator.Persistent) });
 
             var nodeEntity = entityManager.CreateEntity();
             entityManager.AddComponentData(nodeEntity, new Node {

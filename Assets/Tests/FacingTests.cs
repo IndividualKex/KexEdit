@@ -2,6 +2,7 @@ using System.IO;
 using KexEdit.Coaster;
 using KexEdit.Legacy;
 using KexEdit.Legacy.Serialization;
+using KexEdit.Persistence;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Entities;
@@ -77,8 +78,9 @@ namespace Tests {
                             World world = new World("FacingTestWorld");
                             try {
                                 var em = world.EntityManager;
-                                var coasterEntity = em.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+                                var coasterEntity = em.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
                                 em.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+                                em.SetComponentData(coasterEntity, new UIStateData { Value = UIStateChunk.Create(Allocator.Persistent) });
 
                                 foreach (var nodeId in result.Paths.GetKeyArray(Allocator.Temp)) {
                                     var nodeEntity = em.CreateEntity(

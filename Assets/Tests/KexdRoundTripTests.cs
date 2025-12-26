@@ -31,13 +31,14 @@ namespace Tests {
         [Test]
         public void SerializeToKEXD_ProducesValidFormat() {
             var entityManager = _world.EntityManager;
-            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             entityManager.SetName(coasterEntity, "Coaster");
 
             var coaster = Coaster.Create(Allocator.Persistent);
             var nodeId = coaster.Graph.AddNode((uint)LegacyNodeType.Anchor, new float2(100, 200));
 
             entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+            entityManager.SetComponentData(coasterEntity, new UIStateData { Value = UIStateChunk.Create(Allocator.Persistent) });
 
             var nodeEntity = entityManager.CreateEntity();
             entityManager.AddComponentData(nodeEntity, new Node {
@@ -94,7 +95,7 @@ namespace Tests {
         [Test]
         public void SerializeToKEXD_PreservesNodePositions() {
             var entityManager = _world.EntityManager;
-            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             entityManager.SetName(coasterEntity, "Coaster");
 
             var coaster = Coaster.Create(Allocator.Persistent);
@@ -102,6 +103,7 @@ namespace Tests {
             var node2Id = coaster.Graph.AddNode((uint)LegacyNodeType.ForceSection, new float2(300, 400));
 
             entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+            entityManager.SetComponentData(coasterEntity, new UIStateData { Value = UIStateChunk.Create(Allocator.Persistent) });
 
             var node1Entity = entityManager.CreateEntity();
             entityManager.AddComponentData(node1Entity, new Node {
@@ -148,7 +150,7 @@ namespace Tests {
         [Test]
         public void SerializeToKEXD_PreservesCoasterData() {
             var entityManager = _world.EntityManager;
-            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             entityManager.SetName(coasterEntity, "Coaster");
 
             var coaster = Coaster.Create(Allocator.Persistent);
@@ -157,6 +159,7 @@ namespace Tests {
             coaster.Vectors[nodeId] = new float3(1, 2, 3);
 
             entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+            entityManager.SetComponentData(coasterEntity, new UIStateData { Value = UIStateChunk.Create(Allocator.Persistent) });
 
             var nodeEntity = entityManager.CreateEntity();
             entityManager.AddComponentData(nodeEntity, new Node {
@@ -202,11 +205,12 @@ namespace Tests {
         [Test]
         public void EmptyGraph_RoundTrip_Succeeds() {
             var entityManager = _world.EntityManager;
-            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             entityManager.SetName(coasterEntity, "Coaster");
 
             var coaster = Coaster.Create(Allocator.Persistent);
             entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+            entityManager.SetComponentData(coasterEntity, new UIStateData { Value = UIStateChunk.Create(Allocator.Persistent) });
 
             var kexdData = _serializationSystem.SerializeToKEXD(coasterEntity);
 
@@ -226,7 +230,7 @@ namespace Tests {
         [Test]
         public void SingleAnchor_RoundTrip_PreservesData() {
             var entityManager = _world.EntityManager;
-            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             entityManager.SetName(coasterEntity, "Coaster");
 
             var coaster = Coaster.Create(Allocator.Persistent);
@@ -240,6 +244,7 @@ namespace Tests {
             coaster.Scalars[yawPortId] = 0.3f;
 
             entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+            entityManager.SetComponentData(coasterEntity, new UIStateData { Value = UIStateChunk.Create(Allocator.Persistent) });
 
             var nodeEntity = entityManager.CreateEntity();
             entityManager.AddComponentData(nodeEntity, new Node {
@@ -283,7 +288,7 @@ namespace Tests {
         [Test]
         public void NodePositions_RoundTrip_FromUIMetadata() {
             var entityManager = _world.EntityManager;
-            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             entityManager.SetName(coasterEntity, "Coaster");
 
             var coaster = Coaster.Create(Allocator.Persistent);
@@ -291,6 +296,7 @@ namespace Tests {
             var node2Id = coaster.Graph.AddNode((uint)KexEdit.Nodes.NodeType.Force, new float2(350, 450));
 
             entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+            entityManager.SetComponentData(coasterEntity, new UIStateData { Value = UIStateChunk.Create(Allocator.Persistent) });
 
             var node1Entity = entityManager.CreateEntity();
             entityManager.AddComponentData(node1Entity, new Node {
@@ -345,7 +351,7 @@ namespace Tests {
         [Test]
         public void KeyframeIds_RoundTrip_AreUnique() {
             var entityManager = _world.EntityManager;
-            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData));
+            var coasterEntity = entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             entityManager.SetName(coasterEntity, "Coaster");
 
             var coaster = Coaster.Create(Allocator.Persistent);
@@ -359,6 +365,7 @@ namespace Tests {
             keyframes.Dispose();
 
             entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
+            entityManager.SetComponentData(coasterEntity, new UIStateData { Value = UIStateChunk.Create(Allocator.Persistent) });
 
             var nodeEntity = entityManager.CreateEntity();
             entityManager.AddComponentData(nodeEntity, new Node {
