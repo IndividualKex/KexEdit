@@ -35,6 +35,7 @@ namespace KexEdit.Persistence {
                 writer.WriteUInt(state.Id);
                 writer.WriteByte(state.HandleType);
                 writer.WriteByte(state.Flags);
+                writer.WriteByte(state.Selected);
             }
 
             writer.WriteHashSet(in chunk.SelectedNodeIds);
@@ -80,7 +81,8 @@ namespace KexEdit.Persistence {
                             KeyframeIndex = reader.ReadInt(),
                             Id = reader.ReadUInt(),
                             HandleType = reader.ReadByte(),
-                            Flags = reader.ReadByte()
+                            Flags = reader.ReadByte(),
+                            Selected = reader.ReadByte()
                         };
                         result.KeyframeStates.Add(state);
                     }
