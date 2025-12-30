@@ -1,10 +1,11 @@
 # KexEdit.Legacy.Debug
 
-Debug visualization for spline data.
+Debug visualization for spline and train data.
 
 ## Purpose
 
 - Draw spline paths in Scene view using Debug.DrawLine
+- Visualize train center-of-mass following sim graph
 
 ## Layout
 
@@ -12,11 +13,14 @@ Debug visualization for spline data.
 Legacy/Debug/
 ├── context.md
 ├── KexEdit.Legacy.Debug.asmdef
-└── SplineGizmos.cs    # SystemBase that draws SplineBuffer
+├── SplineGizmos.cs        # Draws SplineBuffer as lines
+├── SegmentationGizmos.cs  # Draws segments with color coding
+└── TrainGizmos.cs         # CoM frame following sim graph via Trains layer
 ```
 
 ## Dependencies
 
-- KexEdit.Spline (SplinePoint)
-- KexEdit.Legacy (SplineBuffer)
+- KexEdit.Trains (SimFollowerLogic)
+- KexEdit.Coaster (CoasterEvaluator)
+- KexEdit.Spline
 - Unity.Entities

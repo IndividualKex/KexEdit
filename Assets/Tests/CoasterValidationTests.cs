@@ -1,13 +1,13 @@
 using System.IO;
 using System.Text;
-using KexEdit.App.Coaster;
+using KexEdit.Document;
 using KexEdit.Legacy;
 using KexEdit.Sim.Schema;
 using NUnit.Framework;
 using Unity.Collections;
 using UnityEngine;
-using NodeMeta = KexEdit.App.Coaster.NodeMeta;
-using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using DocumentAggregate = KexEdit.Document.Document;
+using NodeMeta = KexEdit.Document.NodeMeta;
 
 namespace Tests {
     [TestFixture]
@@ -66,13 +66,13 @@ namespace Tests {
 
                 try {
                     // Serialize to new format
-                    using var writer = new KexEdit.App.Persistence.ChunkWriter(Allocator.Temp);
-                    KexEdit.App.Persistence.CoasterSerializer.Write(writer, in original);
+                    using var writer = new KexEdit.Persistence.ChunkWriter(Allocator.Temp);
+                    KexEdit.Persistence.CoasterSerializer.Write(writer, in original);
                     var serializedData = writer.ToArray();
 
                     // Deserialize back
-                    var reader = new KexEdit.App.Persistence.ChunkReader(serializedData);
-                    var restored = KexEdit.App.Persistence.CoasterSerializer.Read(ref reader, Allocator.TempJob);
+                    var reader = new KexEdit.Persistence.ChunkReader(serializedData);
+                    var restored = KexEdit.Persistence.CoasterSerializer.Read(ref reader, Allocator.TempJob);
 
                     try {
                         // Compare
@@ -91,7 +91,7 @@ namespace Tests {
             }
         }
 
-        private static void ExportCoasterToJson(in KexEdit.App.Coaster.Coaster coaster, string path) {
+        private static void ExportCoasterToJson(in KexEdit.Document.Document coaster, string path) {
             var sb = new StringBuilder();
             sb.AppendLine("{");
 
@@ -146,12 +146,12 @@ namespace Tests {
             sb.AppendLine("  \"durations\": {");
             bool firstDuration = true;
             foreach (var kv in coaster.Scalars) {
-                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
+                DocumentAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
                 if (idx != NodeMeta.Duration) continue;
                 if (!firstDuration) sb.AppendLine(",");
                 firstDuration = false;
                 float durValue = kv.Value;
-                ulong durTypeKey = CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType);
+                ulong durTypeKey = DocumentAggregate.InputKey(nodeId, NodeMeta.DurationType);
                 int durType = coaster.Flags.TryGetValue(durTypeKey, out int t) ? t : 0;
                 sb.Append($"    \"{nodeId}\": {{\"value\": {durValue}, \"type\": {durType}}}");
             }
@@ -166,7 +166,7 @@ namespace Tests {
                 if (!firstKeyframe) sb.AppendLine(",");
                 firstKeyframe = false;
 
-                KexEdit.Sim.Schema.Storage.KeyframeStore.UnpackKey(keyframeEnumerator.Current.Key, out uint nodeId, out PropertyId propertyId);
+                KexEdit.Sim.Schema.KeyframeStore.UnpackKey(keyframeEnumerator.Current.Key, out uint nodeId, out PropertyId propertyId);
                 var range = keyframeEnumerator.Current.Value;
                 sb.Append($"    \"({nodeId}, {propertyId})\": {range.y}");
             }
@@ -178,7 +178,7 @@ namespace Tests {
             sb.AppendLine("  \"steering\": [");
             bool firstSteering = true;
             foreach (var kv in coaster.Flags) {
-                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
+                DocumentAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
                 if (idx != NodeMeta.Steering || kv.Value != 1) continue;
                 if (!firstSteering) sb.Append(", ");
                 firstSteering = false;
@@ -191,7 +191,7 @@ namespace Tests {
             sb.AppendLine("  \"driven\": [");
             bool firstDriven = true;
             foreach (var kv in coaster.Flags) {
-                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
+                DocumentAggregate.UnpackInputKey(kv.Key, out uint nodeId, out int idx);
                 if (idx != NodeMeta.Driven || kv.Value != 1) continue;
                 if (!firstDriven) sb.Append(", ");
                 firstDriven = false;
@@ -205,7 +205,7 @@ namespace Tests {
             File.WriteAllText(path, sb.ToString());
         }
 
-        private static void AssertCoastersEqual(in KexEdit.App.Coaster.Coaster expected, in KexEdit.App.Coaster.Coaster actual) {
+        private static void AssertCoastersEqual(in KexEdit.Document.Document expected, in KexEdit.Document.Document actual) {
             // Graph structure
             Assert.AreEqual(expected.Graph.NodeIds.Length, actual.Graph.NodeIds.Length, "Node count mismatch");
             Assert.AreEqual(expected.Graph.EdgeIds.Length, actual.Graph.EdgeIds.Length, "Edge count mismatch");

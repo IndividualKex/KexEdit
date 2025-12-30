@@ -1,7 +1,7 @@
-using KexEdit.App.Persistence;
+using KexEdit.Persistence;
 using Unity.Collections;
 using Unity.Mathematics;
-using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using DocumentAggregate = KexEdit.Document.Document;
 
 namespace KexEdit.Legacy.Serialization {
     public static class ClipboardSerializer {

@@ -29,8 +29,12 @@
         "KexEdit.Legacy.Debug",
         "KexEdit.Graph.Typed",
         "KexEdit.Graph",
-        "KexEdit.App.Coaster",
-        "KexEdit.App.Persistence"
+        "KexEdit.Document",
+        "KexEdit.Track",
+        "KexEdit.Persistence",
+        "KexEdit.Spline.Rendering",
+        "KexEdit.Trains",
+        "KexEdit.Trains.Sim"
     ],
     "includePlatforms": [
         "Editor"

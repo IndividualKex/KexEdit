@@ -4,87 +4,49 @@ Roller coaster editor using Force Vector Design (FVD) with portable, high-perfor
 
 ## Architecture
 
-### Design Philosophy
-
-Mixed **Onion/Hexagonal-Lite** architecture optimized for:
-- **Backend portability**: Swappable between Unity/Burst and Rust backends
-- **Future migration**: Path to Rust backend + TypeScript frontend
-- **Simplicity over ceremony**: Data contracts instead of formal adapters
-- **Rust-idiomatic patterns**: Favor simple data over OOP/ECS boilerplate
-
-### Core Principles
-
-1. **Multiple Hex Cores**: Domain-agnostic, portable logic (Sim, Graph, Spline)
-2. **Expanding Layers**: Each core has layers of increasingly KexEdit-aware logic
-3. **Simple Data Contracts**: Structs as ports, no interface-based adapters
-4. **Lightweight Application**: Thin orchestration connecting cores
-5. **Infrastructure at Edge**: Unity/ECS is outermost, easily replaceable
-
-### Dependency Flow
+**Nested Onion/Hexagonal**: Inner hex cores compose into Track Backend, wrapped by domain layers (Trains), then Application (Unity ECS) and UI at the edge.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        INFRASTRUCTURE                               │
-│  KexEdit.Legacy (ECS systems, rendering, input)                     │
-│  KexEdit.UI (editors, viewport)                                     │
+│  UI — editor state, undo/redo, viewport, input                      │
 ├─────────────────────────────────────────────────────────────────────┤
-│                        APPLICATION                                  │
-│  KexEdit.App.Coaster (aggregate root)                               │
-│  KexEdit.App.Persistence (save/load)                                │
+│  APPLICATION — Unity ECS coordination, rendering, I/O               │
 ├─────────────────────────────────────────────────────────────────────┤
-│                        HEX LAYERS                                   │
-│  KexEdit.Sim.Schema (node types, ports)                             │
-│  KexEdit.Sim.Nodes.* (node implementations)                         │
-│  KexEdit.Graph.Typed (type-safe graph operations)                   │
-│  KexEdit.Spline.Resampling (Point → SplinePoint)                    │
+│  DOMAIN LAYERS — Trains                                             │
 ├─────────────────────────────────────────────────────────────────────┤
-│                        HEX CORES (Portable)                         │
-│  KexEdit.Sim (FVD physics, math primitives)                         │
-│  KexEdit.Graph (generic directed graph)                             │
-│  KexEdit.Spline (arc-length spline math)                            │
+│  TRACK BACKEND ─────────────────────────────────────────────────    │
+│  │ Document, Track, Persistence                                     │
+│  │ Sim.Schema, Sim.Nodes.*, Graph.Typed, Spline.Resampling          │
+│  │ Sim (FVD) · Graph (DAG) · Spline (arc-length)  ← Hex Cores       │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Hex Cores
+### Track Backend
 
-Each hex core is:
-- **Domain-agnostic**: No KexEdit-specific knowledge
-- **Portable**: Burst-compatible C# or pure Rust
-- **Testable**: No Unity dependencies in core logic
-- **Reusable**: Could power other applications
+Portable coaster track computation. Composes three hex cores:
 
-| Core | Domain | Purpose |
-|------|--------|---------|
-| `Sim` | Physics | FVD simulation, forces, frames, keyframes |
-| `Graph` | Structure | Generic directed graph with ports |
-| `Spline` | Geometry | Arc-length parameterized spline math |
+| Core | Purpose |
+|------|---------|
+| `Sim` | FVD physics, frames, keyframes |
+| `Graph` | Generic directed graph with ports |
+| `Spline` | Arc-length parameterized spline |
 
-### Hex Layers
+Hex cores are domain-agnostic. Hex layers extend them with coaster-specific logic (Schema, Nodes, Typed, Resampling). Document/Track/Persistence provide the document model, built track output, and serialization.
 
-Layers extend cores with domain-specific logic:
+### Domain Layers
 
-| Layer | Extends | Purpose |
-|-------|---------|---------|
-| `Sim.Schema` | Sim | Node types, port specs, property IDs |
-| `Sim.Nodes.*` | Sim + Schema | Concrete node implementations (Force, Geometric, etc.) |
-| `Graph.Typed` | Graph + Sim.Schema | Type-safe operations using node schema |
-| `Spline.Resampling` | Sim + Spline | Bridges Sim points to Spline format |
+Wrap Track Backend with additional coaster features:
 
-### Application Layer
+| Layer | Purpose |
+|-------|---------|
+| `Trains` | Train traversal (via Sim nodes), car positioning (via Spline) |
 
-Lightweight orchestration that:
-- Composes multiple hex cores
-- Defines aggregate roots (`Coaster`)
-- Implements use cases (`CoasterEvaluator`)
-- Handles serialization
+Domain layers depend inward on Track Backend, never vice versa.
 
-### Infrastructure Layer
+### Application & UI
 
-Platform-specific code (Unity):
-- ECS systems and components
-- Rendering and mesh generation
-- Input handling and UI
-- File I/O adapters
+- **Application** (Legacy): Unity ECS coordination, rendering, file I/O
+- **UI**: Editor state, undo/redo, viewport, input handling
 
 ---
 
@@ -140,11 +102,14 @@ KexEdit/
 │   │   │   └── Typed/              # (KexEdit.Graph.Typed) Type-safe ops
 │   │   ├── Spline/                 # Hex 3: Spline System
 │   │   │   ├── Core/               # (KexEdit.Spline) Spline math
-│   │   │   └── Resampling/         # (KexEdit.Spline.Resampling) Adapter
-│   │   ├── App/                    # Application Layer
-│   │   │   ├── Coaster/            # (KexEdit.App.Coaster) Aggregate
-│   │   │   └── Persistence/        # (KexEdit.App.Persistence) Save/load
-│   │   ├── Legacy/                 # Infrastructure Layer
+│   │   │   ├── Resampling/         # (KexEdit.Spline.Resampling) Adapter
+│   │   │   └── Rendering/          # (KexEdit.Spline.Rendering) Segmentation
+│   │   ├── Document/               # (KexEdit.Document) Editable document
+│   │   ├── Track/                  # (KexEdit.Track) Built track output
+│   │   ├── Persistence/            # (KexEdit.Persistence) Save/load
+│   │   ├── Trains/                 # Domain Layer
+│   │   │   └── Sim/                # (KexEdit.Trains.Sim) CoM traversal
+│   │   ├── Legacy/                 # Application (Unity ECS)
 │   │   │   ├── Core/               # Foundation & utilities
 │   │   │   ├── Track/              # Track ECS systems
 │   │   │   ├── Trains/             # Vehicle systems
@@ -186,7 +151,8 @@ KexEdit/
 | Scene | `Assets/Scenes/Main.unity` | Main editor scene |
 | Runtime | `Assets/Runtime/Legacy/Core/KexEditManager.cs` | Runtime initialization |
 | UI | `Assets/Scripts/UI/UIManager.cs` | UI initialization |
-| Track | `Assets/Runtime/Legacy/Track/Track.cs` | Track data structure |
+| Document | `Assets/Runtime/Document/Document.cs` | Editable document structure |
+| Track | `Assets/Runtime/Track/Track.cs` | Built track data structure |
 | File I/O | `Assets/Runtime/Legacy/Persistence/CoasterLoader.cs` | File loading |
 
 ## Where to Add Code
@@ -205,20 +171,27 @@ KexEdit/
 | Node implementations | `Runtime/Sim/Nodes/<NodeType>/` |
 | Type-safe graph ops | `Runtime/Graph/Typed/` |
 | Point → Spline conversion | `Runtime/Spline/Resampling/` |
+| Track segment boundaries | `Runtime/Spline/Rendering/` |
 
-### Application
+### Track Backend (Application)
 | What | Where |
 |------|-------|
-| Coaster aggregate | `Runtime/App/Coaster/` |
-| Serialization format | `Runtime/App/Persistence/` |
+| Editable document | `Runtime/Document/` |
+| Built track (Track, Section) | `Runtime/Track/` |
+| Serialization format | `Runtime/Persistence/` |
 
-### Infrastructure (Legacy)
+### Domain Layers
+| What | Where |
+|------|-------|
+| Train simulation | `Runtime/Trains/` |
+
+### Application (Legacy)
 | What | Where |
 |------|-------|
 | ECS systems | `Runtime/Legacy/<Domain>/Systems/` |
 | ECS components | `Runtime/Legacy/<Domain>/Components/` |
-| File I/O adapters | `Runtime/Legacy/Persistence/` |
-| Debug visualization | `Runtime/Legacy/Debug/` |
+| File I/O | `Runtime/Legacy/Persistence/` |
+| Debug gizmos | `Runtime/Legacy/Debug/` |
 | Editor tools | `Runtime/Legacy/Editor/` |
 
 ### Rust Backend
@@ -263,7 +236,7 @@ The codebase is being refactored from a monolithic Unity ECS application to the 
 ### Completed
 - [x] Hex core structure (Sim, Graph, Spline)
 - [x] Layer structure (Schema, Nodes, Typed, Resampling)
-- [x] Application layer (App.Coaster, App.Persistence)
+- [x] Application layer (Coaster, Persistence)
 - [x] Infrastructure renamed (Unity → Legacy)
 - [x] Namespace/assembly rename complete
 
@@ -272,28 +245,13 @@ The codebase is being refactored from a monolithic Unity ECS application to the 
 - [ ] Reducing Unity dependencies in application layer
 - [ ] Rust backend parity with C# cores
 
-### Remaining in Legacy Layer
+### Remaining in Legacy
 
-The following are still in `KexEdit.Legacy` and should eventually be:
-- Extracted to hex cores (portable logic)
-- Or kept as infrastructure (Unity-specific)
-
-| Folder | Status | Target |
-|--------|--------|--------|
-| `Trains/` | ECS components + systems | Extract physics to Sim, keep ECS in Legacy |
-| `Track/` | ECS components | Keep in Legacy (infrastructure) |
-| `Physics/` | ECS integration | Keep in Legacy (infrastructure) |
-| `State/` | ECS singletons | Refactor to App layer |
-| `Persistence/` | Adapters | Keep in Legacy (file I/O infrastructure) |
-| `Visualization/` | Being replaced | Delete when Spline.Rendering complete |
-
-## Migration Goals
-
-1. **Hex cores contain all portable logic** - testable without Unity
-2. **Legacy layer is thin** - only ECS wiring and infrastructure
-3. **Rust backend matches C# cores** - swappable via FFI
-4. **Future: TypeScript frontend** - reuse Rust backend via WASM
-
-## Rendering Migration
-
-See `PLAN.md` for detailed Articulation.Rendering implementation plan.
+| Folder | Target |
+|--------|--------|
+| `Trains/` | Extract to Domain Layer (`Runtime/Trains/`) |
+| `Track/` | Keep (infrastructure) |
+| `Physics/` | Keep (infrastructure) |
+| `State/` | Keep (infrastructure) |
+| `Persistence/` | Keep (infrastructure) |
+| `Visualization/` | Delete when Spline.Rendering complete |

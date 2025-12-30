@@ -1,12 +1,11 @@
 using System.IO;
-using KexEdit.App.Coaster;
 using KexEdit.Legacy;
 using KexEdit.Graph.Typed;
 using KexEdit.Graph;
 using NUnit.Framework;
 using Unity.Collections;
-using NodeMeta = KexEdit.App.Coaster.NodeMeta;
-using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using NodeMeta = KexEdit.Document.NodeMeta;
+using Coaster = KexEdit.Document.Document;
 
 namespace Tests {
     [TestFixture]
@@ -32,6 +31,62 @@ namespace Tests {
             RunParityTestForNodeType("all_types", "Bridge");
         }
 
+
+        [Test]
+        public void Switch_LoadAndEvaluate_EndpointsMatch() {
+            RunSwitchParityTest("switch");
+        }
+
+        private static void RunSwitchParityTest(string name) {
+            var gold = GoldDataLoader.Load($"Assets/Tests/TrackData/{name}.json");
+            var kexPath = $"Assets/Tests/Assets/{name}.kex";
+
+            Assert.IsTrue(File.Exists(kexPath), $"Test file not found: {kexPath}");
+
+            byte[] kexData = File.ReadAllBytes(kexPath);
+            var buffer = new NativeArray<byte>(kexData, Allocator.Temp);
+
+            try {
+                LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
+
+                try {
+                    KexEdit.Track.Track.Build(in coaster, Allocator.TempJob, out var track);
+
+                    try {
+                        Assert.Greater(track.SectionCount, 0, "No sections generated");
+
+                        bool afterCopyPath = false;
+                        foreach (var section in gold.sections) {
+                            int sectionPoints = section.outputs?.points?.Count ?? 0;
+                            if (sectionPoints == 0) continue;
+
+                            uint nodeId = section.nodeId;
+                            Assert.IsTrue(track.NodeToSection.TryGetValue(nodeId, out int sectionIndex),
+                                $"No section found for nodeId {nodeId} ({section.nodeType})");
+
+                            var trackSection = track.Sections[sectionIndex];
+                            var sectionPoints_array = track.Points.AsArray().GetSubArray(trackSection.StartIndex, trackSection.Length);
+
+                            bool isCopyPath = section.nodeType == "CopyPathSection";
+                            float tolerance = (isCopyPath || afterCopyPath) ? 0.5f : 5e-2f;
+                            AssertEndpointsMatchWithTolerance(sectionPoints_array, section.outputs.points, nodeId, section.nodeType, tolerance);
+
+                            if (isCopyPath) afterCopyPath = true;
+                        }
+                    }
+                    finally {
+                        track.Dispose();
+                    }
+                }
+                finally {
+                    coaster.Dispose();
+                }
+            }
+            finally {
+                buffer.Dispose();
+            }
+        }
+
         private static void RunParityTestForNodeType(string name, string nodeType) {
             var gold = GoldDataLoader.Load($"Assets/Tests/TrackData/{name}.json");
             var kexPath = $"Assets/Tests/Assets/{name}.kex";
@@ -45,15 +100,15 @@ namespace Tests {
                 LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
                 try {
-                    CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.TempJob);
+                    KexEdit.Track.Track.Build(in coaster, Allocator.TempJob, out var track);
 
                     try {
-                        Assert.Greater(result.Paths.Count, 0, "No paths generated");
+                        Assert.Greater(track.SectionCount, 0, "No sections generated");
                         LogCoasterDiagnostics(coaster, gold);
-                        AssertSectionsMatchByType(gold, result, nodeType);
+                        AssertSectionsMatchByType(gold, track, nodeType);
                     }
                     finally {
-                        result.Dispose();
+                        track.Dispose();
                     }
                 }
                 finally {
@@ -78,15 +133,15 @@ namespace Tests {
                 LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
                 try {
-                    CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.TempJob);
+                    KexEdit.Track.Track.Build(in coaster, Allocator.TempJob, out var track);
 
                     try {
-                        Assert.Greater(result.Paths.Count, 0, "No paths generated");
+                        Assert.Greater(track.SectionCount, 0, "No sections generated");
                         LogCoasterDiagnostics(coaster, gold);
-                        AssertAllSectionsMatch(gold, result);
+                        AssertAllSectionsMatch(gold, track);
                     }
                     finally {
-                        result.Dispose();
+                        track.Dispose();
                     }
                 }
                 finally {
@@ -98,7 +153,7 @@ namespace Tests {
             }
         }
 
-        private static void LogCoasterDiagnostics(KexEdit.App.Coaster.Coaster coaster, GoldTrackData gold) {
+        private static void LogCoasterDiagnostics(Coaster coaster, GoldTrackData gold) {
             UnityEngine.Debug.Log($"=== COASTER DIAGNOSTICS ===");
             UnityEngine.Debug.Log($"Graph: {coaster.Graph.NodeCount} nodes, {coaster.Graph.EdgeCount} edges");
 
@@ -114,12 +169,11 @@ namespace Tests {
                 uint nodeId = coaster.Graph.NodeIds[i];
                 uint nodeType = coaster.Graph.NodeTypes[i];
                 string typeName = ((KexEdit.Sim.Schema.NodeType)nodeType).ToString();
-                ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                ulong durKey = Coaster.InputKey(nodeId, NodeMeta.Duration);
                 string durInfo = coaster.Scalars.TryGetValue(durKey, out var dur) ? $"dur={dur}" : "no-dur";
                 string vectorInfo = coaster.Vectors.TryGetValue(nodeId, out var vec) ? $"pos=({vec.x:F2},{vec.y:F2},{vec.z:F2})" : "no-vec";
 
                 string velInfo = "no-vel";
-                // Velocity is only on Anchor nodes at index 2
                 if ((KexEdit.Sim.Schema.NodeType)nodeType == KexEdit.Sim.Schema.NodeType.Anchor &&
                     coaster.Graph.TryGetInput(nodeId, 2, out uint velPortId)) {
                     velInfo = coaster.Scalars.TryGetValue(velPortId, out float vel) ? $"vel={vel:F4} (port={velPortId})" : $"vel-port={velPortId}-no-scalar";
@@ -127,7 +181,6 @@ namespace Tests {
                 UnityEngine.Debug.Log($"  [{i}] id={nodeId} type={typeName} {durInfo} {vectorInfo} {velInfo}");
             }
 
-            // Show edges
             UnityEngine.Debug.Log($"=== EDGES ({coaster.Graph.EdgeCount}) ===");
             for (int i = 0; i < coaster.Graph.EdgeCount; i++) {
                 uint sourcePortId = coaster.Graph.EdgeSources[i];
@@ -139,7 +192,6 @@ namespace Tests {
                 UnityEngine.Debug.Log($"  Edge: node {sourceNodeId} (port={sourcePortId}) -> node {targetNodeId} (port={targetPortId})");
             }
 
-            // Compare with gold first section's input anchor
             var firstGoldAnc = gold.sections[0].inputs?.anchor;
             if (firstGoldAnc != null) {
                 UnityEngine.Debug.Log($"=== GOLD FIRST SECTION INPUT ANCHOR ===");
@@ -147,7 +199,7 @@ namespace Tests {
             }
         }
 
-        private static void AssertSectionsMatchByType(GoldTrackData gold, EvaluationResult result, string nodeType) {
+        private static void AssertSectionsMatchByType(GoldTrackData gold, KexEdit.Track.Track track, string nodeType) {
             int sectionsChecked = 0;
             int cumulativePoints = 0;
             bool isBridgeType = nodeType == "Bridge";
@@ -165,17 +217,20 @@ namespace Tests {
                 }
 
                 uint nodeId = section.nodeId;
-                Assert.IsTrue(result.Paths.TryGetValue(nodeId, out var path),
-                    $"No path found for nodeId {nodeId} ({section.nodeType})");
+                Assert.IsTrue(track.NodeToSection.TryGetValue(nodeId, out int sectionIndex),
+                    $"No section found for nodeId {nodeId} ({section.nodeType})");
+
+                var trackSection = track.Sections[sectionIndex];
+                var sectionPoints_array = track.Points.AsArray().GetSubArray(trackSection.StartIndex, trackSection.Length);
 
                 var goldDur = section.inputs?.duration;
-                UnityEngine.Debug.Log($"Checking {section.nodeType} nodeId={nodeId}: {path.Length} points (gold expects {sectionPoints}, gold duration={goldDur?.value} {goldDur?.type}, cumulative offset={cumulativePoints})");
+                UnityEngine.Debug.Log($"Checking {section.nodeType} nodeId={nodeId}: {sectionPoints_array.Length} points (gold expects {sectionPoints}, gold duration={goldDur?.value} {goldDur?.type}, cumulative offset={cumulativePoints})");
 
                 if (isBridgeType) {
-                    AssertBridgeTargetMatch(path, section.outputs.points, nodeId);
+                    AssertBridgeTargetMatch(sectionPoints_array, section.outputs.points, nodeId);
                 }
                 else {
-                    SimPointComparer.AssertMatchesGold(path, section.outputs.points, cumulativePoints);
+                    SimPointComparer.AssertMatchesGold(sectionPoints_array, section.outputs.points, cumulativePoints);
                 }
                 cumulativePoints += sectionPoints;
                 sectionsChecked++;
@@ -185,7 +240,7 @@ namespace Tests {
             UnityEngine.Debug.Log($"Verified {sectionsChecked} {nodeType} sections");
         }
 
-        private static void AssertAllSectionsMatch(GoldTrackData gold, EvaluationResult result) {
+        private static void AssertAllSectionsMatch(GoldTrackData gold, KexEdit.Track.Track track) {
             int sectionsChecked = 0;
             int cumulativePoints = 0;
             bool afterBridge = false;
@@ -208,26 +263,27 @@ namespace Tests {
 
                 bool isCopyPath = section.nodeType == "CopyPathSection";
 
-                Assert.IsTrue(result.Paths.TryGetValue(nodeId, out var path),
-                    $"No path found for nodeId {nodeId} ({section.nodeType})");
+                Assert.IsTrue(track.NodeToSection.TryGetValue(nodeId, out int sectionIndex),
+                    $"No section found for nodeId {nodeId} ({section.nodeType})");
+
+                var trackSection = track.Sections[sectionIndex];
+                var sectionPoints_array = track.Points.AsArray().GetSubArray(trackSection.StartIndex, trackSection.Length);
 
                 var goldDur = section.inputs?.duration;
-                UnityEngine.Debug.Log($"Checking {section.nodeType} nodeId={nodeId}: {path.Length} points (gold expects {sectionPoints}, gold duration={goldDur?.value} {goldDur?.type}, cumulative offset={cumulativePoints}, afterBridge={afterBridge})");
+                UnityEngine.Debug.Log($"Checking {section.nodeType} nodeId={nodeId}: {sectionPoints_array.Length} points (gold expects {sectionPoints}, gold duration={goldDur?.value} {goldDur?.type}, cumulative offset={cumulativePoints}, afterBridge={afterBridge})");
 
                 const int HIGH_OFFSET_THRESHOLD = 5000;
 
                 if (isCopyPath || afterBridge) {
-                    // CopyPath or post-Bridge: source/target data may differ, verify endpoints only
-                    AssertEndpointsMatch(path, section.outputs.points, nodeId, section.nodeType);
+                    AssertEndpointsMatch(sectionPoints_array, section.outputs.points, nodeId, section.nodeType);
                     cumulativePoints += sectionPoints;
                 }
                 else if (cumulativePoints >= HIGH_OFFSET_THRESHOLD) {
-                    // High accumulated offset: floating-point drift makes point-by-point unreliable
-                    AssertHighOffsetEndpointsMatch(path, section.outputs.points, nodeId, section.nodeType);
+                    AssertHighOffsetEndpointsMatch(sectionPoints_array, section.outputs.points, nodeId, section.nodeType);
                     cumulativePoints += sectionPoints;
                 }
                 else {
-                    SimPointComparer.AssertMatchesGold(path, section.outputs.points, cumulativePoints);
+                    SimPointComparer.AssertMatchesGold(sectionPoints_array, section.outputs.points, cumulativePoints);
                     cumulativePoints += sectionPoints;
                 }
                 sectionsChecked++;
@@ -238,25 +294,24 @@ namespace Tests {
         }
 
         private static void AssertBridgeTargetMatch(
-            NativeList<KexEdit.Sim.Point> actual,
+            NativeArray<KexEdit.Sim.Point> actual,
             System.Collections.Generic.List<GoldPointData> expected,
             uint nodeId
         ) {
             Assert.Greater(actual.Length, 0, $"Bridge {nodeId}: no points generated");
             Assert.Greater(expected.Count, 0, $"Bridge {nodeId}: no gold points");
 
-            // Bridges interpolate to a fixed target - only verify the endpoint matches
             const float targetTolerance = 1e-3f;
 
-            var actualLast = actual[^1];
-            var goldLast = expected[^1];
+            var actualLast = actual[actual.Length - 1];
+            var goldLast = expected[expected.Count - 1];
             AssertPointNear(actualLast, goldLast, $"Bridge {nodeId} target", targetTolerance);
 
             UnityEngine.Debug.Log($"Bridge {nodeId}: target matches (actual={actual.Length} pts, gold={expected.Count} pts)");
         }
 
         private static void AssertHighOffsetEndpointsMatch(
-            NativeList<KexEdit.Sim.Point> actual,
+            NativeArray<KexEdit.Sim.Point> actual,
             System.Collections.Generic.List<GoldPointData> expected,
             uint nodeId,
             string nodeType
@@ -267,21 +322,30 @@ namespace Tests {
             Assert.AreEqual(expected.Count, actual.Length,
                 $"{nodeType} {nodeId}: point count mismatch - actual={actual.Length}, gold={expected.Count}");
 
-            // High-offset sections have accumulated significant drift - use relaxed tolerance
             const float highOffsetTolerance = 5.0f;
 
-            var actualLast = actual[^1];
-            var goldLast = expected[^1];
+            var actualLast = actual[actual.Length - 1];
+            var goldLast = expected[expected.Count - 1];
             AssertPointNear(actualLast, goldLast, $"{nodeType} {nodeId} last point (high-offset)", highOffsetTolerance);
 
             UnityEngine.Debug.Log($"{nodeType} {nodeId}: high-offset endpoint matches (actual={actual.Length} pts)");
         }
 
         private static void AssertEndpointsMatch(
-            NativeList<KexEdit.Sim.Point> actual,
+            NativeArray<KexEdit.Sim.Point> actual,
             System.Collections.Generic.List<GoldPointData> expected,
             uint nodeId,
             string nodeType
+        ) {
+            AssertEndpointsMatchWithTolerance(actual, expected, nodeId, nodeType, 5e-2f);
+        }
+
+        private static void AssertEndpointsMatchWithTolerance(
+            NativeArray<KexEdit.Sim.Point> actual,
+            System.Collections.Generic.List<GoldPointData> expected,
+            uint nodeId,
+            string nodeType,
+            float endpointTolerance
         ) {
             Assert.Greater(actual.Length, 0, $"{nodeType} {nodeId}: no points generated");
             Assert.Greater(expected.Count, 0, $"{nodeType} {nodeId}: no gold points");
@@ -293,14 +357,12 @@ namespace Tests {
                 $"{nodeType} {nodeId}: point count diverged too much - actual={actual.Length}, gold={expected.Count}, ratio={countRatio:F3}"
             );
 
-            const float endpointTolerance = 5e-2f;
-
             var actualFirst = actual[0];
             var goldFirst = expected[0];
             AssertPointNear(actualFirst, goldFirst, $"{nodeType} {nodeId} first point", endpointTolerance);
 
-            var actualLast = actual[^1];
-            var goldLast = expected[^1];
+            var actualLast = actual[actual.Length - 1];
+            var goldLast = expected[expected.Count - 1];
             AssertPointNear(actualLast, goldLast, $"{nodeType} {nodeId} last point", endpointTolerance);
 
             UnityEngine.Debug.Log($"{nodeType} {nodeId}: endpoints match (actual={actual.Length} pts, gold={expected.Count} pts)");

@@ -1,4 +1,4 @@
-using KexEdit.App.Persistence;
+using KexEdit.Persistence;
 using Unity.Mathematics;
 
 namespace KexEdit.Legacy.Serialization {

@@ -15,9 +15,9 @@ using static KexEdit.UI.Timeline.Constants;
 using KexEdit.Sim.Schema;
 using LegacyDurationType = KexEdit.Legacy.DurationType;
 using LegacyNodeType = KexEdit.Legacy.NodeType;
-using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using DocumentAggregate = KexEdit.Document.Document;
 using LegacyCoaster = KexEdit.Legacy.Coaster;
-using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using NodeMeta = KexEdit.Document.NodeMeta;
 
 namespace KexEdit.UI.Timeline {
     [UpdateInGroup(typeof(UISimulationSystemGroup))]
@@ -651,7 +651,7 @@ namespace KexEdit.UI.Timeline {
             if (HasEditableDuration()) {
                 uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
                 ref var coaster = ref GetCoasterRef();
-                ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                ulong durKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Duration);
                 if (coaster.Scalars.TryGetValue(durKey, out float duration)) {
                     return duration;
                 }
@@ -675,7 +675,7 @@ namespace KexEdit.UI.Timeline {
             if (_data.Active && HasEditableDuration()) {
                 uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
                 ref var coaster = ref GetCoasterRef();
-                ulong durTypeKey = CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType);
+                ulong durTypeKey = DocumentAggregate.InputKey(nodeId, NodeMeta.DurationType);
                 if (coaster.Flags.TryGetValue(durTypeKey, out int durType) && durType == 1) {
                     return LegacyDurationType.Distance;
                 }
@@ -739,7 +739,7 @@ namespace KexEdit.UI.Timeline {
             SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
         }
 
-        private ref CoasterAggregate GetCoasterRef() {
+        private ref DocumentAggregate GetCoasterRef() {
             var coasterEntity = SystemAPI.GetComponent<CoasterReference>(_data.Entity).Value;
             return ref SystemAPI.GetComponentRW<CoasterData>(coasterEntity).ValueRW.Value;
         }
@@ -792,8 +792,8 @@ namespace KexEdit.UI.Timeline {
             SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
         }
 
-        private static void SetCoasterFlag(ref CoasterAggregate coaster, uint nodeId, int metaIndex, bool value) {
-            ulong key = CoasterAggregate.InputKey(nodeId, metaIndex);
+        private static void SetCoasterFlag(ref DocumentAggregate coaster, uint nodeId, int metaIndex, bool value) {
+            ulong key = DocumentAggregate.InputKey(nodeId, metaIndex);
             if (value) {
                 coaster.Flags[key] = 1;
             }
@@ -1119,7 +1119,7 @@ namespace KexEdit.UI.Timeline {
 
             uint nodeId = SystemAPI.GetComponent<Node>(_data.Entity).Id;
             ref var coaster = ref GetCoasterRef();
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = duration;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, NodeMeta.Duration)] = duration;
 
             SystemAPI.SetComponentEnabled<Dirty>(_data.Entity, true);
             MarkTrackDirty();

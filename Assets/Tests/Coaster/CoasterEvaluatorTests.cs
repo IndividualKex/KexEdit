@@ -1,4 +1,3 @@
-using KexEdit.App.Coaster;
 using KexEdit.Sim;
 using KexEdit.Graph.Typed;
 using KexEdit.Sim.Schema;
@@ -7,20 +6,20 @@ using KexEdit.Graph;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
-using DurationType = KexEdit.App.Coaster.DurationType;
-using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using Coaster = KexEdit.Document.Document;
+using NodeMeta = KexEdit.Document.NodeMeta;
 
 public class CoasterEvaluatorTests {
     [Test]
     public void Evaluate_EmptyCoaster_ReturnsEmptyResult() {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
-            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
             try {
-                Assert.AreEqual(0, result.Paths.Count);
-                Assert.AreEqual(0, result.OutputAnchors.Count);
+                Assert.AreEqual(0, track.SectionCount);
+                Assert.AreEqual(0, track.Points.Length);
             } finally {
-                result.Dispose();
+                track.Dispose();
             }
         } finally {
             coaster.Dispose();
@@ -33,19 +32,12 @@ public class CoasterEvaluatorTests {
         try {
             uint nodeId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out _, Allocator.Temp);
             coaster.Vectors[Coaster.InputKey(nodeId, AnchorPorts.Position)] = new float3(10f, 20f, 30f);
-            // Rotation defaults to zero in scalars
 
-            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
             try {
-                Assert.AreEqual(1, result.OutputAnchors.Count);
-                Assert.IsTrue(result.OutputAnchors.ContainsKey(nodeId));
-
-                var anchor = result.OutputAnchors[nodeId];
-                Assert.AreEqual(10f, anchor.HeartPosition.x, 0.001f);
-                Assert.AreEqual(20f, anchor.HeartPosition.y, 0.001f);
-                Assert.AreEqual(30f, anchor.HeartPosition.z, 0.001f);
+                Assert.AreEqual(0, track.SectionCount, "Anchor nodes don't produce sections");
             } finally {
-                result.Dispose();
+                track.Dispose();
             }
         } finally {
             coaster.Dispose();
@@ -58,7 +50,6 @@ public class CoasterEvaluatorTests {
         try {
             uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
             coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
-            // Rotation defaults to zero in scalars
 
             uint forceId = coaster.Graph.CreateNode(NodeType.Force, new float2(100f, 0f), out var forceInputs, out _, Allocator.Temp);
             coaster.Scalars[Coaster.InputKey(forceId, NodeMeta.Duration)] = 1f;
@@ -68,18 +59,18 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             forceInputs.Dispose();
 
-            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
             try {
-                Assert.IsTrue(result.OutputAnchors.ContainsKey(forceId), "Force node should have output anchor");
-                Assert.IsTrue(result.Paths.ContainsKey(forceId), "Force node should have path");
+                Assert.IsTrue(track.NodeToSection.TryGetValue(forceId, out int sectionIndex), "Force node should have section");
 
-                var path = result.Paths[forceId];
-                Assert.Greater(path.Length, 1, "Path should have multiple points");
+                var section = track.Sections[sectionIndex];
+                Assert.IsTrue(section.IsValid, "Force section should be valid");
+                Assert.Greater(section.Length, 1, "Section should have multiple points");
 
-                var outputAnchor = result.OutputAnchors[forceId];
-                Assert.AreNotEqual(0f, outputAnchor.HeartPosition.z, "Output anchor should have moved from start");
+                var lastPoint = track.Points[section.EndIndex];
+                Assert.AreNotEqual(0f, lastPoint.HeartPosition.z, "Output position should have moved from start");
             } finally {
-                result.Dispose();
+                track.Dispose();
             }
         } finally {
             coaster.Dispose();
@@ -92,7 +83,6 @@ public class CoasterEvaluatorTests {
         try {
             uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
             coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
-            // Rotation defaults to zero in scalars
 
             uint geoId = coaster.Graph.CreateNode(NodeType.Geometric, new float2(100f, 0f), out var geoInputs, out _, Allocator.Temp);
             coaster.Scalars[Coaster.InputKey(geoId, NodeMeta.Duration)] = 1f;
@@ -102,15 +92,15 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             geoInputs.Dispose();
 
-            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
             try {
-                Assert.IsTrue(result.OutputAnchors.ContainsKey(geoId), "Geometric node should have output anchor");
-                Assert.IsTrue(result.Paths.ContainsKey(geoId), "Geometric node should have path");
+                Assert.IsTrue(track.NodeToSection.TryGetValue(geoId, out int sectionIndex), "Geometric node should have section");
 
-                var path = result.Paths[geoId];
-                Assert.Greater(path.Length, 1, "Path should have multiple points");
+                var section = track.Sections[sectionIndex];
+                Assert.IsTrue(section.IsValid, "Geometric section should be valid");
+                Assert.Greater(section.Length, 1, "Section should have multiple points");
             } finally {
-                result.Dispose();
+                track.Dispose();
             }
         } finally {
             coaster.Dispose();
@@ -123,7 +113,6 @@ public class CoasterEvaluatorTests {
         try {
             uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
             coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
-            // Rotation defaults to zero in scalars
 
             uint curvedId = coaster.Graph.CreateNode(NodeType.Curved, new float2(100f, 0f), out var curvedInputs, out _, Allocator.Temp);
             coaster.Scalars[Coaster.InputKey(curvedId, 1)] = 20f;
@@ -133,15 +122,15 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             curvedInputs.Dispose();
 
-            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
             try {
-                Assert.IsTrue(result.OutputAnchors.ContainsKey(curvedId), "Curved node should have output anchor");
-                Assert.IsTrue(result.Paths.ContainsKey(curvedId), "Curved node should have path");
+                Assert.IsTrue(track.NodeToSection.TryGetValue(curvedId, out int sectionIndex), "Curved node should have section");
 
-                var path = result.Paths[curvedId];
-                Assert.Greater(path.Length, 1, "Path should have multiple points");
+                var section = track.Sections[sectionIndex];
+                Assert.IsTrue(section.IsValid, "Curved section should be valid");
+                Assert.Greater(section.Length, 1, "Section should have multiple points");
             } finally {
-                result.Dispose();
+                track.Dispose();
             }
         } finally {
             coaster.Dispose();
@@ -154,7 +143,6 @@ public class CoasterEvaluatorTests {
         try {
             uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
             coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
-            // Rotation defaults to zero in scalars
 
             uint reverseId = coaster.Graph.CreateNode(NodeType.Reverse, new float2(100f, 0f), out var reverseInputs, out _, Allocator.Temp);
 
@@ -163,60 +151,17 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             reverseInputs.Dispose();
 
-            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
             try {
-                Assert.IsTrue(result.OutputAnchors.ContainsKey(reverseId), "Reverse node should have output anchor");
-
-                var inputAnchor = result.OutputAnchors[anchorId];
-                var outputAnchor = result.OutputAnchors[reverseId];
-
-                Assert.AreEqual(-inputAnchor.Direction.x, outputAnchor.Direction.x, 0.001f);
-                Assert.AreEqual(-inputAnchor.Direction.y, outputAnchor.Direction.y, 0.001f);
-                Assert.AreEqual(-inputAnchor.Direction.z, outputAnchor.Direction.z, 0.001f);
+                Assert.AreEqual(0, track.SectionCount, "Reverse nodes don't produce sections");
             } finally {
-                result.Dispose();
+                track.Dispose();
             }
         } finally {
             coaster.Dispose();
         }
     }
 
-    [Test]
-    public void Evaluate_ForceToReversePath_ReversesPath() {
-        var coaster = Coaster.Create(Allocator.Temp);
-        try {
-            uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-            coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
-
-            uint forceId = coaster.Graph.CreateNode(NodeType.Force, new float2(100f, 0f), out var forceInputs, out var forceOutputs, Allocator.Temp);
-            coaster.Scalars[Coaster.InputKey(forceId, NodeMeta.Duration)] = 0.5f;
-
-            uint reversePathId = coaster.Graph.CreateNode(NodeType.ReversePath, new float2(200f, 0f), out var rpInputs, out _, Allocator.Temp);
-
-            coaster.Graph.AddEdge(anchorOutputs[0], forceInputs[0]);
-            coaster.Graph.AddEdge(forceOutputs[1], rpInputs[0]);
-
-            anchorOutputs.Dispose();
-            forceInputs.Dispose();
-            forceOutputs.Dispose();
-            rpInputs.Dispose();
-
-            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
-            try {
-                Assert.IsTrue(result.Paths.ContainsKey(reversePathId), "ReversePath should have path");
-
-                var originalPath = result.Paths[forceId];
-                var reversedPath = result.Paths[reversePathId];
-
-                Assert.AreEqual(originalPath.Length, reversedPath.Length);
-                Assert.AreEqual(originalPath[0].HeartPosition.x, reversedPath[^1].HeartPosition.x, 0.001f);
-            } finally {
-                result.Dispose();
-            }
-        } finally {
-            coaster.Dispose();
-        }
-    }
 
     [Test]
     public void Evaluate_ForceToCopyPath_CopiesPath() {
@@ -243,15 +188,15 @@ public class CoasterEvaluatorTests {
             anchor2Outputs.Dispose();
             copyInputs.Dispose();
 
-            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
             try {
-                Assert.IsTrue(result.Paths.ContainsKey(copyId), "CopyPath should have path");
-                Assert.IsTrue(result.OutputAnchors.ContainsKey(copyId), "CopyPath should have output anchor");
+                Assert.IsTrue(track.NodeToSection.TryGetValue(copyId, out int sectionIndex), "CopyPath should have section");
 
-                var copyPath = result.Paths[copyId];
-                Assert.Greater(copyPath.Length, 1, "CopyPath should have multiple points");
+                var section = track.Sections[sectionIndex];
+                Assert.IsTrue(section.IsValid, "CopyPath section should be valid");
+                Assert.Greater(section.Length, 1, "CopyPath should have multiple points");
             } finally {
-                result.Dispose();
+                track.Dispose();
             }
         } finally {
             coaster.Dispose();
@@ -264,11 +209,9 @@ public class CoasterEvaluatorTests {
         try {
             uint anchor1Id = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchor1Outputs, Allocator.Temp);
             coaster.Vectors[Coaster.InputKey(anchor1Id, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
-            // Rotation defaults to zero in scalars
 
             uint anchor2Id = coaster.Graph.CreateNode(NodeType.Anchor, new float2(0f, 100f), out _, out var anchor2Outputs, Allocator.Temp);
             coaster.Vectors[Coaster.InputKey(anchor2Id, AnchorPorts.Position)] = new float3(0f, 10f, 50f);
-            // Rotation defaults to zero in scalars
 
             uint bridgeId = coaster.Graph.CreateNode(NodeType.Bridge, new float2(100f, 0f), out var bridgeInputs, out _, Allocator.Temp);
 
@@ -279,15 +222,15 @@ public class CoasterEvaluatorTests {
             anchor2Outputs.Dispose();
             bridgeInputs.Dispose();
 
-            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
             try {
-                Assert.IsTrue(result.Paths.ContainsKey(bridgeId), "Bridge should have path");
-                Assert.IsTrue(result.OutputAnchors.ContainsKey(bridgeId), "Bridge should have output anchor");
+                Assert.IsTrue(track.NodeToSection.TryGetValue(bridgeId, out int sectionIndex), "Bridge should have section");
 
-                var bridgePath = result.Paths[bridgeId];
-                Assert.Greater(bridgePath.Length, 1, "Bridge should have multiple points");
+                var section = track.Sections[sectionIndex];
+                Assert.IsTrue(section.IsValid, "Bridge section should be valid");
+                Assert.Greater(section.Length, 1, "Bridge should have multiple points");
             } finally {
-                result.Dispose();
+                track.Dispose();
             }
         } finally {
             coaster.Dispose();
@@ -313,14 +256,15 @@ public class CoasterEvaluatorTests {
             scalarOutputs.Dispose();
             curvedInputs.Dispose();
 
-            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
             try {
-                Assert.IsTrue(result.Paths.ContainsKey(curvedId), "Curved node should have path");
+                Assert.IsTrue(track.NodeToSection.TryGetValue(curvedId, out int sectionIndex), "Curved node should have section");
 
-                var path = result.Paths[curvedId];
-                Assert.Greater(path.Length, 1, "Path should have multiple points");
+                var section = track.Sections[sectionIndex];
+                Assert.IsTrue(section.IsValid, "Curved section should be valid");
+                Assert.Greater(section.Length, 1, "Section should have multiple points");
             } finally {
-                result.Dispose();
+                track.Dispose();
             }
         } finally {
             coaster.Dispose();

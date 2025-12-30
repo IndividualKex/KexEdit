@@ -1,23 +1,23 @@
 using System.Collections.Generic;
 using KexEdit.Legacy;
 using KexEdit.Sim.Schema;
-using KexEdit.App.Persistence;
+using KexEdit.Persistence;
 using Unity.Collections;
-using AppCoaster = KexEdit.App.Coaster.Coaster;
+using AppDocument = KexEdit.Document.Document;
 
 namespace KexEdit.UI.Timeline {
     public class CoasterKeyframeManager {
-        private AppCoaster _coaster;
+        private AppDocument _coaster;
         private UIStateChunk _uiState;
         private readonly Dictionary<uint, uint> _nextKeyframeIds;
 
-        public CoasterKeyframeManager(AppCoaster coaster, UIStateChunk uiState) {
+        public CoasterKeyframeManager(AppDocument coaster, UIStateChunk uiState) {
             _coaster = coaster;
             _uiState = uiState;
             _nextKeyframeIds = new Dictionary<uint, uint>();
         }
 
-        public void UpdateCoaster(AppCoaster coaster) {
+        public void UpdateCoaster(AppDocument coaster) {
             _coaster = coaster;
         }
 

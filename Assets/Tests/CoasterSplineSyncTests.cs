@@ -1,6 +1,6 @@
 using KexEdit.Spline;
 using KexEdit.Spline.Resampling;
-using KexEdit.App.Coaster;
+using KexEdit.Document;
 using KexEdit.Graph.Typed;
 using KexEdit.Sim.Schema;
 using KexEdit.Sim.Nodes.Anchor;
@@ -8,8 +8,9 @@ using KexEdit.Graph;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
-using CoasterAggregate = KexEdit.App.Coaster.Coaster;
-using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using Coaster = KexEdit.Document.Document;
+using NodeMeta = KexEdit.Document.NodeMeta;
+using TrackData = KexEdit.Track.Track;
 
 namespace Tests {
     [TestFixture]
@@ -17,28 +18,31 @@ namespace Tests {
     public class CoasterSplineSyncTests {
         [Test]
         public void SplineSync_ForceNode_ProducesSplinePoints() {
-            var coaster = CoasterAggregate.Create(Allocator.Temp);
+            var coaster = Coaster.Create(Allocator.Temp);
             try {
                 uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-                coaster.Vectors[CoasterAggregate.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
+                coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
 
                 uint forceId = coaster.Graph.CreateNode(NodeType.Force, new float2(100f, 0f), out var forceInputs, out _, Allocator.Temp);
-                coaster.Scalars[CoasterAggregate.InputKey(forceId, NodeMeta.Duration)] = 1f;
+                coaster.Scalars[Coaster.InputKey(forceId, NodeMeta.Duration)] = 1f;
 
                 coaster.Graph.AddEdge(anchorOutputs[0], forceInputs[0]);
 
                 anchorOutputs.Dispose();
                 forceInputs.Dispose();
 
-                CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+                TrackData.Build(in coaster, Allocator.Temp, out var track);
                 try {
-                    Assert.IsTrue(result.Paths.ContainsKey(forceId), "Force node should have path");
-                    var path = result.Paths[forceId];
+                    Assert.IsTrue(track.NodeToSection.TryGetValue(forceId, out int sectionIdx), "Force node should have section");
+                    var section = track.Sections[sectionIdx];
+                    Assert.IsTrue(section.IsValid, "Section should be valid");
+
+                    var path = track.Points.AsArray().GetSubArray(section.StartIndex, section.Length);
                     Assert.Greater(path.Length, 1, "Path should have multiple points");
 
                     var splineOutput = new NativeList<SplinePoint>(256, Allocator.Temp);
                     try {
-                        SplineResampler.Resample(path.AsArray(), 0.1f, ref splineOutput);
+                        SplineResampler.Resample(path, 0.1f, ref splineOutput);
 
                         Assert.Greater(splineOutput.Length, 1, "Spline should have multiple points");
 
@@ -56,7 +60,7 @@ namespace Tests {
                     }
                 }
                 finally {
-                    result.Dispose();
+                    track.Dispose();
                 }
             }
             finally {
@@ -66,27 +70,28 @@ namespace Tests {
 
         [Test]
         public void SplineSync_GeometricNode_ProducesSplinePoints() {
-            var coaster = CoasterAggregate.Create(Allocator.Temp);
+            var coaster = Coaster.Create(Allocator.Temp);
             try {
                 uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-                coaster.Vectors[CoasterAggregate.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
+                coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
 
                 uint geoId = coaster.Graph.CreateNode(NodeType.Geometric, new float2(100f, 0f), out var geoInputs, out _, Allocator.Temp);
-                coaster.Scalars[CoasterAggregate.InputKey(geoId, NodeMeta.Duration)] = 2f;
+                coaster.Scalars[Coaster.InputKey(geoId, NodeMeta.Duration)] = 2f;
 
                 coaster.Graph.AddEdge(anchorOutputs[0], geoInputs[0]);
 
                 anchorOutputs.Dispose();
                 geoInputs.Dispose();
 
-                CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+                TrackData.Build(in coaster, Allocator.Temp, out var track);
                 try {
-                    Assert.IsTrue(result.Paths.ContainsKey(geoId), "Geometric node should have path");
-                    var path = result.Paths[geoId];
+                    Assert.IsTrue(track.NodeToSection.TryGetValue(geoId, out int sectionIdx), "Geometric node should have section");
+                    var section = track.Sections[sectionIdx];
+                    var path = track.Points.AsArray().GetSubArray(section.StartIndex, section.Length);
 
                     var splineOutput = new NativeList<SplinePoint>(256, Allocator.Temp);
                     try {
-                        SplineResampler.Resample(path.AsArray(), 0.1f, ref splineOutput);
+                        SplineResampler.Resample(path, 0.1f, ref splineOutput);
 
                         Assert.Greater(splineOutput.Length, 1, "Spline should have multiple points");
 
@@ -101,7 +106,7 @@ namespace Tests {
                     }
                 }
                 finally {
-                    result.Dispose();
+                    track.Dispose();
                 }
             }
             finally {
@@ -111,28 +116,29 @@ namespace Tests {
 
         [Test]
         public void SplineSync_CurvedNode_ProducesUniformArcSpacing() {
-            var coaster = CoasterAggregate.Create(Allocator.Temp);
+            var coaster = Coaster.Create(Allocator.Temp);
             try {
                 uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-                coaster.Vectors[CoasterAggregate.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
+                coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
 
                 uint curvedId = coaster.Graph.CreateNode(NodeType.Curved, new float2(100f, 0f), out var curvedInputs, out _, Allocator.Temp);
-                coaster.Scalars[CoasterAggregate.InputKey(curvedId, 1)] = 20f;
+                coaster.Scalars[Coaster.InputKey(curvedId, 1)] = 20f;
 
                 coaster.Graph.AddEdge(anchorOutputs[0], curvedInputs[0]);
 
                 anchorOutputs.Dispose();
                 curvedInputs.Dispose();
 
-                CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+                TrackData.Build(in coaster, Allocator.Temp, out var track);
                 try {
-                    Assert.IsTrue(result.Paths.ContainsKey(curvedId), "Curved node should have path");
-                    var path = result.Paths[curvedId];
+                    Assert.IsTrue(track.NodeToSection.TryGetValue(curvedId, out int sectionIdx), "Curved node should have section");
+                    var section = track.Sections[sectionIdx];
+                    var path = track.Points.AsArray().GetSubArray(section.StartIndex, section.Length);
 
                     float resolution = 0.5f;
                     var splineOutput = new NativeList<SplinePoint>(256, Allocator.Temp);
                     try {
-                        SplineResampler.Resample(path.AsArray(), resolution, ref splineOutput);
+                        SplineResampler.Resample(path, resolution, ref splineOutput);
 
                         Assert.Greater(splineOutput.Length, 2, "Spline should have multiple points for curved track");
 
@@ -147,7 +153,7 @@ namespace Tests {
                     }
                 }
                 finally {
-                    result.Dispose();
+                    track.Dispose();
                 }
             }
             finally {
@@ -157,26 +163,28 @@ namespace Tests {
 
         [Test]
         public void SplineSync_PreservesDirectionNormalLateral() {
-            var coaster = CoasterAggregate.Create(Allocator.Temp);
+            var coaster = Coaster.Create(Allocator.Temp);
             try {
                 uint anchorId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out var anchorOutputs, Allocator.Temp);
-                coaster.Vectors[CoasterAggregate.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
+                coaster.Vectors[Coaster.InputKey(anchorId, AnchorPorts.Position)] = new float3(0f, 10f, 0f);
 
                 uint forceId = coaster.Graph.CreateNode(NodeType.Force, new float2(100f, 0f), out var forceInputs, out _, Allocator.Temp);
-                coaster.Scalars[CoasterAggregate.InputKey(forceId, NodeMeta.Duration)] = 0.5f;
+                coaster.Scalars[Coaster.InputKey(forceId, NodeMeta.Duration)] = 0.5f;
 
                 coaster.Graph.AddEdge(anchorOutputs[0], forceInputs[0]);
 
                 anchorOutputs.Dispose();
                 forceInputs.Dispose();
 
-                CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.Temp);
+                TrackData.Build(in coaster, Allocator.Temp, out var track);
                 try {
-                    var path = result.Paths[forceId];
+                    Assert.IsTrue(track.NodeToSection.TryGetValue(forceId, out int sectionIdx), "Force node should have section");
+                    var section = track.Sections[sectionIdx];
+                    var path = track.Points.AsArray().GetSubArray(section.StartIndex, section.Length);
 
                     var splineOutput = new NativeList<SplinePoint>(256, Allocator.Temp);
                     try {
-                        SplineResampler.Resample(path.AsArray(), ref splineOutput);
+                        SplineResampler.Resample(path, ref splineOutput);
 
                         Assert.AreEqual(path.Length, splineOutput.Length, "Direct resample should preserve point count");
 
@@ -195,7 +203,7 @@ namespace Tests {
                     }
                 }
                 finally {
-                    result.Dispose();
+                    track.Dispose();
                 }
             }
             finally {

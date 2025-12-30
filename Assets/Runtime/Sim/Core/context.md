@@ -42,6 +42,7 @@ Sim/Core/
 | `WithYaw(deltaYaw)` | Rotate around world up |
 | `FromDirectionAndRoll` | Construct from direction vector |
 | `FromEuler` | Construct from euler angles |
+| `MatchesForContinuation` | Check frame alignment for spatial continuation |
 
 ## Constants (Sim)
 

@@ -30,16 +30,18 @@ namespace KexEdit.Legacy {
                 if (overrides.TrackStyle) {
                     if (_coasterDataLookup.TryGetComponent(coasterRef, out var coasterData)) {
                         hashRef = CalculateStyleHash(in coasterData.Value.Keyframes, node.Id);
-                    } else {
+                    }
+                    else {
                         hashRef = 13;
                     }
-                } else {
+                }
+                else {
                     hashRef = CalculatePointHash(SystemAPI.GetBuffer<CorePointBuffer>(entity));
                 }
             }
         }
 
-        private uint CalculateStyleHash(in KexEdit.Sim.Schema.Storage.KeyframeStore keyframes, uint nodeId) {
+        private uint CalculateStyleHash(in KexEdit.Sim.Schema.KeyframeStore keyframes, uint nodeId) {
             if (!keyframes.TryGet(nodeId, PropertyId.TrackStyle, out var slice)) return 13;
             if (slice.Length == 0) return 13;
 

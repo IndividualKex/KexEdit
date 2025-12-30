@@ -1,6 +1,6 @@
 using KexEdit.Legacy;
 using KexEdit.Sim.Schema;
-using KexEdit.App.Persistence;
+using KexEdit.Persistence;
 using KexEdit.UI.Timeline;
 using NUnit.Framework;
 using Unity.Collections;
@@ -266,13 +266,13 @@ namespace Tests {
 
     [TestFixture]
     public class CoasterKeyframeManagerTests {
-        private KexEdit.App.Coaster.Coaster _coaster;
+        private KexEdit.Document.Document _coaster;
         private UIStateChunk _uiState;
         private CoasterKeyframeManager _manager;
 
         [SetUp]
         public void SetUp() {
-            _coaster = KexEdit.App.Coaster.Coaster.Create(Allocator.Persistent);
+            _coaster = KexEdit.Document.Document.Create(Allocator.Persistent);
             _uiState = UIStateChunk.Create(Allocator.Persistent);
             _manager = new CoasterKeyframeManager(_coaster, _uiState);
         }

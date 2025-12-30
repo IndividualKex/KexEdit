@@ -1,25 +1,25 @@
 using System;
 using System.Collections.Generic;
+using KexEdit.Graph;
+using KexEdit.Graph.Typed;
 using KexEdit.Legacy;
 using KexEdit.Legacy.Serialization;
-using KexEdit.Graph.Typed;
-using KexEdit.Graph;
 using SFB;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static KexEdit.Sim.Sim;
 using static KexEdit.Legacy.Constants;
+using static KexEdit.Sim.Sim;
 using static KexEdit.UI.Extensions;
 using AnchorNodeBuilder = KexEdit.Sim.Nodes.Anchor.AnchorNode;
 using AnchorPorts = KexEdit.Sim.Nodes.Anchor.AnchorPorts;
-using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using DocumentAggregate = KexEdit.Document.Document;
 using CoreNodeType = KexEdit.Sim.Schema.NodeType;
 using CorePoint = KexEdit.Sim.Point;
 using LegacyCoaster = KexEdit.Legacy.Coaster;
-using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using NodeMeta = KexEdit.Document.NodeMeta;
 using PortDataType = KexEdit.Sim.Schema.PortDataType;
 using PortSpec = KexEdit.Sim.Schema.PortSpec;
 
@@ -37,7 +37,7 @@ namespace KexEdit.UI.NodeGraph {
         private EntityQuery _connectionQuery;
         private EntityQuery _portQuery;
 
-        private ref CoasterAggregate GetCoasterRef() {
+        private ref DocumentAggregate GetCoasterRef() {
             return ref SystemAPI.GetComponentRW<CoasterData>(_data.Coaster).ValueRW.Value;
         }
 
@@ -50,7 +50,7 @@ namespace KexEdit.UI.NodeGraph {
         };
 
         private static void AddPortToCoaster(
-            ref CoasterAggregate coaster, uint nodeId, uint portId, uint encodedPortSpec, bool isInput
+            ref DocumentAggregate coaster, uint nodeId, uint portId, uint encodedPortSpec, bool isInput
         ) {
             int portIndex = coaster.Graph.PortIds.Length;
             coaster.Graph.PortIds.Add(portId);
@@ -126,10 +126,10 @@ namespace KexEdit.UI.NodeGraph {
             }
 
             if (type == NodeType.ForceSection || type == NodeType.GeometricSection) {
-                coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = 1f;
+                coaster.Scalars[DocumentAggregate.InputKey(nodeId, NodeMeta.Duration)] = 1f;
             }
             if (type == NodeType.GeometricSection) {
-                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Steering)] = 1;
+                coaster.Flags[DocumentAggregate.InputKey(nodeId, NodeMeta.Steering)] = 1;
             }
 
             InitializePortScalars(ref coaster, entity, type);
@@ -156,20 +156,20 @@ namespace KexEdit.UI.NodeGraph {
             );
         }
 
-        private void RebuildAnchorInCoaster(ref CoasterAggregate coaster, Entity nodeEntity) {
+        private void RebuildAnchorInCoaster(ref DocumentAggregate coaster, Entity nodeEntity) {
             uint nodeId = SystemAPI.GetComponent<Node>(nodeEntity).Id;
 
-            ulong posKey = CoasterAggregate.InputKey(nodeId, AnchorPorts.Position);
+            ulong posKey = DocumentAggregate.InputKey(nodeId, AnchorPorts.Position);
             float3 position = coaster.Vectors.TryGetValue(posKey, out var pos) ? pos : float3.zero;
 
-            float roll = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Roll), out var rollVal) ? rollVal : 0f;
-            float pitch = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Pitch), out var pitchVal) ? pitchVal : 0f;
-            float yaw = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Yaw), out var yawVal) ? yawVal : 0f;
+            float roll = coaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, AnchorPorts.Roll), out var rollVal) ? rollVal : 0f;
+            float pitch = coaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, AnchorPorts.Pitch), out var pitchVal) ? pitchVal : 0f;
+            float yaw = coaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, AnchorPorts.Yaw), out var yawVal) ? yawVal : 0f;
 
-            float velocity = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Velocity), out var v) ? v : 10f;
-            float heart = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Heart), out var h) ? h : 1.1f;
-            float friction = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Friction), out var f) ? f : 0.021f;
-            float resistance = coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Resistance), out var r) ? r : 2e-5f;
+            float velocity = coaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, AnchorPorts.Velocity), out var v) ? v : 10f;
+            float heart = coaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, AnchorPorts.Heart), out var h) ? h : 1.1f;
+            float friction = coaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, AnchorPorts.Friction), out var f) ? f : 0.021f;
+            float resistance = coaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, AnchorPorts.Resistance), out var r) ? r : 2e-5f;
 
             // Build anchor for ECS component (used by UI/visualization)
             float energy = 0.5f * velocity * velocity + 9.80665f * position.y;
@@ -204,7 +204,7 @@ namespace KexEdit.UI.NodeGraph {
             };
         }
 
-        private void InitializePortScalars(ref CoasterAggregate coaster, Entity entity, NodeType type) {
+        private void InitializePortScalars(ref DocumentAggregate coaster, Entity entity, NodeType type) {
             var inputPorts = SystemAPI.GetBuffer<InputPortReference>(entity);
             var defaultCurveData = CurveData.Default;
             uint nodeId = SystemAPI.GetComponent<Node>(entity).Id;
@@ -212,7 +212,7 @@ namespace KexEdit.UI.NodeGraph {
             for (int i = 0; i < inputPorts.Length; i++) {
                 var portEntity = inputPorts[i].Value;
                 var port = SystemAPI.GetComponent<Port>(portEntity);
-                ulong key = CoasterAggregate.InputKey(nodeId, i);
+                ulong key = DocumentAggregate.InputKey(nodeId, i);
 
                 switch (port.Type) {
                     case PortType.Duration:
@@ -787,14 +787,14 @@ namespace KexEdit.UI.NodeGraph {
 
             uint anchorNodeId = SystemAPI.GetComponent<Node>(node).Id;
             ref var coaster = ref GetCoasterRef();
-            coaster.Vectors[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Position)] = anchor.HeartPosition;
-            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Roll)] = math.radians(anchor.Roll);
-            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Pitch)] = math.radians(anchor.GetPitch());
-            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Yaw)] = math.radians(anchor.GetYaw());
-            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Velocity)] = anchor.Velocity;
-            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Heart)] = anchor.HeartOffset;
-            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Friction)] = anchor.Friction;
-            coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Resistance)] = anchor.Resistance;
+            coaster.Vectors[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Position)] = anchor.HeartPosition;
+            coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Roll)] = math.radians(anchor.Roll);
+            coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Pitch)] = math.radians(anchor.GetPitch());
+            coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Yaw)] = math.radians(anchor.GetYaw());
+            coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Velocity)] = anchor.Velocity;
+            coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Heart)] = anchor.HeartOffset;
+            coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Friction)] = anchor.Friction;
+            coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Resistance)] = anchor.Resistance;
         }
 
         private void OnAddConnection(AddConnectionEvent evt) {
@@ -826,7 +826,7 @@ namespace KexEdit.UI.NodeGraph {
 
             uint nodeId = SystemAPI.GetComponent<Node>(evt.Node).Id;
             ref var coaster = ref GetCoasterRef();
-            ulong durTypeKey = CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType);
+            ulong durTypeKey = DocumentAggregate.InputKey(nodeId, NodeMeta.DurationType);
             coaster.Flags[durTypeKey] = evt.DurationType == KexEdit.Legacy.DurationType.Distance ? 1 : 0;
 
             SystemAPI.SetComponentEnabled<Dirty>(evt.Node, true);
@@ -838,7 +838,7 @@ namespace KexEdit.UI.NodeGraph {
 
             uint nodeId = SystemAPI.GetComponent<Node>(evt.Node).Id;
             ref var coaster = ref GetCoasterRef();
-            ulong renderKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Render);
+            ulong renderKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Render);
             coaster.Flags[renderKey] = evt.Render ? 0 : 1;
 
             SystemAPI.SetComponentEnabled<Dirty>(evt.Node, true);
@@ -850,7 +850,7 @@ namespace KexEdit.UI.NodeGraph {
 
             uint nodeId = SystemAPI.GetComponent<Node>(evt.Node).Id;
             ref var coaster = ref GetCoasterRef();
-            ulong steeringKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Steering);
+            ulong steeringKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Steering);
             coaster.Flags[steeringKey] = evt.Steering ? 1 : 0;
 
             SystemAPI.SetComponentEnabled<Dirty>(evt.Node, true);
@@ -986,7 +986,7 @@ namespace KexEdit.UI.NodeGraph {
                 var outputPortBuffer = SystemAPI.GetBuffer<OutputPortReference>(entity);
 
                 for (int i = 0; i < inputPortBuffer.Length; i++) {
-                    ulong key = CoasterAggregate.InputKey(nodeId, i);
+                    ulong key = DocumentAggregate.InputKey(nodeId, i);
                     coaster.Scalars.Remove(key);
                     coaster.Vectors.Remove(key);
                     ecb.DestroyEntity(inputPortBuffer[i]);
@@ -996,10 +996,10 @@ namespace KexEdit.UI.NodeGraph {
                 }
 
                 coaster.Graph.RemoveNodeCascade(nodeId);
-                coaster.Scalars.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.Duration));
-                coaster.Flags.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType));
-                coaster.Flags.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.Steering));
-                coaster.Flags.Remove(CoasterAggregate.InputKey(nodeId, NodeMeta.Driven));
+                coaster.Scalars.Remove(DocumentAggregate.InputKey(nodeId, NodeMeta.Duration));
+                coaster.Flags.Remove(DocumentAggregate.InputKey(nodeId, NodeMeta.DurationType));
+                coaster.Flags.Remove(DocumentAggregate.InputKey(nodeId, NodeMeta.Steering));
+                coaster.Flags.Remove(DocumentAggregate.InputKey(nodeId, NodeMeta.Driven));
 
                 ecb.DestroyEntity(entity);
             }
@@ -1065,14 +1065,14 @@ namespace KexEdit.UI.NodeGraph {
         private void UpdateInputPortValue(PortData port) {
             ref var coaster = ref GetCoasterRef();
             uint nodeId = SystemAPI.GetComponent<Node>(port.Node).Id;
-            ulong key = CoasterAggregate.InputKey(nodeId, port.Index);
+            ulong key = DocumentAggregate.InputKey(nodeId, port.Index);
 
             switch (port.Port.Type) {
                 case PortType.Anchor:
                 case PortType.Path:
                     break;
                 case PortType.Duration:
-                    ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                    ulong durKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Duration);
                     if (coaster.Scalars.TryGetValue(durKey, out var durationVal)) {
                         port.SetValue(durationVal);
                     }
@@ -1181,7 +1181,7 @@ namespace KexEdit.UI.NodeGraph {
             var node = SystemAPI.GetComponent<Node>(port.Node);
             uint nodeId = node.Id;
             var nodeType = node.Type;
-            ulong key = CoasterAggregate.InputKey(nodeId, port.Index);
+            ulong key = DocumentAggregate.InputKey(nodeId, port.Index);
 
             switch (port.Port.Type) {
                 case PortType.Anchor:
@@ -1189,7 +1189,7 @@ namespace KexEdit.UI.NodeGraph {
                     break;
                 case PortType.Duration:
                     port.GetValue(out float durationValue);
-                    coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = durationValue;
+                    coaster.Scalars[DocumentAggregate.InputKey(nodeId, NodeMeta.Duration)] = durationValue;
                     break;
                 case PortType.Position:
                     port.GetValue(out float3 positionValue);
@@ -1492,6 +1492,8 @@ namespace KexEdit.UI.NodeGraph {
             ) {
                 ecb.AddBuffer<CorePointBuffer>(entity);
                 ecb.AddBuffer<SplineBuffer>(entity);
+                ecb.AddBuffer<SegmentationBuffer>(entity);
+                ecb.AddComponent(entity, SegmentationParams.Default);
 #if VALIDATE_COASTER_PARITY
                 ecb.AddBuffer<CoasterPointBuffer>(entity);
 #endif
@@ -1653,7 +1655,7 @@ namespace KexEdit.UI.NodeGraph {
             center /= selectedNodeCount;
             _clipboardCenter = center;
 
-            var clipboardCoaster = CoasterAggregate.Create(Allocator.Temp);
+            var clipboardCoaster = DocumentAggregate.Create(Allocator.Temp);
             var nodeOffsets = new NativeArray<float2>(selectedNodeCount, Allocator.Temp);
             var selectedNodeIds = new NativeHashSet<uint>(selectedNodeCount, Allocator.Temp);
             var selectedPortIds = new NativeHashSet<uint>(selectedNodeCount * 4, Allocator.Temp);
@@ -1708,28 +1710,28 @@ namespace KexEdit.UI.NodeGraph {
             }
 
             foreach (var kv in coaster.Scalars) {
-                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
+                DocumentAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
                 if (selectedNodeIds.Contains(nodeId)) {
                     clipboardCoaster.Scalars[kv.Key] = kv.Value;
                 }
             }
 
             foreach (var kv in coaster.Vectors) {
-                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
+                DocumentAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
                 if (selectedNodeIds.Contains(nodeId)) {
                     clipboardCoaster.Vectors[kv.Key] = kv.Value;
                 }
             }
 
             foreach (var kv in coaster.Flags) {
-                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
+                DocumentAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
                 if (selectedNodeIds.Contains(nodeId)) {
                     clipboardCoaster.Flags[kv.Key] = kv.Value;
                 }
             }
 
             foreach (var kv in coaster.Keyframes.Ranges) {
-                CoasterAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
+                DocumentAggregate.UnpackInputKey(kv.Key, out uint nodeId, out _);
                 if (selectedNodeIds.Contains(nodeId)) {
                     int2 range = kv.Value;
                     int newStart = clipboardCoaster.Keyframes.Keyframes.Length;
@@ -1760,7 +1762,7 @@ namespace KexEdit.UI.NodeGraph {
 
             var clipboardData = ClipboardSerializer.Deserialize(_clipboardData);
             var portMap = new Dictionary<uint, uint>();
-            var emptyUiState = KexEdit.App.Persistence.UIStateChunk.Create(Allocator.Temp);
+            var emptyUiState = KexEdit.Persistence.UIStateChunk.Create(Allocator.Temp);
 
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 

@@ -1,6 +1,6 @@
 using KexEdit.Sim;
 using KexEdit.Sim.Schema;
-using KexEdit.Sim.Schema.Storage;
+using KexEdit.Sim.Schema;
 using NUnit.Framework;
 using Unity.Collections;
 

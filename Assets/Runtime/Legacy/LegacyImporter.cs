@@ -1,16 +1,16 @@
 using System;
-using KexEdit.App.Coaster;
-using KexEdit.Legacy.Serialization;
+using KexEdit.Document;
+using KexEdit.Graph;
 using KexEdit.Graph.Typed;
+using KexEdit.Legacy.Serialization;
 using KexEdit.Sim.Nodes.Anchor;
 using KexEdit.Sim.Nodes.Bridge;
 using KexEdit.Sim.Schema;
-using KexEdit.Graph;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
-using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using DocumentAggregate = KexEdit.Document.Document;
 using CoreInterpolationType = KexEdit.Sim.InterpolationType;
 using CoreKeyframe = KexEdit.Sim.Keyframe;
 using SchemaNodeType = KexEdit.Sim.Schema.NodeType;
@@ -54,13 +54,13 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        public static void Import(ref NativeArray<byte> kexData, Allocator allocator, out CoasterAggregate coaster, out SerializedUIState uiState) {
-            coaster = CoasterAggregate.Create(allocator);
+        public static void Import(ref NativeArray<byte> kexData, Allocator allocator, out DocumentAggregate coaster, out SerializedUIState uiState) {
+            coaster = DocumentAggregate.Create(allocator);
             ImportInternal(ref kexData, allocator, ref coaster, out uiState);
         }
 
         [BurstCompile]
-        private static void ImportInternal(ref NativeArray<byte> kexData, Allocator allocator, ref CoasterAggregate coaster, out SerializedUIState uiState) {
+        private static void ImportInternal(ref NativeArray<byte> kexData, Allocator allocator, ref DocumentAggregate coaster, out SerializedUIState uiState) {
             var reader = new BinaryReader(kexData);
 
             int version = ReadHeader(ref reader, out uiState);
@@ -94,6 +94,7 @@ namespace KexEdit.Legacy {
             }
 
             ImportBridgeTargetsFromNodes(in nodes, ref coaster, allocator, in nodeIdRemap);
+            ImportInferredAnchorsFromNodes(in nodes, ref coaster, allocator, in nodeIdRemap);
 
             nodeIdRemap.Dispose();
             portIdRemap.Dispose();
@@ -107,7 +108,7 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void RemapKeyframesInStore(uint oldNodeId, uint newNodeId, ref KexEdit.Sim.Schema.Storage.KeyframeStore keyframes) {
+        private static void RemapKeyframesInStore(uint oldNodeId, uint newNodeId, ref KexEdit.Sim.Schema.KeyframeStore keyframes) {
             RemapKeyframesForProperty(oldNodeId, newNodeId, PropertyId.RollSpeed, ref keyframes);
             RemapKeyframesForProperty(oldNodeId, newNodeId, PropertyId.NormalForce, ref keyframes);
             RemapKeyframesForProperty(oldNodeId, newNodeId, PropertyId.LateralForce, ref keyframes);
@@ -121,7 +122,7 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void RemapKeyframesForProperty(uint oldNodeId, uint newNodeId, PropertyId propertyId, ref KexEdit.Sim.Schema.Storage.KeyframeStore keyframes) {
+        private static void RemapKeyframesForProperty(uint oldNodeId, uint newNodeId, PropertyId propertyId, ref KexEdit.Sim.Schema.KeyframeStore keyframes) {
             if (!keyframes.TryGet(oldNodeId, propertyId, out var kfs)) return;
             var copy = new NativeArray<CoreKeyframe>(kfs.Length, Allocator.Temp);
             for (int i = 0; i < kfs.Length; i++) {
@@ -280,7 +281,7 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ReadKeyframesToStore(ref BinaryReader reader, int version, uint nodeId, ref KexEdit.Sim.Schema.Storage.KeyframeStore keyframes) {
+        private static void ReadKeyframesToStore(ref BinaryReader reader, int version, uint nodeId, ref KexEdit.Sim.Schema.KeyframeStore keyframes) {
             if (version < SerializationVersion.PRECISION_MIGRATION) {
                 ReadLegacyKeyframeArray(ref reader, nodeId, PropertyId.RollSpeed, ref keyframes);
                 ReadLegacyKeyframeArray(ref reader, nodeId, PropertyId.NormalForce, ref keyframes);
@@ -309,7 +310,7 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ReadKeyframeArray(ref BinaryReader reader, uint nodeId, PropertyId propertyId, ref KexEdit.Sim.Schema.Storage.KeyframeStore keyframes) {
+        private static void ReadKeyframeArray(ref BinaryReader reader, uint nodeId, PropertyId propertyId, ref KexEdit.Sim.Schema.KeyframeStore keyframes) {
             reader.ReadArray(out NativeArray<Keyframe> legacyKeyframes, Allocator.Temp);
             if (legacyKeyframes.Length == 0) {
                 legacyKeyframes.Dispose();
@@ -337,7 +338,7 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ReadLegacyKeyframeArray(ref BinaryReader reader, uint nodeId, PropertyId propertyId, ref KexEdit.Sim.Schema.Storage.KeyframeStore keyframes) {
+        private static void ReadLegacyKeyframeArray(ref BinaryReader reader, uint nodeId, PropertyId propertyId, ref KexEdit.Sim.Schema.KeyframeStore keyframes) {
             reader.ReadArray(out NativeArray<KeyframeV1> legacy, Allocator.Temp);
             if (legacy.Length == 0) {
                 legacy.Dispose();
@@ -533,7 +534,7 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ImportNodeDataFromLegacyNode(in LegacyNode node, uint nodeId, ref CoasterAggregate coaster) {
+        private static void ImportNodeDataFromLegacyNode(in LegacyNode node, uint nodeId, ref DocumentAggregate coaster) {
             ImportDurationFromLegacyNode(in node, nodeId, ref coaster);
             ImportSteeringFromLegacyNode(in node, nodeId, ref coaster);
             ImportPropertyOverridesFromLegacyNode(in node, nodeId, ref coaster);
@@ -545,73 +546,73 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ImportDurationFromLegacyNode(in LegacyNode node, uint nodeId, ref CoasterAggregate coaster) {
+        private static void ImportDurationFromLegacyNode(in LegacyNode node, uint nodeId, ref DocumentAggregate coaster) {
             if ((node.FieldFlags & NodeFieldFlags.HasDuration) != 0) {
-                coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = node.Duration.Value;
+                coaster.Scalars[DocumentAggregate.InputKey(nodeId, NodeMeta.Duration)] = node.Duration.Value;
                 if (node.Duration.Type == DurationType.Distance) {
-                    coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType)] = 1;
+                    coaster.Flags[DocumentAggregate.InputKey(nodeId, NodeMeta.DurationType)] = 1;
                 }
             }
         }
 
         [BurstCompile]
-        private static void ImportSteeringFromLegacyNode(in LegacyNode node, uint nodeId, ref CoasterAggregate coaster) {
+        private static void ImportSteeringFromLegacyNode(in LegacyNode node, uint nodeId, ref DocumentAggregate coaster) {
             if (node.Steering) {
-                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Steering)] = 1;
+                coaster.Flags[DocumentAggregate.InputKey(nodeId, NodeMeta.Steering)] = 1;
             }
         }
 
         [BurstCompile]
-        private static void ImportPropertyOverridesFromLegacyNode(in LegacyNode node, uint nodeId, ref CoasterAggregate coaster) {
+        private static void ImportPropertyOverridesFromLegacyNode(in LegacyNode node, uint nodeId, ref DocumentAggregate coaster) {
             if ((node.FieldFlags & NodeFieldFlags.HasPropertyOverrides) == 0) return;
 
             if (node.PropertyOverrides.FixedVelocity) {
-                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Driven)] = 1;
+                coaster.Flags[DocumentAggregate.InputKey(nodeId, NodeMeta.Driven)] = 1;
             }
             if (node.PropertyOverrides.Heart) {
-                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideHeart)] = 1;
+                coaster.Flags[DocumentAggregate.InputKey(nodeId, NodeMeta.OverrideHeart)] = 1;
             }
             if (node.PropertyOverrides.Friction) {
-                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideFriction)] = 1;
+                coaster.Flags[DocumentAggregate.InputKey(nodeId, NodeMeta.OverrideFriction)] = 1;
             }
             if (node.PropertyOverrides.Resistance) {
-                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideResistance)] = 1;
+                coaster.Flags[DocumentAggregate.InputKey(nodeId, NodeMeta.OverrideResistance)] = 1;
             }
             if (node.PropertyOverrides.TrackStyle) {
-                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideTrackStyle)] = 1;
+                coaster.Flags[DocumentAggregate.InputKey(nodeId, NodeMeta.OverrideTrackStyle)] = 1;
             }
         }
 
         [BurstCompile]
-        private static void ImportFacingFromLegacyNode(in LegacyNode node, uint nodeId, ref CoasterAggregate coaster) {
+        private static void ImportFacingFromLegacyNode(in LegacyNode node, uint nodeId, ref DocumentAggregate coaster) {
             int facing = node.Anchor.Facing;
             if (facing != 1) {
-                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Facing)] = facing;
+                coaster.Flags[DocumentAggregate.InputKey(nodeId, NodeMeta.Facing)] = facing;
             }
         }
 
         [BurstCompile]
-        private static void ImportPriorityFromLegacyNode(in LegacyNode node, uint nodeId, ref CoasterAggregate coaster) {
+        private static void ImportPriorityFromLegacyNode(in LegacyNode node, uint nodeId, ref DocumentAggregate coaster) {
             int priority = node.Node.Priority;
             if (priority != 0) {
-                coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Priority)] = priority;
+                coaster.Scalars[DocumentAggregate.InputKey(nodeId, NodeMeta.Priority)] = priority;
             }
         }
 
         [BurstCompile]
-        private static void ImportRenderFromLegacyNode(in LegacyNode node, uint nodeId, ref CoasterAggregate coaster) {
+        private static void ImportRenderFromLegacyNode(in LegacyNode node, uint nodeId, ref DocumentAggregate coaster) {
             if (!node.Render) {
-                coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Render)] = 1;
+                coaster.Flags[DocumentAggregate.InputKey(nodeId, NodeMeta.Render)] = 1;
             }
         }
 
         [BurstCompile]
-        private static void ImportPortValuesFromLegacyNode(in LegacyNode node, uint nodeId, ref CoasterAggregate coaster) {
+        private static void ImportPortValuesFromLegacyNode(in LegacyNode node, uint nodeId, ref DocumentAggregate coaster) {
             for (int i = 0; i < node.InputPorts.Length; i++) {
                 var port = node.InputPorts[i];
                 var portType = port.Port.Type;
                 var value = port.Value;
-                ulong key = CoasterAggregate.InputKey(nodeId, i);
+                ulong key = DocumentAggregate.InputKey(nodeId, i);
 
                 switch (portType) {
                     case PortType.Anchor:
@@ -647,19 +648,19 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ImportAnchorDataFromLegacyNode(in LegacyNode node, uint nodeId, ref CoasterAggregate coaster) {
+        private static void ImportAnchorDataFromLegacyNode(in LegacyNode node, uint nodeId, ref DocumentAggregate coaster) {
             if (node.Node.Type != NodeType.Anchor) return;
 
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Velocity)] = node.Anchor.Velocity;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Heart)] = node.Anchor.HeartOffset;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Friction)] = node.Anchor.Friction;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Resistance)] = node.Anchor.Resistance;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, AnchorPorts.Velocity)] = node.Anchor.Velocity;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, AnchorPorts.Heart)] = node.Anchor.HeartOffset;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, AnchorPorts.Friction)] = node.Anchor.Friction;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, AnchorPorts.Resistance)] = node.Anchor.Resistance;
 
             bool hasPosition = !math.all(node.Anchor.HeartPosition == float3.zero);
             bool hasDirection = !math.all(node.Anchor.Direction == float3.zero);
 
             if (hasPosition) {
-                coaster.Vectors[CoasterAggregate.InputKey(nodeId, AnchorPorts.Position)] = node.Anchor.HeartPosition;
+                coaster.Vectors[DocumentAggregate.InputKey(nodeId, AnchorPorts.Position)] = node.Anchor.HeartPosition;
             }
 
             if (hasDirection) {
@@ -668,16 +669,16 @@ namespace KexEdit.Legacy {
                     math.normalizesafe(node.Anchor.Normal, math.down()),
                     math.normalizesafe(node.Anchor.Lateral, math.right())
                 );
-                coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Roll)] = frame.Roll;
-                coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Pitch)] = frame.Pitch;
-                coaster.Scalars[CoasterAggregate.InputKey(nodeId, AnchorPorts.Yaw)] = frame.Yaw;
+                coaster.Scalars[DocumentAggregate.InputKey(nodeId, AnchorPorts.Roll)] = frame.Roll;
+                coaster.Scalars[DocumentAggregate.InputKey(nodeId, AnchorPorts.Pitch)] = frame.Pitch;
+                coaster.Scalars[DocumentAggregate.InputKey(nodeId, AnchorPorts.Yaw)] = frame.Yaw;
             }
         }
 
         [BurstCompile]
         private static void ImportBridgeTargetsFromNodes(
             in NativeArray<LegacyNode> nodes,
-            ref CoasterAggregate coaster,
+            ref DocumentAggregate coaster,
             Allocator allocator,
             in NativeHashMap<int, uint> nodeIdRemap
         ) {
@@ -707,23 +708,90 @@ namespace KexEdit.Legacy {
                 float2 anchorPos = node.Node.Position + new float2(-100f, 50f);
                 uint anchorNodeId = coaster.Graph.CreateNode(SchemaNodeType.Anchor, anchorPos, out _, out var anchorOutputs, allocator);
 
-                coaster.Vectors[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Position)] = anchor.HeartPosition;
+                coaster.Vectors[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Position)] = anchor.HeartPosition;
 
                 var frame = new KexEdit.Sim.Frame(
                     math.normalizesafe(anchor.Direction, math.back()),
                     math.normalizesafe(anchor.Normal, math.down()),
                     math.normalizesafe(anchor.Lateral, math.right())
                 );
-                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Roll)] = frame.Roll;
-                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Pitch)] = frame.Pitch;
-                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Yaw)] = frame.Yaw;
-                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Velocity)] = anchor.Velocity;
-                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Heart)] = anchor.HeartOffset;
-                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Friction)] = anchor.Friction;
-                coaster.Scalars[CoasterAggregate.InputKey(anchorNodeId, AnchorPorts.Resistance)] = anchor.Resistance;
+                coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Roll)] = frame.Roll;
+                coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Pitch)] = frame.Pitch;
+                coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Yaw)] = frame.Yaw;
+                coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Velocity)] = anchor.Velocity;
+                coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Heart)] = anchor.HeartOffset;
+                coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Friction)] = anchor.Friction;
+                coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Resistance)] = anchor.Resistance;
 
                 if (coaster.Graph.TryGetInput(nodeId, BridgePorts.Target, out uint bridgeTargetPortId)) {
                     coaster.Graph.AddEdge(anchorOutputs[0], bridgeTargetPortId);
+                }
+
+                anchorOutputs.Dispose();
+            }
+        }
+
+        [BurstCompile]
+        private static void ImportInferredAnchorsFromNodes(
+            in NativeArray<LegacyNode> nodes,
+            ref DocumentAggregate coaster,
+            Allocator allocator,
+            in NativeHashMap<int, uint> nodeIdRemap
+        ) {
+            for (int i = 0; i < nodes.Length; i++) {
+                var node = nodes[i];
+                var nodeType = node.Node.Type;
+
+                bool isSectionNode = nodeType == NodeType.GeometricSection ||
+                                     nodeType == NodeType.ForceSection ||
+                                     nodeType == NodeType.CurvedSection ||
+                                     nodeType == NodeType.CopyPathSection;
+                if (!isSectionNode) continue;
+
+                uint nodeId = nodeIdRemap.TryGetValue(i, out uint remappedId) ? remappedId : node.Node.Id;
+
+                bool hasAnchorConnection = false;
+                if (coaster.Graph.TryGetInput(nodeId, 0, out uint anchorPortId)) {
+                    for (int j = 0; j < coaster.Graph.EdgeIds.Length; j++) {
+                        if (coaster.Graph.EdgeTargets[j] == anchorPortId) {
+                            hasAnchorConnection = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (hasAnchorConnection) continue;
+
+                var anchor = node.Anchor;
+                bool hasPosition = !math.all(anchor.HeartPosition == float3.zero);
+                bool hasDirection = !math.all(anchor.Direction == float3.zero);
+                if (!hasPosition && !hasDirection) continue;
+
+                float2 anchorPos = node.Node.Position + new float2(-100f, -50f);
+                uint anchorNodeId = coaster.Graph.CreateNode(SchemaNodeType.Anchor, anchorPos, out _, out var anchorOutputs, allocator);
+
+                if (hasPosition) {
+                    coaster.Vectors[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Position)] = anchor.HeartPosition;
+                }
+
+                if (hasDirection) {
+                    var frame = new KexEdit.Sim.Frame(
+                        math.normalizesafe(anchor.Direction, math.back()),
+                        math.normalizesafe(anchor.Normal, math.down()),
+                        math.normalizesafe(anchor.Lateral, math.right())
+                    );
+                    coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Roll)] = frame.Roll;
+                    coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Pitch)] = frame.Pitch;
+                    coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Yaw)] = frame.Yaw;
+                }
+
+                coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Velocity)] = anchor.Velocity;
+                coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Heart)] = anchor.HeartOffset;
+                coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Friction)] = anchor.Friction;
+                coaster.Scalars[DocumentAggregate.InputKey(anchorNodeId, AnchorPorts.Resistance)] = anchor.Resistance;
+
+                if (coaster.Graph.TryGetInput(nodeId, 0, out uint sectionAnchorPortId)) {
+                    coaster.Graph.AddEdge(anchorOutputs[0], sectionAnchorPortId);
                 }
 
                 anchorOutputs.Dispose();

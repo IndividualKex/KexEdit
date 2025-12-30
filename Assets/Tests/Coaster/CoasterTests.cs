@@ -5,10 +5,10 @@ using KexEdit.Sim.Nodes.Anchor;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
-using Coaster = KexEdit.App.Coaster.Coaster;
-using Duration = KexEdit.App.Coaster.Duration;
-using DurationType = KexEdit.App.Coaster.DurationType;
-using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using Coaster = KexEdit.Document.Document;
+using Duration = KexEdit.Legacy.Duration;
+using DurationType = KexEdit.Legacy.DurationType;
+using NodeMeta = KexEdit.Document.NodeMeta;
 
 public class CoasterTests {
     [Test]

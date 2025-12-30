@@ -28,7 +28,7 @@ Graph/Typed/
 **Out-of-scope**
 - Port data storage (consumer responsibility)
 - Property/keyframe handling (see KexEdit.Sim.Schema)
-- Serialization (see KexEdit.App.Persistence)
+- Serialization (see KexEdit.Persistence)
 - ECS integration (see KexEdit.Legacy)
 
 ## API (Extension Methods on Graph)

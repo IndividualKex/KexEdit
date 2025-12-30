@@ -21,8 +21,7 @@ Sim/Schema/
 ├── PropertyId.cs       # Keyframe properties
 ├── NodeSchema.cs       # Static schema queries (InputSpec, OutputSpec, etc.)
 ├── PropertyIndex.cs    # Serialization mapping
-├── Storage/            # Data storage contracts
-│   └── KeyframeStore.cs  # (nodeId, propertyId) → Keyframe[] storage
+|── KeyframeStore.cs    # (nodeId, propertyId) → Keyframe[] storage
 ├── Anchor/             # Creates initial state from position/rotation
 ├── Bridge/             # Bezier curve between anchors
 ├── CopyPath/           # Copies/transforms existing path

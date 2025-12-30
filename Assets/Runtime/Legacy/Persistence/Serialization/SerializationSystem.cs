@@ -5,8 +5,8 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using static KexEdit.Legacy.Constants;
-using CoasterAggregate = KexEdit.App.Coaster.Coaster;
-using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using DocumentAggregate = KexEdit.Document.Document;
+using NodeMeta = KexEdit.Document.NodeMeta;
 using CoreNodeType = KexEdit.Sim.Schema.NodeType;
 
 namespace KexEdit.Legacy.Serialization {
@@ -175,9 +175,9 @@ namespace KexEdit.Legacy.Serialization {
                 ViewStateAdapter.Capture(ref uiState, in timeline, in nodeGraph, in camera);
             }
 
-            var writer = new KexEdit.App.Persistence.ChunkWriter(Allocator.Temp);
-            KexEdit.App.Persistence.CoasterSerializer.Write(writer, in coasterData);
-            KexEdit.App.Persistence.UIExtensionCodec.Write(ref writer, in uiState);
+            var writer = new KexEdit.Persistence.ChunkWriter(Allocator.Temp);
+            KexEdit.Persistence.CoasterSerializer.Write(writer, in coasterData);
+            KexEdit.Persistence.UIExtensionCodec.Write(ref writer, in uiState);
 
             var data = writer.ToArray();
             var result = data.ToArray();
@@ -194,10 +194,10 @@ namespace KexEdit.Legacy.Serialization {
 
             if (data.Length == 0) {
                 EntityManager.SetComponentData(coaster, new CoasterData {
-                    Value = CoasterAggregate.Create(Allocator.Persistent)
+                    Value = DocumentAggregate.Create(Allocator.Persistent)
                 });
                 EntityManager.SetComponentData(coaster, new UIStateData {
-                    Value = KexEdit.App.Persistence.UIStateChunk.Create(Allocator.Persistent)
+                    Value = KexEdit.Persistence.UIStateChunk.Create(Allocator.Persistent)
                 });
                 return coaster;
             }
@@ -211,10 +211,10 @@ namespace KexEdit.Legacy.Serialization {
 
             if (data.Length == 0) {
                 EntityManager.SetComponentData(coaster, new CoasterData {
-                    Value = CoasterAggregate.Create(Allocator.Persistent)
+                    Value = DocumentAggregate.Create(Allocator.Persistent)
                 });
                 EntityManager.SetComponentData(coaster, new UIStateData {
-                    Value = KexEdit.App.Persistence.UIStateChunk.Create(Allocator.Persistent)
+                    Value = KexEdit.Persistence.UIStateChunk.Create(Allocator.Persistent)
                 });
                 return coaster;
             }
@@ -230,12 +230,12 @@ namespace KexEdit.Legacy.Serialization {
 
         private Entity DeserializeKexd(byte[] data, Entity coaster, bool restoreUIState) {
             var buffer = new NativeArray<byte>(data, Allocator.Temp);
-            var reader = new KexEdit.App.Persistence.ChunkReader(buffer);
+            var reader = new KexEdit.Persistence.ChunkReader(buffer);
 
-            var coasterAggregate = KexEdit.App.Persistence.CoasterSerializer.Read(ref reader, Allocator.Persistent);
-            bool hasUIState = KexEdit.App.Persistence.UIExtensionCodec.TryRead(ref reader, Allocator.Persistent, out var uiState);
+            var coasterAggregate = KexEdit.Persistence.CoasterSerializer.Read(ref reader, Allocator.Persistent);
+            bool hasUIState = KexEdit.Persistence.UIExtensionCodec.TryRead(ref reader, Allocator.Persistent, out var uiState);
             if (!hasUIState) {
-                uiState = KexEdit.App.Persistence.UIStateChunk.Create(Allocator.Persistent);
+                uiState = KexEdit.Persistence.UIStateChunk.Create(Allocator.Persistent);
             }
 
             EntityManager.SetComponentData(coaster, new CoasterData {
@@ -287,7 +287,7 @@ namespace KexEdit.Legacy.Serialization {
                 serializedUIState.ToState(out timelineState, out nodeGraphState, out cameraState);
             }
 
-            var uiState = KexEdit.App.Persistence.UIStateChunk.Create(Allocator.Persistent);
+            var uiState = KexEdit.Persistence.UIStateChunk.Create(Allocator.Persistent);
             EntityManager.SetComponentData(coaster, new UIStateData {
                 Value = uiState
             });
@@ -302,7 +302,7 @@ namespace KexEdit.Legacy.Serialization {
             return coaster;
         }
 
-        public SerializedNode SerializeNode(Entity entity, in CoasterAggregate coaster, Allocator allocator) {
+        public SerializedNode SerializeNode(Entity entity, in DocumentAggregate coaster, Allocator allocator) {
             Node node = SystemAPI.GetComponent<Node>(entity);
             uint nodeId = node.Id;
 
@@ -313,14 +313,14 @@ namespace KexEdit.Legacy.Serialization {
             for (int i = 0; i < inputPortBuffer.Length; i++) {
                 var portEntity = inputPortBuffer[i];
                 Port port = SystemAPI.GetComponent<Port>(portEntity);
-                ulong key = CoasterAggregate.InputKey(nodeId, i);
+                ulong key = DocumentAggregate.InputKey(nodeId, i);
                 SerializedPort portData = new() { Port = port };
                 switch (port.Type) {
                     case PortType.Anchor:
                     case PortType.Path:
                         break;
                     case PortType.Duration:
-                        ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                        ulong durKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Duration);
                         float durationValue = coaster.Scalars.TryGetValue(durKey, out var d) ? d : 0f;
                         portData.Value.Roll = durationValue;
                         break;
@@ -563,6 +563,8 @@ namespace KexEdit.Legacy.Serialization {
                 type == NodeType.ReversePath) {
                 ecb.AddBuffer<CorePointBuffer>(entity);
                 ecb.AddBuffer<SplineBuffer>(entity);
+                ecb.AddBuffer<SegmentationBuffer>(entity);
+                ecb.AddComponent(entity, SegmentationParams.Default);
 #if VALIDATE_COASTER_PARITY
                 ecb.AddBuffer<CoasterPointBuffer>(entity);
 #endif

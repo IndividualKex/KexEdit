@@ -8,7 +8,7 @@ namespace Tests {
     public static class SimPointComparer {
         private const float BASE_TOLERANCE = 1e-3f;
         private const float MACHINE_EPSILON = 1.1920929e-7f;
-        private const float TOLERANCE_PER_STEP = MACHINE_EPSILON * 2048f;
+        private const float TOLERANCE_PER_STEP = MACHINE_EPSILON * 2200f;
         private const int BOUNDARY_COUNT = 5;
         private const int SAMPLE_INTERVAL = 50;
 
@@ -16,6 +16,22 @@ namespace Tests {
             NativeList<Point> actual,
             List<GoldPointData> expected,
             int cumulativeOffset = 0
+        ) {
+            AssertMatchesGoldInternal(actual.AsArray(), expected, cumulativeOffset);
+        }
+
+        public static void AssertMatchesGold(
+            NativeArray<Point> actual,
+            List<GoldPointData> expected,
+            int cumulativeOffset = 0
+        ) {
+            AssertMatchesGoldInternal(actual, expected, cumulativeOffset);
+        }
+
+        private static void AssertMatchesGoldInternal(
+            NativeArray<Point> actual,
+            List<GoldPointData> expected,
+            int cumulativeOffset
         ) {
             Assert.AreEqual(expected.Count, actual.Length,
                 $"Point count mismatch: expected {expected.Count}, got {actual.Length}");

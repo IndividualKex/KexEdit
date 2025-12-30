@@ -1,6 +1,6 @@
 using KexEdit.Legacy;
 using KexEdit.Sim.Schema;
-using KexEdit.Sim.Schema.Storage;
+using KexEdit.Sim.Schema;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -8,8 +8,8 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.UIElements;
-using static KexEdit.Sim.Sim;
 using static KexEdit.Legacy.Constants;
+using static KexEdit.Sim.Sim;
 using static KexEdit.UI.Constants;
 using Keyframe = KexEdit.Legacy.Keyframe;
 

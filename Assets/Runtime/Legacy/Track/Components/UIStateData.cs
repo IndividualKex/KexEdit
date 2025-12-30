@@ -1,5 +1,5 @@
 using Unity.Entities;
-using KexEdit.App.Persistence;
+using KexEdit.Persistence;
 
 namespace KexEdit.Legacy {
     public struct UIStateData : IComponentData {

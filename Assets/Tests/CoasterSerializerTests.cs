@@ -1,15 +1,15 @@
 using KexEdit.Sim.Schema;
-using KexEdit.App.Persistence;
+using KexEdit.Persistence;
 using KexEdit.Graph;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Mathematics;
-using Coaster = KexEdit.App.Coaster.Coaster;
-using Duration = KexEdit.App.Coaster.Duration;
-using DurationType = KexEdit.App.Coaster.DurationType;
+using Coaster = KexEdit.Document.Document;
+using Duration = KexEdit.Legacy.Duration;
+using DurationType = KexEdit.Legacy.DurationType;
 using InterpolationType = KexEdit.Sim.InterpolationType;
 using Keyframe = KexEdit.Sim.Keyframe;
-using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using NodeMeta = KexEdit.Document.NodeMeta;
 
 namespace Tests {
     [TestFixture]

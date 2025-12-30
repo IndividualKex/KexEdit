@@ -1,4 +1,4 @@
-using KexEdit.App.Coaster;
+using KexEdit.Document;
 using KexEdit.Sim;
 using KexEdit.Legacy.Serialization;
 using KexEdit.Sim.Schema;
@@ -7,7 +7,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using DocumentAggregate = KexEdit.Document.Document;
 using CoreInterpolationType = KexEdit.Sim.InterpolationType;
 using CoreKeyframe = KexEdit.Sim.Keyframe;
 using SchemaNodeType = KexEdit.Sim.Schema.NodeType;
@@ -16,8 +16,8 @@ namespace KexEdit.Legacy {
     [BurstCompile]
     public static class KexdAdapter {
         public static void ImportToEcs(
-            in CoasterAggregate coaster,
-            in KexEdit.App.Persistence.UIStateChunk uiState,
+            in DocumentAggregate coaster,
+            in KexEdit.Persistence.UIStateChunk uiState,
             Entity coasterEntity,
             EntityManager entityManager,
             bool restoreUIState
@@ -51,8 +51,8 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void BuildSerializedNode(
-            in CoasterAggregate coaster,
-            in KexEdit.App.Persistence.UIStateChunk uiState,
+            in DocumentAggregate coaster,
+            in KexEdit.Persistence.UIStateChunk uiState,
             int nodeIndex,
             Allocator allocator,
             out SerializedNode result
@@ -69,7 +69,7 @@ namespace KexEdit.Legacy {
 
             var legacyType = CoreToLegacyNodeType((SchemaNodeType)coreNodeType);
 
-            ulong priorityKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Priority);
+            ulong priorityKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Priority);
             int priority = coaster.Scalars.TryGetValue(priorityKey, out float pf) ? (int)pf : 0;
 
             var node = new Node {
@@ -85,8 +85,8 @@ namespace KexEdit.Legacy {
 
             BuildAnchor(in coaster, nodeId, out var anchor);
             ExtractDuration(in coaster, nodeId, out var duration);
-            bool steering = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.Steering), out int s) && s == 1;
-            bool render = !coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.Render), out int r) || r == 0;
+            bool steering = coaster.Flags.TryGetValue(DocumentAggregate.InputKey(nodeId, NodeMeta.Steering), out int s) && s == 1;
+            bool render = !coaster.Flags.TryGetValue(DocumentAggregate.InputKey(nodeId, NodeMeta.Render), out int r) || r == 0;
 
             ExtractKeyframesForNode(
                 in coaster,
@@ -145,7 +145,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void ExtractKeyframesForNode(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             SchemaNodeType nodeType,
             uint nodeId,
             Allocator allocator,
@@ -242,12 +242,12 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void ExtractPropertyOverrides(in CoasterAggregate coaster, uint nodeId, out PropertyOverrides result) {
-            bool driven = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.Driven), out int d) && d == 1;
-            bool heart = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideHeart), out int h) && h == 1;
-            bool friction = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideFriction), out int f) && f == 1;
-            bool resistance = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideResistance), out int r) && r == 1;
-            bool trackStyle = coaster.Flags.TryGetValue(CoasterAggregate.InputKey(nodeId, NodeMeta.OverrideTrackStyle), out int t) && t == 1;
+        private static void ExtractPropertyOverrides(in DocumentAggregate coaster, uint nodeId, out PropertyOverrides result) {
+            bool driven = coaster.Flags.TryGetValue(DocumentAggregate.InputKey(nodeId, NodeMeta.Driven), out int d) && d == 1;
+            bool heart = coaster.Flags.TryGetValue(DocumentAggregate.InputKey(nodeId, NodeMeta.OverrideHeart), out int h) && h == 1;
+            bool friction = coaster.Flags.TryGetValue(DocumentAggregate.InputKey(nodeId, NodeMeta.OverrideFriction), out int f) && f == 1;
+            bool resistance = coaster.Flags.TryGetValue(DocumentAggregate.InputKey(nodeId, NodeMeta.OverrideResistance), out int r) && r == 1;
+            bool trackStyle = coaster.Flags.TryGetValue(DocumentAggregate.InputKey(nodeId, NodeMeta.OverrideTrackStyle), out int t) && t == 1;
 
             result = new PropertyOverrides();
             result.FixedVelocity = driven;
@@ -274,7 +274,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         private static void BuildInputPorts(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             SchemaNodeType coreType,
             uint nodeId,
             int nodeIndex,
@@ -306,7 +306,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         private static void BuildOutputPorts(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             SchemaNodeType coreType,
             uint nodeId,
             int nodeIndex,
@@ -335,7 +335,7 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static uint FindPortId(in CoasterAggregate coaster, uint nodeId, bool isInput, int portIndex) {
+        private static uint FindPortId(in DocumentAggregate coaster, uint nodeId, bool isInput, int portIndex) {
             int currentIndex = 0;
             for (int i = 0; i < coaster.Graph.PortIds.Length; i++) {
                 if (coaster.Graph.PortOwners[i] != nodeId) continue;
@@ -401,13 +401,13 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         private static void ExtractInputPortValue(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             uint nodeId,
             int inputIndex,
             PortType portType,
             out PointData result
         ) {
-            ulong key = CoasterAggregate.InputKey(nodeId, inputIndex);
+            ulong key = DocumentAggregate.InputKey(nodeId, inputIndex);
 
             switch (portType) {
                 case PortType.Anchor:
@@ -431,7 +431,7 @@ namespace KexEdit.Legacy {
                     return;
 
                 case PortType.Duration:
-                    ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+                    ulong durKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Duration);
                     if (coaster.Scalars.TryGetValue(durKey, out float durValue)) {
                         result = new PointData { Roll = durValue };
                         return;
@@ -480,13 +480,13 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void BuildAnchorPortValue(in CoasterAggregate coaster, uint nodeId, out PointData result) {
-            ulong posKey = CoasterAggregate.InputKey(nodeId, AnchorPorts.Position);
+        private static void BuildAnchorPortValue(in DocumentAggregate coaster, uint nodeId, out PointData result) {
+            ulong posKey = DocumentAggregate.InputKey(nodeId, AnchorPorts.Position);
             var position = coaster.Vectors.TryGetValue(posKey, out var p) ? p : float3.zero;
 
-            coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Roll), out float roll);
-            coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Pitch), out float pitch);
-            coaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, AnchorPorts.Yaw), out float yaw);
+            coaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, AnchorPorts.Roll), out float roll);
+            coaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, AnchorPorts.Pitch), out float pitch);
+            coaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, AnchorPorts.Yaw), out float yaw);
 
             var frame = Frame.FromEuler(pitch, yaw, roll);
 
@@ -502,16 +502,16 @@ namespace KexEdit.Legacy {
         }
 
         [BurstCompile]
-        private static void BuildAnchor(in CoasterAggregate coaster, uint nodeId, out PointData result) {
+        private static void BuildAnchor(in DocumentAggregate coaster, uint nodeId, out PointData result) {
             BuildAnchorPortValue(in coaster, nodeId, out result);
-            ulong facingKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Facing);
+            ulong facingKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Facing);
             result.Facing = coaster.Flags.TryGetValue(facingKey, out int facing) ? facing : 1;
         }
 
         [BurstCompile]
-        private static void ExtractDuration(in CoasterAggregate coaster, uint nodeId, out Duration result) {
-            ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
-            ulong durTypeKey = CoasterAggregate.InputKey(nodeId, NodeMeta.DurationType);
+        private static void ExtractDuration(in DocumentAggregate coaster, uint nodeId, out Duration result) {
+            ulong durKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Duration);
+            ulong durTypeKey = DocumentAggregate.InputKey(nodeId, NodeMeta.DurationType);
 
             float value = coaster.Scalars.TryGetValue(durKey, out float v) ? v : 1f;
             bool isDistance = coaster.Flags.TryGetValue(durTypeKey, out int t) && t == 1;
@@ -570,7 +570,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void ExtractRollSpeedKeyframes(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             uint nodeId,
             Allocator allocator,
             out NativeArray<Keyframe> result
@@ -591,7 +591,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void ExtractNormalForceKeyframes(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             uint nodeId,
             Allocator allocator,
             out NativeArray<Keyframe> result
@@ -612,7 +612,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void ExtractLateralForceKeyframes(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             uint nodeId,
             Allocator allocator,
             out NativeArray<Keyframe> result
@@ -633,7 +633,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void ExtractPitchSpeedKeyframes(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             uint nodeId,
             Allocator allocator,
             out NativeArray<Keyframe> result
@@ -654,7 +654,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void ExtractYawSpeedKeyframes(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             uint nodeId,
             Allocator allocator,
             out NativeArray<Keyframe> result
@@ -675,7 +675,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void ExtractFixedVelocityKeyframes(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             uint nodeId,
             Allocator allocator,
             out NativeArray<Keyframe> result
@@ -696,7 +696,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void ExtractHeartKeyframes(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             uint nodeId,
             Allocator allocator,
             out NativeArray<Keyframe> result
@@ -717,7 +717,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void ExtractFrictionKeyframes(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             uint nodeId,
             Allocator allocator,
             out NativeArray<Keyframe> result
@@ -738,7 +738,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void ExtractResistanceKeyframes(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             uint nodeId,
             Allocator allocator,
             out NativeArray<Keyframe> result
@@ -759,7 +759,7 @@ namespace KexEdit.Legacy {
 
         [BurstCompile]
         public static void ExtractTrackStyleKeyframes(
-            in CoasterAggregate coaster,
+            in DocumentAggregate coaster,
             uint nodeId,
             Allocator allocator,
             out NativeArray<Keyframe> result
@@ -818,7 +818,7 @@ namespace KexEdit.Legacy {
             };
         }
 
-        private static void BuildConnections(CoasterAggregate coaster, Entity coasterEntity, EntityManager entityManager, in KexEdit.App.Persistence.UIStateChunk uiState) {
+        private static void BuildConnections(DocumentAggregate coaster, Entity coasterEntity, EntityManager entityManager, in KexEdit.Persistence.UIStateChunk uiState) {
             var portQuery = entityManager.CreateEntityQuery(typeof(Port));
             using var ports = portQuery.ToEntityArray(Allocator.Temp);
 

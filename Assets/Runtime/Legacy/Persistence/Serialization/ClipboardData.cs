@@ -1,11 +1,11 @@
 using System;
 using Unity.Collections;
 using Unity.Mathematics;
-using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using DocumentAggregate = KexEdit.Document.Document;
 
 namespace KexEdit.Legacy.Serialization {
     public struct ClipboardData : IDisposable {
-        public CoasterAggregate Coaster;
+        public DocumentAggregate Coaster;
         public NativeArray<float2> NodeOffsets;
         public float2 Center;
 

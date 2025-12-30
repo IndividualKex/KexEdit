@@ -31,4 +31,4 @@ Legacy/
 
 ## Dependencies
 
-- KexEdit.Sim, KexEdit.App.Coaster, KexEdit.Sim.Nodes.*, KexEdit.Graph, Unity.Entities, Unity.Mathematics, Unity.Burst
+- KexEdit.Sim, KexEdit.Coaster, KexEdit.Sim.Nodes.*, KexEdit.Graph, Unity.Entities, Unity.Mathematics, Unity.Burst

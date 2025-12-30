@@ -82,5 +82,18 @@ namespace KexEdit.Sim {
         public float3 SpinePosition(in float3 heartPosition, float offset) => heartPosition + Normal * offset;
 
         public static Frame Default => new(math.back(), math.down(), math.right());
+
+        public bool MatchesForContinuation(in Frame other, float threshold, bool isNext) {
+            float dirDot = math.dot(Direction, other.Direction);
+            float normDot = math.dot(Normal, other.Normal);
+            float latDot = math.dot(Lateral, other.Lateral);
+
+            if (isNext) {
+                return dirDot > threshold && normDot > threshold && latDot > threshold;
+            }
+            else {
+                return dirDot < -threshold && normDot > threshold && latDot < -threshold;
+            }
+        }
     }
 }

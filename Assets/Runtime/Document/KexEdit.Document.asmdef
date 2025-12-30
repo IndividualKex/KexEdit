@@ -1,0 +1,21 @@
+{
+    "name": "KexEdit.Document",
+    "rootNamespace": "KexEdit.Document",
+    "references": [
+        "KexEdit.Graph",
+        "KexEdit.Sim",
+        "KexEdit.Sim.Schema",
+        "Unity.Collections",
+        "Unity.Mathematics",
+        "Unity.Burst"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

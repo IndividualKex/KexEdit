@@ -1,18 +1,18 @@
 using KexEdit.Legacy;
 using KexEdit.Legacy.Serialization;
 using KexEdit.Sim.Schema;
-using KexEdit.App.Persistence;
+using KexEdit.Persistence;
 using KexEdit.Graph;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using CoasterAggregate = KexEdit.App.Coaster.Coaster;
+using DocumentAggregate = KexEdit.Document.Document;
 using LegacyNodeType = KexEdit.Legacy.NodeType;
 using CoreNodeType = KexEdit.Sim.Schema.NodeType;
-using CoreDuration = KexEdit.App.Coaster.Duration;
-using CoreDurationType = KexEdit.App.Coaster.DurationType;
-using NodeMeta = KexEdit.App.Coaster.NodeMeta;
+using CoreDuration = KexEdit.Legacy.Duration;
+using CoreDurationType = KexEdit.Legacy.DurationType;
+using NodeMeta = KexEdit.Document.NodeMeta;
 
 namespace Tests {
     [TestFixture]
@@ -37,7 +37,7 @@ namespace Tests {
 
         [Test]
         public void AnchorNode_PortValues_RoundTrip() {
-            var coaster = CoasterAggregate.Create(Allocator.Persistent);
+            var coaster = DocumentAggregate.Create(Allocator.Persistent);
             var nodeId = coaster.Graph.AddNode((uint)CoreNodeType.Anchor, float2.zero);
 
             coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Vector, 0).ToEncoded());
@@ -57,14 +57,14 @@ namespace Tests {
             float friction = 0.025f;
             float resistance = 3e-5f;
 
-            coaster.Vectors[CoasterAggregate.InputKey(nodeId, 0)] = position;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 1)] = roll;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 2)] = pitch;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 3)] = yaw;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 4)] = velocity;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 5)] = heart;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 6)] = friction;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 7)] = resistance;
+            coaster.Vectors[DocumentAggregate.InputKey(nodeId, 0)] = position;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 1)] = roll;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 2)] = pitch;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 3)] = yaw;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 4)] = velocity;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 5)] = heart;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 6)] = friction;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 7)] = resistance;
 
             var coasterEntity = _entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             _entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
@@ -87,26 +87,26 @@ namespace Tests {
             var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
             var loadedCoaster = _entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
 
-            Assert.IsTrue(loadedCoaster.Vectors.TryGetValue(CoasterAggregate.InputKey(nodeId, 0), out var loadedPosition),
+            Assert.IsTrue(loadedCoaster.Vectors.TryGetValue(DocumentAggregate.InputKey(nodeId, 0), out var loadedPosition),
                 "Position should be preserved");
             Assert.AreEqual(position.x, loadedPosition.x, 0.001f, "Position.x mismatch");
             Assert.AreEqual(position.y, loadedPosition.y, 0.001f, "Position.y mismatch");
             Assert.AreEqual(position.z, loadedPosition.z, 0.001f, "Position.z mismatch");
 
             // Verify scalar values are preserved in Coaster
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 4), out var loadedVelocity),
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 4), out var loadedVelocity),
                 "Velocity scalar should be preserved");
             Assert.AreEqual(velocity, loadedVelocity, 0.001f, "Velocity mismatch");
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 5), out var loadedHeart),
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 5), out var loadedHeart),
                 "Heart scalar should be preserved");
             Assert.AreEqual(heart, loadedHeart, 0.001f, "Heart mismatch");
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 6), out var loadedFriction),
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 6), out var loadedFriction),
                 "Friction scalar should be preserved");
             Assert.AreEqual(friction, loadedFriction, 0.001f, "Friction mismatch");
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 7), out var loadedResistance),
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 7), out var loadedResistance),
                 "Resistance scalar should be preserved");
             Assert.AreEqual(resistance, loadedResistance, 0.001f, "Resistance mismatch");
 
@@ -115,7 +115,7 @@ namespace Tests {
 
         [Test]
         public void ForceSection_Duration_RoundTrip() {
-            var coaster = CoasterAggregate.Create(Allocator.Persistent);
+            var coaster = DocumentAggregate.Create(Allocator.Persistent);
             var nodeId = coaster.Graph.AddNode((uint)CoreNodeType.Force, float2.zero);
 
             coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Anchor, 0).ToEncoded());
@@ -124,7 +124,7 @@ namespace Tests {
             coaster.Graph.AddOutputPort(nodeId, new PortSpec(PortDataType.Path, 0).ToEncoded());
 
             float durationValue = 3.5f;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = durationValue;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, NodeMeta.Duration)] = durationValue;
 
             var coasterEntity = _entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             _entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
@@ -147,7 +147,7 @@ namespace Tests {
             var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
             var loadedCoaster = _entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
 
-            ulong durKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Duration);
+            ulong durKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Duration);
             Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(durKey, out var loadedDuration),
                 "Duration should be preserved");
             Assert.AreEqual(durationValue, loadedDuration, 0.001f, "Duration value mismatch");
@@ -157,7 +157,7 @@ namespace Tests {
 
         [Test]
         public void CurvedSection_AllScalars_RoundTrip() {
-            var coaster = CoasterAggregate.Create(Allocator.Persistent);
+            var coaster = DocumentAggregate.Create(Allocator.Persistent);
             var nodeId = coaster.Graph.AddNode((uint)CoreNodeType.Curved, float2.zero);
 
             coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Anchor, 0).ToEncoded());
@@ -170,11 +170,11 @@ namespace Tests {
             coaster.Graph.AddOutputPort(nodeId, new PortSpec(PortDataType.Path, 0).ToEncoded());
 
             float radius = 25f, arc = 90f, axis = 45f, leadIn = 5f, leadOut = 10f;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 1)] = radius;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 2)] = arc;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 3)] = axis;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 4)] = leadIn;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 5)] = leadOut;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 1)] = radius;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 2)] = arc;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 3)] = axis;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 4)] = leadIn;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 5)] = leadOut;
 
             var coasterEntity = _entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             _entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
@@ -197,19 +197,19 @@ namespace Tests {
             var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
             var loadedCoaster = _entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 1), out var loadedRadius), "Radius not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 1), out var loadedRadius), "Radius not found");
             Assert.AreEqual(radius, loadedRadius, 0.001f, "Radius mismatch");
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 2), out var loadedArc), "Arc not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 2), out var loadedArc), "Arc not found");
             Assert.AreEqual(arc, loadedArc, 0.001f, "Arc mismatch");
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 3), out var loadedAxis), "Axis not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 3), out var loadedAxis), "Axis not found");
             Assert.AreEqual(axis, loadedAxis, 0.001f, "Axis mismatch");
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 4), out var loadedLeadIn), "LeadIn not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 4), out var loadedLeadIn), "LeadIn not found");
             Assert.AreEqual(leadIn, loadedLeadIn, 0.001f, "LeadIn mismatch");
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 5), out var loadedLeadOut), "LeadOut not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 5), out var loadedLeadOut), "LeadOut not found");
             Assert.AreEqual(leadOut, loadedLeadOut, 0.001f, "LeadOut mismatch");
 
             _entityManager.DestroyEntity(loadedEntity);
@@ -217,7 +217,7 @@ namespace Tests {
 
         [Test]
         public void Bridge_WeightPorts_RoundTrip() {
-            var coaster = CoasterAggregate.Create(Allocator.Persistent);
+            var coaster = DocumentAggregate.Create(Allocator.Persistent);
             var nodeId = coaster.Graph.AddNode((uint)CoreNodeType.Bridge, float2.zero);
 
             coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Anchor, 0).ToEncoded());
@@ -228,8 +228,8 @@ namespace Tests {
             coaster.Graph.AddOutputPort(nodeId, new PortSpec(PortDataType.Path, 0).ToEncoded());
 
             float outWeight = 0.4f, inWeight = 0.6f;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 2)] = outWeight;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 3)] = inWeight;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 2)] = outWeight;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 3)] = inWeight;
 
             var coasterEntity = _entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             _entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
@@ -252,10 +252,10 @@ namespace Tests {
             var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
             var loadedCoaster = _entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 2), out var loadedOutWeight), "OutWeight not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 2), out var loadedOutWeight), "OutWeight not found");
             Assert.AreEqual(outWeight, loadedOutWeight, 0.001f, "OutWeight mismatch");
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 3), out var loadedInWeight), "InWeight not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 3), out var loadedInWeight), "InWeight not found");
             Assert.AreEqual(inWeight, loadedInWeight, 0.001f, "InWeight mismatch");
 
             _entityManager.DestroyEntity(loadedEntity);
@@ -263,7 +263,7 @@ namespace Tests {
 
         [Test]
         public void CopyPath_TrimPorts_RoundTrip() {
-            var coaster = CoasterAggregate.Create(Allocator.Persistent);
+            var coaster = DocumentAggregate.Create(Allocator.Persistent);
             var nodeId = coaster.Graph.AddNode((uint)CoreNodeType.CopyPath, float2.zero);
 
             coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Anchor, 0).ToEncoded());
@@ -274,8 +274,8 @@ namespace Tests {
             coaster.Graph.AddOutputPort(nodeId, new PortSpec(PortDataType.Path, 0).ToEncoded());
 
             float start = 0.25f, end = 0.75f;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 2)] = start;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, 3)] = end;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 2)] = start;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, 3)] = end;
 
             var coasterEntity = _entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             _entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
@@ -298,10 +298,10 @@ namespace Tests {
             var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
             var loadedCoaster = _entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 2), out var loadedStart), "Start not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 2), out var loadedStart), "Start not found");
             Assert.AreEqual(start, loadedStart, 0.001f, "Start mismatch");
 
-            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(CoasterAggregate.InputKey(nodeId, 3), out var loadedEnd), "End not found");
+            Assert.IsTrue(loadedCoaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, 3), out var loadedEnd), "End not found");
             Assert.AreEqual(end, loadedEnd, 0.001f, "End mismatch");
 
             _entityManager.DestroyEntity(loadedEntity);
@@ -309,7 +309,7 @@ namespace Tests {
 
         [Test]
         public void Steering_Flag_RoundTrip() {
-            var coaster = CoasterAggregate.Create(Allocator.Persistent);
+            var coaster = DocumentAggregate.Create(Allocator.Persistent);
             var nodeId = coaster.Graph.AddNode((uint)CoreNodeType.Geometric, float2.zero);
 
             coaster.Graph.AddInputPort(nodeId, new PortSpec(PortDataType.Anchor, 0).ToEncoded());
@@ -317,8 +317,8 @@ namespace Tests {
             coaster.Graph.AddOutputPort(nodeId, new PortSpec(PortDataType.Anchor, 0).ToEncoded());
             coaster.Graph.AddOutputPort(nodeId, new PortSpec(PortDataType.Path, 0).ToEncoded());
 
-            coaster.Flags[CoasterAggregate.InputKey(nodeId, NodeMeta.Steering)] = 1;
-            coaster.Scalars[CoasterAggregate.InputKey(nodeId, NodeMeta.Duration)] = 1f;
+            coaster.Flags[DocumentAggregate.InputKey(nodeId, NodeMeta.Steering)] = 1;
+            coaster.Scalars[DocumentAggregate.InputKey(nodeId, NodeMeta.Duration)] = 1f;
 
             var coasterEntity = _entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             _entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });
@@ -341,7 +341,7 @@ namespace Tests {
             var loadedEntity = _serializationSystem.DeserializeGraph(kexdData, false);
             var loadedCoaster = _entityManager.GetComponentData<CoasterData>(loadedEntity).Value;
 
-            ulong steeringKey = CoasterAggregate.InputKey(nodeId, NodeMeta.Steering);
+            ulong steeringKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Steering);
             Assert.IsTrue(loadedCoaster.Flags.TryGetValue(steeringKey, out int s) && s == 1, "Steering flag should be preserved");
 
             var nodeQuery = _entityManager.CreateEntityQuery(typeof(Node), typeof(Steering));
@@ -354,7 +354,7 @@ namespace Tests {
 
         [Test]
         public void Connections_RoundTrip() {
-            var coaster = CoasterAggregate.Create(Allocator.Persistent);
+            var coaster = DocumentAggregate.Create(Allocator.Persistent);
 
             // Create Anchor node (6 inputs, 1 output)
             var anchorId = coaster.Graph.AddNode((uint)CoreNodeType.Anchor, float2.zero);
@@ -384,8 +384,8 @@ namespace Tests {
             uint edge1 = coaster.Graph.AddEdge(anchorOutputPort, forceInputPort);
             uint edge2 = coaster.Graph.AddEdge(forceOutputPort, geoInputPort);
 
-            coaster.Scalars[CoasterAggregate.InputKey(forceId, NodeMeta.Duration)] = 2f;
-            coaster.Scalars[CoasterAggregate.InputKey(geoId, NodeMeta.Duration)] = 3f;
+            coaster.Scalars[DocumentAggregate.InputKey(forceId, NodeMeta.Duration)] = 2f;
+            coaster.Scalars[DocumentAggregate.InputKey(geoId, NodeMeta.Duration)] = 3f;
 
             var coasterEntity = _entityManager.CreateEntity(typeof(KexEdit.Legacy.Coaster), typeof(CoasterData), typeof(UIStateData));
             _entityManager.SetComponentData(coasterEntity, new CoasterData { Value = coaster });

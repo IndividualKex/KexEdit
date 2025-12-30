@@ -1,6 +1,6 @@
 using KexEdit.Legacy;
 using KexEdit.Legacy.Serialization;
-using KexEdit.App.Persistence;
+using KexEdit.Persistence;
 using KexEdit.Graph;
 using NUnit.Framework;
 using System.IO;
@@ -8,7 +8,7 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
-using Coaster = KexEdit.App.Coaster.Coaster;
+using Coaster = KexEdit.Document.Document;
 using LegacyNodeType = KexEdit.Legacy.NodeType;
 
 namespace Tests {

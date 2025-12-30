@@ -4,6 +4,7 @@
     "references": [
         "KexEdit.Legacy",
         "KexEdit.Spline",
+        "KexEdit.Spline.Rendering",
         "Unity.Entities",
         "Unity.Collections",
         "Unity.Burst",
@@ -22,11 +23,11 @@
         "StandaloneFileBrowser",
         "KexEdit.Sim",
         "KexEdit.Graph",
-        "KexEdit.App.Coaster",
+        "KexEdit.Document",
         "KexEdit.Graph.Typed",
         "KexEdit.Sim.Schema",
         "KexEdit.Sim.Nodes.Anchor",
-        "KexEdit.App.Persistence"
+        "KexEdit.Persistence"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,6 +1,6 @@
 using System.IO;
 using System.Text;
-using KexEdit.App.Coaster;
+using KexEdit.Document;
 using KexEdit.Legacy;
 using KexEdit.Graph.Typed;
 using KexEdit.Sim.Schema;
@@ -9,6 +9,7 @@ using KexEdit.Graph;
 using NUnit.Framework;
 using Unity.Collections;
 using CoreNodeType = KexEdit.Sim.Schema.NodeType;
+using TrackData = KexEdit.Track.Track;
 
 namespace Tests {
     [TestFixture]
@@ -152,12 +153,12 @@ namespace Tests {
 
             LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
-            CoasterEvaluator.Evaluate(in coaster, out var result, Allocator.TempJob);
+            TrackData.Build(in coaster, Allocator.TempJob, out var track);
 
             var sb = new StringBuilder();
             sb.AppendLine($"=== EVALUATION RESULT FOR {path} ===");
-            sb.AppendLine($"Output anchors: {result.OutputAnchors.Count}");
-            sb.AppendLine($"Paths: {result.Paths.Count}");
+            sb.AppendLine($"Sections: {track.SectionCount}");
+            sb.AppendLine($"NodeToSection mappings: {track.NodeToSection.Count}");
 
             int bridgePathCount = 0;
             for (int i = 0; i < coaster.Graph.NodeIds.Length; i++) {
@@ -166,14 +167,17 @@ namespace Tests {
                 if (nodeType != CoreNodeType.Bridge) continue;
 
                 sb.AppendLine($"\nBridge Node {nodeId}:");
-                bool hasOutput = result.OutputAnchors.ContainsKey(nodeId);
-                bool hasPath = result.Paths.TryGetValue(nodeId, out var bridgePath);
-                int pathLen = hasPath && bridgePath.IsCreated ? bridgePath.Length : 0;
+                bool hasSection = track.NodeToSection.TryGetValue(nodeId, out int sectionIdx);
+                int pathLen = 0;
+                if (hasSection && sectionIdx >= 0 && sectionIdx < track.Sections.Length) {
+                    var section = track.Sections[sectionIdx];
+                    pathLen = section.IsValid ? section.Length : 0;
+                }
 
-                sb.AppendLine($"  Has output anchor: {hasOutput}");
-                sb.AppendLine($"  Has path: {hasPath} (length: {pathLen})");
+                sb.AppendLine($"  Has section: {hasSection} (index: {(hasSection ? sectionIdx : -1)})");
+                sb.AppendLine($"  Section length: {pathLen}");
 
-                if (hasPath && pathLen > 0) {
+                if (hasSection && pathLen > 0) {
                     bridgePathCount++;
                 }
             }
@@ -193,7 +197,7 @@ namespace Tests {
                     $"Expected all {totalBridgeNodes} Bridge nodes to have paths, but only {bridgePathCount} have paths");
             }
 
-            result.Dispose();
+            track.Dispose();
             coaster.Dispose();
             buffer.Dispose();
         }
