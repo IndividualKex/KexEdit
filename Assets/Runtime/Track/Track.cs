@@ -21,6 +21,7 @@ using Unity.Mathematics;
 namespace KexEdit.Track {
     public static class NodeFlag {
         public const byte Reversed = 0x01;
+        public const byte Rendered = 0x02;
     }
 
     public struct SectionLink {
@@ -52,9 +53,16 @@ namespace KexEdit.Track {
         public SectionLink Next;
         public SectionLink Prev;
 
+        public int SplineStartIndex;
+        public int SplineEndIndex;
+        public byte StyleIndex;
+
         public int Length => EndIndex - StartIndex + 1;
         public bool IsValid => StartIndex >= 0;
         public int Facing => (Flags & NodeFlag.Reversed) != 0 ? -1 : 1;
+        public bool Rendered => (Flags & NodeFlag.Rendered) != 0;
+        public int SplineLength => SplineEndIndex - SplineStartIndex + 1;
+        public bool HasSpline => SplineStartIndex >= 0;
     }
 
     [BurstCompile]
@@ -63,6 +71,11 @@ namespace KexEdit.Track {
         public NativeArray<Section> Sections;
         public NativeHashMap<uint, int> NodeToSection;
         public NativeArray<int> TraversalOrder;
+        public NativeList<SplinePoint> SplinePoints;
+        public NativeList<float> SplineVelocities;
+        public NativeList<float> SplineNormalForces;
+        public NativeList<float> SplineLateralForces;
+        public NativeList<float> SplineRollSpeeds;
 
         public bool IsCreated => Points.IsCreated;
         public int SectionCount => Sections.IsCreated ? Sections.Length : 0;
@@ -74,13 +87,18 @@ namespace KexEdit.Track {
         private const float DEFAULT_RESISTANCE = 2e-5f;
 
         [BurstCompile]
-        public static void Build(in Document.Document doc, Allocator allocator, out Track track) {
+        public static void Build(in Document.Document doc, Allocator allocator, float resolution, int defaultStyleIndex, out Track track) {
             int nodeCount = doc.Graph.NodeCount;
 
             if (nodeCount == 0) {
                 track = new Track {
                     Points = new NativeList<Point>(0, allocator),
-                    Sections = new NativeArray<Section>(0, allocator)
+                    Sections = new NativeArray<Section>(0, allocator),
+                    SplinePoints = new NativeList<SplinePoint>(0, allocator),
+                    SplineVelocities = new NativeList<float>(0, allocator),
+                    SplineNormalForces = new NativeList<float>(0, allocator),
+                    SplineLateralForces = new NativeList<float>(0, allocator),
+                    SplineRollSpeeds = new NativeList<float>(0, allocator)
                 };
                 return;
             }
@@ -126,6 +144,9 @@ namespace KexEdit.Track {
             CollectAllSections(in doc, in sortedNodes, in paths, out var allSectionNodes, Allocator.Temp);
             PopulateNodeFlags(in doc, in paths, ref nodeFlags);
 
+            var nodeStyles = new NativeHashMap<uint, byte>(allSectionNodes.Length, Allocator.Temp);
+            PopulateSectionStyles(in doc, in allSectionNodes, defaultStyleIndex, ref nodeStyles);
+
             track = new Track {
                 Points = new NativeList<Point>(256, allocator),
                 Sections = new NativeArray<Section>(allSectionNodes.Length, allocator),
@@ -136,6 +157,7 @@ namespace KexEdit.Track {
             for (int i = 0; i < allSectionNodes.Length; i++) {
                 uint nodeId = allSectionNodes[i];
                 byte flags = nodeFlags.TryGetValue(nodeId, out byte f) ? f : (byte)0;
+                byte styleIndex = nodeStyles.TryGetValue(nodeId, out byte s) ? s : (byte)defaultStyleIndex;
 
                 track.NodeToSection[nodeId] = i;
 
@@ -147,7 +169,10 @@ namespace KexEdit.Track {
                         ArcEnd = 0f,
                         Flags = flags,
                         Next = SectionLink.None,
-                        Prev = SectionLink.None
+                        Prev = SectionLink.None,
+                        SplineStartIndex = -1,
+                        SplineEndIndex = -1,
+                        StyleIndex = styleIndex
                     };
                     continue;
                 }
@@ -165,7 +190,10 @@ namespace KexEdit.Track {
                     ArcEnd = path[^1].SpineArc,
                     Flags = flags,
                     Next = SectionLink.None,
-                    Prev = SectionLink.None
+                    Prev = SectionLink.None,
+                    SplineStartIndex = -1,
+                    SplineEndIndex = -1,
+                    StyleIndex = styleIndex
                 };
             }
 
@@ -178,6 +206,7 @@ namespace KexEdit.Track {
 
             ComputeContinuations(in doc, in allSectionNodes, ref track);
             ComputeSpatialContinuations(ref track);
+            BuildSplinePoints(ref track, resolution, allocator);
 
             var pathKeys = paths.GetKeyArray(Allocator.Temp);
             for (int i = 0; i < pathKeys.Length; i++) {
@@ -189,6 +218,7 @@ namespace KexEdit.Track {
             paths.Dispose();
             outputAnchors.Dispose();
             nodeFlags.Dispose();
+            nodeStyles.Dispose();
             allSectionNodes.Dispose();
             sortedNodes.Dispose();
         }
@@ -205,9 +235,40 @@ namespace KexEdit.Track {
                     flags |= NodeFlag.Reversed;
                 }
 
+                ulong renderKey = Document.Document.InputKey(nodeId, NodeMeta.Render);
+                bool rendered = !doc.Flags.TryGetValue(renderKey, out int r) || r == 0;
+                if (rendered) {
+                    flags |= NodeFlag.Rendered;
+                }
+
                 nodeFlags[nodeId] = flags;
             }
             keys.Dispose();
+        }
+
+        [BurstCompile]
+        private static void PopulateSectionStyles(
+            in Document.Document doc,
+            in NativeList<uint> sectionNodes,
+            int defaultStyleIndex,
+            ref NativeHashMap<uint, byte> nodeStyles
+        ) {
+            for (int i = 0; i < sectionNodes.Length; i++) {
+                uint nodeId = sectionNodes[i];
+
+                // Check if node has OverrideTrackStyle flag set
+                ulong overrideKey = Document.Document.InputKey(nodeId, NodeMeta.OverrideTrackStyle);
+                bool hasOverride = doc.Flags.TryGetValue(overrideKey, out int flag) && flag != 0;
+
+                if (hasOverride && doc.Keyframes.TryGet(nodeId, PropertyId.TrackStyle, out var kfs) && kfs.Length > 0) {
+                    // Use first keyframe value as section default style
+                    int styleValue = (int)math.round(kfs[0].Value);
+                    nodeStyles[nodeId] = (byte)math.clamp(styleValue, 0, 255);
+                }
+                else {
+                    nodeStyles[nodeId] = (byte)defaultStyleIndex;
+                }
+            }
         }
 
         [BurstCompile]
@@ -293,12 +354,14 @@ namespace KexEdit.Track {
             ref Track track
         ) {
             for (int i = 0; i < sectionNodes.Length; i++) {
+                var section = track.Sections[i];
+                if (!section.Rendered) continue;
+
                 uint nodeId = sectionNodes[i];
                 int nextSection = FindNextSection(in doc.Graph, nodeId, in track.NodeToSection);
 
-                if (nextSection >= 0) {
+                if (nextSection >= 0 && track.Sections[nextSection].Rendered) {
                     // Graph connections: our END connects to their START (same direction, no flip)
-                    var section = track.Sections[i];
                     section.Next = SectionLink.Create(nextSection, atStart: true, flip: false);
                     track.Sections[i] = section;
 
@@ -440,6 +503,100 @@ namespace KexEdit.Track {
             if (isCosmetic && !bestIsCosmetic) return true;
             if (!isCosmetic && bestIsCosmetic) return false;
             return dist < bestDist;
+        }
+
+        [BurstCompile]
+        private static void BuildSplinePoints(ref Track track, float splineResolution, Allocator allocator) {
+            track.SplinePoints = new NativeList<SplinePoint>(1024, allocator);
+            track.SplineVelocities = new NativeList<float>(1024, allocator);
+            track.SplineNormalForces = new NativeList<float>(1024, allocator);
+            track.SplineLateralForces = new NativeList<float>(1024, allocator);
+            track.SplineRollSpeeds = new NativeList<float>(1024, allocator);
+            var tempSpline = new NativeList<SplinePoint>(256, Allocator.Temp);
+
+            for (int i = 0; i < track.Sections.Length; i++) {
+                var section = track.Sections[i];
+                if (!section.IsValid || !section.Rendered) continue;
+
+                var sectionPoints = track.Points.AsArray()
+                    .GetSubArray(section.StartIndex, section.Length);
+
+                tempSpline.Clear();
+                SplineResampler.Resample(sectionPoints, splineResolution, ref tempSpline);
+
+                int splineStart = track.SplinePoints.Length;
+                for (int j = 0; j < tempSpline.Length; j++) {
+                    var sp = tempSpline[j];
+                    track.SplinePoints.Add(sp);
+                    InterpolatePhysicsData(in sectionPoints, sp.Arc,
+                        out float velocity, out float normalForce, out float lateralForce, out float rollSpeed);
+                    track.SplineVelocities.Add(velocity);
+                    track.SplineNormalForces.Add(normalForce);
+                    track.SplineLateralForces.Add(lateralForce);
+                    track.SplineRollSpeeds.Add(rollSpeed);
+                }
+                int splineEnd = track.SplinePoints.Length - 1;
+
+                section.SplineStartIndex = splineStart;
+                section.SplineEndIndex = splineEnd;
+                track.Sections[i] = section;
+            }
+
+            tempSpline.Dispose();
+        }
+
+        [BurstCompile]
+        private static void InterpolatePhysicsData(in NativeArray<Point> points, float arc,
+            out float velocity, out float normalForce, out float lateralForce, out float rollSpeed) {
+            if (points.Length == 0) {
+                velocity = 0f;
+                normalForce = 0f;
+                lateralForce = 0f;
+                rollSpeed = 0f;
+                return;
+            }
+            var p0 = points[0];
+            if (points.Length == 1) {
+                velocity = p0.Velocity;
+                normalForce = p0.NormalForce;
+                lateralForce = p0.LateralForce;
+                rollSpeed = p0.RollSpeed;
+                return;
+            }
+
+            if (arc <= p0.SpineArc) {
+                velocity = p0.Velocity;
+                normalForce = p0.NormalForce;
+                lateralForce = p0.LateralForce;
+                rollSpeed = p0.RollSpeed;
+                return;
+            }
+            var pLast = points[^1];
+            if (arc >= pLast.SpineArc) {
+                velocity = pLast.Velocity;
+                normalForce = pLast.NormalForce;
+                lateralForce = pLast.LateralForce;
+                rollSpeed = pLast.RollSpeed;
+                return;
+            }
+
+            int lo = 0;
+            int hi = points.Length - 1;
+            while (lo < hi - 1) {
+                int mid = (lo + hi) / 2;
+                if (points[mid].SpineArc <= arc) lo = mid;
+                else hi = mid;
+            }
+
+            var a = points[lo];
+            var b = points[lo + 1];
+            float segLen = b.SpineArc - a.SpineArc;
+            float t = segLen > 0f ? (arc - a.SpineArc) / segLen : 0f;
+
+            velocity = math.lerp(a.Velocity, b.Velocity, t);
+            normalForce = math.lerp(a.NormalForce, b.NormalForce, t);
+            lateralForce = math.lerp(a.LateralForce, b.LateralForce, t);
+            rollSpeed = math.lerp(a.RollSpeed, b.RollSpeed, t);
         }
 
         [BurstCompile]
@@ -869,6 +1026,24 @@ namespace KexEdit.Track {
         }
 
         [BurstCompile]
+        public void SampleFromSpline(int sectionIndex, float arc, out SplinePoint result) {
+            if (sectionIndex < 0 || sectionIndex >= Sections.Length) {
+                result = SplinePoint.Default;
+                return;
+            }
+
+            var section = Sections[sectionIndex];
+            if (!section.HasSpline) {
+                result = SplinePoint.Default;
+                return;
+            }
+
+            var sectionSpline = SplinePoints.AsArray()
+                .GetSubArray(section.SplineStartIndex, section.SplineLength);
+            SplineInterpolation.Interpolate(sectionSpline, arc, out result);
+        }
+
+        [BurstCompile]
         public void Extrapolate(int sectionIndex, float arc, bool fromEnd, out SplinePoint result) {
             if (sectionIndex < 0 || sectionIndex >= Sections.Length) {
                 result = SplinePoint.Default;
@@ -994,6 +1169,11 @@ namespace KexEdit.Track {
             if (Sections.IsCreated) Sections.Dispose();
             if (NodeToSection.IsCreated) NodeToSection.Dispose();
             if (TraversalOrder.IsCreated) TraversalOrder.Dispose();
+            if (SplinePoints.IsCreated) SplinePoints.Dispose();
+            if (SplineVelocities.IsCreated) SplineVelocities.Dispose();
+            if (SplineNormalForces.IsCreated) SplineNormalForces.Dispose();
+            if (SplineLateralForces.IsCreated) SplineLateralForces.Dispose();
+            if (SplineRollSpeeds.IsCreated) SplineRollSpeeds.Dispose();
         }
     }
 }

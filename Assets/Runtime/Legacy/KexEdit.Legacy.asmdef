@@ -2,7 +2,9 @@
     "name": "KexEdit.Legacy",
     "rootNamespace": "KexEdit.Legacy",
     "references": [
+        "KexEdit.Rendering",
         "KexEdit.Sim",
+        "KexEdit.Trains.Sim",
         "KexEdit.Spline",
         "KexEdit.Spline.Resampling",
         "KexEdit.Spline.Rendering",

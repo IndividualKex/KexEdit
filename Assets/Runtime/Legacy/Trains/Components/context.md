@@ -6,13 +6,15 @@ Train entity components
 
 - Define train data structures
 - Support force calculation offsets
+- Provide shared state singletons
 
 ## Components
 
 - `Train` - Core train entity data
 - `TrainOffset` - Position offset for force calculations
+- `SimFollowerSingleton` - Modern train CoM state (wraps KexEdit.Trains.Sim.SimFollower)
 
 ## Scope
 
-- In: Train data, position offsets
+- In: Train data, position offsets, modern train state
 - Out: Systems, rendering

@@ -1,10 +1,12 @@
 using KexEdit.Legacy;
+using KexEdit.Trains.Sim;
 using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 using LegacyCoaster = KexEdit.Legacy.Coaster;
+using static KexEdit.Sim.Sim;
 
 namespace KexEdit.UI {
     [UpdateInGroup(typeof(UISimulationSystemGroup), OrderLast = true)]
@@ -82,6 +84,8 @@ namespace KexEdit.UI {
             }
 
             if (_data.IsPlaying && !KexTime.IsPaused) {
+                AdvanceSimFollower();
+
                 if (SystemAPI.HasBuffer<CorePointBuffer>(follower.Section)) {
                     var points = SystemAPI.GetBuffer<CorePointBuffer>(follower.Section);
                     if (follower.Index >= points.Length - 1) {
@@ -98,6 +102,19 @@ namespace KexEdit.UI {
 
             float currentDistance = CalculateDistanceToSection(root, follower.Section) + follower.Index;
             _data.Progress = _data.TotalLength > 0f ? currentDistance / _data.TotalLength : 0f;
+        }
+
+        private void AdvanceSimFollower() {
+            if (!SystemAPI.HasSingleton<TrackSingleton>()) return;
+            if (!SystemAPI.HasSingleton<SimFollowerSingleton>()) return;
+
+            var trackSingleton = SystemAPI.GetSingleton<TrackSingleton>();
+            var track = trackSingleton.Value;
+            if (!track.IsCreated || track.TraversalCount == 0) return;
+
+            ref var simFollowerSingleton = ref SystemAPI.GetSingletonRW<SimFollowerSingleton>().ValueRW;
+            float dt = SystemAPI.Time.DeltaTime;
+            SimFollowerLogic.Advance(ref simFollowerSingleton.Follower, in track, dt, HZ, wrapAtEnd: true, out _);
         }
 
         private void TogglePlayPause() {
@@ -227,6 +244,8 @@ namespace KexEdit.UI {
         private void SetProgress(float progress) {
             _data.Progress = progress;
 
+            UpdateSimFollowerProgress(progress);
+
             var editorCoaster = _coasterQuery.GetSingleton<LegacyCoaster>();
             Entity root = editorCoaster.RootNode;
 
@@ -244,6 +263,18 @@ namespace KexEdit.UI {
                     break;
                 }
             }
+        }
+
+        private void UpdateSimFollowerProgress(float progress) {
+            if (!SystemAPI.HasSingleton<TrackSingleton>()) return;
+            if (!SystemAPI.HasSingleton<SimFollowerSingleton>()) return;
+
+            var trackSingleton = SystemAPI.GetSingleton<TrackSingleton>();
+            var track = trackSingleton.Value;
+            if (!track.IsCreated || track.TraversalCount == 0) return;
+
+            ref var simFollowerSingleton = ref SystemAPI.GetSingletonRW<SimFollowerSingleton>().ValueRW;
+            SimFollowerLogic.SetFromProgress(ref simFollowerSingleton.Follower, in track, progress);
         }
 
         private void SetTrainPosition(ref TrackFollower follower, Entity start, float targetDistance) {

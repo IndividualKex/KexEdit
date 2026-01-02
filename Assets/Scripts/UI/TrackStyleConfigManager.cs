@@ -82,8 +82,8 @@ namespace KexEdit.UI {
                 string content = File.ReadAllText(filePath);
                 var config = JsonUtility.FromJson<TrackStyleConfig>(content);
 
-                if (config != null && !string.IsNullOrWhiteSpace(config.Name)) {
-                    return config.Name;
+                if (config != null && !string.IsNullOrWhiteSpace(config.name)) {
+                    return config.name;
                 }
             }
             catch {

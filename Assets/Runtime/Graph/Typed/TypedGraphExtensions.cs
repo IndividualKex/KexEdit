@@ -1,5 +1,4 @@
 using KexEdit.Sim.Schema;
-using KexEdit.Graph;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;

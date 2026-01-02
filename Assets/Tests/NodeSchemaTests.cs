@@ -41,10 +41,10 @@ namespace Tests {
 
         [TestCase(NodeType.Scalar, 0)]
         [TestCase(NodeType.Vector, 0)]
-        [TestCase(NodeType.Force, 7)]
-        [TestCase(NodeType.Geometric, 7)]
-        [TestCase(NodeType.Curved, 5)]
-        [TestCase(NodeType.CopyPath, 4)]
+        [TestCase(NodeType.Force, 8)]
+        [TestCase(NodeType.Geometric, 8)]
+        [TestCase(NodeType.Curved, 6)]
+        [TestCase(NodeType.CopyPath, 5)]
         [TestCase(NodeType.Bridge, 5)]
         [TestCase(NodeType.Anchor, 0)]
         [TestCase(NodeType.Reverse, 0)]
@@ -61,7 +61,7 @@ namespace Tests {
         }
 
         [Test]
-        public void Property_Force_ReturnsSevenProperties() {
+        public void Property_Force_ReturnsEightProperties() {
             Assert.AreEqual(PropertyId.RollSpeed, NodeSchema.Property(NodeType.Force, 0));
             Assert.AreEqual(PropertyId.NormalForce, NodeSchema.Property(NodeType.Force, 1));
             Assert.AreEqual(PropertyId.LateralForce, NodeSchema.Property(NodeType.Force, 2));
@@ -69,10 +69,11 @@ namespace Tests {
             Assert.AreEqual(PropertyId.HeartOffset, NodeSchema.Property(NodeType.Force, 4));
             Assert.AreEqual(PropertyId.Friction, NodeSchema.Property(NodeType.Force, 5));
             Assert.AreEqual(PropertyId.Resistance, NodeSchema.Property(NodeType.Force, 6));
+            Assert.AreEqual(PropertyId.TrackStyle, NodeSchema.Property(NodeType.Force, 7));
         }
 
         [Test]
-        public void Property_Geometric_ReturnsSevenProperties() {
+        public void Property_Geometric_ReturnsEightProperties() {
             Assert.AreEqual(PropertyId.RollSpeed, NodeSchema.Property(NodeType.Geometric, 0));
             Assert.AreEqual(PropertyId.PitchSpeed, NodeSchema.Property(NodeType.Geometric, 1));
             Assert.AreEqual(PropertyId.YawSpeed, NodeSchema.Property(NodeType.Geometric, 2));
@@ -80,6 +81,7 @@ namespace Tests {
             Assert.AreEqual(PropertyId.HeartOffset, NodeSchema.Property(NodeType.Geometric, 4));
             Assert.AreEqual(PropertyId.Friction, NodeSchema.Property(NodeType.Geometric, 5));
             Assert.AreEqual(PropertyId.Resistance, NodeSchema.Property(NodeType.Geometric, 6));
+            Assert.AreEqual(PropertyId.TrackStyle, NodeSchema.Property(NodeType.Geometric, 7));
         }
 
         [Test]
@@ -89,12 +91,13 @@ namespace Tests {
         }
 
         [Test]
-        public void Property_Curved_ReturnsFiveProperties() {
+        public void Property_Curved_ReturnsSixProperties() {
             Assert.AreEqual(PropertyId.RollSpeed, NodeSchema.Property(NodeType.Curved, 0));
             Assert.AreEqual(PropertyId.DrivenVelocity, NodeSchema.Property(NodeType.Curved, 1));
             Assert.AreEqual(PropertyId.HeartOffset, NodeSchema.Property(NodeType.Curved, 2));
             Assert.AreEqual(PropertyId.Friction, NodeSchema.Property(NodeType.Curved, 3));
             Assert.AreEqual(PropertyId.Resistance, NodeSchema.Property(NodeType.Curved, 4));
+            Assert.AreEqual(PropertyId.TrackStyle, NodeSchema.Property(NodeType.Curved, 5));
         }
 
         [Test]
@@ -406,7 +409,7 @@ namespace Tests {
         public void ForceNode_PropertyIndexRoundTrip() {
             var properties = new[] {
                 PropertyId.RollSpeed, PropertyId.NormalForce, PropertyId.LateralForce,
-                PropertyId.DrivenVelocity, PropertyId.HeartOffset, PropertyId.Friction, PropertyId.Resistance
+                PropertyId.DrivenVelocity, PropertyId.HeartOffset, PropertyId.Friction, PropertyId.Resistance, PropertyId.TrackStyle
             };
 
             for (int i = 0; i < properties.Length; i++) {
@@ -422,7 +425,7 @@ namespace Tests {
         public void GeometricNode_PropertyIndexRoundTrip() {
             var properties = new[] {
                 PropertyId.RollSpeed, PropertyId.PitchSpeed, PropertyId.YawSpeed,
-                PropertyId.DrivenVelocity, PropertyId.HeartOffset, PropertyId.Friction, PropertyId.Resistance
+                PropertyId.DrivenVelocity, PropertyId.HeartOffset, PropertyId.Friction, PropertyId.Resistance, PropertyId.TrackStyle
             };
 
             for (int i = 0; i < properties.Length; i++) {
@@ -486,7 +489,7 @@ namespace Tests {
         public void CurvedNode_PropertyIndexRoundTrip() {
             var properties = new[] {
                 PropertyId.RollSpeed, PropertyId.DrivenVelocity, PropertyId.HeartOffset,
-                PropertyId.Friction, PropertyId.Resistance
+                PropertyId.Friction, PropertyId.Resistance, PropertyId.TrackStyle
             };
 
             for (int i = 0; i < properties.Length; i++) {
@@ -502,7 +505,7 @@ namespace Tests {
         public void CopyPathNode_PropertyIndexRoundTrip() {
             var properties = new[] {
                 PropertyId.DrivenVelocity, PropertyId.HeartOffset,
-                PropertyId.Friction, PropertyId.Resistance
+                PropertyId.Friction, PropertyId.Resistance, PropertyId.TrackStyle
             };
 
             for (int i = 0; i < properties.Length; i++) {
@@ -530,10 +533,10 @@ namespace Tests {
             }
         }
 
-        [TestCase(NodeType.Force, 7)]
-        [TestCase(NodeType.Geometric, 7)]
-        [TestCase(NodeType.Curved, 5)]
-        [TestCase(NodeType.CopyPath, 4)]
+        [TestCase(NodeType.Force, 8)]
+        [TestCase(NodeType.Geometric, 8)]
+        [TestCase(NodeType.Curved, 6)]
+        [TestCase(NodeType.CopyPath, 5)]
         [TestCase(NodeType.Bridge, 5)]
         public void ToIndex_AllPropertiesForNodeType_AreUnique(NodeType type, int expectedCount) {
             var seen = new System.Collections.Generic.HashSet<int>();
@@ -547,10 +550,10 @@ namespace Tests {
             }
         }
 
-        [TestCase(NodeType.Force, 7)]
-        [TestCase(NodeType.Geometric, 7)]
-        [TestCase(NodeType.Curved, 5)]
-        [TestCase(NodeType.CopyPath, 4)]
+        [TestCase(NodeType.Force, 8)]
+        [TestCase(NodeType.Geometric, 8)]
+        [TestCase(NodeType.Curved, 6)]
+        [TestCase(NodeType.CopyPath, 5)]
         [TestCase(NodeType.Bridge, 5)]
         public void FromIndex_AllIndexesForNodeType_AreValid(NodeType type, int expectedCount) {
             for (int i = 0; i < expectedCount; i++) {

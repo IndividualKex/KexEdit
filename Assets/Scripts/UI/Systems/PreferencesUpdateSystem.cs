@@ -1,4 +1,5 @@
 using KexEdit.Legacy;
+using KexEdit.Sim.Schema;
 using Unity.Entities;
 
 namespace KexEdit.UI {
@@ -15,9 +16,6 @@ namespace KexEdit.UI {
             preferences.NormalForceRange = Preferences.GetVisualizationRange(VisualizationMode.NormalForce);
             preferences.LateralForceRange = Preferences.GetVisualizationRange(VisualizationMode.LateralForce);
             preferences.RollSpeedRange = Preferences.GetVisualizationRange(VisualizationMode.RollSpeed);
-            preferences.PitchSpeedRange = Preferences.GetVisualizationRange(VisualizationMode.PitchSpeed);
-            preferences.YawSpeedRange = Preferences.GetVisualizationRange(VisualizationMode.YawSpeed);
-            preferences.CurvatureRange = Preferences.GetVisualizationRange(VisualizationMode.Curvature);
             preferences.VisualizationMode = Preferences.VisualizationMode;
             preferences.DrawGizmos = Preferences.ShowGizmos && !OrbitCameraSystem.IsRideCameraActive;
         }

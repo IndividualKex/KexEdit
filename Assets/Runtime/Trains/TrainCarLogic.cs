@@ -1,7 +1,8 @@
+using KexEdit.Sim;
 using KexEdit.Spline;
 using KexEdit.Track;
+using KexEdit.Trains.Sim;
 using Unity.Burst;
-using Unity.Mathematics;
 using TrackData = KexEdit.Track.Track;
 
 namespace KexEdit.Trains {
@@ -70,6 +71,37 @@ namespace KexEdit.Trains {
         }
 
         [BurstCompile]
+        public static bool TryGetSplinePoint(
+            in SimFollower follower,
+            in TrackData track,
+            float offset,
+            out SplinePoint result
+        ) {
+            result = SplinePoint.Default;
+
+            if (!track.IsCreated || track.TraversalCount == 0) return false;
+            if (follower.TraversalIndex < 0 || follower.TraversalIndex >= track.TraversalCount) return false;
+
+            int sectionIdx = track.TraversalOrder[follower.TraversalIndex];
+            var section = track.Sections[sectionIdx];
+            if (!section.IsValid) return false;
+
+            SimFollowerLogic.GetCurrentPoint(in follower, in track, out Point point);
+            float arc = point.SpineArc;
+
+            PositionCarWithOverhang(in track, sectionIdx, arc, offset, follower.Facing, out var raw);
+
+            result = new SplinePoint(
+                raw.Arc,
+                raw.Position,
+                raw.Direction * follower.Facing,
+                raw.Normal,
+                raw.Lateral * follower.Facing
+            );
+            return true;
+        }
+
+        [BurstCompile]
         private static bool TryFollowLink(
             in TrackData track,
             in SectionLink link,
@@ -90,19 +122,22 @@ namespace KexEdit.Trains {
                 if (overhang <= targetLength) {
                     float mappedArc = target.ArcStart + overhang;
                     track.SampleSplinePoint(link.Index, mappedArc, out result);
-                } else {
+                }
+                else {
                     // Overhang exceeds section - recursively follow Next
                     float remainingOverhang = overhang - targetLength;
                     if (!TryFollowLink(in track, in target.Next, remainingOverhang, out result, remainingDepth - 1)) {
                         return false;
                     }
                 }
-            } else {
+            }
+            else {
                 // Connection is at target's END, traverse backward
                 if (overhang <= targetLength) {
                     float mappedArc = target.ArcEnd - overhang;
                     track.SampleSplinePoint(link.Index, mappedArc, out result);
-                } else {
+                }
+                else {
                     // Overhang exceeds section - recursively follow Prev
                     float remainingOverhang = overhang - targetLength;
                     if (!TryFollowLink(in track, in target.Prev, remainingOverhang, out result, remainingDepth - 1)) {

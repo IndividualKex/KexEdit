@@ -12,7 +12,7 @@ namespace KexEdit.Legacy {
         private IEnumerator Start() {
             var world = World.DefaultGameObjectInjectionWorld;
             var entityManager = world.EntityManager;
-            var query = entityManager.CreateEntityQuery(typeof(GlobalSettings));
+            var query = entityManager.CreateEntityQuery(typeof(Preferences));
             while (query.IsEmpty) yield return null;
 
             var coaster = SerializationSystem.Instance.DeserializeGraph(Track.Data, restoreUIState: false);

@@ -1491,12 +1491,6 @@ namespace KexEdit.UI.NodeGraph {
                 type == NodeType.ReversePath
             ) {
                 ecb.AddBuffer<CorePointBuffer>(entity);
-                ecb.AddBuffer<SplineBuffer>(entity);
-                ecb.AddBuffer<SegmentationBuffer>(entity);
-                ecb.AddComponent(entity, SegmentationParams.Default);
-#if VALIDATE_COASTER_PARITY
-                ecb.AddBuffer<CoasterPointBuffer>(entity);
-#endif
                 ecb.AddBuffer<ReadNormalForce>(entity);
                 ecb.AddBuffer<ReadLateralForce>(entity);
                 ecb.AddBuffer<ReadPitchSpeed>(entity);

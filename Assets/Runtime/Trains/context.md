@@ -4,8 +4,8 @@ Domain layer for train traversal and car positioning.
 
 ## Purpose
 
-- CoM traversal through Track segments (Trains.Sim)
-- Car positioning with overhang via recursive section link following
+- CoM traversal through Track sections (Trains.Sim)
+- Car/seat positioning with overhang via recursive section link following
 
 ## Layout
 
@@ -13,15 +13,21 @@ Domain layer for train traversal and car positioning.
 Trains/
 ├── context.md
 ├── KexEdit.Trains.asmdef
-├── TrainCarLogic.cs           # Position car at arc offset with overhang
+├── TrainCarLogic.cs           # Position at arc offset with overhang
 └── Sim/                       # Sub-assembly: CoM traversal
     ├── KexEdit.Trains.Sim.asmdef
-    ├── SimFollower.cs         # SegmentIndex + PointIndex + Facing
-    └── SimFollowerLogic.cs    # Advance through segments
+    ├── SimFollower.cs         # TraversalIndex + PointIndex + Facing
+    └── SimFollowerLogic.cs    # Advance, GetCurrentPoint, SetFromProgress
 ```
+
+## Entrypoints
+
+- `TrainCarLogic.TryGetSplinePoint(follower, track, offset)` - Get facing-adjusted SplinePoint at offset from CoM
+- `SimFollowerLogic.Advance(follower, track, dt, hz)` - Step CoM forward through track
 
 ## Dependencies
 
-- KexEdit.Trains.Sim (SimFollower, segment traversal)
-- KexEdit.Coaster (Track, Segment)
+- KexEdit.Trains.Sim (SimFollower, traversal)
+- KexEdit.Sim (Point)
+- KexEdit.Track (Track, Section)
 - KexEdit.Spline (SplinePoint)

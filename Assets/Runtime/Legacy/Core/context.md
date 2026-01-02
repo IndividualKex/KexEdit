@@ -6,14 +6,14 @@ Foundation and shared infrastructure for the KexEdit runtime
 
 - System initialization and lifecycle management
 - Core data structures and utilities
-- Global settings and constants
+- Preferences and constants
 - Shared extension methods
 
 ## Key Components
 
 - `Uuid` - Unique identifier for entities
 - `Dirty` - Enableable component marking entities for update
-- `GlobalSettings` - Application-wide configuration
+- `Preferences` - Application-wide preferences
 - `InitializeEvent` - System initialization events
 
 ## Key Systems

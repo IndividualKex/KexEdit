@@ -3,7 +3,6 @@ using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
-using Resources = UnityEngine.Resources;
 
 namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
@@ -62,33 +61,11 @@ namespace KexEdit.Legacy {
             });
             ecb.SetName(colliderTemplateEntity, "Track Collider Template");
 
-            var trackMeshCompute = Resources.Load<UnityEngine.ComputeShader>("TrackMeshCompute");
-            var duplicationMaterial = Resources.Load<UnityEngine.Material>("Duplication");
-            var extrusionMaterial = Resources.Load<UnityEngine.Material>("Extrusion");
-            var gizmoMaterial = Resources.Load<UnityEngine.Material>("LineGizmo");
-
             var settingsEntity = ecb.CreateEntity();
-            ecb.AddComponent(settingsEntity, new GlobalSettings {
-                Compute = trackMeshCompute,
-                DuplicationMaterial = duplicationMaterial,
-                ExtrusionMaterial = extrusionMaterial,
-                GizmoMaterial = gizmoMaterial,
-            });
             var preferences = Preferences.Default;
             preferences.TrainLayer = trainLayer;
             ecb.AddComponent(settingsEntity, preferences);
-
-            var defaultGizmoMaterial = new UnityEngine.Material(gizmoMaterial);
-            defaultGizmoMaterial.SetColor("_Color", new(0.7f, 0.7f, 0.7f));
-
-            var gizmoSettings = new GizmoSettings();
-            gizmoSettings.ExtrusionGizmos.Add(new ExtrusionGizmoSettings {
-                Material = defaultGizmoMaterial,
-                Heart = 0f
-            });
-
-            ecb.AddComponent(settingsEntity, gizmoSettings);
-            ecb.SetName(settingsEntity, "Global Settings");
+            ecb.SetName(settingsEntity, "Settings");
 
             ecb.Playback(EntityManager);
         }

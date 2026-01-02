@@ -151,5 +151,93 @@ namespace Tests {
 
             output.Dispose();
         }
+
+        [Test]
+        public void ComputeSegments_MultiPiece_100m_Uses10mPiece() {
+            var pieces = new NativeArray<TrackPiece>(2, Allocator.Temp);
+            pieces[0] = new TrackPiece(10f, 0);
+            pieces[1] = new TrackPiece(2f, 1);
+            var output = new NativeList<SegmentBoundary>(16, Allocator.Temp);
+
+            SegmentationMath.ComputeSegments(0f, 100f, pieces, SegmentationMath.DefaultTolerance, ref output);
+
+            Assert.AreEqual(10, output.Length);
+            Assert.AreEqual(0, output[0].PieceIndex);
+            Assert.AreEqual(1f, output[0].Scale, TOLERANCE);
+
+            pieces.Dispose();
+            output.Dispose();
+        }
+
+        [Test]
+        public void ComputeSegments_MultiPiece_3m_Uses2mPiece() {
+            var pieces = new NativeArray<TrackPiece>(2, Allocator.Temp);
+            pieces[0] = new TrackPiece(10f, 0);
+            pieces[1] = new TrackPiece(2f, 1);
+            var output = new NativeList<SegmentBoundary>(16, Allocator.Temp);
+
+            // 3m: 10m piece @ 0.3 scale = 70% skew (exceeds 50%), fallback to 2m @ 0.75
+            SegmentationMath.ComputeSegments(0f, 3f, pieces, SegmentationMath.DefaultTolerance, ref output);
+
+            Assert.AreEqual(2, output.Length);
+            Assert.AreEqual(1, output[0].PieceIndex);
+            Assert.AreEqual(0.75f, output[0].Scale, TOLERANCE);
+
+            pieces.Dispose();
+            output.Dispose();
+        }
+
+        [Test]
+        public void ComputeSegments_MultiPiece_5m_Uses10mPieceAtBoundary() {
+            var pieces = new NativeArray<TrackPiece>(2, Allocator.Temp);
+            pieces[0] = new TrackPiece(10f, 0);
+            pieces[1] = new TrackPiece(2f, 1);
+            var output = new NativeList<SegmentBoundary>(16, Allocator.Temp);
+
+            // 5m with 10m piece = 1 segment at 5m, scale 0.5 (at 50% tolerance boundary)
+            SegmentationMath.ComputeSegments(0f, 5f, pieces, SegmentationMath.DefaultTolerance, ref output);
+
+            Assert.AreEqual(1, output.Length);
+            Assert.AreEqual(0, output[0].PieceIndex);
+            Assert.AreEqual(0.5f, output[0].Scale, TOLERANCE);
+
+            pieces.Dispose();
+            output.Dispose();
+        }
+
+        [Test]
+        public void ComputeSegments_MultiPiece_11m_WithinTolerance_Uses10mPiece() {
+            var pieces = new NativeArray<TrackPiece>(2, Allocator.Temp);
+            pieces[0] = new TrackPiece(10f, 0);
+            pieces[1] = new TrackPiece(2f, 1);
+            var output = new NativeList<SegmentBoundary>(16, Allocator.Temp);
+
+            // 11m with 10m piece = 1 segment at 1.1 scale (within 50% tolerance)
+            SegmentationMath.ComputeSegments(0f, 11f, pieces, SegmentationMath.DefaultTolerance, ref output);
+
+            Assert.AreEqual(1, output.Length);
+            Assert.AreEqual(0, output[0].PieceIndex);
+            Assert.AreEqual(1.1f, output[0].Scale, TOLERANCE);
+
+            pieces.Dispose();
+            output.Dispose();
+        }
+
+        [Test]
+        public void ComputeSegments_MultiPiece_2m_PerfectFit_Uses2mPiece() {
+            var pieces = new NativeArray<TrackPiece>(2, Allocator.Temp);
+            pieces[0] = new TrackPiece(10f, 0);
+            pieces[1] = new TrackPiece(2f, 1);
+            var output = new NativeList<SegmentBoundary>(16, Allocator.Temp);
+
+            SegmentationMath.ComputeSegments(0f, 2f, pieces, SegmentationMath.DefaultTolerance, ref output);
+
+            Assert.AreEqual(1, output.Length);
+            Assert.AreEqual(1, output[0].PieceIndex);
+            Assert.AreEqual(1f, output[0].Scale, TOLERANCE);
+
+            pieces.Dispose();
+            output.Dispose();
+        }
     }
 }

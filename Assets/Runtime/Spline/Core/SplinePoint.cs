@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Mathematics;
 
 namespace KexEdit.Spline {
+    [StructLayout(LayoutKind.Sequential)]
     [BurstCompile]
     public readonly struct SplinePoint {
         public readonly float Arc;

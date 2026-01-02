@@ -1,0 +1,19 @@
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Entities;
+
+namespace KexEdit.Legacy {
+    [UpdateInGroup(typeof(CleanupSystemGroup))]
+    [BurstCompile]
+    public partial struct StyleCleanupSystem : ISystem {
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state) {
+            using var ecb = new EntityCommandBuffer(Allocator.Temp);
+            foreach (var (style, entity) in SystemAPI.Query<TrackStyle>().WithEntityAccess()) {
+                if (SystemAPI.HasComponent<TrackStyleSettings>(style.Settings)) continue;
+                ecb.DestroyEntity(entity);
+            }
+            ecb.Playback(state.EntityManager);
+        }
+    }
+}

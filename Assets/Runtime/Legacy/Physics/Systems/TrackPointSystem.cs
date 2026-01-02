@@ -1,3 +1,4 @@
+using KexEdit.Sim.Schema;
 using Unity.Mathematics;
 using Unity.Entities;
 using Unity.Collections;
@@ -77,8 +78,6 @@ namespace KexEdit.Legacy {
                 ReadNormalForceLookup = SystemAPI.GetBufferLookup<ReadNormalForce>(true),
                 ReadLateralForceLookup = SystemAPI.GetBufferLookup<ReadLateralForce>(true),
                 ReadRollSpeedLookup = SystemAPI.GetBufferLookup<ReadRollSpeed>(true),
-                ReadPitchSpeedLookup = SystemAPI.GetBufferLookup<ReadPitchSpeed>(true),
-                ReadYawSpeedLookup = SystemAPI.GetBufferLookup<ReadYawSpeed>(true),
                 TrackPointLookup = SystemAPI.GetBufferLookup<TrackPoint>(false),
                 CountMap = countMap,
                 VisualizationMode = preferences.VisualizationMode
@@ -208,10 +207,6 @@ namespace KexEdit.Legacy {
             public BufferLookup<ReadLateralForce> ReadLateralForceLookup;
             [ReadOnly]
             public BufferLookup<ReadRollSpeed> ReadRollSpeedLookup;
-            [ReadOnly]
-            public BufferLookup<ReadPitchSpeed> ReadPitchSpeedLookup;
-            [ReadOnly]
-            public BufferLookup<ReadYawSpeed> ReadYawSpeedLookup;
 
             [NativeDisableParallelForRestriction]
             public BufferLookup<TrackPoint> TrackPointLookup;
@@ -378,31 +373,6 @@ namespace KexEdit.Legacy {
                             }
                         }
                         return math.lerp(p0.RollSpeed(), p1.RollSpeed(), t);
-
-                    case VisualizationMode.PitchSpeed:
-                        if (ReadPitchSpeedLookup.HasBuffer(section)) {
-                            var buffer = ReadPitchSpeedLookup[section];
-                            if (index < buffer.Length - 1) {
-                                value0 = buffer[index].Value;
-                                value1 = buffer[index + 1].Value;
-                                return math.lerp(value0, value1, t);
-                            }
-                        }
-                        return math.lerp(p0.PitchFromLast, p1.PitchFromLast, t);
-
-                    case VisualizationMode.YawSpeed:
-                        if (ReadYawSpeedLookup.HasBuffer(section)) {
-                            var buffer = ReadYawSpeedLookup[section];
-                            if (index < buffer.Length - 1) {
-                                value0 = buffer[index].Value;
-                                value1 = buffer[index + 1].Value;
-                                return math.lerp(value0, value1, t);
-                            }
-                        }
-                        return math.lerp(p0.YawFromLast, p1.YawFromLast, t);
-
-                    case VisualizationMode.Curvature:
-                        return math.lerp(p0.AngleFromLast, p1.AngleFromLast, t);
 
                     default:
                         return math.lerp(p0.Velocity(), p1.Velocity(), t);

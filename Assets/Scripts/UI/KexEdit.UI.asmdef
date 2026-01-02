@@ -3,6 +3,10 @@
     "rootNamespace": "",
     "references": [
         "KexEdit.Legacy",
+        "KexEdit.Rendering",
+        "KexEdit.Trains",
+        "KexEdit.Trains.Sim",
+        "KexEdit.Track",
         "KexEdit.Spline",
         "KexEdit.Spline.Rendering",
         "Unity.Entities",

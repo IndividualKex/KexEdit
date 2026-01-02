@@ -14,7 +14,7 @@ public class CoasterEvaluatorTests {
     public void Evaluate_EmptyCoaster_ReturnsEmptyResult() {
         var coaster = Coaster.Create(Allocator.Temp);
         try {
-            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
             try {
                 Assert.AreEqual(0, track.SectionCount);
                 Assert.AreEqual(0, track.Points.Length);
@@ -33,7 +33,7 @@ public class CoasterEvaluatorTests {
             uint nodeId = coaster.Graph.CreateNode(NodeType.Anchor, float2.zero, out _, out _, Allocator.Temp);
             coaster.Vectors[Coaster.InputKey(nodeId, AnchorPorts.Position)] = new float3(10f, 20f, 30f);
 
-            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
             try {
                 Assert.AreEqual(0, track.SectionCount, "Anchor nodes don't produce sections");
             } finally {
@@ -59,7 +59,7 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             forceInputs.Dispose();
 
-            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
             try {
                 Assert.IsTrue(track.NodeToSection.TryGetValue(forceId, out int sectionIndex), "Force node should have section");
 
@@ -92,7 +92,7 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             geoInputs.Dispose();
 
-            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
             try {
                 Assert.IsTrue(track.NodeToSection.TryGetValue(geoId, out int sectionIndex), "Geometric node should have section");
 
@@ -122,7 +122,7 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             curvedInputs.Dispose();
 
-            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
             try {
                 Assert.IsTrue(track.NodeToSection.TryGetValue(curvedId, out int sectionIndex), "Curved node should have section");
 
@@ -151,7 +151,7 @@ public class CoasterEvaluatorTests {
             anchorOutputs.Dispose();
             reverseInputs.Dispose();
 
-            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
             try {
                 Assert.AreEqual(0, track.SectionCount, "Reverse nodes don't produce sections");
             } finally {
@@ -188,7 +188,7 @@ public class CoasterEvaluatorTests {
             anchor2Outputs.Dispose();
             copyInputs.Dispose();
 
-            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
             try {
                 Assert.IsTrue(track.NodeToSection.TryGetValue(copyId, out int sectionIndex), "CopyPath should have section");
 
@@ -222,7 +222,7 @@ public class CoasterEvaluatorTests {
             anchor2Outputs.Dispose();
             bridgeInputs.Dispose();
 
-            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
             try {
                 Assert.IsTrue(track.NodeToSection.TryGetValue(bridgeId, out int sectionIndex), "Bridge should have section");
 
@@ -256,7 +256,7 @@ public class CoasterEvaluatorTests {
             scalarOutputs.Dispose();
             curvedInputs.Dispose();
 
-            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, out var track);
+            KexEdit.Track.Track.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
             try {
                 Assert.IsTrue(track.NodeToSection.TryGetValue(curvedId, out int sectionIndex), "Curved node should have section");
 

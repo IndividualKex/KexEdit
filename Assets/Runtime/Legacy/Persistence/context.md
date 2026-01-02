@@ -28,6 +28,10 @@ KEXD Load:   KEXD bytes → Coaster → KexdAdapter → ECS entities
 Legacy Load: .kex bytes → LegacyImporter → Coaster → KexdAdapter → ECS entities
 ```
 
+## Components
+
+- `Import/ObjImporter.cs` - OBJ mesh loader with Blender→Unity handedness conversion
+
 ## Entry Points
 
 - `CoasterLoader.cs` - Main file loading entry point

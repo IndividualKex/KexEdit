@@ -120,15 +120,4 @@ namespace KexEdit.Legacy {
         Reserved5 = 1 << 6,   // 0x40
         Reserved6 = 1 << 7,   // 0x80
     }
-
-    public enum VisualizationMode {
-        None,
-        Velocity,
-        NormalForce,
-        LateralForce,
-        RollSpeed,
-        PitchSpeed,
-        YawSpeed,
-        Curvature,
-    }
 }

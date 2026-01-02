@@ -150,7 +150,7 @@ namespace Tests.Trains {
             try {
                 LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
                 try {
-                    Track.Build(in coaster, Allocator.TempJob, out var track);
+                    Track.Build(in coaster, Allocator.TempJob, 0.1f, 0, out var track);
                     try { test(in track); }
                     finally { track.Dispose(); }
                 }

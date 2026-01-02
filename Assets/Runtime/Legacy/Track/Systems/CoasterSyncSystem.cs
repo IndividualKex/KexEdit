@@ -1,18 +1,13 @@
-using KexEdit.Spline;
-using KexEdit.Spline.Resampling;
-using KexEdit.Document;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using DocumentAggregate = KexEdit.Document.Document;
-using CorePoint = KexEdit.Sim.Point;
+using TrackData = KexEdit.Track.Track;
 
 namespace KexEdit.Legacy {
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
     [BurstCompile]
     public partial struct CoasterSyncSystem : ISystem {
-        private const float SplineResolution = 0.1f;
-
         private EntityQuery _coasterQuery;
 
         [BurstCompile]
@@ -24,113 +19,76 @@ namespace KexEdit.Legacy {
             state.RequireForUpdate(_coasterQuery);
         }
 
+        public void OnDestroy(ref SystemState state) {
+            if (SystemAPI.TryGetSingleton<TrackSingleton>(out var singleton) && singleton.Value.IsCreated) {
+                singleton.Value.Dispose();
+            }
+        }
+
         [BurstCompile]
         public void OnUpdate(ref SystemState state) {
-            var coasterDataLookup = SystemAPI.GetComponentLookup<CoasterData>(true);
-            var anchorLookup = SystemAPI.GetComponentLookup<Anchor>(true);
-            var splineBufferLookup = SystemAPI.GetBufferLookup<SplineBuffer>(false);
-#if VALIDATE_COASTER_PARITY
-            var coasterPointBufferLookup = SystemAPI.GetBufferLookup<CoasterPointBuffer>(false);
-#else
-            var pointBufferLookup = SystemAPI.GetBufferLookup<CorePointBuffer>(false);
-#endif
+            UpdateTrackSingleton(ref state);
+
+            if (!SystemAPI.TryGetSingleton<TrackSingleton>(out var singleton) || !singleton.Value.IsCreated) {
+                return;
+            }
+
+            ref readonly TrackData track = ref singleton.Value;
 
             var coasterEntities = _coasterQuery.ToEntityArray(Allocator.Temp);
-
-            for (int i = 0; i < coasterEntities.Length; i++) {
-                Entity coasterEntity = coasterEntities[i];
-                CoasterData coasterData = coasterDataLookup[coasterEntity];
-                ref readonly DocumentAggregate document = ref coasterData.Value;
-
-                if (!document.Graph.NodeIds.IsCreated || document.Graph.NodeCount == 0) continue;
-
-                KexEdit.Track.Track.Build(in document, Allocator.Temp, out var track);
-
-#if VALIDATE_COASTER_PARITY
-                SyncPathsToCoasterBuffer(
-                    ref state,
-                    coasterEntity,
-                    in track,
-                    in anchorLookup,
-                    ref coasterPointBufferLookup
-                );
-#else
-                SyncPathsToEntities(
-                    ref state,
-                    coasterEntity,
-                    in track,
-                    in anchorLookup,
-                    ref pointBufferLookup
-                );
-#endif
-
-                SyncPathsToSplineBuffers(ref state, coasterEntity, in track, ref splineBufferLookup);
-
-                track.Dispose();
+            if (coasterEntities.Length == 0) {
+                coasterEntities.Dispose();
+                return;
             }
 
+            Entity coasterEntity = coasterEntities[0];
             coasterEntities.Dispose();
+            var pointBufferLookup = SystemAPI.GetBufferLookup<CorePointBuffer>(false);
+            SyncPathsToEntities(ref state, coasterEntity, in track, ref pointBufferLookup);
         }
 
-#if VALIDATE_COASTER_PARITY
-        [BurstCompile]
-        private void SyncPathsToCoasterBuffer(
-            ref SystemState state,
-            Entity coasterEntity,
-            in KexEdit.Track.Track track,
-            in ComponentLookup<Anchor> anchorLookup,
-            ref BufferLookup<CoasterPointBuffer> coasterPointBufferLookup
-        ) {
-            var nodeToEntity = new NativeHashMap<uint, Entity>(64, Allocator.Temp);
+        private void UpdateTrackSingleton(ref SystemState state) {
+            if (_coasterQuery.IsEmpty) return;
 
-            foreach (var (node, coasterRef, entity) in
-                     SystemAPI.Query<RefRO<Node>, RefRO<CoasterReference>>().WithEntityAccess()) {
-                if (coasterRef.ValueRO.Value != coasterEntity) continue;
-                nodeToEntity.TryAdd(node.ValueRO.Id, entity);
+            var coasterEntities = _coasterQuery.ToEntityArray(Allocator.Temp);
+            if (coasterEntities.Length == 0) {
+                coasterEntities.Dispose();
+                return;
             }
 
-            var nodeKeys = track.NodeToSection.GetKeyArray(Allocator.Temp);
+            Entity coasterEntity = coasterEntities[0];
+            coasterEntities.Dispose();
 
-            for (int k = 0; k < nodeKeys.Length; k++) {
-                uint nodeId = nodeKeys[k];
-                if (!nodeToEntity.TryGetValue(nodeId, out Entity nodeEntity)) continue;
-                if (!coasterPointBufferLookup.TryGetBuffer(nodeEntity, out var coasterPoints)) continue;
-                if (!track.NodeToSection.TryGetValue(nodeId, out int sectionIndex)) continue;
+            var coasterData = SystemAPI.GetComponent<CoasterData>(coasterEntity);
+            ref readonly DocumentAggregate document = ref coasterData.Value;
 
-                var section = track.Sections[sectionIndex];
-                if (!section.IsValid) continue;
-
-                int facing = section.Facing;
-
-                WriteToCoasterBuffer(in track, in section, facing, ref coasterPoints);
+            if (!SystemAPI.HasSingleton<TrackSingleton>()) {
+                Entity singletonEntity = state.EntityManager.CreateEntity();
+                state.EntityManager.AddComponent<TrackSingleton>(singletonEntity);
+                state.EntityManager.SetName(singletonEntity, "TrackSingleton");
             }
 
-            nodeKeys.Dispose();
-            nodeToEntity.Dispose();
+            ref var singleton = ref SystemAPI.GetSingletonRW<TrackSingleton>().ValueRW;
+
+            if (singleton.Value.IsCreated) {
+                singleton.Value.Dispose();
+            }
+
+            if (!document.Graph.NodeIds.IsCreated || document.Graph.NodeCount == 0) {
+                singleton.Value = default;
+                return;
+            }
+
+            int defaultStyle = SystemAPI.TryGetSingleton<StyleConfigSingleton>(out var styleConfig)
+                ? styleConfig.DefaultStyleIndex
+                : 0;
+            TrackData.Build(in document, Allocator.Persistent, 0.5f, defaultStyle, out singleton.Value);
         }
 
-        [BurstCompile]
-        private static void WriteToCoasterBuffer(
-            in KexEdit.Track.Track track,
-            in KexEdit.Track.Section section,
-            int facing,
-            ref DynamicBuffer<CoasterPointBuffer> coasterPoints
-        ) {
-            coasterPoints.Clear();
-            for (int i = section.StartIndex; i <= section.EndIndex; i++) {
-                coasterPoints.Add(new CoasterPointBuffer {
-                    Point = track.Points[i],
-                    Facing = facing
-                });
-            }
-        }
-#else
-        [BurstCompile]
         private void SyncPathsToEntities(
             ref SystemState state,
             Entity coasterEntity,
             in KexEdit.Track.Track track,
-            in ComponentLookup<Anchor> anchorLookup,
             ref BufferLookup<CorePointBuffer> pointBufferLookup
         ) {
             var nodeToEntity = new NativeHashMap<uint, Entity>(64, Allocator.Temp);
@@ -181,60 +139,6 @@ namespace KexEdit.Legacy {
                 CorePointBuffer.Create(in currPoint, in prevPoint, facing, out CorePointBuffer curr);
                 corePoints.Add(curr);
             }
-        }
-#endif
-
-        [BurstCompile]
-        private void SyncPathsToSplineBuffers(
-            ref SystemState state,
-            Entity coasterEntity,
-            in KexEdit.Track.Track track,
-            ref BufferLookup<SplineBuffer> splineBufferLookup
-        ) {
-            var nodeToEntity = new NativeHashMap<uint, Entity>(64, Allocator.Temp);
-
-            foreach (var (node, coasterRef, entity) in
-                     SystemAPI.Query<RefRO<Node>, RefRO<CoasterReference>>().WithEntityAccess()) {
-                if (coasterRef.ValueRO.Value != coasterEntity) continue;
-                nodeToEntity.TryAdd(node.ValueRO.Id, entity);
-            }
-
-            var nodeKeys = track.NodeToSection.GetKeyArray(Allocator.Temp);
-            var tempSpline = new NativeList<SplinePoint>(256, Allocator.Temp);
-            var tempPath = new NativeArray<CorePoint>(256, Allocator.Temp);
-
-            for (int k = 0; k < nodeKeys.Length; k++) {
-                uint nodeId = nodeKeys[k];
-                if (!nodeToEntity.TryGetValue(nodeId, out Entity nodeEntity)) continue;
-                if (!splineBufferLookup.TryGetBuffer(nodeEntity, out var splineBuffer)) continue;
-                if (!track.NodeToSection.TryGetValue(nodeId, out int sectionIndex)) continue;
-
-                var section = track.Sections[sectionIndex];
-                if (!section.IsValid) continue;
-
-                int pathLength = section.Length;
-                if (tempPath.Length < pathLength) {
-                    tempPath.Dispose();
-                    tempPath = new NativeArray<CorePoint>(pathLength, Allocator.Temp);
-                }
-
-                for (int i = 0; i < pathLength; i++) {
-                    tempPath[i] = track.Points[section.StartIndex + i];
-                }
-
-                var pathSlice = tempPath.GetSubArray(0, pathLength);
-                SplineResampler.Resample(pathSlice, SplineResolution, ref tempSpline);
-
-                splineBuffer.Clear();
-                for (int i = 0; i < tempSpline.Length; i++) {
-                    splineBuffer.Add(new SplineBuffer { Point = tempSpline[i] });
-                }
-            }
-
-            tempPath.Dispose();
-            tempSpline.Dispose();
-            nodeKeys.Dispose();
-            nodeToEntity.Dispose();
         }
     }
 }

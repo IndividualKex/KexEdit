@@ -5,7 +5,8 @@
         "Unity.Mathematics",
         "Unity.Burst",
         "Unity.Collections",
-        "KexEdit.Spline"
+        "KexEdit.Spline",
+        "KexEdit.Track"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

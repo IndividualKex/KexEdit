@@ -1,10 +1,14 @@
 using KexEdit.Spline;
+using KexEdit.Spline.Rendering;
+using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
 namespace KexEdit.Legacy.Debug {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial class SegmentationGizmos : SystemBase {
+        private const float NominalSegmentLength = 10f;
+
         private static readonly Color[] SegmentColors = {
             Color.red,
             Color.green,
@@ -16,25 +20,42 @@ namespace KexEdit.Legacy.Debug {
             new Color(0.5f, 0f, 1f),
         };
 
+        protected override void OnCreate() {
+            RequireForUpdate<TrackSingleton>();
+        }
+
         protected override void OnUpdate() {
-            foreach (var (splineBuffer, segmentationBuffer) in
-                SystemAPI.Query<DynamicBuffer<SplineBuffer>, DynamicBuffer<SegmentationBuffer>>()) {
+            var singleton = SystemAPI.GetSingleton<TrackSingleton>();
+            if (!singleton.Value.IsCreated) return;
+            ref readonly var track = ref singleton.Value;
 
-                if (splineBuffer.Length < 2 || segmentationBuffer.Length == 0) continue;
+            var segments = new NativeList<SegmentBoundary>(16, Allocator.Temp);
+            int colorIndex = 0;
 
-                var splineArray = splineBuffer.Reinterpret<SplinePoint>().AsNativeArray();
+            for (int s = 0; s < track.SectionCount; s++) {
+                var section = track.Sections[s];
+                if (!section.HasSpline) continue;
 
-                for (int i = 0; i < segmentationBuffer.Length; i++) {
-                    var boundary = segmentationBuffer[i].Boundary;
-                    var color = SegmentColors[i % SegmentColors.Length];
+                var sectionSpline = track.SplinePoints.AsArray()
+                    .GetSubArray(section.SplineStartIndex, section.SplineLength);
 
-                    DrawSegment(splineArray, boundary.StartArc, boundary.EndArc, color);
+                segments.Clear();
+                SegmentationMath.ComputeSegments(section.ArcStart, section.ArcEnd, NominalSegmentLength, ref segments);
+
+                for (int i = 0; i < segments.Length; i++) {
+                    var boundary = segments[i];
+                    var color = SegmentColors[colorIndex % SegmentColors.Length];
+                    colorIndex++;
+
+                    DrawSegment(sectionSpline, boundary.StartArc, boundary.EndArc, color);
                 }
             }
+
+            segments.Dispose();
         }
 
         private static void DrawSegment(
-            Unity.Collections.NativeArray<SplinePoint> spline,
+            NativeArray<SplinePoint> spline,
             float startArc,
             float endArc,
             Color color

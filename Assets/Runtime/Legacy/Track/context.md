@@ -1,12 +1,14 @@
 # Track Context
 
-Track construction and node graph management
+Track construction, node graph management, and rendering
 
 ## Purpose
 
 - Manages track node graph structure
 - Handles connections between track sections
-- Manages ports for node connections
+- Evaluates Document → Track (single source of truth)
+- GPU-accelerated track mesh rendering
+- Style configuration and breakpoint detection
 
 ## Key Components
 
@@ -14,34 +16,39 @@ Track construction and node graph management
 - `Connection` - Links between nodes (graph edges)
 - `Port` - Connection topology (Type, Id, IsInput) - graph structure only, values in Coaster
 - `Segment` - Track segment data for rendering
-- `CorePointBuffer` - Computed track points from CoasterEvaluator
-- `SplineBuffer` - Arc-parameterized spline points from SplineResampler
-- `CoasterData` - Holds KexEdit.Coaster.Coaster aggregate on coaster entity (source of truth)
-- `UIStateData` - Holds KexEdit.Persistence.UIStateChunk on coaster entity (UI metadata: node positions, keyframe IDs)
-- `Dirty` - Marks entities modified by UI for sync to Coaster
+- `CorePointBuffer` - Computed track points per entity (legacy, for train/physics systems)
+- `CoasterData` - Holds Document aggregate on coaster entity (source of truth)
+- `TrackSingleton` - Built Track struct (single source of truth for all track data)
+- `UIStateData` - UI metadata: node positions, keyframe IDs
+- `Dirty` - Marks entities modified by UI for sync
 - Section tags - `BridgeTag`, `ReverseTag`, etc.
+- `TrackStyle` - Style entity with spacing, threshold parameters
+- `TrackStyleSettings` - Style settings (default style, auto style mode)
+- `TrackStyleHash` - Hash for style change invalidation
+- `Render` - Boolean flag for section visibility
+- `RenderStyleSingleton` - Render colors (Primary, Secondary, Tertiary)
+- `PieceStyleSingleton` - Piece meshes and native arrays for GPU pipeline
+- `StyleConfigSingleton` - Style scalars (DefaultStyleIndex, StyleCount, Version)
 
 ## Key Systems
 
-- `CoasterSyncSystem` - Evaluates Coaster aggregate → writes CorePointBuffer and SplineBuffer
+- `CoasterSyncSystem` - Evaluates Document → TrackSingleton, syncs CorePointBuffer per entity
 - `GraphTraversalSystem` - Populates Node.Next/Previous and Coaster.RootNode
-- `TrackSegmentInitializationSystem` - Creates rendering segments (reads Coaster.Keyframes for manual breakpoints)
+- `TrackSegmentInitializationSystem` - Creates rendering segments with style breakpoints
+- `TrackRenderSystem` - GPU mesh deformation via TrackMeshPipeline
+- `SegmentStyleHashSystem` - Computes style hashes for invalidation
+- `StyleLoadingSystem` - Loads style settings and creates style entities
+- `StyleCleanupSystem` - Removes orphaned style entities
 - `ConnectionCleanupSystem` - Removes orphaned connections
 - `NodeCleanupSystem` - Removes orphaned nodes
 
-## Entry Points
-
-- `Track.cs` - Core track data structure
-
 ## Dependencies
 
-- KexEdit.Core (physics types)
-- KexEdit.Articulation (SplinePoint)
-- KexEdit.Articulation.Resampling (SplineResampler)
-- KexEdit.Coaster (Coaster aggregate, CoasterEvaluator)
-- KexGraph (graph data structure)
+- KexEdit.Sim, KexEdit.Spline, KexEdit.Document, KexEdit.Track
+- KexEdit.Rendering (TrackMeshPipeline, StyleBreakpointDetector)
+- KexEdit.Spline.Rendering (SegmentBuilder, StylePieceConfig)
 
 ## Scope
 
-- In: Graph structure, connections, Coaster evaluation
-- Out: Physics simulation, rendering, trains
+- In: Graph structure, connections, Document evaluation, track rendering, styles
+- Out: Physics simulation, trains

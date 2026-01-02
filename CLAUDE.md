@@ -1,37 +1,49 @@
-# AI Context - Working Agreement
+# KexEdit
 
-<project-description>
-Advanced Unity-based roller coaster editor using Force Vector Design (FVD) with Unity DOTS/ECS for high-performance track computation and rendering
-</project-description>
+Unity roller coaster editor using Force Vector Design (FVD) with DOTS/ECS.
 
-**Required**: Read [layers/structure.md](layers/structure.md) before proceeding with any task
+**Before any task**: Read [layers/structure.md](layers/structure.md)
 
-## Testing
+## Architecture: Functional Core, ECS Shell
 
-**Headless (CLI)**: `./run-tests.sh`
+Data-oriented layered design. Pure cores transform data; ECS orchestrates effects.
 
-## Context Management System
+| Layer | Role | Examples |
+|-------|------|----------|
+| **Hex Cores** | Pure, portable transforms | Sim, Graph, Spline |
+| **Hex Layers** | Domain-aware extensions | Schema, Nodes, Typed |
+| **Application** | Unity integration | Legacy/ |
 
-- **Tier 0 — global**: `CLAUDE.md` (root). Global standards and system overview
-- **Tier 1 — project**: `layers/structure.md`. Project map (stack, commands, layout, entry points)
-- **Tier 2 — folder context**: `context.md` in any folder; one per folder; explains purpose/structure of that folder
-- **Tier 3 — implementation**: Code files (scripts)
+**Dependency rule**: Inward only. Cores never call outward—they receive data, return data.
 
-## Rules
+**No interfaces/adapters**: Use data contracts. The shell handles IO; cores stay pure.
 
-- **Priority**: Your number one priority is to manage your own context; always load appropriate context before doing anything else
-- **No History**: CRITICAL - Code and context must NEVER reference their own history. Write everything as the current, final state. Never include comments like "changed from X to Y" or "previously was Z". This is a severe form of context rot
-- **Simplicity**: Keep code simple, elegant, concise, and readable
-- **Structure**: Keep files small and single-responsibility; separate concerns (MVC/ECS as appropriate)
-- **Reuse**: Reuse before adding new code; avoid repetition
-- **Comments**: Code should be self-explanatory without comments; use concise comments only when necessary
-- **State**: Single source of truth; caches/derivations only
-- **Data**: Favor data-driven/declarative design
-- **Fail Fast**: Make bugs immediately visible rather than hiding them; favor simplicity over defensive patterns
-- **Backwards Compatibility**: Unless stated otherwise, favor simplicity over backwards compatibility; the design rules above should make breaking changes easy to trace and fix
-- **Fast Iteration**: Use Python scripts in `tools/` to validate binary formats, data assumptions, or debug issues outside the Unity editor
+## Context Tiers
+
+0. `CLAUDE.md` — Global standards
+1. `layers/structure.md` — Project map, entry points
+2. `context.md` (per folder) — Local purpose/structure
+3. Code files
+
+**Always load context before working.**
+
+## Commands
+
+- **Test**: `./run-tests.sh`
+- **Debug**: Python scripts in `tools/`
+
+## Code Rules
+
+- **No history in code/docs** — Write current state only. Never "changed from X" or "previously Y"
+- **Simple > clever** — Minimal code for current requirements
+- **Single responsibility** — Small files, separated concerns
+- **Reuse first** — Check existing code before adding new
+- **Self-documenting** — Comments only when logic isn't obvious
+- **Single source of truth** — No duplicate state; derive when needed
+- **Fail fast** — Expose bugs immediately; avoid defensive complexity
 
 ## Security
 
-- **Inputs & secrets**: Validate inputs; secrets only in env; never log sensitive data
-- **Auth**: Gateway auth; server-side token validation; sanitize inputs
+- Validate external inputs only (user input, APIs)
+- Secrets in env vars only
+- Never log sensitive data

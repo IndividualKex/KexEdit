@@ -17,5 +17,6 @@ namespace KexEdit.Legacy {
         public static readonly Color VISUALIZATION_MIN_COLOR = new Color(0f, 0f, 1f, 1f);
         public static readonly Color VISUALIZATION_MAX_COLOR = new Color(1f, 0f, 0f, 1f);
         public static readonly Color VISUALIZATION_ZERO_COLOR = new Color(0.7f, 0.7f, 0.7f, 1f);
+        public static readonly Color HIGHLIGHT_COLOR = new Color(1f, 0.9f, 0.3f, 1f);
     }
 }

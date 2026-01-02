@@ -25,7 +25,7 @@ namespace Tests {
                 LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
                 try {
-                    TrackData.Build(in coaster, Allocator.TempJob, out var track);
+                    TrackData.Build(in coaster, Allocator.TempJob, 0.1f, 0, out var track);
 
                     try {
                         World world = new World("FacingTestWorld");

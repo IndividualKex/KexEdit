@@ -11,11 +11,13 @@ namespace KexEdit.Legacy {
             }
 
             var vertices = new List<Vector3>();
+            var colors = new List<Color>();
             var normals = new List<Vector3>();
             var uvs = new List<Vector2>();
             var triangles = new List<int>();
 
             var meshVertices = new List<Vector3>();
+            var meshColors = new List<Color>();
             var meshNormals = new List<Vector3>();
             var meshUVs = new List<Vector2>();
 
@@ -33,6 +35,16 @@ namespace KexEdit.Legacy {
                                 float.Parse(parts[2]),
                                 float.Parse(parts[3])
                             ));
+                            if (parts.Length >= 7) {
+                                colors.Add(new Color(
+                                    float.Parse(parts[4]),
+                                    float.Parse(parts[5]),
+                                    float.Parse(parts[6]),
+                                    parts.Length >= 8 ? float.Parse(parts[7]) : 1f
+                                ));
+                            } else {
+                                colors.Add(Color.white);
+                            }
                         }
                         break;
 
@@ -57,8 +69,8 @@ namespace KexEdit.Legacy {
 
                     case "f":
                         if (parts.Length >= 4) {
-                            ParseFace(parts, vertices, normals, uvs,
-                                meshVertices, meshNormals, meshUVs, triangles);
+                            ParseFace(parts, vertices, colors, normals, uvs,
+                                meshVertices, meshColors, meshNormals, meshUVs, triangles);
                         }
                         break;
                 }
@@ -67,6 +79,7 @@ namespace KexEdit.Legacy {
             var mesh = new Mesh {
                 name = Path.GetFileNameWithoutExtension(filePath),
                 vertices = meshVertices.ToArray(),
+                colors = meshColors.Count == meshVertices.Count ? meshColors.ToArray() : null,
                 normals = meshNormals.Count == meshVertices.Count ? meshNormals.ToArray() : null,
                 uv = meshUVs.Count == meshVertices.Count ? meshUVs.ToArray() : null,
                 triangles = triangles.ToArray()
@@ -82,9 +95,9 @@ namespace KexEdit.Legacy {
         }
 
         private static void ParseFace(string[] parts,
-            List<Vector3> vertices, List<Vector3> normals, List<Vector2> uvs,
-            List<Vector3> meshVertices, List<Vector3> meshNormals, List<Vector2> meshUVs,
-            List<int> triangles) {
+            List<Vector3> vertices, List<Color> colors, List<Vector3> normals, List<Vector2> uvs,
+            List<Vector3> meshVertices, List<Color> meshColors, List<Vector3> meshNormals,
+            List<Vector2> meshUVs, List<int> triangles) {
 
             int[] faceIndices = new int[parts.Length - 1];
 
@@ -98,6 +111,7 @@ namespace KexEdit.Legacy {
                     ? int.Parse(indices[2]) - 1 : -1;
 
                 meshVertices.Add(vertices[vertexIndex]);
+                meshColors.Add(vertexIndex < colors.Count ? colors[vertexIndex] : Color.white);
 
                 if (uvIndex >= 0 && uvIndex < uvs.Count) {
                     meshUVs.Add(uvs[uvIndex]);
@@ -118,8 +132,8 @@ namespace KexEdit.Legacy {
 
             for (int i = 1; i < faceIndices.Length - 1; i++) {
                 triangles.Add(faceIndices[0]);
-                triangles.Add(faceIndices[i]);
                 triangles.Add(faceIndices[i + 1]);
+                triangles.Add(faceIndices[i]);
             }
         }
     }

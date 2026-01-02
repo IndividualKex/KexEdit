@@ -50,7 +50,7 @@ namespace Tests {
                 LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
                 try {
-                    KexEdit.Track.Track.Build(in coaster, Allocator.TempJob, out var track);
+                    KexEdit.Track.Track.Build(in coaster, Allocator.TempJob, 0.1f, 0, out var track);
 
                     try {
                         Assert.Greater(track.SectionCount, 0, "No sections generated");
@@ -100,7 +100,7 @@ namespace Tests {
                 LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
                 try {
-                    KexEdit.Track.Track.Build(in coaster, Allocator.TempJob, out var track);
+                    KexEdit.Track.Track.Build(in coaster, Allocator.TempJob, 0.1f, 0, out var track);
 
                     try {
                         Assert.Greater(track.SectionCount, 0, "No sections generated");
@@ -133,7 +133,7 @@ namespace Tests {
                 LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
                 try {
-                    KexEdit.Track.Track.Build(in coaster, Allocator.TempJob, out var track);
+                    KexEdit.Track.Track.Build(in coaster, Allocator.TempJob, 0.1f, 0, out var track);
 
                     try {
                         Assert.Greater(track.SectionCount, 0, "No sections generated");

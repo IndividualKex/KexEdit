@@ -32,12 +32,11 @@
   <Project Path="Unity.InternalAPIEngineBridge.002.csproj" />
   <Project Path="Unity.ResourceManager.csproj" />
   <Project Path="Unity.VisualScripting.Core.csproj" />
+  <Project Path="Tests.csproj" />
   <Project Path="Unity.VisualScripting.State.Editor.csproj" />
   <Project Path="Unity.Physics.Hybrid.csproj" />
-  <Project Path="KexEdit.Legacy.csproj" />
   <Project Path="Unity.Burst.CodeGen.csproj" />
   <Project Path="Unity.Cinemachine.csproj" />
-  <Project Path="Tests.csproj" />
   <Project Path="Unity.Addressables.DocExampleCode.Editor.Tests.csproj" />
   <Project Path="Unity.VisualScripting.Flow.csproj" />
   <Project Path="Unity.Splines.Editor.csproj" />
@@ -49,6 +48,7 @@
   <Project Path="glTFast.Export.csproj" />
   <Project Path="Unity.Entities.ContentDelivery.Tests.csproj" />
   <Project Path="Unity.Entities.PerformanceTests.csproj" />
+  <Project Path="KexEdit.Legacy.csproj" />
   <Project Path="Unity.Serialization.csproj" />
   <Project Path="Unity.Numerics.Linear.Dense.csproj" />
   <Project Path="Unity.Entities.TestComponents.csproj" />
@@ -61,6 +61,7 @@
   <Project Path="Unity.Entities.Editor.PerformanceTests.csproj" />
   <Project Path="glTFast.Newtonsoft.csproj" />
   <Project Path="Unity.Entities.Editor.Properties.csproj" />
+  <Project Path="KexEdit.Rendering.csproj" />
   <Project Path="Unity.InternalAPIEditorBridge.013.csproj" />
   <Project Path="StandaloneFileBrowser.csproj" />
   <Project Path="Unity.Scenes.Hybrid.Tests.Playmode.csproj" />
@@ -103,6 +104,7 @@
   <Project Path="Unity.Transforms.Tests.csproj" />
   <Project Path="Unity.Numerics.Random.csproj" />
   <Project Path="KexEdit.Sim.Nodes.Bridge.csproj" />
+  <Project Path="KexEdit.Spline.Rendering.csproj" />
   <Project Path="KexEdit.Legacy.Editor.csproj" />
   <Project Path="Unity.Scenes.PerformanceTests.csproj" />
   <Project Path="KexEdit.Track.csproj" />
@@ -136,7 +138,6 @@
   <Project Path="KexEdit.Trains.Sim.csproj" />
   <Project Path="Unity.ScriptableBuildPipeline.csproj" />
   <Project Path="Unity.PlasticSCM.Editor.Entities.csproj" />
-  <Project Path="KexEdit.Spline.Rendering.csproj" />
   <Project Path="Unity.Entities.Tests.InAnotherAssembly.csproj" />
   <Project Path="Unity.Collections.Editor.csproj" />
   <Project Path="Unity.Entities.Hybrid.Tests.SeparateAssembly.csproj" />

@@ -1,7 +1,7 @@
 namespace KexEdit.Sim.Schema {
     public static class PropertyIndex {
         public static int ToIndex(PropertyId property, NodeType node) => (property, node) switch {
-            // Force: 0-6
+            // Force: 0-7
             (PropertyId.RollSpeed, NodeType.Force) => 0,
             (PropertyId.NormalForce, NodeType.Force) => 1,
             (PropertyId.LateralForce, NodeType.Force) => 2,
@@ -9,8 +9,9 @@ namespace KexEdit.Sim.Schema {
             (PropertyId.HeartOffset, NodeType.Force) => 4,
             (PropertyId.Friction, NodeType.Force) => 5,
             (PropertyId.Resistance, NodeType.Force) => 6,
+            (PropertyId.TrackStyle, NodeType.Force) => 7,
 
-            // Geometric: 0-6 (PitchSpeed/YawSpeed at indices 1,2)
+            // Geometric: 0-7 (PitchSpeed/YawSpeed at indices 1,2)
             (PropertyId.RollSpeed, NodeType.Geometric) => 0,
             (PropertyId.PitchSpeed, NodeType.Geometric) => 1,
             (PropertyId.YawSpeed, NodeType.Geometric) => 2,
@@ -18,19 +19,22 @@ namespace KexEdit.Sim.Schema {
             (PropertyId.HeartOffset, NodeType.Geometric) => 4,
             (PropertyId.Friction, NodeType.Geometric) => 5,
             (PropertyId.Resistance, NodeType.Geometric) => 6,
+            (PropertyId.TrackStyle, NodeType.Geometric) => 7,
 
-            // Curved: 0-4
+            // Curved: 0-5
             (PropertyId.RollSpeed, NodeType.Curved) => 0,
             (PropertyId.DrivenVelocity, NodeType.Curved) => 1,
             (PropertyId.HeartOffset, NodeType.Curved) => 2,
             (PropertyId.Friction, NodeType.Curved) => 3,
             (PropertyId.Resistance, NodeType.Curved) => 4,
+            (PropertyId.TrackStyle, NodeType.Curved) => 5,
 
-            // CopyPath: 0-3
+            // CopyPath: 0-4
             (PropertyId.DrivenVelocity, NodeType.CopyPath) => 0,
             (PropertyId.HeartOffset, NodeType.CopyPath) => 1,
             (PropertyId.Friction, NodeType.CopyPath) => 2,
             (PropertyId.Resistance, NodeType.CopyPath) => 3,
+            (PropertyId.TrackStyle, NodeType.CopyPath) => 4,
 
             // Bridge: 0-4
             (PropertyId.DrivenVelocity, NodeType.Bridge) => 0,
@@ -51,6 +55,7 @@ namespace KexEdit.Sim.Schema {
             (4, NodeType.Force) => PropertyId.HeartOffset,
             (5, NodeType.Force) => PropertyId.Friction,
             (6, NodeType.Force) => PropertyId.Resistance,
+            (7, NodeType.Force) => PropertyId.TrackStyle,
 
             // Geometric
             (0, NodeType.Geometric) => PropertyId.RollSpeed,
@@ -60,6 +65,7 @@ namespace KexEdit.Sim.Schema {
             (4, NodeType.Geometric) => PropertyId.HeartOffset,
             (5, NodeType.Geometric) => PropertyId.Friction,
             (6, NodeType.Geometric) => PropertyId.Resistance,
+            (7, NodeType.Geometric) => PropertyId.TrackStyle,
 
             // Curved
             (0, NodeType.Curved) => PropertyId.RollSpeed,
@@ -67,12 +73,14 @@ namespace KexEdit.Sim.Schema {
             (2, NodeType.Curved) => PropertyId.HeartOffset,
             (3, NodeType.Curved) => PropertyId.Friction,
             (4, NodeType.Curved) => PropertyId.Resistance,
+            (5, NodeType.Curved) => PropertyId.TrackStyle,
 
             // CopyPath
             (0, NodeType.CopyPath) => PropertyId.DrivenVelocity,
             (1, NodeType.CopyPath) => PropertyId.HeartOffset,
             (2, NodeType.CopyPath) => PropertyId.Friction,
             (3, NodeType.CopyPath) => PropertyId.Resistance,
+            (4, NodeType.CopyPath) => PropertyId.TrackStyle,
 
             // Bridge
             (0, NodeType.Bridge) => PropertyId.DrivenVelocity,

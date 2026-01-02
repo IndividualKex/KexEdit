@@ -153,7 +153,7 @@ namespace Tests {
 
             LegacyImporter.Import(ref buffer, Allocator.TempJob, out var coaster, out _);
 
-            TrackData.Build(in coaster, Allocator.TempJob, out var track);
+            TrackData.Build(in coaster, Allocator.TempJob, 0.1f, 0, out var track);
 
             var sb = new StringBuilder();
             sb.AppendLine($"=== EVALUATION RESULT FOR {path} ===");

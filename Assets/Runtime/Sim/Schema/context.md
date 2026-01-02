@@ -10,6 +10,7 @@ Node schema layer - shared vocabulary for node types.
 - `PropertyId` - keyframe property identifiers
 - `NodeSchema` - port/property contracts per node type (Burst-compiled)
 - `PropertyIndex` - serialization index ↔ PropertyId mapping
+- `VisualizationMode` - physics value display modes (None, Velocity, NormalForce, etc.)
 
 ## Layout
 
@@ -21,7 +22,8 @@ Sim/Schema/
 ├── PropertyId.cs       # Keyframe properties
 ├── NodeSchema.cs       # Static schema queries (InputSpec, OutputSpec, etc.)
 ├── PropertyIndex.cs    # Serialization mapping
-|── KeyframeStore.cs    # (nodeId, propertyId) → Keyframe[] storage
+├── KeyframeStore.cs    # (nodeId, propertyId) → Keyframe[] storage
+├── VisualizationMode.cs # Physics display modes
 ├── Anchor/             # Creates initial state from position/rotation
 ├── Bridge/             # Bezier curve between anchors
 ├── CopyPath/           # Copies/transforms existing path

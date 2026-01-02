@@ -1,141 +1,26 @@
 {
-    "Name": "Modern",
-    "Colors": [
-        {
-            "r": 0.48,
-            "g": 0.16,
-            "b": 0.18,
-            "a": 1.0
-        }
+    "name": "Modern",
+    "colors": [
+        { "r": 0.48, "g": 0.16, "b": 0.18, "a": 1.0 }
     ],
-    "DefaultStyle": 1,
-    "Styles": [
+    "defaultStyle": 1,
+    "styles": [
         {
-            "Spacing": 0.5,
-            "Threshold": 0.0,
-            "DuplicationMeshes": [
-                {
-                    "MeshPath": "ModernTie_Light.obj",
-                    "Step": 2,
-                    "Offset": 1
-                }
-            ],
-            "ExtrusionMeshes": [
-                {
-                    "MeshPath": "ModernRail.obj"
-                }
-            ],
-            "StartCapMeshes": [
-                {
-                    "MeshPath": "Modern_StartTie.obj"
-                },
-                {
-                    "MeshPath": "ModernRail_StartCap.obj"
-                }
-            ],
-            "EndCapMeshes": [
-                {
-                    "MeshPath": "Modern_EndTie.obj"
-                },
-                {
-                    "MeshPath": "ModernRail_EndCap.obj"
-                }
+            "pieces": [
+                { "mesh": "modern_light_10m.obj", "length": 10 },
+                { "mesh": "modern_light_2m.obj", "length": 2 }
             ]
         },
         {
-            "Spacing": 0.5,
-            "Threshold": 1.0,
-            "DuplicationMeshes": [
-                {
-                    "MeshPath": "ModernTie_Med.obj",
-                    "Step": 2,
-                    "Offset": 1
-                }
-            ],
-            "ExtrusionMeshes": [
-                {
-                    "MeshPath": "ModernRail.obj"
-                },
-                {
-                    "MeshPath": "ModernSpine_1.obj"
-                }
-            ],
-            "StartCapMeshes": [
-                {
-                    "MeshPath": "Modern_StartTie.obj"
-                },
-                {
-                    "MeshPath": "ModernRail_StartCap.obj"
-                },
-                {
-                    "MeshPath": "ModernSpine_1_StartCap.obj"
-                }
-            ],
-            "EndCapMeshes": [
-                {
-                    "MeshPath": "Modern_EndTie.obj"
-                },
-                {
-                    "MeshPath": "ModernRail_EndCap.obj"
-                },
-                {
-                    "MeshPath": "ModernSpine_1_EndCap.obj"
-                }
+            "pieces": [
+                { "mesh": "modern_medium_10m.obj", "length": 10 },
+                { "mesh": "modern_medium_2m.obj", "length": 2 }
             ]
         },
         {
-            "Spacing": 0.5,
-            "Threshold": 10.0,
-            "DuplicationMeshes": [
-                {
-                    "MeshPath": "ModernTie_Med.obj",
-                    "Step": 2,
-                    "Offset": 1
-                },
-                {
-                    "MeshPath": "ModernTie_Dense.obj",
-                    "Step": 4,
-                    "Offset": 2
-                }
-            ],
-            "ExtrusionMeshes": [
-                {
-                    "MeshPath": "ModernRail.obj"
-                },
-                {
-                    "MeshPath": "ModernSpine_1.obj"
-                },
-                {
-                    "MeshPath": "ModernSpine_2.obj"
-                }
-            ],
-            "StartCapMeshes": [
-                {
-                    "MeshPath": "Modern_StartTie.obj"
-                },
-                {
-                    "MeshPath": "ModernRail_StartCap.obj"
-                },
-                {
-                    "MeshPath": "ModernSpine_1_StartCap.obj"
-                },
-                {
-                    "MeshPath": "ModernSpine_2_StartCap.obj"
-                }
-            ],
-            "EndCapMeshes": [
-                {
-                    "MeshPath": "Modern_EndTie.obj"
-                },
-                {
-                    "MeshPath": "ModernRail_EndCap.obj"
-                },
-                {
-                    "MeshPath": "ModernSpine_1_EndCap.obj"
-                },
-                {
-                    "MeshPath": "ModernSpine_2_EndCap.obj"
-                }
+            "pieces": [
+                { "mesh": "modern_dense_10m.obj", "length": 10 },
+                { "mesh": "modern_dense_2m.obj", "length": 2 }
             ]
         }
     ]

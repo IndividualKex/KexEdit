@@ -1,47 +1,11 @@
 {
-    "Name": "Hybrid",
-    "Colors": [
-        {
-            "r": 0.55,
-            "g": 0.15,
-            "b": 0.15,
-            "a": 1.0
-        },
-        {
-            "r": 0.3,
-            "g": 0.3,
-            "b": 0.3,
-            "a": 1.0
-        }
+    "name": "Hybrid",
+    "colors": [
+        { "r": 0.55, "g": 0.15, "b": 0.15, "a": 1.0 },
+        { "r": 0.3, "g": 0.3, "b": 0.3, "a": 1.0 }
     ],
-    "Styles": [
-        {
-            "Spacing": 0.5,
-            "DuplicationMeshes": [
-                {
-                    "MeshPath": "HybridTie.obj",
-                    "Step": 2,
-                    "ColorIndex": 1
-                }
-            ],
-            "ExtrusionMeshes": [
-                {
-                    "MeshPath": "HybridRail.obj",
-                    "ColorIndex": 0
-                }
-            ],
-            "StartCapMeshes": [
-                {
-                    "MeshPath": "HybridRail_StartCap.obj",
-                    "ColorIndex": 0
-                }
-            ],
-            "EndCapMeshes": [
-                {
-                    "MeshPath": "HybridRail_EndCap.obj",
-                    "ColorIndex": 0
-                }
-            ]
-        }
+    "pieces": [
+        { "mesh": "hybrid_10m.obj", "length": 10.0 },
+        { "mesh": "hybrid_2m.obj", "length": 2.0 }
     ]
 }

@@ -10,13 +10,13 @@ Roller coaster editor using Force Vector Design (FVD) with portable, high-perfor
 ┌─────────────────────────────────────────────────────────────────────┐
 │  UI — editor state, undo/redo, viewport, input                      │
 ├─────────────────────────────────────────────────────────────────────┤
-│  APPLICATION — Unity ECS coordination, rendering, I/O               │
+│  APPLICATION — Legacy (ECS), Rendering (GPU shell)                  │
 ├─────────────────────────────────────────────────────────────────────┤
 │  DOMAIN LAYERS — Trains                                             │
 ├─────────────────────────────────────────────────────────────────────┤
 │  TRACK BACKEND ─────────────────────────────────────────────────    │
 │  │ Document, Track, Persistence                                     │
-│  │ Sim.Schema, Sim.Nodes.*, Graph.Typed, Spline.Resampling          │
+│  │ Sim.Schema, Sim.Nodes.*, Graph.Typed, Spline.Resampling/Rendering│
 │  │ Sim (FVD) · Graph (DAG) · Spline (arc-length)  ← Hex Cores       │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -45,7 +45,8 @@ Domain layers depend inward on Track Backend, never vice versa.
 
 ### Application & UI
 
-- **Application** (Legacy): Unity ECS coordination, rendering, file I/O
+- **Legacy**: Unity ECS coordination, file I/O, system lifecycle
+- **Rendering**: GPU buffer management, compute dispatch (wraps Spline.Rendering)
 - **UI**: Editor state, undo/redo, viewport, input handling
 
 ---
@@ -109,6 +110,7 @@ KexEdit/
 │   │   ├── Persistence/            # (KexEdit.Persistence) Save/load
 │   │   ├── Trains/                 # Domain Layer
 │   │   │   └── Sim/                # (KexEdit.Trains.Sim) CoM traversal
+│   │   ├── Rendering/              # (KexEdit.Rendering) GPU pipeline
 │   │   ├── Legacy/                 # Application (Unity ECS)
 │   │   │   ├── Core/               # Foundation & utilities
 │   │   │   ├── Track/              # Track ECS systems
@@ -185,6 +187,11 @@ KexEdit/
 |------|-------|
 | Train simulation | `Runtime/Trains/` |
 
+### Rendering (GPU Shell)
+| What | Where |
+|------|-------|
+| GPU buffer management | `Runtime/Rendering/` |
+
 ### Application (Legacy)
 | What | Where |
 |------|-------|
@@ -249,9 +256,11 @@ The codebase is being refactored from a monolithic Unity ECS application to the 
 
 | Folder | Target |
 |--------|--------|
-| `Trains/` | Extract to Domain Layer (`Runtime/Trains/`) |
-| `Track/` | Keep (infrastructure) |
-| `Physics/` | Keep (infrastructure) |
-| `State/` | Keep (infrastructure) |
-| `Persistence/` | Keep (infrastructure) |
-| `Visualization/` | Delete when Spline.Rendering complete |
+| `Trains/` | Replace with lightweight ECS in new Application layer |
+| `Track/` | Replace with lightweight ECS in new Application layer |
+| `Physics/` | Replace with lightweight ECS in new Application layer |
+| `State/` | Replace with lightweight ECS in new Application layer |
+| `Persistence/` | Replace with lightweight ECS in new Application layer |
+| `Visualization/` | Replace with lightweight ECS in new Application layer |
+
+Goal: Delete Legacy entirely. New Application layer will be minimal ECS coordination only.

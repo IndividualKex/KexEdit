@@ -31,7 +31,7 @@ namespace Tests {
                 anchorOutputs.Dispose();
                 forceInputs.Dispose();
 
-                TrackData.Build(in coaster, Allocator.Temp, out var track);
+                TrackData.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
                 try {
                     Assert.IsTrue(track.NodeToSection.TryGetValue(forceId, out int sectionIdx), "Force node should have section");
                     var section = track.Sections[sectionIdx];
@@ -83,7 +83,7 @@ namespace Tests {
                 anchorOutputs.Dispose();
                 geoInputs.Dispose();
 
-                TrackData.Build(in coaster, Allocator.Temp, out var track);
+                TrackData.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
                 try {
                     Assert.IsTrue(track.NodeToSection.TryGetValue(geoId, out int sectionIdx), "Geometric node should have section");
                     var section = track.Sections[sectionIdx];
@@ -129,7 +129,7 @@ namespace Tests {
                 anchorOutputs.Dispose();
                 curvedInputs.Dispose();
 
-                TrackData.Build(in coaster, Allocator.Temp, out var track);
+                TrackData.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
                 try {
                     Assert.IsTrue(track.NodeToSection.TryGetValue(curvedId, out int sectionIdx), "Curved node should have section");
                     var section = track.Sections[sectionIdx];
@@ -176,7 +176,7 @@ namespace Tests {
                 anchorOutputs.Dispose();
                 forceInputs.Dispose();
 
-                TrackData.Build(in coaster, Allocator.Temp, out var track);
+                TrackData.Build(in coaster, Allocator.Temp, 0.1f, 0, out var track);
                 try {
                     Assert.IsTrue(track.NodeToSection.TryGetValue(forceId, out int sectionIdx), "Force node should have section");
                     var section = track.Sections[sectionIdx];

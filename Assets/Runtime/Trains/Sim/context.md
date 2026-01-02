@@ -5,7 +5,7 @@ Center-of-mass traversal through built track.
 ## Purpose
 
 - SimFollower: traversal state (TraversalIndex, PointIndex, Facing)
-- SimFollowerLogic: advance CoM at simulation rate (100Hz), interpolate between Points
+- SimFollowerLogic: advance CoM at 100Hz, interpolate Points, seek via progress
 
 ## Layout
 
@@ -13,8 +13,8 @@ Center-of-mass traversal through built track.
 Sim/
 ├── context.md
 ├── KexEdit.Trains.Sim.asmdef
-├── SimFollower.cs       # Traversal state
-└── SimFollowerLogic.cs  # Advance/interpolate logic
+├── SimFollower.cs       # Traversal state struct
+└── SimFollowerLogic.cs  # Advance, GetCurrentPoint, SetFromProgress, GetProgress
 ```
 
 ## Dependencies

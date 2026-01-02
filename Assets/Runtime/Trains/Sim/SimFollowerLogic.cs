@@ -138,5 +138,71 @@ namespace KexEdit.Trains.Sim {
                 resistance: math.lerp(p0.Resistance, p1.Resistance, t)
             );
         }
+
+        [BurstCompile]
+        public static void SetFromProgress(ref SimFollower follower, in TrackData track, float progress) {
+            if (track.TraversalCount == 0) {
+                follower = SimFollower.Default;
+                return;
+            }
+
+            float totalLength = 0f;
+            for (int i = 0; i < track.TraversalCount; i++) {
+                int sectionIdx = track.TraversalOrder[i];
+                var section = track.Sections[sectionIdx];
+                if (section.IsValid) {
+                    totalLength += section.Length - 1;
+                }
+            }
+
+            float targetDistance = math.clamp(progress, 0f, 1f) * totalLength;
+            float accumulated = 0f;
+
+            for (int i = 0; i < track.TraversalCount; i++) {
+                int sectionIdx = track.TraversalOrder[i];
+                var section = track.Sections[sectionIdx];
+                if (!section.IsValid) continue;
+
+                float sectionLength = section.Length - 1;
+                if (accumulated + sectionLength >= targetDistance) {
+                    follower.TraversalIndex = i;
+                    follower.PointIndex = targetDistance - accumulated;
+                    UpdateFacing(ref follower, in track);
+                    return;
+                }
+                accumulated += sectionLength;
+            }
+
+            follower.TraversalIndex = track.TraversalCount - 1;
+            int lastSectionIdx = track.TraversalOrder[follower.TraversalIndex];
+            var lastSection = track.Sections[lastSectionIdx];
+            follower.PointIndex = lastSection.IsValid ? lastSection.Length - 1 : 0f;
+            UpdateFacing(ref follower, in track);
+        }
+
+        [BurstCompile]
+        public static float GetProgress(in SimFollower follower, in TrackData track) {
+            if (track.TraversalCount == 0) return 0f;
+
+            float totalLength = 0f;
+            float currentDistance = 0f;
+
+            for (int i = 0; i < track.TraversalCount; i++) {
+                int sectionIdx = track.TraversalOrder[i];
+                var section = track.Sections[sectionIdx];
+                if (!section.IsValid) continue;
+
+                float sectionLength = section.Length - 1;
+                if (i < follower.TraversalIndex) {
+                    currentDistance += sectionLength;
+                }
+                else if (i == follower.TraversalIndex) {
+                    currentDistance += follower.PointIndex;
+                }
+                totalLength += sectionLength;
+            }
+
+            return totalLength > 0f ? currentDistance / totalLength : 0f;
+        }
     }
 }
