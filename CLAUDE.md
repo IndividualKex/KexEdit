@@ -2,48 +2,72 @@
 
 Unity roller coaster editor using Force Vector Design (FVD) with DOTS/ECS.
 
-**Before any task**: Read [layers/structure.md](layers/structure.md)
+## Architecture
 
-## Architecture: Functional Core, ECS Shell
+Nested hexagonal: Pure cores compose into Track Backend, wrapped by domain layers, then Application (Unity ECS) and UI.
 
-Data-oriented layered design. Pure cores transform data; ECS orchestrates effects.
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  UI — editor state, undo/redo, viewport, input                      │
+├─────────────────────────────────────────────────────────────────────┤
+│  APPLICATION — Legacy (ECS), Rendering (GPU shell)                  │
+├─────────────────────────────────────────────────────────────────────┤
+│  DOMAIN LAYERS — Trains                                             │
+├─────────────────────────────────────────────────────────────────────┤
+│  TRACK BACKEND ─────────────────────────────────────────────────    │
+│  │ Document, Track, Persistence                                     │
+│  │ Sim.Schema, Sim.Nodes.*, Graph.Typed, Spline.Resampling/Rendering│
+│  │ Sim (FVD) · Graph (DAG) · Spline (arc-length)  ← Hex Cores       │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-| Layer | Role | Examples |
-|-------|------|----------|
-| **Hex Cores** | Pure, portable transforms | Sim, Graph, Spline |
-| **Hex Layers** | Domain-aware extensions | Schema, Nodes, Typed |
-| **Application** | Unity integration | Legacy/ |
+**Dependency rule**: Inward only. Cores receive data, return data—no outward calls.
 
-**Dependency rule**: Inward only. Cores never call outward—they receive data, return data.
+| Layer | Role |
+|-------|------|
+| **Hex Cores** | Pure physics/math: `Sim/Core`, `Graph/Core`, `Spline/Core` |
+| **Hex Layers** | Domain extensions: Schema, Nodes, Typed, Resampling |
+| **Track Backend** | Document, Track, Persistence |
+| **Domain** | Trains (traversal, car positioning) |
+| **Application** | Legacy (ECS), Rendering (GPU) |
+| **UI** | Editor state, undo/redo, viewport |
 
-**No interfaces/adapters**: Use data contracts. The shell handles IO; cores stay pure.
+## Stack
 
-## Context Tiers
-
-0. `CLAUDE.md` — Global standards
-1. `layers/structure.md` — Project map, entry points
-2. `context.md` (per folder) — Local purpose/structure
-3. Code files
-
-**Always load context before working.**
+- **Runtime**: Unity 6000.3.1f1, Rust (parallel backend)
+- **Framework**: Unity DOTS (ECS, Burst, Jobs)
+- **UI**: UI Toolkit
 
 ## Commands
 
-- **Test**: `./run-tests.sh`
-- **Debug**: Python scripts in `tools/`
+```bash
+./run-tests.sh [TestName]              # Headless tests (Burst backend)
+./run-tests.sh --rust-backend [TestName]  # Headless tests (Rust FFI)
+cargo test -p kexedit-sim              # Rust tests
+./build-rust.sh                        # Build FFI DLL
+```
+
+## Entry Points
+
+| Entry | Path |
+|-------|------|
+| Scene | `Assets/Scenes/Main.unity` |
+| Runtime | `Assets/Runtime/Legacy/Core/KexEditManager.cs` |
+| UI | `Assets/Scripts/UI/UIManager.cs` |
+| Document | `Assets/Runtime/Document/Document.cs` |
 
 ## Code Rules
 
-- **No history in code/docs** — Write current state only. Never "changed from X" or "previously Y"
+- **No history in code/docs** — Write current state only
 - **Simple > clever** — Minimal code for current requirements
 - **Single responsibility** — Small files, separated concerns
 - **Reuse first** — Check existing code before adding new
 - **Self-documenting** — Comments only when logic isn't obvious
-- **Single source of truth** — No duplicate state; derive when needed
-- **Fail fast** — Expose bugs immediately; avoid defensive complexity
+- **Single source of truth** — No duplicate state
+- **Fail fast** — Expose bugs immediately
 
 ## Security
 
-- Validate external inputs only (user input, APIs)
+- Validate external inputs only
 - Secrets in env vars only
 - Never log sensitive data
