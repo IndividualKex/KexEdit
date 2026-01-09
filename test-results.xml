@@ -1,464 +1,1888 @@
 <?xml version="1.0" encoding="utf-8"?>
-<test-run id="2" testcasecount="4" result="Passed" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-01-09 20:01:58Z" end-time="2026-01-09 20:01:59Z" duration="0.6449231">
-  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3396" result="Passed" start-time="2026-01-09 20:01:58Z" end-time="2026-01-09 20:01:59Z" duration="0.644923" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+<test-run id="2" testcasecount="5" result="Passed" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-01-09 20:20:09Z" end-time="2026-01-09 20:20:10Z" duration="1.1432446">
+  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3400" result="Passed" start-time="2026-01-09 20:20:09Z" end-time="2026-01-09 20:20:10Z" duration="1.143245" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
     <properties>
       <property name="platform" value="EditMode" />
     </properties>
-    <test-suite type="Assembly" id="1607" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="531" result="Passed" start-time="2026-01-09 20:01:58Z" end-time="2026-01-09 20:01:59Z" duration="0.613741" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <test-suite type="Assembly" id="1613" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="535" result="Passed" start-time="2026-01-09 20:20:09Z" end-time="2026-01-09 20:20:10Z" duration="1.115202" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
       <properties>
-        <property name="_PID" value="13848" />
+        <property name="_PID" value="30276" />
         <property name="_APPDOMAIN" value="Unity Child Domain" />
         <property name="platform" value="EditMode" />
         <property name="EditorOnly" value="True" />
       </properties>
-      <test-suite type="TestSuite" id="1617" name="Tests" fullname="Tests" runstate="Runnable" testcasecount="395" result="Passed" start-time="2026-01-09 20:01:58Z" end-time="2026-01-09 20:01:59Z" duration="0.605394" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-suite type="TestSuite" id="1623" name="Tests" fullname="Tests" runstate="Runnable" testcasecount="399" result="Passed" start-time="2026-01-09 20:20:09Z" end-time="2026-01-09 20:20:10Z" duration="1.111737" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
         <properties />
-        <test-suite type="TestFixture" id="1346" name="ForceNodeTests" fullname="Tests.ForceNodeTests" classname="Tests.ForceNodeTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-01-09 20:01:58Z" end-time="2026-01-09 20:01:59Z" duration="0.599716" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-suite type="TestFixture" id="1185" name="CoasterGoldTests" fullname="Tests.CoasterGoldTests" classname="Tests.CoasterGoldTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-01-09 20:20:09Z" end-time="2026-01-09 20:20:10Z" duration="1.107459" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
           <properties>
             <property name="Category" value="Golden" />
           </properties>
-          <test-case id="1350" name="AllTypes_ForceSection_MatchesGoldData" fullname="Tests.ForceNodeTests.AllTypes_ForceSection_MatchesGoldData" methodname="AllTypes_ForceSection_MatchesGoldData" classname="Tests.ForceNodeTests" runstate="Runnable" seed="59283106" result="Passed" start-time="2026-01-09 20:01:58Z" end-time="2026-01-09 20:01:59Z" duration="0.147693" asserts="0">
+          <test-case id="1189" name="AllTypes_BridgeSectionsOnly_MatchesGoldData" fullname="Tests.CoasterGoldTests.AllTypes_BridgeSectionsOnly_MatchesGoldData" methodname="AllTypes_BridgeSectionsOnly_MatchesGoldData" classname="Tests.CoasterGoldTests" runstate="Runnable" seed="796647714" result="Passed" start-time="2026-01-09 20:20:09Z" end-time="2026-01-09 20:20:09Z" duration="0.127616" asserts="0">
             <properties>
               <property name="retryIteration" value="0" />
               <property name="repeatIteration" value="0" />
             </properties>
-            <output><![CDATA[=== DRIFT ANALYSIS (offset=0) ===
-First divergence at index -1
-Max drift 9.53674316E-06 at index 318
-=== FIRST 20 POINTS ===
-    [0] Pos: (0.000002, 2.999989, 0.000000) vs (0.000002, 2.999989, 0.000000)
-    [0] Vel: 4.231463 vs 4.231463, diff=0
-    [0] Energy: 28.664050 vs 28.664050, diff=0
-    [0] HeartArc: 265.086700 vs 265.086700
-    [1] Pos: (-0.000095, 2.999995, 0.041975) vs (-0.000095, 2.999995, 0.041975)
-    [1] Vel: 4.227893 vs 4.227892, diff=4.76837E-07
-    [1] Energy: 28.664040 vs 28.664040, diff=0
-    [1] HeartArc: 265.128700 vs 265.128700
-    [2] Pos: (-0.000385, 3.000013, 0.084003) vs (-0.000385, 3.000013, 0.084003)
-    [2] Vel: 4.225771 vs 4.225770, diff=9.53674E-07
-    [2] Energy: 28.664020 vs 28.664020, diff=0
-    [2] HeartArc: 265.170700 vs 265.170700
-    [3] Pos: (-0.000868, 3.000041, 0.126010) vs (-0.000868, 3.000041, 0.126010)
-    [3] Vel: 4.223617 vs 4.223617, diff=4.76837E-07
-    [3] Energy: 28.664010 vs 28.664010, diff=0
-    [3] HeartArc: 265.212700 vs 265.212700
-    [4] Pos: (-0.001540, 3.000080, 0.167995) vs (-0.001540, 3.000080, 0.167995)
-    [4] Vel: 4.221428 vs 4.221428, diff=4.76837E-07
-    [4] Energy: 28.663990 vs 28.663990, diff=0
-    [4] HeartArc: 265.254700 vs 265.254700
-    [5] Pos: (-0.002400, 3.000129, 0.209955) vs (-0.002400, 3.000129, 0.209955)
-    [5] Vel: 4.219206 vs 4.219206, diff=0
-    [5] Energy: 28.663970 vs 28.663970, diff=0
-    [5] HeartArc: 265.296700 vs 265.296700
-    [6] Pos: (-0.003446, 3.000189, 0.251892) vs (-0.003446, 3.000189, 0.251892)
-    [6] Vel: 4.216950 vs 4.216950, diff=4.76837E-07
-    [6] Energy: 28.663960 vs 28.663960, diff=0
-    [6] HeartArc: 265.338600 vs 265.338600
-    [7] Pos: (-0.004675, 3.000260, 0.293803) vs (-0.004675, 3.000260, 0.293803)
-    [7] Vel: 4.214657 vs 4.214657, diff=4.76837E-07
-    [7] Energy: 28.663940 vs 28.663940, diff=0
-    [7] HeartArc: 265.380600 vs 265.380600
-    [8] Pos: (-0.006086, 3.000342, 0.335689) vs (-0.006086, 3.000343, 0.335689)
-    [8] Vel: 4.212329 vs 4.212328, diff=9.53674E-07
-    [8] Energy: 28.663930 vs 28.663930, diff=0
-    [8] HeartArc: 265.422500 vs 265.422500
-    [9] Pos: (-0.007677, 3.000437, 0.377549) vs (-0.007677, 3.000437, 0.377549)
-    [9] Vel: 4.209964 vs 4.209963, diff=4.76837E-07
-    [9] Energy: 28.663910 vs 28.663910, diff=0
-    [9] HeartArc: 265.464400 vs 265.464400
-    [10] Pos: (-0.009444, 3.000543, 0.419381) vs (-0.009444, 3.000543, 0.419381)
-    [10] Vel: 4.207561 vs 4.207561, diff=4.76837E-07
-    [10] Energy: 28.663900 vs 28.663900, diff=0
-    [10] HeartArc: 265.506200 vs 265.506200
-    [11] Pos: (-0.011387, 3.000661, 0.461186) vs (-0.011387, 3.000661, 0.461186)
-    [11] Vel: 4.205123 vs 4.205123, diff=4.76837E-07
-    [11] Energy: 28.663880 vs 28.663880, diff=0
-    [11] HeartArc: 265.548100 vs 265.548100
-    [12] Pos: (-0.013504, 3.000791, 0.502963) vs (-0.013504, 3.000791, 0.502963)
-    [12] Vel: 4.202646 vs 4.202645, diff=9.53674E-07
-    [12] Energy: 28.663870 vs 28.663870, diff=0
-    [12] HeartArc: 265.589900 vs 265.589900
-    [13] Pos: (-0.015791, 3.000933, 0.544710) vs (-0.015791, 3.000933, 0.544710)
-    [13] Vel: 4.200131 vs 4.200130, diff=4.76837E-07
-    [13] Energy: 28.663850 vs 28.663850, diff=0
-    [13] HeartArc: 265.631700 vs 265.631700
-    [14] Pos: (-0.018248, 3.001087, 0.586428) vs (-0.018248, 3.001088, 0.586428)
-    [14] Vel: 4.197578 vs 4.197577, diff=9.53674E-07
-    [14] Energy: 28.663840 vs 28.663840, diff=0
-    [14] HeartArc: 265.673500 vs 265.673500
-    [15] Pos: (-0.020872, 3.001254, 0.628117) vs (-0.020872, 3.001255, 0.628116)
-    [15] Vel: 4.194986 vs 4.194985, diff=9.53674E-07
-    [15] Energy: 28.663820 vs 28.663820, diff=0
-    [15] HeartArc: 265.715300 vs 265.715300
-    [16] Pos: (-0.023661, 3.001434, 0.669774) vs (-0.023661, 3.001434, 0.669774)
-    [16] Vel: 4.192357 vs 4.192357, diff=4.76837E-07
-    [16] Energy: 28.663810 vs 28.663810, diff=0
-    [16] HeartArc: 265.757000 vs 265.757000
-    [17] Pos: (-0.026613, 3.001625, 0.711400) vs (-0.026613, 3.001625, 0.711400)
-    [17] Vel: 4.189690 vs 4.189690, diff=0
-    [17] Energy: 28.663790 vs 28.663790, diff=0
-    [17] HeartArc: 265.798700 vs 265.798700
-    [18] Pos: (-0.029726, 3.001829, 0.752995) vs (-0.029726, 3.001829, 0.752995)
-    [18] Vel: 4.186982 vs 4.186981, diff=4.76837E-07
-    [18] Energy: 28.663780 vs 28.663780, diff=0
-    [18] HeartArc: 265.840500 vs 265.840500
-    [19] Pos: (-0.032998, 3.002046, 0.794557) vs (-0.032998, 3.002046, 0.794557)
-    [19] Vel: 4.184234 vs 4.184234, diff=0
-    [19] Energy: 28.663760 vs 28.663760, diff=0
-    [19] HeartArc: 265.882100 vs 265.882100
-=== SAMPLE POINTS ===
-    [50] Pos: (-0.202308, 3.013868, 2.065197) vs (-0.202308, 3.013868, 2.065196)
-    [50] Vel: 4.082155 vs 4.082152, diff=2.38419E-06
-    [50] Energy: 28.663320 vs 28.663320, diff=0
-    [50] HeartArc: 267.164600 vs 267.164600
-    [100] Pos: (-0.647345, 3.025224, 4.045181) vs (-0.647345, 3.025226, 4.045177)
-    [100] Vel: 3.915485 vs 3.915482, diff=2.38419E-06
-    [100] Energy: 28.662690 vs 28.662690, diff=0
-    [100] HeartArc: 269.194600 vs 269.194600
-    [200] Pos: (-1.416055, 2.696407, 8.052833) vs (-1.416056, 2.696408, 8.052828)
-    [200] Vel: 4.347154 vs 4.347153, diff=9.53674E-07
-    [200] Energy: 28.661420 vs 28.661420, diff=0
-    [200] HeartArc: 273.298700 vs 273.298700
+            <output><![CDATA[=== COASTER DIAGNOSTICS ===
+Graph: 21 nodes, 24 edges
+=== ALL NODES IN GRAPH ===
+=== SCALARS DUMP (41 entries) ===
+  Scalar[963443849464] = 47.2000
+  Scalar[129542321666] = 0.0000
+  Scalar[134573833731] = 0.7000
+  Scalar[129542321667] = -1.0000
+  Scalar[134573833730] = 0.6000
+  Scalar[140362125825] = 0.0000
+  Scalar[140362125826] = 0.0000
+  Scalar[140362125827] = 0.3711
+  Scalar[140362125828] = 10.0000
+  Scalar[140362125829] = 1.1000
+  Scalar[140362125830] = 0.0210
+  Scalar[140362125831] = 0.0000
+  Scalar[250606909954] = 0.3000
+  Scalar[250606909955] = 0.3000
+  Scalar[292723083778] = 0.0000
+  Scalar[292723083779] = -1.0000
+  Scalar[391038500355] = -1.0000
+  Scalar[391038500354] = 0.0000
+  Scalar[278777035512] = 3.2000
+  Scalar[273520098040] = 4.9000
+  Scalar[103062379256] = 2.7000
+  Scalar[1081744211960] = 18.5000
+  Scalar[57212723461] = 1.1000
+  Scalar[57212723460] = 10.0000
+  Scalar[57212723463] = 0.0000
+  Scalar[57212723462] = 0.0210
+  Scalar[57212723457] = -0.0304
+  Scalar[57212723459] = -0.2220
+  Scalar[1056816019448] = 29.2000
+  Scalar[57212723458] = -0.0803
+  Scalar[869971024376] = 3.9000
+  Scalar[245413976835] = -1.0000
+  Scalar[245413976834] = 0.0000
+  Scalar[532930305016] = 18.0000
+  Scalar[1009422707971] = 0.0000
+  Scalar[1009422707970] = 0.0000
+  Scalar[1009422707969] = 0.0000
+  Scalar[1009422707975] = 0.0000
+  Scalar[1009422707974] = 0.0210
+  Scalar[1009422707973] = 1.1000
+  Scalar[1009422707972] = 10.0000
+  [0] id=1088972794 type=Force dur=3.2 no-vec no-vel
+  [1] id=4128187575 type=Force dur=29.2 no-vec no-vel
+  [2] id=2081759003 type=Force dur=18 no-vec no-vel
+  [3] id=402587418 type=Force dur=2.7 no-vec no-vel
+  [4] id=3398324313 type=Geometric dur=3.9 no-vec no-vel
+  [5] id=1068437882 type=Geometric dur=4.9 no-vec no-vel
+  [6] id=3763452536 type=Geometric dur=47.2 no-vec no-vel
+  [7] id=4225563327 type=Geometric dur=18.5 no-vec no-vel
+  [8] id=3943057453 type=Anchor no-dur no-vec vel-port=3399362681-no-scalar
+  [9] id=548289554 type=Anchor no-dur no-vec vel-port=741197621-no-scalar
+  [10] id=223487201 type=Anchor no-dur no-vec vel-port=1584921540-no-scalar
+  [11] id=525679038 type=Bridge no-dur no-vec no-vel
+  [12] id=978933242 type=Bridge no-dur no-vec no-vel
+  [13] id=748544271 type=Reverse no-dur no-vec no-vel
+  [14] id=1862095302 type=Reverse no-dur no-vec no-vel
+  [15] id=1143449546 type=CopyPath no-dur no-vec no-vel
+  [16] id=506024694 type=CopyPath no-dur no-vec no-vel
+  [17] id=958648347 type=CopyPath no-dur no-vec no-vel
+  [18] id=1527494142 type=CopyPath no-dur no-vec no-vel
+  [19] id=2080741825 type=ReversePath no-dur no-vec no-vel
+  [20] id=311072247 type=ReversePath no-dur no-vec no-vel
+=== EDGES (24) ===
+  Edge: node 3943057453 (port=2412495142) -> node 3398324313 (port=2962123871)
+  Edge: node 3398324313 (port=2692189360) -> node 1068437882 (port=1480624814)
+  Edge: node 2081759003 (port=959305938) -> node 4128187575 (port=2493289831)
+  Edge: node 4128187575 (port=2579920942) -> node 4225563327 (port=3707806943)
+  Edge: node 4225563327 (port=4053737568) -> node 3763452536 (port=4120058990)
+  Edge: node 3763452536 (port=4085047698) -> node 525679038 (port=1764097772)
+  Edge: node 223487201 (port=1694702241) -> node 525679038 (port=880120380)
+  Edge: node 525679038 (port=357320551) -> node 958648347 (port=49893109)
+  Edge: node 525679038 (port=485958676) -> node 958648347 (port=754098629)
+  Edge: node 958648347 (port=2087697692) -> node 978933242 (port=1703894615)
+  Edge: node 548289554 (port=375727787) -> node 978933242 (port=2136017453)
+  Edge: node 506024694 (port=1866215305) -> node 1088972794 (port=1529567368)
+  Edge: node 1088972794 (port=1145140870) -> node 1862095302 (port=1841461387)
+  Edge: node 1862095302 (port=1567613988) -> node 402587418 (port=453269326)
+  Edge: node 402587418 (port=932585045) -> node 2081759003 (port=184940493)
+  Edge: node 311072247 (port=858466596) -> node 506024694 (port=1963698896)
+  Edge: node 1143449546 (port=1357813512) -> node 506024694 (port=782401126)
+  Edge: node 3398324313 (port=3087166484) -> node 311072247 (port=1277215123)
+  Edge: node 748544271 (port=1239856845) -> node 1143449546 (port=2001271157)
+  Edge: node 2080741825 (port=1015403562) -> node 1143449546 (port=1021337306)
+  Edge: node 1068437882 (port=603678873) -> node 2080741825 (port=1960736154)
+  Edge: node 1068437882 (port=674904489) -> node 748544271 (port=1553995962)
+  Edge: node 978933242 (port=1206718633) -> node 1527494142 (port=1809925200)
+  Edge: node 978933242 (port=2019972135) -> node 1527494142 (port=1321159574)
+=== GOLD FIRST SECTION INPUT ANCHOR ===
+  vel=4.2315 frictionOrig=268.8372 dir=(0.000,0.000,1.000)
+Checking Bridge nodeId=525679038: 355 points (gold expects 355, gold duration=0 , cumulative offset=1993)
+Bridge 525679038: target matches (actual=355 pts, gold=355 pts)
+Checking Bridge nodeId=978933242: 176 points (gold expects 176, gold duration=0 , cumulative offset=2348)
+Bridge 978933242: target matches (actual=176 pts, gold=176 pts)
+Verified 2 Bridge sections
 ]]></output>
           </test-case>
-          <test-case id="1347" name="Shuttle_ForceSection_MatchesGoldData" fullname="Tests.ForceNodeTests.Shuttle_ForceSection_MatchesGoldData" methodname="Shuttle_ForceSection_MatchesGoldData" classname="Tests.ForceNodeTests" runstate="Runnable" seed="1865700445" result="Passed" start-time="2026-01-09 20:01:59Z" end-time="2026-01-09 20:01:59Z" duration="0.156036" asserts="0">
+          <test-case id="1188" name="AllTypes_LoadAndEvaluate_MatchesGoldData" fullname="Tests.CoasterGoldTests.AllTypes_LoadAndEvaluate_MatchesGoldData" methodname="AllTypes_LoadAndEvaluate_MatchesGoldData" classname="Tests.CoasterGoldTests" runstate="Runnable" seed="138393933" result="Passed" start-time="2026-01-09 20:20:09Z" end-time="2026-01-09 20:20:09Z" duration="0.378268" asserts="0">
             <properties>
               <property name="retryIteration" value="0" />
               <property name="repeatIteration" value="0" />
             </properties>
-            <output><![CDATA[=== DRIFT ANALYSIS (offset=0) ===
+            <output><![CDATA[=== COASTER DIAGNOSTICS ===
+Graph: 21 nodes, 24 edges
+=== ALL NODES IN GRAPH ===
+=== SCALARS DUMP (41 entries) ===
+  Scalar[963443849464] = 47.2000
+  Scalar[129542321666] = 0.0000
+  Scalar[134573833731] = 0.7000
+  Scalar[129542321667] = -1.0000
+  Scalar[134573833730] = 0.6000
+  Scalar[140362125825] = 0.0000
+  Scalar[140362125826] = 0.0000
+  Scalar[140362125827] = 0.3711
+  Scalar[140362125828] = 10.0000
+  Scalar[140362125829] = 1.1000
+  Scalar[140362125830] = 0.0210
+  Scalar[140362125831] = 0.0000
+  Scalar[250606909954] = 0.3000
+  Scalar[250606909955] = 0.3000
+  Scalar[292723083778] = 0.0000
+  Scalar[292723083779] = -1.0000
+  Scalar[391038500355] = -1.0000
+  Scalar[391038500354] = 0.0000
+  Scalar[278777035512] = 3.2000
+  Scalar[273520098040] = 4.9000
+  Scalar[103062379256] = 2.7000
+  Scalar[1081744211960] = 18.5000
+  Scalar[57212723461] = 1.1000
+  Scalar[57212723460] = 10.0000
+  Scalar[57212723463] = 0.0000
+  Scalar[57212723462] = 0.0210
+  Scalar[57212723457] = -0.0304
+  Scalar[57212723459] = -0.2220
+  Scalar[1056816019448] = 29.2000
+  Scalar[57212723458] = -0.0803
+  Scalar[869971024376] = 3.9000
+  Scalar[245413976835] = -1.0000
+  Scalar[245413976834] = 0.0000
+  Scalar[532930305016] = 18.0000
+  Scalar[1009422707971] = 0.0000
+  Scalar[1009422707970] = 0.0000
+  Scalar[1009422707969] = 0.0000
+  Scalar[1009422707975] = 0.0000
+  Scalar[1009422707974] = 0.0210
+  Scalar[1009422707973] = 1.1000
+  Scalar[1009422707972] = 10.0000
+  [0] id=1088972794 type=Force dur=3.2 no-vec no-vel
+  [1] id=4128187575 type=Force dur=29.2 no-vec no-vel
+  [2] id=2081759003 type=Force dur=18 no-vec no-vel
+  [3] id=402587418 type=Force dur=2.7 no-vec no-vel
+  [4] id=3398324313 type=Geometric dur=3.9 no-vec no-vel
+  [5] id=1068437882 type=Geometric dur=4.9 no-vec no-vel
+  [6] id=3763452536 type=Geometric dur=47.2 no-vec no-vel
+  [7] id=4225563327 type=Geometric dur=18.5 no-vec no-vel
+  [8] id=3943057453 type=Anchor no-dur no-vec vel-port=3399362681-no-scalar
+  [9] id=548289554 type=Anchor no-dur no-vec vel-port=741197621-no-scalar
+  [10] id=223487201 type=Anchor no-dur no-vec vel-port=1584921540-no-scalar
+  [11] id=525679038 type=Bridge no-dur no-vec no-vel
+  [12] id=978933242 type=Bridge no-dur no-vec no-vel
+  [13] id=748544271 type=Reverse no-dur no-vec no-vel
+  [14] id=1862095302 type=Reverse no-dur no-vec no-vel
+  [15] id=1143449546 type=CopyPath no-dur no-vec no-vel
+  [16] id=506024694 type=CopyPath no-dur no-vec no-vel
+  [17] id=958648347 type=CopyPath no-dur no-vec no-vel
+  [18] id=1527494142 type=CopyPath no-dur no-vec no-vel
+  [19] id=2080741825 type=ReversePath no-dur no-vec no-vel
+  [20] id=311072247 type=ReversePath no-dur no-vec no-vel
+=== EDGES (24) ===
+  Edge: node 3943057453 (port=2412495142) -> node 3398324313 (port=2962123871)
+  Edge: node 3398324313 (port=2692189360) -> node 1068437882 (port=1480624814)
+  Edge: node 2081759003 (port=959305938) -> node 4128187575 (port=2493289831)
+  Edge: node 4128187575 (port=2579920942) -> node 4225563327 (port=3707806943)
+  Edge: node 4225563327 (port=4053737568) -> node 3763452536 (port=4120058990)
+  Edge: node 3763452536 (port=4085047698) -> node 525679038 (port=1764097772)
+  Edge: node 223487201 (port=1694702241) -> node 525679038 (port=880120380)
+  Edge: node 525679038 (port=357320551) -> node 958648347 (port=49893109)
+  Edge: node 525679038 (port=485958676) -> node 958648347 (port=754098629)
+  Edge: node 958648347 (port=2087697692) -> node 978933242 (port=1703894615)
+  Edge: node 548289554 (port=375727787) -> node 978933242 (port=2136017453)
+  Edge: node 506024694 (port=1866215305) -> node 1088972794 (port=1529567368)
+  Edge: node 1088972794 (port=1145140870) -> node 1862095302 (port=1841461387)
+  Edge: node 1862095302 (port=1567613988) -> node 402587418 (port=453269326)
+  Edge: node 402587418 (port=932585045) -> node 2081759003 (port=184940493)
+  Edge: node 311072247 (port=858466596) -> node 506024694 (port=1963698896)
+  Edge: node 1143449546 (port=1357813512) -> node 506024694 (port=782401126)
+  Edge: node 3398324313 (port=3087166484) -> node 311072247 (port=1277215123)
+  Edge: node 748544271 (port=1239856845) -> node 1143449546 (port=2001271157)
+  Edge: node 2080741825 (port=1015403562) -> node 1143449546 (port=1021337306)
+  Edge: node 1068437882 (port=603678873) -> node 2080741825 (port=1960736154)
+  Edge: node 1068437882 (port=674904489) -> node 748544271 (port=1553995962)
+  Edge: node 978933242 (port=1206718633) -> node 1527494142 (port=1809925200)
+  Edge: node 978933242 (port=2019972135) -> node 1527494142 (port=1321159574)
+=== GOLD FIRST SECTION INPUT ANCHOR ===
+  vel=4.2315 frictionOrig=268.8372 dir=(0.000,0.000,1.000)
+Checking ForceSection nodeId=1088972794: 320 points (gold expects 320, gold duration=3.2 Time, cumulative offset=0, afterBridge=False)
+=== DRIFT ANALYSIS (offset=0) ===
 First divergence at index -1
-Max drift 0.000343322754 at index 553
+Max drift 0 at index 0
 === FIRST 20 POINTS ===
-    [0] Pos: (0.000000, 3.000000, -44.949460) vs (0.000000, 3.000000, -44.949460)
+    [0] Pos: (0.000008, 2.999993, 0.000015) vs (0.000008, 2.999993, 0.000015)
+    [0] Vel: 4.231463 vs 4.231463, diff=0
+    [0] Energy: 28.664090 vs 28.664090, diff=0
+    [0] HeartArc: 265.073800 vs 265.073800
+    [1] Pos: (-0.000089, 2.999999, 0.041991) vs (-0.000089, 2.999999, 0.041991)
+    [1] Vel: 4.227889 vs 4.227889, diff=0
+    [1] Energy: 28.664070 vs 28.664070, diff=0
+    [1] HeartArc: 265.115800 vs 265.115800
+    [2] Pos: (-0.000380, 3.000017, 0.084019) vs (-0.000380, 3.000017, 0.084019)
+    [2] Vel: 4.225768 vs 4.225768, diff=0
+    [2] Energy: 28.664060 vs 28.664060, diff=0
+    [2] HeartArc: 265.157800 vs 265.157800
+    [3] Pos: (-0.000862, 3.000045, 0.126026) vs (-0.000862, 3.000045, 0.126026)
+    [3] Vel: 4.223614 vs 4.223614, diff=0
+    [3] Energy: 28.664040 vs 28.664040, diff=0
+    [3] HeartArc: 265.199800 vs 265.199800
+    [4] Pos: (-0.001535, 3.000083, 0.168011) vs (-0.001535, 3.000083, 0.168011)
+    [4] Vel: 4.221426 vs 4.221426, diff=0
+    [4] Energy: 28.664030 vs 28.664030, diff=0
+    [4] HeartArc: 265.241800 vs 265.241800
+    [5] Pos: (-0.002395, 3.000133, 0.209971) vs (-0.002395, 3.000133, 0.209971)
+    [5] Vel: 4.219203 vs 4.219203, diff=0
+    [5] Energy: 28.664010 vs 28.664010, diff=0
+    [5] HeartArc: 265.283800 vs 265.283800
+    [6] Pos: (-0.003440, 3.000192, 0.251908) vs (-0.003440, 3.000192, 0.251908)
+    [6] Vel: 4.216948 vs 4.216948, diff=0
+    [6] Energy: 28.664000 vs 28.664000, diff=0
+    [6] HeartArc: 265.325700 vs 265.325700
+    [7] Pos: (-0.004670, 3.000263, 0.293819) vs (-0.004670, 3.000263, 0.293819)
+    [7] Vel: 4.214655 vs 4.214655, diff=0
+    [7] Energy: 28.663980 vs 28.663980, diff=0
+    [7] HeartArc: 265.367600 vs 265.367600
+    [8] Pos: (-0.006081, 3.000346, 0.335705) vs (-0.006081, 3.000346, 0.335705)
+    [8] Vel: 4.212327 vs 4.212327, diff=0
+    [8] Energy: 28.663970 vs 28.663970, diff=0
+    [8] HeartArc: 265.409500 vs 265.409500
+    [9] Pos: (-0.007671, 3.000440, 0.377564) vs (-0.007671, 3.000440, 0.377564)
+    [9] Vel: 4.209962 vs 4.209962, diff=0
+    [9] Energy: 28.663950 vs 28.663950, diff=0
+    [9] HeartArc: 265.451400 vs 265.451400
+    [10] Pos: (-0.009439, 3.000546, 0.419397) vs (-0.009439, 3.000546, 0.419397)
+    [10] Vel: 4.207560 vs 4.207560, diff=0
+    [10] Energy: 28.663940 vs 28.663940, diff=0
+    [10] HeartArc: 265.493300 vs 265.493300
+    [11] Pos: (-0.011382, 3.000664, 0.461202) vs (-0.011382, 3.000664, 0.461202)
+    [11] Vel: 4.205122 vs 4.205122, diff=0
+    [11] Energy: 28.663920 vs 28.663920, diff=0
+    [11] HeartArc: 265.535200 vs 265.535200
+    [12] Pos: (-0.013498, 3.000794, 0.502978) vs (-0.013498, 3.000794, 0.502978)
+    [12] Vel: 4.202644 vs 4.202644, diff=0
+    [12] Energy: 28.663910 vs 28.663910, diff=0
+    [12] HeartArc: 265.577000 vs 265.577000
+    [13] Pos: (-0.015786, 3.000936, 0.544726) vs (-0.015786, 3.000936, 0.544726)
+    [13] Vel: 4.200130 vs 4.200130, diff=0
+    [13] Energy: 28.663890 vs 28.663890, diff=0
+    [13] HeartArc: 265.618800 vs 265.618800
+    [14] Pos: (-0.018242, 3.001091, 0.586444) vs (-0.018242, 3.001091, 0.586444)
+    [14] Vel: 4.197577 vs 4.197577, diff=0
+    [14] Energy: 28.663880 vs 28.663880, diff=0
+    [14] HeartArc: 265.660600 vs 265.660600
+    [15] Pos: (-0.020866, 3.001257, 0.628132) vs (-0.020866, 3.001257, 0.628132)
+    [15] Vel: 4.194986 vs 4.194986, diff=0
+    [15] Energy: 28.663860 vs 28.663860, diff=0
+    [15] HeartArc: 265.702400 vs 265.702400
+    [16] Pos: (-0.023655, 3.001436, 0.669789) vs (-0.023655, 3.001436, 0.669789)
+    [16] Vel: 4.192356 vs 4.192356, diff=0
+    [16] Energy: 28.663850 vs 28.663850, diff=0
+    [16] HeartArc: 265.744100 vs 265.744100
+    [17] Pos: (-0.026607, 3.001628, 0.711416) vs (-0.026607, 3.001628, 0.711416)
+    [17] Vel: 4.189689 vs 4.189689, diff=0
+    [17] Energy: 28.663830 vs 28.663830, diff=0
+    [17] HeartArc: 265.785800 vs 265.785800
+    [18] Pos: (-0.029721, 3.001832, 0.753010) vs (-0.029721, 3.001832, 0.753010)
+    [18] Vel: 4.186981 vs 4.186981, diff=0
+    [18] Energy: 28.663810 vs 28.663810, diff=0
+    [18] HeartArc: 265.827500 vs 265.827500
+    [19] Pos: (-0.032993, 3.002048, 0.794573) vs (-0.032993, 3.002048, 0.794573)
+    [19] Vel: 4.184235 vs 4.184235, diff=0
+    [19] Energy: 28.663800 vs 28.663800, diff=0
+    [19] HeartArc: 265.869200 vs 265.869200
+=== SAMPLE POINTS ===
+    [50] Pos: (-0.202302, 3.013870, 2.065213) vs (-0.202302, 3.013870, 2.065213)
+    [50] Vel: 4.082155 vs 4.082155, diff=0
+    [50] Energy: 28.663360 vs 28.663360, diff=0
+    [50] HeartArc: 267.151700 vs 267.151700
+    [100] Pos: (-0.647339, 3.025226, 4.045195) vs (-0.647339, 3.025226, 4.045195)
+    [100] Vel: 3.915488 vs 3.915488, diff=0
+    [100] Energy: 28.662720 vs 28.662720, diff=0
+    [100] HeartArc: 269.181700 vs 269.181700
+    [200] Pos: (-1.416051, 2.696407, 8.052852) vs (-1.416051, 2.696407, 8.052852)
+    [200] Vel: 4.347160 vs 4.347160, diff=0
+    [200] Energy: 28.661450 vs 28.661450, diff=0
+    [200] HeartArc: 273.285800 vs 273.285800
+Checking ForceSection nodeId=4128187575: 193 points (gold expects 193, gold duration=29.2 Distance, cumulative offset=320, afterBridge=False)
+=== DRIFT ANALYSIS (offset=320) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (2.728869, 9.810164, -63.968710) vs (2.728869, 9.810164, -63.968710)
+    [0] Vel: 30.218200 vs 30.218200, diff=0
+    [0] Energy: 548.377300 vs 548.377300, diff=0
+    [0] HeartArc: 358.781200 vs 358.781200
+    [1] Pos: (2.737704, 9.778230, -64.267460) vs (2.737704, 9.778230, -64.267460)
+    [1] Vel: 30.209840 vs 30.209840, diff=0
+    [1] Energy: 544.332800 vs 544.332800, diff=0
+    [1] HeartArc: 359.081700 vs 359.081700
+    [2] Pos: (2.747156, 9.746420, -64.565960) vs (2.747156, 9.746420, -64.565960)
+    [2] Vel: 30.184840 vs 30.184840, diff=0
+    [2] Energy: 543.202100 vs 543.202100, diff=0
+    [2] HeartArc: 359.382100 vs 359.382100
+    [3] Pos: (2.757208, 9.714761, -64.864070) vs (2.757208, 9.714761, -64.864070)
+    [3] Vel: 30.143430 vs 30.143430, diff=0
+    [3] Energy: 541.579800 vs 541.579800, diff=0
+    [3] HeartArc: 359.682000 vs 359.682000
+    [4] Pos: (2.767840, 9.683276, -65.161610) vs (2.767840, 9.683276, -65.161610)
+    [4] Vel: 30.085860 vs 30.085860, diff=0
+    [4] Energy: 539.475800 vs 539.475800, diff=0
+    [4] HeartArc: 359.981400 vs 359.981400
+    [5] Pos: (2.779031, 9.651989, -65.458440) vs (2.779031, 9.651989, -65.458440)
+    [5] Vel: 30.012460 vs 30.012460, diff=0
+    [5] Energy: 536.902700 vs 536.902700, diff=0
+    [5] HeartArc: 360.280100 vs 360.280100
+    [6] Pos: (2.790761, 9.620922, -65.754390) vs (2.790761, 9.620922, -65.754390)
+    [6] Vel: 29.923590 vs 29.923590, diff=0
+    [6] Energy: 533.875400 vs 533.875400, diff=0
+    [6] HeartArc: 360.577900 vs 360.577900
+    [7] Pos: (2.803008, 9.590099, -66.049310) vs (2.803008, 9.590099, -66.049310)
+    [7] Vel: 29.819640 vs 29.819640, diff=0
+    [7] Energy: 530.409900 vs 530.409900, diff=0
+    [7] HeartArc: 360.874700 vs 360.874700
+    [8] Pos: (2.815751, 9.559540, -66.343060) vs (2.815751, 9.559540, -66.343060)
+    [8] Vel: 29.701080 vs 29.701080, diff=0
+    [8] Energy: 526.524800 vs 526.524800, diff=0
+    [8] HeartArc: 361.170300 vs 361.170300
+    [9] Pos: (2.828967, 9.529265, -66.635510) vs (2.828967, 9.529265, -66.635510)
+    [9] Vel: 29.568350 vs 29.568350, diff=0
+    [9] Energy: 522.239000 vs 522.239000, diff=0
+    [9] HeartArc: 361.464600 vs 361.464600
+    [10] Pos: (2.842635, 9.499293, -66.926500) vs (2.842635, 9.499293, -66.926500)
+    [10] Vel: 29.422000 vs 29.422000, diff=0
+    [10] Energy: 517.574200 vs 517.574200, diff=0
+    [10] HeartArc: 361.757500 vs 361.757500
+    [11] Pos: (2.856732, 9.469645, -67.215920) vs (2.856732, 9.469645, -67.215920)
+    [11] Vel: 29.262550 vs 29.262550, diff=0
+    [11] Energy: 512.551800 vs 512.551800, diff=0
+    [11] HeartArc: 362.048800 vs 362.048800
+    [12] Pos: (2.871236, 9.440335, -67.503630) vs (2.871236, 9.440335, -67.503630)
+    [12] Vel: 29.090570 vs 29.090570, diff=0
+    [12] Energy: 507.194800 vs 507.194800, diff=0
+    [12] HeartArc: 362.338300 vs 362.338300
+    [13] Pos: (2.886123, 9.411384, -67.789510) vs (2.886123, 9.411384, -67.789510)
+    [13] Vel: 28.906670 vs 28.906670, diff=0
+    [13] Energy: 501.527500 vs 501.527500, diff=0
+    [13] HeartArc: 362.626000 vs 362.626000
+    [14] Pos: (2.901372, 9.382803, -68.073460) vs (2.901372, 9.382803, -68.073460)
+    [14] Vel: 28.711430 vs 28.711430, diff=0
+    [14] Energy: 495.573600 vs 495.573600, diff=0
+    [14] HeartArc: 362.911800 vs 362.911800
+    [15] Pos: (2.916960, 9.354609, -68.355350) vs (2.916960, 9.354609, -68.355350)
+    [15] Vel: 28.505490 vs 28.505490, diff=0
+    [15] Energy: 489.357900 vs 489.357900, diff=0
+    [15] HeartArc: 363.195600 vs 363.195600
+    [16] Pos: (2.932865, 9.326818, -68.635110) vs (2.932865, 9.326818, -68.635110)
+    [16] Vel: 28.289510 vs 28.289510, diff=0
+    [16] Energy: 482.905600 vs 482.905600, diff=0
+    [16] HeartArc: 363.477100 vs 363.477100
+    [17] Pos: (2.949065, 9.299439, -68.912630) vs (2.949065, 9.299439, -68.912630)
+    [17] Vel: 28.064090 vs 28.064090, diff=0
+    [17] Energy: 476.240600 vs 476.240600, diff=0
+    [17] HeartArc: 363.756500 vs 363.756500
+    [18] Pos: (2.965537, 9.272486, -69.187820) vs (2.965537, 9.272486, -69.187820)
+    [18] Vel: 27.829910 vs 27.829910, diff=0
+    [18] Energy: 469.388100 vs 469.388100, diff=0
+    [18] HeartArc: 364.033500 vs 364.033500
+    [19] Pos: (2.982260, 9.245968, -69.460600) vs (2.982260, 9.245968, -69.460600)
+    [19] Vel: 27.587620 vs 27.587620, diff=0
+    [19] Energy: 462.372400 vs 462.372400, diff=0
+    [19] HeartArc: 364.308000 vs 364.308000
+=== SAMPLE POINTS ===
+    [50] Pos: (3.528607, 8.660114, -76.544100) vs (3.528607, 8.660114, -76.544100)
+    [50] Vel: 18.997550 vs 18.997550, diff=0
+    [50] Energy: 255.821100 vs 255.821100, diff=0
+    [50] HeartArc: 371.437200 vs 371.437200
+    [100] Pos: (4.027110, 8.485851, -83.584260) vs (4.027110, 8.485851, -83.584260)
+    [100] Vel: 11.321210 vs 11.321210, diff=0
+    [100] Energy: 137.844500 vs 137.844500, diff=0
+    [100] HeartArc: 378.500700 vs 378.500700
+Checking ForceSection nodeId=2081759003: 61 points (gold expects 61, gold duration=18 Distance, cumulative offset=513, afterBridge=False)
+=== DRIFT ANALYSIS (offset=513) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (2.321372, 10.821350, -45.859050) vs (2.321372, 10.821350, -45.859050)
+    [0] Vel: 30.000000 vs 30.000000, diff=0
+    [0] Energy: 548.704500 vs 548.704500, diff=0
+    [0] HeartArc: 340.630700 vs 340.630700
+    [1] Pos: (2.332128, 10.820210, -46.159800) vs (2.332128, 10.820210, -46.159800)
+    [1] Vel: 29.999560 vs 29.999560, diff=0
+    [1] Energy: 548.699100 vs 548.699100, diff=0
+    [1] HeartArc: 340.931600 vs 340.931600
+    [2] Pos: (2.342570, 10.818460, -46.460590) vs (2.342570, 10.818460, -46.460590)
+    [2] Vel: 30.002130 vs 30.002130, diff=0
+    [2] Energy: 548.693700 vs 548.693700, diff=0
+    [2] HeartArc: 341.232600 vs 341.232600
+    [3] Pos: (2.352707, 10.816110, -46.761470) vs (2.352707, 10.816110, -46.761470)
+    [3] Vel: 30.004770 vs 30.004770, diff=0
+    [3] Energy: 548.688400 vs 548.688400, diff=0
+    [3] HeartArc: 341.533700 vs 341.533700
+    [4] Pos: (2.362548, 10.813170, -47.062420) vs (2.362548, 10.813170, -47.062420)
+    [4] Vel: 30.007500 vs 30.007500, diff=0
+    [4] Energy: 548.682900 vs 548.682900, diff=0
+    [4] HeartArc: 341.834800 vs 341.834800
+    [5] Pos: (2.372100, 10.809640, -47.363450) vs (2.372100, 10.809640, -47.363450)
+    [5] Vel: 30.010300 vs 30.010300, diff=0
+    [5] Energy: 548.677500 vs 548.677500, diff=0
+    [5] HeartArc: 342.136000 vs 342.136000
+    [6] Pos: (2.381371, 10.805530, -47.664540) vs (2.381371, 10.805530, -47.664540)
+    [6] Vel: 30.013170 vs 30.013170, diff=0
+    [6] Energy: 548.672100 vs 548.672100, diff=0
+    [6] HeartArc: 342.437300 vs 342.437300
+    [7] Pos: (2.390370, 10.800840, -47.965710) vs (2.390370, 10.800840, -47.965710)
+    [7] Vel: 30.016110 vs 30.016110, diff=0
+    [7] Energy: 548.666600 vs 548.666600, diff=0
+    [7] HeartArc: 342.738600 vs 342.738600
+    [8] Pos: (2.399105, 10.795590, -48.266940) vs (2.399105, 10.795590, -48.266940)
+    [8] Vel: 30.019120 vs 30.019120, diff=0
+    [8] Energy: 548.661200 vs 548.661200, diff=0
+    [8] HeartArc: 343.040000 vs 343.040000
+    [9] Pos: (2.407585, 10.789760, -48.568240) vs (2.407585, 10.789760, -48.568240)
+    [9] Vel: 30.022180 vs 30.022180, diff=0
+    [9] Energy: 548.655800 vs 548.655800, diff=0
+    [9] HeartArc: 343.341500 vs 343.341500
+    [10] Pos: (2.415818, 10.783380, -48.869610) vs (2.415818, 10.783380, -48.869610)
+    [10] Vel: 30.025300 vs 30.025300, diff=0
+    [10] Energy: 548.650300 vs 548.650300, diff=0
+    [10] HeartArc: 343.643000 vs 343.643000
+    [11] Pos: (2.423815, 10.776440, -49.171030) vs (2.423815, 10.776440, -49.171030)
+    [11] Vel: 30.028480 vs 30.028480, diff=0
+    [11] Energy: 548.644900 vs 548.644900, diff=0
+    [11] HeartArc: 343.944600 vs 343.944600
+    [12] Pos: (2.431582, 10.768960, -49.472520) vs (2.431582, 10.768960, -49.472520)
+    [12] Vel: 30.031710 vs 30.031710, diff=0
+    [12] Energy: 548.639500 vs 548.639500, diff=0
+    [12] HeartArc: 344.246300 vs 344.246300
+    [13] Pos: (2.439130, 10.760930, -49.774060) vs (2.439130, 10.760930, -49.774060)
+    [13] Vel: 30.034980 vs 30.034980, diff=0
+    [13] Energy: 548.634000 vs 548.634000, diff=0
+    [13] HeartArc: 344.548100 vs 344.548100
+    [14] Pos: (2.446468, 10.752360, -50.075660) vs (2.446468, 10.752360, -50.075660)
+    [14] Vel: 30.038300 vs 30.038300, diff=0
+    [14] Energy: 548.628600 vs 548.628600, diff=0
+    [14] HeartArc: 344.849900 vs 344.849900
+    [15] Pos: (2.453605, 10.743250, -50.377320) vs (2.453605, 10.743250, -50.377320)
+    [15] Vel: 30.041670 vs 30.041670, diff=0
+    [15] Energy: 548.623200 vs 548.623200, diff=0
+    [15] HeartArc: 345.151800 vs 345.151800
+    [16] Pos: (2.460550, 10.733610, -50.679020) vs (2.460550, 10.733610, -50.679020)
+    [16] Vel: 30.045070 vs 30.045070, diff=0
+    [16] Energy: 548.617700 vs 548.617700, diff=0
+    [16] HeartArc: 345.453700 vs 345.453700
+    [17] Pos: (2.467313, 10.723450, -50.980770) vs (2.467313, 10.723450, -50.980770)
+    [17] Vel: 30.048510 vs 30.048510, diff=0
+    [17] Energy: 548.612300 vs 548.612300, diff=0
+    [17] HeartArc: 345.755700 vs 345.755700
+    [18] Pos: (2.473904, 10.712760, -51.282560) vs (2.473904, 10.712760, -51.282560)
+    [18] Vel: 30.051980 vs 30.051980, diff=0
+    [18] Energy: 548.606900 vs 548.606900, diff=0
+    [18] HeartArc: 346.057800 vs 346.057800
+    [19] Pos: (2.480332, 10.701550, -51.584400) vs (2.480332, 10.701550, -51.584400)
+    [19] Vel: 30.055490 vs 30.055490, diff=0
+    [19] Energy: 548.601400 vs 548.601400, diff=0
+    [19] HeartArc: 346.359900 vs 346.359900
+=== SAMPLE POINTS ===
+    [50] Pos: (2.654098, 10.105970, -60.950570) vs (2.654098, 10.105970, -60.950570)
+    [50] Vel: 30.174540 vs 30.174540, diff=0
+    [50] Energy: 548.432200 vs 548.432200, diff=0
+    [50] HeartArc: 355.747600 vs 355.747600
+Checking ForceSection nodeId=402587418: 270 points (gold expects 270, gold duration=2.7 Time, cumulative offset=574, afterBridge=False)
+=== DRIFT ANALYSIS (offset=574) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (-0.341556, 1.193449, 13.994820) vs (-0.341556, 1.193449, 13.994820)
+    [0] Vel: 6.645833 vs 6.645833, diff=0
+    [0] Energy: 28.657640 vs 28.657640, diff=0
+    [0] HeartArc: 279.572000 vs 279.572000
+    [1] Pos: (-0.364892, 1.211900, 13.940310) vs (-0.364892, 1.211900, 13.940310)
+    [1] Vel: 6.647899 vs 6.647899, diff=0
+    [1] Energy: 25.684700 vs 25.684700, diff=0
+    [1] HeartArc: 279.634100 vs 279.634100
+    [2] Pos: (-0.387662, 1.230290, 13.885680) vs (-0.387662, 1.230290, 13.885680)
+    [2] Vel: 6.654116 vs 6.654116, diff=0
+    [2] Energy: 25.895990 vs 25.895990, diff=0
+    [2] HeartArc: 279.696100 vs 279.696100
+    [3] Pos: (-0.409949, 1.248695, 13.830730) vs (-0.409949, 1.248695, 13.830730)
+    [3] Vel: 6.664459 vs 6.664459, diff=0
+    [3] Energy: 26.134750 vs 26.134750, diff=0
+    [3] HeartArc: 279.758200 vs 279.758200
+    [4] Pos: (-0.431772, 1.267133, 13.775400) vs (-0.431772, 1.267133, 13.775400)
+    [4] Vel: 6.678910 vs 6.678910, diff=0
+    [4] Energy: 26.401240 vs 26.401240, diff=0
+    [4] HeartArc: 279.820500 vs 279.820500
+    [5] Pos: (-0.453144, 1.285620, 13.719650) vs (-0.453144, 1.285620, 13.719650)
+    [5] Vel: 6.697452 vs 6.697452, diff=0
+    [5] Energy: 26.695650 vs 26.695650, diff=0
+    [5] HeartArc: 279.883000 vs 279.883000
+    [6] Pos: (-0.474079, 1.304170, 13.663470) vs (-0.474079, 1.304170, 13.663470)
+    [6] Vel: 6.720064 vs 6.720064, diff=0
+    [6] Energy: 27.018200 vs 27.018200, diff=0
+    [6] HeartArc: 279.945700 vs 279.945700
+    [7] Pos: (-0.494589, 1.322795, 13.606800) vs (-0.494589, 1.322795, 13.606800)
+    [7] Vel: 6.746730 vs 6.746730, diff=0
+    [7] Energy: 27.369180 vs 27.369180, diff=0
+    [7] HeartArc: 280.008800 vs 280.008800
+    [8] Pos: (-0.514685, 1.341510, 13.549620) vs (-0.514685, 1.341510, 13.549620)
+    [8] Vel: 6.777430 vs 6.777430, diff=0
+    [8] Energy: 27.748910 vs 27.748910, diff=0
+    [8] HeartArc: 280.072300 vs 280.072300
+    [9] Pos: (-0.534378, 1.360328, 13.491880) vs (-0.534378, 1.360328, 13.491880)
+    [9] Vel: 6.812140 vs 6.812140, diff=0
+    [9] Energy: 28.157720 vs 28.157720, diff=0
+    [9] HeartArc: 280.136100 vs 280.136100
+    [10] Pos: (-0.553677, 1.379262, 13.433560) vs (-0.553677, 1.379262, 13.433560)
+    [10] Vel: 6.850841 vs 6.850841, diff=0
+    [10] Energy: 28.596020 vs 28.596020, diff=0
+    [10] HeartArc: 280.200400 vs 280.200400
+    [11] Pos: (-0.572591, 1.398324, 13.374620) vs (-0.572591, 1.398324, 13.374620)
+    [11] Vel: 6.893510 vs 6.893510, diff=0
+    [11] Energy: 29.064240 vs 29.064240, diff=0
+    [11] HeartArc: 280.265100 vs 280.265100
+    [12] Pos: (-0.591130, 1.417529, 13.315020) vs (-0.591130, 1.417529, 13.315020)
+    [12] Vel: 6.940123 vs 6.940123, diff=0
+    [12] Energy: 29.562830 vs 29.562830, diff=0
+    [12] HeartArc: 280.330400 vs 280.330400
+    [13] Pos: (-0.609300, 1.436888, 13.254730) vs (-0.609300, 1.436888, 13.254730)
+    [13] Vel: 6.990656 vs 6.990656, diff=0
+    [13] Energy: 30.092300 vs 30.092300, diff=0
+    [13] HeartArc: 280.396300 vs 280.396300
+    [14] Pos: (-0.627109, 1.456412, 13.193710) vs (-0.627109, 1.456412, 13.193710)
+    [14] Vel: 7.045086 vs 7.045086, diff=0
+    [14] Energy: 30.653190 vs 30.653190, diff=0
+    [14] HeartArc: 280.462800 vs 280.462800
+    [15] Pos: (-0.644564, 1.476115, 13.131930) vs (-0.644564, 1.476115, 13.131930)
+    [15] Vel: 7.103385 vs 7.103385, diff=0
+    [15] Energy: 31.246060 vs 31.246060, diff=0
+    [15] HeartArc: 280.530000 vs 280.530000
+    [16] Pos: (-0.661670, 1.496008, 13.069360) vs (-0.661670, 1.496008, 13.069360)
+    [16] Vel: 7.165526 vs 7.165526, diff=0
+    [16] Energy: 31.871510 vs 31.871510, diff=0
+    [16] HeartArc: 280.597800 vs 280.597800
+    [17] Pos: (-0.678432, 1.516102, 13.005950) vs (-0.678432, 1.516102, 13.005950)
+    [17] Vel: 7.231485 vs 7.231485, diff=0
+    [17] Energy: 32.530170 vs 32.530170, diff=0
+    [17] HeartArc: 280.666400 vs 280.666400
+    [18] Pos: (-0.694856, 1.536409, 12.941690) vs (-0.694856, 1.536409, 12.941690)
+    [18] Vel: 7.301229 vs 7.301229, diff=0
+    [18] Energy: 33.222690 vs 33.222690, diff=0
+    [18] HeartArc: 280.735800 vs 280.735800
+    [19] Pos: (-0.710945, 1.556939, 12.876530) vs (-0.710945, 1.556939, 12.876530)
+    [19] Vel: 7.374732 vs 7.374732, diff=0
+    [19] Energy: 33.949760 vs 33.949760, diff=0
+    [19] HeartArc: 280.806000 vs 280.806000
+=== SAMPLE POINTS ===
+    [50] Pos: (-1.050740, 2.353906, 10.247830) vs (-1.050740, 2.353906, 10.247830)
+    [50] Vel: 11.316820 vs 11.316820, diff=0
+    [50] Energy: 78.096020 vs 78.096020, diff=0
+    [50] HeartArc: 283.577500 vs 283.577500
+    [100] Pos: (-0.911424, 4.521855, 2.354809) vs (-0.911424, 4.521855, 2.354809)
+    [100] Vel: 21.502080 vs 21.502080, diff=0
+    [100] Energy: 265.678000 vs 265.678000, diff=0
+    [100] HeartArc: 291.767700 vs 291.767700
+    [200] Pos: (1.115599, 9.642753, -25.152470) vs (1.115599, 9.642753, -25.152470)
+    [200] Vel: 30.000000 vs 30.000000, diff=0
+    [200] Energy: 535.177900 vs 535.177900, diff=0
+    [200] HeartArc: 319.842600 vs 319.842600
+Checking GeometricSection nodeId=3398324313: 390 points (gold expects 390, gold duration=3.9 Time, cumulative offset=844, afterBridge=False)
+=== DRIFT ANALYSIS (offset=844) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (0.000000, 3.000000, 0.000000) vs (0.000000, 3.000000, 0.000000)
+    [0] Vel: 10.000000 vs 10.000000, diff=0
+    [0] Energy: 69.711360 vs 69.711360, diff=0
+    [0] HeartArc: 0.000000 vs 0.000000
+    [1] Pos: (0.000050, 3.000050, -0.100004) vs (0.000050, 3.000050, -0.100004)
+    [1] Vel: 10.000450 vs 10.000450, diff=0
+    [1] Energy: 69.715820 vs 69.715820, diff=0
+    [1] HeartArc: 0.100004 vs 0.100004
+    [2] Pos: (0.000200, 3.000200, -0.200022) vs (0.000200, 3.000200, -0.200022)
+    [2] Vel: 10.001780 vs 10.001780, diff=0
+    [2] Energy: 69.729640 vs 69.729640, diff=0
+    [2] HeartArc: 0.200022 vs 0.200022
+    [3] Pos: (0.000450, 3.000451, -0.300061) vs (0.000450, 3.000451, -0.300061)
+    [3] Vel: 10.004000 vs 10.004000, diff=0
+    [3] Energy: 69.753340 vs 69.753340, diff=0
+    [3] HeartArc: 0.300062 vs 0.300062
+    [4] Pos: (0.000800, 3.000801, -0.400131) vs (0.000800, 3.000801, -0.400131)
+    [4] Vel: 10.007100 vs 10.007100, diff=0
+    [4] Energy: 69.786910 vs 69.786910, diff=0
+    [4] HeartArc: 0.400133 vs 0.400133
+    [5] Pos: (0.001251, 3.001252, -0.500240) vs (0.001251, 3.001252, -0.500240)
+    [5] Vel: 10.011090 vs 10.011090, diff=0
+    [5] Energy: 69.830320 vs 69.830320, diff=0
+    [5] HeartArc: 0.500244 vs 0.500244
+    [6] Pos: (0.001802, 3.001803, -0.600396) vs (0.001802, 3.001803, -0.600396)
+    [6] Vel: 10.015960 vs 10.015960, diff=0
+    [6] Energy: 69.883610 vs 69.883610, diff=0
+    [6] HeartArc: 0.600404 vs 0.600404
+    [7] Pos: (0.002454, 3.002455, -0.700609) vs (0.002454, 3.002455, -0.700609)
+    [7] Vel: 10.021710 vs 10.021710, diff=0
+    [7] Energy: 69.946710 vs 69.946710, diff=0
+    [7] HeartArc: 0.700621 vs 0.700621
+    [8] Pos: (0.003206, 3.003207, -0.800887) vs (0.003206, 3.003207, -0.800887)
+    [8] Vel: 10.028330 vs 10.028330, diff=0
+    [8] Energy: 70.019660 vs 70.019660, diff=0
+    [8] HeartArc: 0.800904 vs 0.800904
+    [9] Pos: (0.004060, 3.004061, -0.901238) vs (0.004060, 3.004061, -0.901238)
+    [9] Vel: 10.035840 vs 10.035840, diff=0
+    [9] Energy: 70.102460 vs 70.102460, diff=0
+    [9] HeartArc: 0.901262 vs 0.901262
+    [10] Pos: (0.005015, 3.005017, -1.001671) vs (0.005015, 3.005017, -1.001671)
+    [10] Vel: 10.044210 vs 10.044210, diff=0
+    [10] Energy: 70.195100 vs 70.195100, diff=0
+    [10] HeartArc: 1.001704 vs 1.001704
+    [11] Pos: (0.006072, 3.006074, -1.102194) vs (0.006072, 3.006074, -1.102194)
+    [11] Vel: 10.053460 vs 10.053460, diff=0
+    [11] Energy: 70.297580 vs 70.297580, diff=0
+    [11] HeartArc: 1.102239 vs 1.102239
+    [12] Pos: (0.007231, 3.007233, -1.202817) vs (0.007231, 3.007233, -1.202817)
+    [12] Vel: 10.063580 vs 10.063580, diff=0
+    [12] Energy: 70.409900 vs 70.409900, diff=0
+    [12] HeartArc: 1.202875 vs 1.202875
+    [13] Pos: (0.008492, 3.008495, -1.303547) vs (0.008492, 3.008495, -1.303547)
+    [13] Vel: 10.074560 vs 10.074560, diff=0
+    [13] Energy: 70.532120 vs 70.532120, diff=0
+    [13] HeartArc: 1.303620 vs 1.303620
+    [14] Pos: (0.009856, 3.009860, -1.404392) vs (0.009856, 3.009860, -1.404392)
+    [14] Vel: 10.086420 vs 10.086420, diff=0
+    [14] Energy: 70.664200 vs 70.664200, diff=0
+    [14] HeartArc: 1.404485 vs 1.404485
+    [15] Pos: (0.011324, 3.011329, -1.505362) vs (0.011324, 3.011329, -1.505362)
+    [15] Vel: 10.099130 vs 10.099130, diff=0
+    [15] Energy: 70.806170 vs 70.806170, diff=0
+    [15] HeartArc: 1.505476 vs 1.505476
+    [16] Pos: (0.012895, 3.012901, -1.606465) vs (0.012895, 3.012901, -1.606465)
+    [16] Vel: 10.112710 vs 10.112710, diff=0
+    [16] Energy: 70.958050 vs 70.958050, diff=0
+    [16] HeartArc: 1.606603 vs 1.606603
+    [17] Pos: (0.014570, 3.014578, -1.707708) vs (0.014570, 3.014578, -1.707708)
+    [17] Vel: 10.127140 vs 10.127140, diff=0
+    [17] Energy: 71.119840 vs 71.119840, diff=0
+    [17] HeartArc: 1.707874 vs 1.707874
+    [18] Pos: (0.016350, 3.016361, -1.809101) vs (0.016350, 3.016361, -1.809101)
+    [18] Vel: 10.142430 vs 10.142430, diff=0
+    [18] Energy: 71.291560 vs 71.291560, diff=0
+    [18] HeartArc: 1.809298 vs 1.809298
+    [19] Pos: (0.018236, 3.018248, -1.910652) vs (0.018236, 3.018248, -1.910652)
+    [19] Vel: 10.158570 vs 10.158570, diff=0
+    [19] Energy: 71.473260 vs 71.473260, diff=0
+    [19] HeartArc: 1.910884 vs 1.910884
+=== SAMPLE POINTS ===
+    [50] Pos: (0.133418, 3.134028, -5.180913) vs (0.133418, 3.134028, -5.180913)
+    [50] Vel: 11.067990 vs 11.067990, diff=0
+    [50] Energy: 82.243480 vs 82.243480, diff=0
+    [50] HeartArc: 5.185504 vs 5.185504
+    [100] Pos: (0.630589, 3.642294, -11.353180) vs (0.630589, 3.642294, -11.353180)
+    [100] Vel: 14.000140 vs 14.000140, diff=0
+    [100] Energy: 123.950300 vs 123.950300, diff=0
+    [100] HeartArc: 11.400380 vs 11.400380
+    [200] Pos: (3.927125, 7.238939, -28.928950) vs (3.927125, 7.238939, -28.928950)
+    [200] Vel: 22.722560 vs 22.722560, diff=0
+    [200] Energy: 319.226400 vs 319.226400, diff=0
+    [200] HeartArc: 29.679670 vs 29.679670
+Checking GeometricSection nodeId=1068437882: 323 points (gold expects 323, gold duration=4.9 Time, cumulative offset=1234, afterBridge=False)
+=== DRIFT ANALYSIS (offset=1234) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (23.002340, 34.137710, -69.554600) vs (23.002340, 34.137710, -69.554600)
+    [0] Vel: 30.000000 vs 30.000000, diff=0
+    [0] Energy: 775.907800 vs 775.907800, diff=0
+    [0] HeartArc: 82.799950 vs 82.799950
+    [1] Pos: (23.122710, 34.350460, -69.722540) vs (23.122710, 34.350460, -69.722540)
+    [1] Vel: 29.854240 vs 29.854240, diff=0
+    [1] Energy: 775.902500 vs 775.902500, diff=0
+    [1] HeartArc: 83.096520 vs 83.096520
+    [2] Pos: (23.242440, 34.562780, -69.888900) vs (23.242440, 34.562780, -69.888900)
+    [2] Vel: 29.781450 vs 29.781450, diff=0
+    [2] Energy: 775.897200 vs 775.897200, diff=0
+    [2] HeartArc: 83.391620 vs 83.391620
+    [3] Pos: (23.361810, 34.775190, -70.054100) vs (23.361810, 34.775190, -70.054100)
+    [3] Vel: 29.708450 vs 29.708450, diff=0
+    [3] Energy: 775.891800 vs 775.891800, diff=0
+    [3] HeartArc: 83.686000 vs 83.686000
+    [4] Pos: (23.480840, 34.987690, -70.218150) vs (23.480840, 34.987690, -70.218150)
+    [4] Vel: 29.635260 vs 29.635260, diff=0
+    [4] Energy: 775.886600 vs 775.886600, diff=0
+    [4] HeartArc: 83.979660 vs 83.979660
+    [5] Pos: (23.599510, 35.200260, -70.381040) vs (23.599510, 35.200260, -70.381040)
+    [5] Vel: 29.561860 vs 29.561860, diff=0
+    [5] Energy: 775.881400 vs 775.881400, diff=0
+    [5] HeartArc: 84.272580 vs 84.272580
+    [6] Pos: (23.717820, 35.412900, -70.542790) vs (23.717820, 35.412900, -70.542790)
+    [6] Vel: 29.488250 vs 29.488250, diff=0
+    [6] Energy: 775.876200 vs 775.876200, diff=0
+    [6] HeartArc: 84.564770 vs 84.564770
+    [7] Pos: (23.835760, 35.625600, -70.703370) vs (23.835760, 35.625600, -70.703370)
+    [7] Vel: 29.414450 vs 29.414450, diff=0
+    [7] Energy: 775.871100 vs 775.871100, diff=0
+    [7] HeartArc: 84.856220 vs 84.856220
+    [8] Pos: (23.953340, 35.838360, -70.862810) vs (23.953340, 35.838360, -70.862810)
+    [8] Vel: 29.340450 vs 29.340450, diff=0
+    [8] Energy: 775.866000 vs 775.866000, diff=0
+    [8] HeartArc: 85.146930 vs 85.146930
+    [9] Pos: (24.070540, 36.051180, -71.021100) vs (24.070540, 36.051180, -71.021100)
+    [9] Vel: 29.266240 vs 29.266240, diff=0
+    [9] Energy: 775.861000 vs 775.861000, diff=0
+    [9] HeartArc: 85.436900 vs 85.436900
+    [10] Pos: (24.187370, 36.264030, -71.178240) vs (24.187370, 36.264030, -71.178240)
+    [10] Vel: 29.191840 vs 29.191840, diff=0
+    [10] Energy: 775.856000 vs 775.856000, diff=0
+    [10] HeartArc: 85.726110 vs 85.726110
+    [11] Pos: (24.303810, 36.476930, -71.334240) vs (24.303810, 36.476930, -71.334240)
+    [11] Vel: 29.117240 vs 29.117240, diff=0
+    [11] Energy: 775.851000 vs 775.851000, diff=0
+    [11] HeartArc: 86.014600 vs 86.014600
+    [12] Pos: (24.419870, 36.689870, -71.489110) vs (24.419870, 36.689870, -71.489110)
+    [12] Vel: 29.042440 vs 29.042440, diff=0
+    [12] Energy: 775.846000 vs 775.846000, diff=0
+    [12] HeartArc: 86.302330 vs 86.302330
+    [13] Pos: (24.535540, 36.902820, -71.642820) vs (24.535540, 36.902820, -71.642820)
+    [13] Vel: 28.967440 vs 28.967440, diff=0
+    [13] Energy: 775.841100 vs 775.841100, diff=0
+    [13] HeartArc: 86.589310 vs 86.589310
+    [14] Pos: (24.650820, 37.115800, -71.795400) vs (24.650820, 37.115800, -71.795400)
+    [14] Vel: 28.892240 vs 28.892240, diff=0
+    [14] Energy: 775.836200 vs 775.836200, diff=0
+    [14] HeartArc: 86.875540 vs 86.875540
+    [15] Pos: (24.765700, 37.328790, -71.946850) vs (24.765700, 37.328790, -71.946850)
+    [15] Vel: 28.816850 vs 28.816850, diff=0
+    [15] Energy: 775.831400 vs 775.831400, diff=0
+    [15] HeartArc: 87.161020 vs 87.161020
+    [16] Pos: (24.880180, 37.541780, -72.097180) vs (24.880180, 37.541780, -72.097180)
+    [16] Vel: 28.741270 vs 28.741270, diff=0
+    [16] Energy: 775.826700 vs 775.826700, diff=0
+    [16] HeartArc: 87.445750 vs 87.445750
+    [17] Pos: (24.994250, 37.754780, -72.246370) vs (24.994250, 37.754780, -72.246370)
+    [17] Vel: 28.665490 vs 28.665490, diff=0
+    [17] Energy: 775.821900 vs 775.821900, diff=0
+    [17] HeartArc: 87.729710 vs 87.729710
+    [18] Pos: (25.107920, 37.967770, -72.394440) vs (25.107920, 37.967770, -72.394440)
+    [18] Vel: 28.589520 vs 28.589520, diff=0
+    [18] Energy: 775.817200 vs 775.817200, diff=0
+    [18] HeartArc: 88.012930 vs 88.012930
+    [19] Pos: (25.221180, 38.180750, -72.541380) vs (25.221180, 38.180750, -72.541380)
+    [19] Vel: 28.513350 vs 28.513350, diff=0
+    [19] Energy: 775.812500 vs 775.812500, diff=0
+    [19] HeartArc: 88.295380 vs 88.295380
+=== SAMPLE POINTS ===
+    [50] Pos: (28.508960, 44.742290, -76.555700) vs (28.508960, 44.742290, -76.555700)
+    [50] Vel: 26.059930 vs 26.059930, diff=0
+    [50] Energy: 775.685500 vs 775.685500, diff=0
+    [50] HeartArc: 96.664160 vs 96.664160
+    [100] Pos: (32.751590, 54.818840, -81.019770) vs (32.751590, 54.818840, -81.019770)
+    [100] Vel: 21.765430 vs 21.765430, diff=0
+    [100] Energy: 775.546200 vs 775.546200, diff=0
+    [100] HeartArc: 108.485900 vs 108.485900
+    [200] Pos: (36.941040, 70.640510, -84.566200) vs (36.941040, 70.640510, -84.566200)
+    [200] Vel: 12.274520 vs 12.274520, diff=0
+    [200] Energy: 775.437700 vs 775.437700, diff=0
+    [200] HeartArc: 125.296200 vs 125.296200
+Checking GeometricSection nodeId=3763452536: 270 points (gold expects 270, gold duration=47.2 Distance, cumulative offset=1557, afterBridge=False)
+=== DRIFT ANALYSIS (offset=1557) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (3.490186, 12.090040, -101.673700) vs (3.490186, 12.090040, -101.673700)
+    [0] Vel: 11.740000 vs 11.740000, diff=0
+    [0] Energy: 195.455300 vs 195.455300, diff=0
+    [0] HeartArc: 403.059300 vs 403.059300
+    [1] Pos: (3.556784, 12.100770, -101.593600) vs (3.556784, 12.100770, -101.593600)
+    [1] Vel: 11.702240 vs 11.702240, diff=0
+    [1] Energy: 195.455000 vs 195.455000, diff=0
+    [1] HeartArc: 403.164000 vs 403.164000
+    [2] Pos: (3.623055, 12.110200, -101.513500) vs (3.623055, 12.110200, -101.513500)
+    [2] Vel: 11.688230 vs 11.688230, diff=0
+    [2] Energy: 195.454700 vs 195.454700, diff=0
+    [2] HeartArc: 403.268400 vs 403.268400
+    [3] Pos: (3.689124, 12.118350, -101.433300) vs (3.689124, 12.118350, -101.433300)
+    [3] Vel: 11.675430 vs 11.675430, diff=0
+    [3] Energy: 195.454300 vs 195.454300, diff=0
+    [3] HeartArc: 403.372700 vs 403.372700
+    [4] Pos: (3.754988, 12.125220, -101.353000) vs (3.754988, 12.125220, -101.353000)
+    [4] Vel: 11.663820 vs 11.663820, diff=0
+    [4] Energy: 195.454000 vs 195.454000, diff=0
+    [4] HeartArc: 403.476700 vs 403.476700
+    [5] Pos: (3.820646, 12.130820, -101.272600) vs (3.820646, 12.130820, -101.272600)
+    [5] Vel: 11.653420 vs 11.653420, diff=0
+    [5] Energy: 195.453700 vs 195.453700, diff=0
+    [5] HeartArc: 403.580700 vs 403.580700
+    [6] Pos: (3.886095, 12.135160, -101.192200) vs (3.886095, 12.135160, -101.192200)
+    [6] Vel: 11.644230 vs 11.644230, diff=0
+    [6] Energy: 195.453400 vs 195.453400, diff=0
+    [6] HeartArc: 403.684500 vs 403.684500
+    [7] Pos: (3.951334, 12.138240, -101.111600) vs (3.951334, 12.138240, -101.111600)
+    [7] Vel: 11.636230 vs 11.636230, diff=0
+    [7] Energy: 195.453000 vs 195.453000, diff=0
+    [7] HeartArc: 403.788200 vs 403.788200
+    [8] Pos: (4.016360, 12.140070, -101.031000) vs (4.016360, 12.140070, -101.031000)
+    [8] Vel: 11.629440 vs 11.629440, diff=0
+    [8] Energy: 195.452700 vs 195.452700, diff=0
+    [8] HeartArc: 403.891800 vs 403.891800
+    [9] Pos: (4.081171, 12.140640, -100.950300) vs (4.081171, 12.140640, -100.950300)
+    [9] Vel: 11.623850 vs 11.623850, diff=0
+    [9] Energy: 195.452400 vs 195.452400, diff=0
+    [9] HeartArc: 403.995300 vs 403.995300
+    [10] Pos: (4.145766, 12.139960, -100.869600) vs (4.145766, 12.139960, -100.869600)
+    [10] Vel: 11.619460 vs 11.619460, diff=0
+    [10] Energy: 195.452100 vs 195.452100, diff=0
+    [10] HeartArc: 404.098700 vs 404.098700
+    [11] Pos: (4.210142, 12.138040, -100.788700) vs (4.210142, 12.138040, -100.788700)
+    [11] Vel: 11.616280 vs 11.616280, diff=0
+    [11] Energy: 195.451800 vs 195.451800, diff=0
+    [11] HeartArc: 404.202100 vs 404.202100
+    [12] Pos: (4.274297, 12.134870, -100.707800) vs (4.274297, 12.134870, -100.707800)
+    [12] Vel: 11.614300 vs 11.614300, diff=0
+    [12] Energy: 195.451400 vs 195.451400, diff=0
+    [12] HeartArc: 404.305400 vs 404.305400
+    [13] Pos: (4.338230, 12.130460, -100.626900) vs (4.338230, 12.130460, -100.626900)
+    [13] Vel: 11.613510 vs 11.613510, diff=0
+    [13] Energy: 195.451100 vs 195.451100, diff=0
+    [13] HeartArc: 404.408600 vs 404.408600
+    [14] Pos: (4.401939, 12.124800, -100.545800) vs (4.401939, 12.124800, -100.545800)
+    [14] Vel: 11.613930 vs 11.613930, diff=0
+    [14] Energy: 195.450800 vs 195.450800, diff=0
+    [14] HeartArc: 404.511800 vs 404.511800
+    [15] Pos: (4.465423, 12.117910, -100.464800) vs (4.465423, 12.117910, -100.464800)
+    [15] Vel: 11.615550 vs 11.615550, diff=0
+    [15] Energy: 195.450500 vs 195.450500, diff=0
+    [15] HeartArc: 404.615100 vs 404.615100
+    [16] Pos: (4.528678, 12.109780, -100.383700) vs (4.528678, 12.109780, -100.383700)
+    [16] Vel: 11.618370 vs 11.618370, diff=0
+    [16] Energy: 195.450200 vs 195.450200, diff=0
+    [16] HeartArc: 404.718200 vs 404.718200
+    [17] Pos: (4.591705, 12.100410, -100.302500) vs (4.591705, 12.100410, -100.302500)
+    [17] Vel: 11.622390 vs 11.622390, diff=0
+    [17] Energy: 195.449800 vs 195.449800, diff=0
+    [17] HeartArc: 404.821400 vs 404.821400
+    [18] Pos: (4.654500, 12.089800, -100.221300) vs (4.654500, 12.089800, -100.221300)
+    [18] Vel: 11.627610 vs 11.627610, diff=0
+    [18] Energy: 195.449500 vs 195.449500, diff=0
+    [18] HeartArc: 404.924600 vs 404.924600
+    [19] Pos: (4.717061, 12.077960, -100.140000) vs (4.717061, 12.077960, -100.140000)
+    [19] Vel: 11.634030 vs 11.634030, diff=0
+    [19] Energy: 195.449200 vs 195.449200, diff=0
+    [19] HeartArc: 405.027800 vs 405.027800
+=== SAMPLE POINTS ===
+    [50] Pos: (6.526467, 11.080580, -97.626080) vs (6.526467, 11.080580, -97.626080)
+    [50] Vel: 12.419830 vs 12.419830, diff=0
+    [50] Energy: 195.438700 vs 195.438700, diff=0
+    [50] HeartArc: 408.302000 vs 408.302000
+    [100] Pos: (8.588569, 6.513905, -94.236560) vs (8.588569, 6.513905, -94.236560)
+    [100] Vel: 15.847290 vs 15.847290, diff=0
+    [100] Energy: 195.411400 vs 195.411400, diff=0
+    [100] HeartArc: 414.479600 vs 414.479600
+    [200] Pos: (7.539061, -5.177078, -103.234900) vs (7.539061, -5.177078, -103.234900)
+    [200] Vel: 22.310570 vs 22.310570, diff=0
+    [200] Energy: 195.248100 vs 195.248100, diff=0
+    [200] HeartArc: 432.215000 vs 432.215000
+Checking GeometricSection nodeId=4225563327: 166 points (gold expects 166, gold duration=18.5 Distance, cumulative offset=1827, afterBridge=False)
+=== DRIFT ANALYSIS (offset=1827) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (2.333314, 9.408032, -92.224430) vs (2.333314, 9.408032, -92.224430)
+    [0] Vel: 10.000000 vs 10.000000, diff=0
+    [0] Energy: 134.606800 vs 134.606800, diff=0
+    [0] HeartArc: 387.464500 vs 387.464500
+    [1] Pos: (2.286842, 9.423122, -92.309650) vs (2.286842, 9.423122, -92.309650)
+    [1] Vel: 9.940254 vs 9.940254, diff=0
+    [1] Energy: 134.182300 vs 134.182300, diff=0
+    [1] HeartArc: 387.562800 vs 387.562800
+    [2] Pos: (2.240078, 9.438119, -92.394800) vs (2.240078, 9.438119, -92.394800)
+    [2] Vel: 9.941015 vs 9.941015, diff=0
+    [2] Energy: 134.242100 vs 134.242100, diff=0
+    [2] HeartArc: 387.661100 vs 387.661100
+    [3] Pos: (2.193018, 9.453020, -92.479880) vs (2.193018, 9.453020, -92.479880)
+    [3] Vel: 9.942294 vs 9.942294, diff=0
+    [3] Energy: 134.308000 vs 134.308000, diff=0
+    [3] HeartArc: 387.759400 vs 387.759400
+    [4] Pos: (2.145657, 9.467826, -92.564920) vs (2.145657, 9.467826, -92.564920)
+    [4] Vel: 9.944080 vs 9.944080, diff=0
+    [4] Energy: 134.379900 vs 134.379900, diff=0
+    [4] HeartArc: 387.857900 vs 387.857900
+    [5] Pos: (2.097994, 9.482538, -92.649910) vs (2.097994, 9.482538, -92.649910)
+    [5] Vel: 9.946376 vs 9.946376, diff=0
+    [5] Energy: 134.457900 vs 134.457900, diff=0
+    [5] HeartArc: 387.956400 vs 387.956400
+    [6] Pos: (2.050027, 9.497158, -92.734860) vs (2.050027, 9.497158, -92.734860)
+    [6] Vel: 9.949178 vs 9.949178, diff=0
+    [6] Energy: 134.541900 vs 134.541900, diff=0
+    [6] HeartArc: 388.055100 vs 388.055100
+    [7] Pos: (2.001754, 9.511686, -92.819800) vs (2.001754, 9.511686, -92.819800)
+    [7] Vel: 9.952480 vs 9.952480, diff=0
+    [7] Energy: 134.632000 vs 134.632000, diff=0
+    [7] HeartArc: 388.153900 vs 388.153900
+    [8] Pos: (1.953175, 9.526125, -92.904710) vs (1.953175, 9.526125, -92.904710)
+    [8] Vel: 9.956285 vs 9.956285, diff=0
+    [8] Energy: 134.728100 vs 134.728100, diff=0
+    [8] HeartArc: 388.252700 vs 388.252700
+    [9] Pos: (1.904292, 9.540473, -92.989590) vs (1.904292, 9.540473, -92.989590)
+    [9] Vel: 9.960582 vs 9.960582, diff=0
+    [9] Energy: 134.830300 vs 134.830300, diff=0
+    [9] HeartArc: 388.351700 vs 388.351700
+    [10] Pos: (1.855106, 9.554733, -93.074480) vs (1.855106, 9.554733, -93.074480)
+    [10] Vel: 9.965377 vs 9.965377, diff=0
+    [10] Energy: 134.938600 vs 134.938600, diff=0
+    [10] HeartArc: 388.450900 vs 388.450900
+    [11] Pos: (1.805619, 9.568906, -93.159360) vs (1.805619, 9.568906, -93.159360)
+    [11] Vel: 9.970660 vs 9.970660, diff=0
+    [11] Energy: 135.052900 vs 135.052900, diff=0
+    [11] HeartArc: 388.550200 vs 388.550200
+    [12] Pos: (1.755834, 9.582993, -93.244260) vs (1.755834, 9.582993, -93.244260)
+    [12] Vel: 9.976435 vs 9.976435, diff=0
+    [12] Energy: 135.173300 vs 135.173300, diff=0
+    [12] HeartArc: 388.649600 vs 388.649600
+    [13] Pos: (1.705757, 9.596995, -93.329170) vs (1.705757, 9.596995, -93.329170)
+    [13] Vel: 9.982692 vs 9.982692, diff=0
+    [13] Energy: 135.299900 vs 135.299900, diff=0
+    [13] HeartArc: 388.749200 vs 388.749200
+    [14] Pos: (1.655392, 9.610915, -93.414110) vs (1.655392, 9.610915, -93.414110)
+    [14] Vel: 9.989433 vs 9.989433, diff=0
+    [14] Energy: 135.432600 vs 135.432600, diff=0
+    [14] HeartArc: 388.848900 vs 388.848900
+    [15] Pos: (1.604746, 9.624753, -93.499080) vs (1.604746, 9.624753, -93.499080)
+    [15] Vel: 9.996649 vs 9.996649, diff=0
+    [15] Energy: 135.571400 vs 135.571400, diff=0
+    [15] HeartArc: 388.948800 vs 388.948800
+    [16] Pos: (1.553826, 9.638511, -93.584080) vs (1.553826, 9.638511, -93.584080)
+    [16] Vel: 10.004340 vs 10.004340, diff=0
+    [16] Energy: 135.716300 vs 135.716300, diff=0
+    [16] HeartArc: 389.048800 vs 389.048800
+    [17] Pos: (1.502640, 9.652190, -93.669140) vs (1.502640, 9.652190, -93.669140)
+    [17] Vel: 10.012510 vs 10.012510, diff=0
+    [17] Energy: 135.867400 vs 135.867400, diff=0
+    [17] HeartArc: 389.149000 vs 389.149000
+    [18] Pos: (1.451197, 9.665792, -93.754250) vs (1.451197, 9.665792, -93.754250)
+    [18] Vel: 10.021150 vs 10.021150, diff=0
+    [18] Energy: 136.024800 vs 136.024800, diff=0
+    [18] HeartArc: 389.249400 vs 389.249400
+    [19] Pos: (1.399508, 9.679319, -93.839420) vs (1.399508, 9.679319, -93.839420)
+    [19] Vel: 10.030240 vs 10.030240, diff=0
+    [19] Energy: 136.188200 vs 136.188200, diff=0
+    [19] HeartArc: 389.350000 vs 389.350000
+=== SAMPLE POINTS ===
+    [50] Pos: (-0.222565, 10.074020, -96.557890) vs (-0.222565, 10.074020, -96.557890)
+    [50] Vel: 10.514620 vs 10.514620, diff=0
+    [50] Energy: 144.396000 vs 144.396000, diff=0
+    [50] HeartArc: 392.540700 vs 392.540700
+    [100] Pos: (-0.966480, 10.815600, -101.172300) vs (-0.966480, 10.815600, -101.172300)
+    [100] Vel: 11.566080 vs 11.566080, diff=0
+    [100] Energy: 168.616200 vs 168.616200, diff=0
+    [100] HeartArc: 397.424500 vs 397.424500
+Skipping Bridge nodeId=525679038: legacy .kex format doesn't store target anchor data
+Skipping Bridge nodeId=978933242: legacy .kex format doesn't store target anchor data
+Checking CopyPathSection nodeId=1143449546: 337 points (gold expects 337, gold duration=0 , cumulative offset=2524, afterBridge=True)
+CopyPathSection 1143449546: endpoints match (actual=337 pts, gold=337 pts)
+Checking CopyPathSection nodeId=506024694: 507 points (gold expects 507, gold duration=0 , cumulative offset=2861, afterBridge=True)
+CopyPathSection 506024694: endpoints match (actual=507 pts, gold=507 pts)
+Checking CopyPathSection nodeId=958648347: 399 points (gold expects 399, gold duration=0 , cumulative offset=3368, afterBridge=True)
+CopyPathSection 958648347: endpoints match (actual=399 pts, gold=399 pts)
+Checking CopyPathSection nodeId=1527494142: 225 points (gold expects 225, gold duration=0 , cumulative offset=3767, afterBridge=True)
+CopyPathSection 1527494142: endpoints match (actual=225 pts, gold=225 pts)
+Verified 12 sections (total 3992 cumulative points)
+]]></output>
+          </test-case>
+          <test-case id="1186" name="Shuttle_LoadAndEvaluate_MatchesGoldData" fullname="Tests.CoasterGoldTests.Shuttle_LoadAndEvaluate_MatchesGoldData" methodname="Shuttle_LoadAndEvaluate_MatchesGoldData" classname="Tests.CoasterGoldTests" runstate="Runnable" seed="965459574" result="Passed" start-time="2026-01-09 20:20:09Z" end-time="2026-01-09 20:20:10Z" duration="0.246252" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[=== COASTER DIAGNOSTICS ===
+Graph: 16 nodes, 19 edges
+=== ALL NODES IN GRAPH ===
+=== SCALARS DUMP (24 entries) ===
+  Scalar[1537] = 0.0000
+  Scalar[1538] = 0.0000
+  Scalar[1539] = 0.0000
+  Scalar[1540] = 0.1000
+  Scalar[1541] = 1.1000
+  Scalar[1542] = 0.0210
+  Scalar[1543] = 0.0000
+  Scalar[866976309497] = -1.0000
+  Scalar[553398309890] = 0.0000
+  Scalar[553398309891] = -1.0000
+  Scalar[866976309251] = -1.0000
+  Scalar[866976309250] = 0.0000
+  Scalar[760] = 50.0000
+  Scalar[1272] = 2.0000
+  Scalar[1273] = -1.0000
+  Scalar[1092524439554] = 0.0000
+  Scalar[1092524439555] = -1.0000
+  Scalar[504] = 2.5000
+  Scalar[1016] = 1.0000
+  Scalar[1528] = 6.6000
+  Scalar[2041] = -1.0000
+  Scalar[1017] = -1.0000
+  Scalar[1090047430915] = -1.0000
+  Scalar[1090047430914] = 0.0000
+  [0] id=5 type=Force dur=6.6 no-vec no-vel
+  [1] id=4 type=Geometric dur=2 no-vec no-vel
+  [2] id=2 type=Geometric dur=50.00001 no-vec no-vel
+  [3] id=3 type=Geometric dur=1 no-vec no-vel
+  [4] id=1 type=Geometric dur=2.5 no-vec no-vel
+  [5] id=6 type=Anchor no-dur no-vec vel-port=2211444262-no-scalar
+  [6] id=7 type=Reverse no-dur no-vec no-vel
+  [7] id=8 type=Reverse no-dur no-vec no-vel
+  [8] id=3386626208 type=CopyPath no-dur no-vec no-vel
+  [9] id=4257997777 type=CopyPath no-dur no-vec no-vel
+  [10] id=4267673592 type=CopyPath no-dur no-vec no-vel
+  [11] id=2161712148 type=CopyPath no-dur no-vec no-vel
+  [12] id=13 type=ReversePath no-dur no-vec no-vel
+  [13] id=14 type=ReversePath no-dur no-vec no-vel
+  [14] id=16 type=ReversePath no-dur no-vec no-vel
+  [15] id=15 type=ReversePath no-dur no-vec no-vel
+=== EDGES (19) ===
+  Edge: node 5 (port=3397609991) -> node 16 (port=499895499)
+  Edge: node 5 (port=3551060890) -> node 2 (port=1752105906)
+  Edge: node 16 (port=1027114524) -> node 4257997777 (port=3832904716)
+  Edge: node 1 (port=2545387420) -> node 13 (port=1132287077)
+  Edge: node 15 (port=363071863) -> node 4267673592 (port=4168242533)
+  Edge: node 8 (port=1984287434) -> node 4267673592 (port=2738126404)
+  Edge: node 1 (port=3698306244) -> node 5 (port=3807449982)
+  Edge: node 4257997777 (port=3919281599) -> node 2161712148 (port=3286014599)
+  Edge: node 13 (port=1858037438) -> node 2161712148 (port=2619590779)
+  Edge: node 1 (port=2545387420) -> node 14 (port=2504405529)
+  Edge: node 4267673592 (port=2837056071) -> node 4257997777 (port=2392787693)
+  Edge: node 3386626208 (port=3273838424) -> node 3 (port=3470377393)
+  Edge: node 14 (port=3765982659) -> node 3386626208 (port=4145549934)
+  Edge: node 7 (port=3444455266) -> node 3386626208 (port=3073046030)
+  Edge: node 2 (port=1592716920) -> node 15 (port=1440202488)
+  Edge: node 2 (port=1769637745) -> node 8 (port=1176360213)
+  Edge: node 2 (port=1769637745) -> node 4 (port=740216124)
+  Edge: node 6 (port=2737928590) -> node 1 (port=2335877407)
+  Edge: node 1 (port=3698306244) -> node 7 (port=3127128704)
+=== GOLD FIRST SECTION INPUT ANCHOR ===
+  vel=30.0000 frictionOrig=44.6496 dir=(0.000,0.000,-1.000)
+Checking ForceSection nodeId=5: 660 points (gold expects 660, gold duration=6.6 Time, cumulative offset=0, afterBridge=False)
+=== DRIFT ANALYSIS (offset=0) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (0.000000, 3.000000, -44.949640) vs (0.000000, 3.000000, -44.949640)
     [0] Vel: 30.000000 vs 30.000000, diff=0
     [0] Energy: 469.711400 vs 469.711400, diff=0
-    [0] HeartArc: 44.949460 vs 44.949460
-    [1] Pos: (0.000000, 3.000000, -45.249460) vs (0.000000, 3.000000, -45.249460)
+    [0] HeartArc: 44.949640 vs 44.949640
+    [1] Pos: (0.000000, 3.000000, -45.249640) vs (0.000000, 3.000000, -45.249640)
     [1] Vel: 29.995700 vs 29.995700, diff=0
     [1] Energy: 469.706000 vs 469.706000, diff=0
-    [1] HeartArc: 45.249460 vs 45.249460
-    [2] Pos: (0.000000, 3.000001, -45.549410) vs (0.000000, 3.000001, -45.549410)
+    [1] HeartArc: 45.249640 vs 45.249640
+    [2] Pos: (0.000000, 3.000001, -45.549590) vs (0.000000, 3.000001, -45.549590)
     [2] Vel: 29.993460 vs 29.993460, diff=0
     [2] Energy: 469.700600 vs 469.700600, diff=0
-    [2] HeartArc: 45.549410 vs 45.549410
-    [3] Pos: (0.000000, 3.000004, -45.849330) vs (0.000000, 3.000004, -45.849330)
+    [2] HeartArc: 45.549590 vs 45.549590
+    [3] Pos: (0.000000, 3.000004, -45.849520) vs (0.000000, 3.000004, -45.849520)
     [3] Vel: 29.991220 vs 29.991220, diff=0
     [3] Energy: 469.695200 vs 469.695200, diff=0
-    [3] HeartArc: 45.849330 vs 45.849330
-    [4] Pos: (0.000000, 3.000011, -46.149230) vs (0.000000, 3.000011, -46.149230)
+    [3] HeartArc: 45.849520 vs 45.849520
+    [4] Pos: (0.000000, 3.000011, -46.149410) vs (0.000000, 3.000011, -46.149410)
     [4] Vel: 29.988980 vs 29.988980, diff=0
     [4] Energy: 469.689800 vs 469.689800, diff=0
-    [4] HeartArc: 46.149230 vs 46.149230
-    [5] Pos: (0.000000, 3.000025, -46.449090) vs (0.000000, 3.000025, -46.449090)
+    [4] HeartArc: 46.149410 vs 46.149410
+    [5] Pos: (0.000000, 3.000025, -46.449270) vs (0.000000, 3.000025, -46.449270)
     [5] Vel: 29.986730 vs 29.986730, diff=0
     [5] Energy: 469.684400 vs 469.684400, diff=0
-    [5] HeartArc: 46.449090 vs 46.449090
-    [6] Pos: (0.000000, 3.000048, -46.748910) vs (0.000000, 3.000048, -46.748910)
+    [5] HeartArc: 46.449270 vs 46.449270
+    [6] Pos: (0.000000, 3.000048, -46.749090) vs (0.000000, 3.000048, -46.749090)
     [6] Vel: 29.984490 vs 29.984490, diff=0
     [6] Energy: 469.679000 vs 469.679000, diff=0
-    [6] HeartArc: 46.748910 vs 46.748910
-    [7] Pos: (0.000000, 3.000085, -47.048700) vs (0.000000, 3.000085, -47.048700)
+    [6] HeartArc: 46.749090 vs 46.749090
+    [7] Pos: (0.000000, 3.000085, -47.048880) vs (0.000000, 3.000085, -47.048880)
     [7] Vel: 29.982230 vs 29.982230, diff=0
     [7] Energy: 469.673600 vs 469.673600, diff=0
-    [7] HeartArc: 47.048700 vs 47.048700
-    [8] Pos: (0.000000, 3.000140, -47.348450) vs (0.000000, 3.000140, -47.348450)
+    [7] HeartArc: 47.048880 vs 47.048880
+    [8] Pos: (0.000000, 3.000140, -47.348630) vs (0.000000, 3.000140, -47.348630)
     [8] Vel: 29.979980 vs 29.979980, diff=0
     [8] Energy: 469.668200 vs 469.668200, diff=0
-    [8] HeartArc: 47.348450 vs 47.348450
-    [9] Pos: (0.000000, 3.000218, -47.648160) vs (0.000000, 3.000218, -47.648160)
+    [8] HeartArc: 47.348630 vs 47.348630
+    [9] Pos: (0.000000, 3.000218, -47.648340) vs (0.000000, 3.000218, -47.648340)
     [9] Vel: 29.977710 vs 29.977710, diff=0
     [9] Energy: 469.662800 vs 469.662800, diff=0
-    [9] HeartArc: 47.648160 vs 47.648160
-    [10] Pos: (0.000000, 3.000324, -47.947820) vs (0.000000, 3.000324, -47.947820)
+    [9] HeartArc: 47.648340 vs 47.648340
+    [10] Pos: (0.000000, 3.000324, -47.948000) vs (0.000000, 3.000324, -47.948000)
     [10] Vel: 29.975440 vs 29.975440, diff=0
     [10] Energy: 469.657300 vs 469.657300, diff=0
-    [10] HeartArc: 47.947820 vs 47.947820
-    [11] Pos: (0.000000, 3.000464, -48.247440) vs (0.000000, 3.000464, -48.247440)
+    [10] HeartArc: 47.948000 vs 47.948000
+    [11] Pos: (0.000000, 3.000464, -48.247620) vs (0.000000, 3.000464, -48.247620)
     [11] Vel: 29.973150 vs 29.973150, diff=0
     [11] Energy: 469.651900 vs 469.651900, diff=0
-    [11] HeartArc: 48.247440 vs 48.247440
-    [12] Pos: (0.000000, 3.000645, -48.547000) vs (0.000000, 3.000645, -48.547000)
+    [11] HeartArc: 48.247620 vs 48.247620
+    [12] Pos: (0.000000, 3.000645, -48.547190) vs (0.000000, 3.000645, -48.547190)
     [12] Vel: 29.970860 vs 29.970860, diff=0
     [12] Energy: 469.646600 vs 469.646600, diff=0
-    [12] HeartArc: 48.547000 vs 48.547000
-    [13] Pos: (0.000000, 3.000875, -48.846520) vs (0.000000, 3.000875, -48.846520)
+    [12] HeartArc: 48.547190 vs 48.547190
+    [13] Pos: (0.000000, 3.000875, -48.846710) vs (0.000000, 3.000875, -48.846710)
     [13] Vel: 29.968540 vs 29.968540, diff=0
     [13] Energy: 469.641200 vs 469.641200, diff=0
-    [13] HeartArc: 48.846520 vs 48.846520
-    [14] Pos: (0.000000, 3.001161, -49.145990) vs (0.000000, 3.001161, -49.145990)
+    [13] HeartArc: 48.846710 vs 48.846710
+    [14] Pos: (0.000000, 3.001161, -49.146170) vs (0.000000, 3.001161, -49.146170)
     [14] Vel: 29.966210 vs 29.966210, diff=0
     [14] Energy: 469.635800 vs 469.635800, diff=0
-    [14] HeartArc: 49.145990 vs 49.145990
-    [15] Pos: (0.000001, 3.001511, -49.445400) vs (0.000001, 3.001511, -49.445400)
+    [14] HeartArc: 49.146170 vs 49.146170
+    [15] Pos: (0.000001, 3.001511, -49.445580) vs (0.000001, 3.001511, -49.445580)
     [15] Vel: 29.963850 vs 29.963850, diff=0
     [15] Energy: 469.630500 vs 469.630500, diff=0
-    [15] HeartArc: 49.445400 vs 49.445400
-    [16] Pos: (0.000001, 3.001934, -49.744750) vs (0.000001, 3.001934, -49.744750)
+    [15] HeartArc: 49.445580 vs 49.445580
+    [16] Pos: (0.000001, 3.001934, -49.744930) vs (0.000001, 3.001934, -49.744930)
     [16] Vel: 29.961480 vs 29.961480, diff=0
     [16] Energy: 469.625100 vs 469.625100, diff=0
-    [16] HeartArc: 49.744750 vs 49.744750
-    [17] Pos: (0.000001, 3.002440, -50.044040) vs (0.000001, 3.002440, -50.044040)
+    [16] HeartArc: 49.744930 vs 49.744930
+    [17] Pos: (0.000001, 3.002440, -50.044230) vs (0.000001, 3.002440, -50.044230)
     [17] Vel: 29.959070 vs 29.959070, diff=0
     [17] Energy: 469.619700 vs 469.619700, diff=0
-    [17] HeartArc: 50.044040 vs 50.044040
-    [18] Pos: (0.000002, 3.003038, -50.343280) vs (0.000002, 3.003038, -50.343280)
+    [17] HeartArc: 50.044230 vs 50.044230
+    [18] Pos: (0.000002, 3.003038, -50.343460) vs (0.000002, 3.003038, -50.343460)
     [18] Vel: 29.956640 vs 29.956640, diff=0
     [18] Energy: 469.614300 vs 469.614300, diff=0
-    [18] HeartArc: 50.343280 vs 50.343280
-    [19] Pos: (0.000002, 3.003739, -50.642440) vs (0.000002, 3.003739, -50.642440)
+    [18] HeartArc: 50.343460 vs 50.343460
+    [19] Pos: (0.000002, 3.003739, -50.642630) vs (0.000002, 3.003739, -50.642630)
     [19] Vel: 29.954170 vs 29.954170, diff=0
     [19] Energy: 469.609000 vs 469.609000, diff=0
-    [19] HeartArc: 50.642440 vs 50.642440
+    [19] HeartArc: 50.642630 vs 50.642630
 === SAMPLE POINTS ===
-    [50] Pos: (0.000293, 3.152895, -59.871140) vs (0.000293, 3.152895, -59.871140)
+    [50] Pos: (0.000293, 3.152895, -59.871320) vs (0.000293, 3.152895, -59.871320)
     [50] Vel: 29.835580 vs 29.835580, diff=0
     [50] Energy: 469.443100 vs 469.443100, diff=0
-    [50] HeartArc: 59.872860 vs 59.872860
-    [100] Pos: (0.010764, 5.002076, -74.268270) vs (0.010764, 5.002074, -74.268270)
+    [50] HeartArc: 59.873050 vs 59.873050
+    [100] Pos: (0.010764, 5.002076, -74.268460) vs (0.010764, 5.002076, -74.268460)
     [100] Vel: 29.097740 vs 29.097740, diff=0
     [100] Energy: 469.184800 vs 469.184800, diff=0
-    [100] HeartArc: 74.416490 vs 74.416490
-    [200] Pos: (0.271643, 20.413510, -93.214740) vs (0.271643, 20.413520, -93.214750)
+    [100] HeartArc: 74.416670 vs 74.416670
+    [200] Pos: (0.271643, 20.413510, -93.214930) vs (0.271643, 20.413510, -93.214930)
     [200] Vel: 22.801460 vs 22.801460, diff=0
     [200] Energy: 468.803400 vs 468.803400, diff=0
-    [200] HeartArc: 99.895610 vs 99.895610
-    [500] Pos: (3.130521, 11.337710, -83.177490) vs (3.130605, 11.337750, -83.177790)
-    [500] Vel: 26.130550 vs 26.130540, diff=1.33514E-05
+    [200] HeartArc: 99.895800 vs 99.895800
+    [500] Pos: (3.130521, 11.337710, -83.177670) vs (3.130521, 11.337710, -83.177670)
+    [500] Vel: 26.130550 vs 26.130550, diff=0
     [500] Energy: 468.389300 vs 468.389300, diff=0
-    [500] HeartArc: 150.149600 vs 150.149500
+    [500] HeartArc: 150.149800 vs 150.149800
+Checking GeometricSection nodeId=4: 200 points (gold expects 200, gold duration=2 Time, cumulative offset=660, afterBridge=False)
+=== DRIFT ANALYSIS (offset=660) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (3.395511, 43.990540, -145.269500) vs (3.395511, 43.990540, -145.269500)
+    [0] Vel: 0.091109 vs 0.091109, diff=0
+    [0] Energy: 467.416200 vs 467.416200, diff=0
+    [0] HeartArc: 233.545000 vs 233.545000
+    [1] Pos: (3.395451, 44.078840, -145.316400) vs (3.395451, 44.078840, -145.316400)
+    [1] Vel: 10.000000 vs 10.000000, diff=0
+    [1] Energy: 476.844100 vs 476.844100, diff=0
+    [1] HeartArc: 233.645000 vs 233.645000
+    [2] Pos: (3.395391, 44.167140, -145.363400) vs (3.395391, 44.167140, -145.363400)
+    [2] Vel: 10.000000 vs 10.000000, diff=0
+    [2] Energy: 477.710000 vs 477.710000, diff=0
+    [2] HeartArc: 233.745000 vs 233.745000
+    [3] Pos: (3.395332, 44.255450, -145.410300) vs (3.395332, 44.255450, -145.410300)
+    [3] Vel: 10.000000 vs 10.000000, diff=0
+    [3] Energy: 478.576000 vs 478.576000, diff=0
+    [3] HeartArc: 233.845000 vs 233.845000
+    [4] Pos: (3.395272, 44.343750, -145.457200) vs (3.395272, 44.343750, -145.457200)
+    [4] Vel: 10.000000 vs 10.000000, diff=0
+    [4] Energy: 479.441900 vs 479.441900, diff=0
+    [4] HeartArc: 233.945100 vs 233.945100
+    [5] Pos: (3.395213, 44.432050, -145.504200) vs (3.395213, 44.432050, -145.504200)
+    [5] Vel: 10.000000 vs 10.000000, diff=0
+    [5] Energy: 480.307900 vs 480.307900, diff=0
+    [5] HeartArc: 234.045100 vs 234.045100
+    [6] Pos: (3.395153, 44.520360, -145.551100) vs (3.395153, 44.520360, -145.551100)
+    [6] Vel: 10.000000 vs 10.000000, diff=0
+    [6] Energy: 481.173800 vs 481.173800, diff=0
+    [6] HeartArc: 234.145100 vs 234.145100
+    [7] Pos: (3.395093, 44.608660, -145.598100) vs (3.395093, 44.608660, -145.598100)
+    [7] Vel: 10.000000 vs 10.000000, diff=0
+    [7] Energy: 482.039800 vs 482.039800, diff=0
+    [7] HeartArc: 234.245100 vs 234.245100
+    [8] Pos: (3.395034, 44.696960, -145.645000) vs (3.395034, 44.696960, -145.645000)
+    [8] Vel: 10.000000 vs 10.000000, diff=0
+    [8] Energy: 482.905700 vs 482.905700, diff=0
+    [8] HeartArc: 234.345100 vs 234.345100
+    [9] Pos: (3.394974, 44.785260, -145.691900) vs (3.394974, 44.785260, -145.691900)
+    [9] Vel: 10.000000 vs 10.000000, diff=0
+    [9] Energy: 483.771700 vs 483.771700, diff=0
+    [9] HeartArc: 234.445100 vs 234.445100
+    [10] Pos: (3.394915, 44.873570, -145.738900) vs (3.394915, 44.873570, -145.738900)
+    [10] Vel: 10.000000 vs 10.000000, diff=0
+    [10] Energy: 484.637600 vs 484.637600, diff=0
+    [10] HeartArc: 234.545100 vs 234.545100
+    [11] Pos: (3.394855, 44.961870, -145.785800) vs (3.394855, 44.961870, -145.785800)
+    [11] Vel: 10.000000 vs 10.000000, diff=0
+    [11] Energy: 485.503600 vs 485.503600, diff=0
+    [11] HeartArc: 234.645100 vs 234.645100
+    [12] Pos: (3.394795, 45.050170, -145.832700) vs (3.394795, 45.050170, -145.832700)
+    [12] Vel: 10.000000 vs 10.000000, diff=0
+    [12] Energy: 486.369500 vs 486.369500, diff=0
+    [12] HeartArc: 234.745100 vs 234.745100
+    [13] Pos: (3.394736, 45.138470, -145.879700) vs (3.394736, 45.138470, -145.879700)
+    [13] Vel: 10.000000 vs 10.000000, diff=0
+    [13] Energy: 487.235500 vs 487.235500, diff=0
+    [13] HeartArc: 234.845100 vs 234.845100
+    [14] Pos: (3.394676, 45.226780, -145.926600) vs (3.394676, 45.226780, -145.926600)
+    [14] Vel: 10.000000 vs 10.000000, diff=0
+    [14] Energy: 488.101400 vs 488.101400, diff=0
+    [14] HeartArc: 234.945100 vs 234.945100
+    [15] Pos: (3.394617, 45.315080, -145.973500) vs (3.394617, 45.315080, -145.973500)
+    [15] Vel: 10.000000 vs 10.000000, diff=0
+    [15] Energy: 488.967400 vs 488.967400, diff=0
+    [15] HeartArc: 235.045100 vs 235.045100
+    [16] Pos: (3.394557, 45.403380, -146.020500) vs (3.394557, 45.403380, -146.020500)
+    [16] Vel: 10.000000 vs 10.000000, diff=0
+    [16] Energy: 489.833300 vs 489.833300, diff=0
+    [16] HeartArc: 235.145100 vs 235.145100
+    [17] Pos: (3.394497, 45.491680, -146.067400) vs (3.394497, 45.491680, -146.067400)
+    [17] Vel: 10.000000 vs 10.000000, diff=0
+    [17] Energy: 490.699300 vs 490.699300, diff=0
+    [17] HeartArc: 235.245100 vs 235.245100
+    [18] Pos: (3.394438, 45.579990, -146.114300) vs (3.394438, 45.579990, -146.114300)
+    [18] Vel: 10.000000 vs 10.000000, diff=0
+    [18] Energy: 491.565200 vs 491.565200, diff=0
+    [18] HeartArc: 235.345100 vs 235.345100
+    [19] Pos: (3.394378, 45.668290, -146.161300) vs (3.394378, 45.668290, -146.161300)
+    [19] Vel: 10.000000 vs 10.000000, diff=0
+    [19] Energy: 492.431200 vs 492.431200, diff=0
+    [19] HeartArc: 235.445100 vs 235.445100
+=== SAMPLE POINTS ===
+    [50] Pos: (3.392530, 48.405670, -147.616300) vs (3.392530, 48.405670, -147.616300)
+    [50] Vel: 10.000000 vs 10.000000, diff=0
+    [50] Energy: 519.275800 vs 519.275800, diff=0
+    [50] HeartArc: 238.545300 vs 238.545300
+    [100] Pos: (3.389550, 52.820800, -149.963100) vs (3.389550, 52.820800, -149.963100)
+    [100] Vel: 10.000000 vs 10.000000, diff=0
+    [100] Energy: 562.573400 vs 562.573400, diff=0
+    [100] HeartArc: 243.545600 vs 243.545600
+Checking GeometricSection nodeId=2: 301 points (gold expects 301, gold duration=50.00001 Distance, cumulative offset=860, afterBridge=False)
+=== DRIFT ANALYSIS (offset=860) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (3.423914, 10.401430, -122.877500) vs (3.423914, 10.401430, -122.877500)
+    [0] Vel: 26.136520 vs 26.136520, diff=0
+    [0] Energy: 467.707400 vs 467.707400, diff=0
+    [0] HeartArc: 192.804300 vs 192.804300
+    [1] Pos: (3.423645, 10.553230, -123.090300) vs (3.423645, 10.553230, -123.090300)
+    [1] Vel: 26.075410 vs 26.075410, diff=0
+    [1] Energy: 467.703800 vs 467.703800, diff=0
+    [1] HeartArc: 193.065700 vs 193.065700
+    [2] Pos: (3.423377, 10.706460, -123.301200) vs (3.423377, 10.706460, -123.301200)
+    [2] Vel: 26.013600 vs 26.013600, diff=0
+    [2] Energy: 467.700300 vs 467.700300, diff=0
+    [2] HeartArc: 193.326400 vs 193.326400
+    [3] Pos: (3.423111, 10.861080, -123.510400) vs (3.423111, 10.861080, -123.510400)
+    [3] Vel: 25.951110 vs 25.951110, diff=0
+    [3] Energy: 467.696700 vs 467.696700, diff=0
+    [3] HeartArc: 193.586600 vs 193.586600
+    [4] Pos: (3.422848, 11.017070, -123.717800) vs (3.422848, 11.017070, -123.717800)
+    [4] Vel: 25.887940 vs 25.887940, diff=0
+    [4] Energy: 467.693200 vs 467.693200, diff=0
+    [4] HeartArc: 193.846100 vs 193.846100
+    [5] Pos: (3.422588, 11.174390, -123.923400) vs (3.422588, 11.174390, -123.923400)
+    [5] Vel: 25.824100 vs 25.824100, diff=0
+    [5] Energy: 467.689800 vs 467.689800, diff=0
+    [5] HeartArc: 194.105000 vs 194.105000
+    [6] Pos: (3.422329, 11.333030, -124.127200) vs (3.422329, 11.333030, -124.127200)
+    [6] Vel: 25.759610 vs 25.759610, diff=0
+    [6] Energy: 467.686300 vs 467.686300, diff=0
+    [6] HeartArc: 194.363200 vs 194.363200
+    [7] Pos: (3.422073, 11.492930, -124.329100) vs (3.422073, 11.492930, -124.329100)
+    [7] Vel: 25.694460 vs 25.694460, diff=0
+    [7] Energy: 467.682900 vs 467.682900, diff=0
+    [7] HeartArc: 194.620800 vs 194.620800
+    [8] Pos: (3.421819, 11.654080, -124.529300) vs (3.421819, 11.654080, -124.529300)
+    [8] Vel: 25.628680 vs 25.628680, diff=0
+    [8] Energy: 467.679500 vs 467.679500, diff=0
+    [8] HeartArc: 194.877700 vs 194.877700
+    [9] Pos: (3.421568, 11.816440, -124.727600) vs (3.421568, 11.816440, -124.727600)
+    [9] Vel: 25.562260 vs 25.562260, diff=0
+    [9] Energy: 467.676100 vs 467.676100, diff=0
+    [9] HeartArc: 195.134000 vs 195.134000
+    [10] Pos: (3.421319, 11.979970, -124.924000) vs (3.421319, 11.979970, -124.924000)
+    [10] Vel: 25.495210 vs 25.495210, diff=0
+    [10] Energy: 467.672800 vs 467.672800, diff=0
+    [10] HeartArc: 195.389700 vs 195.389700
+    [11] Pos: (3.421072, 12.144640, -125.118700) vs (3.421072, 12.144640, -125.118700)
+    [11] Vel: 25.427550 vs 25.427550, diff=0
+    [11] Energy: 467.669500 vs 467.669500, diff=0
+    [11] HeartArc: 195.644600 vs 195.644600
+    [12] Pos: (3.420827, 12.310410, -125.311500) vs (3.420827, 12.310410, -125.311500)
+    [12] Vel: 25.359290 vs 25.359290, diff=0
+    [12] Energy: 467.666200 vs 467.666200, diff=0
+    [12] HeartArc: 195.898900 vs 195.898900
+    [13] Pos: (3.420585, 12.477260, -125.502400) vs (3.420585, 12.477260, -125.502400)
+    [13] Vel: 25.290430 vs 25.290430, diff=0
+    [13] Energy: 467.662900 vs 467.662900, diff=0
+    [13] HeartArc: 196.152500 vs 196.152500
+    [14] Pos: (3.420345, 12.645140, -125.691600) vs (3.420345, 12.645140, -125.691600)
+    [14] Vel: 25.220990 vs 25.220990, diff=0
+    [14] Energy: 467.659700 vs 467.659700, diff=0
+    [14] HeartArc: 196.405400 vs 196.405400
+    [15] Pos: (3.420107, 12.814030, -125.878900) vs (3.420107, 12.814030, -125.878900)
+    [15] Vel: 25.150970 vs 25.150970, diff=0
+    [15] Energy: 467.656500 vs 467.656500, diff=0
+    [15] HeartArc: 196.657600 vs 196.657600
+    [16] Pos: (3.419872, 12.983880, -126.064400) vs (3.419872, 12.983880, -126.064400)
+    [16] Vel: 25.080390 vs 25.080390, diff=0
+    [16] Energy: 467.653300 vs 467.653300, diff=0
+    [16] HeartArc: 196.909100 vs 196.909100
+    [17] Pos: (3.419639, 13.154660, -126.248100) vs (3.419639, 13.154660, -126.248100)
+    [17] Vel: 25.009250 vs 25.009250, diff=0
+    [17] Energy: 467.650200 vs 467.650200, diff=0
+    [17] HeartArc: 197.159900 vs 197.159900
+    [18] Pos: (3.419408, 13.326340, -126.429900) vs (3.419408, 13.326340, -126.429900)
+    [18] Vel: 24.937570 vs 24.937570, diff=0
+    [18] Energy: 467.647000 vs 467.647000, diff=0
+    [18] HeartArc: 197.410000 vs 197.410000
+    [19] Pos: (3.419180, 13.498880, -126.610000) vs (3.419180, 13.498880, -126.610000)
+    [19] Vel: 24.865360 vs 24.865360, diff=0
+    [19] Energy: 467.643900 vs 467.643900, diff=0
+    [19] HeartArc: 197.659400 vs 197.659400
+=== SAMPLE POINTS ===
+    [50] Pos: (3.413152, 19.092010, -131.362700) vs (3.413152, 19.092010, -131.362700)
+    [50] Vel: 22.418550 vs 22.418550, diff=0
+    [50] Energy: 467.561000 vs 467.561000, diff=0
+    [50] HeartArc: 205.009600 vs 205.009600
+    [100] Pos: (3.406475, 27.765090, -136.625500) vs (3.406475, 27.765090, -136.625500)
+    [100] Vel: 18.058890 vs 18.058890, diff=0
+    [100] Energy: 467.476400 vs 467.476400, diff=0
+    [100] HeartArc: 215.160600 vs 215.160600
+    [200] Pos: (3.398326, 39.813780, -143.050000) vs (3.398326, 39.813780, -143.050000)
+    [200] Vel: 9.158836 vs 9.158836, diff=0
+    [200] Energy: 467.420100 vs 467.420100, diff=0
+    [200] HeartArc: 228.815100 vs 228.815100
+Checking GeometricSection nodeId=3: 100 points (gold expects 100, gold duration=1 Time, cumulative offset=1161, afterBridge=False)
+=== DRIFT ANALYSIS (offset=1161) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (0.000000, 3.000000, 0.000000) vs (0.000000, 3.000000, 0.000000)
+    [0] Vel: 29.660740 vs 29.660740, diff=0
+    [0] Energy: 468.909700 vs 468.909700, diff=0
+    [0] HeartArc: 89.899260 vs 89.899260
+    [1] Pos: (0.000000, 3.000000, 0.100000) vs (0.000000, 3.000000, 0.100000)
+    [1] Vel: 10.000000 vs 10.000000, diff=0
+    [1] Energy: 69.711360 vs 69.711360, diff=0
+    [1] HeartArc: 89.999260 vs 89.999260
+    [2] Pos: (0.000000, 3.000000, 0.200000) vs (0.000000, 3.000000, 0.200000)
+    [2] Vel: 10.000000 vs 10.000000, diff=0
+    [2] Energy: 69.711360 vs 69.711360, diff=0
+    [2] HeartArc: 90.099260 vs 90.099260
+    [3] Pos: (0.000000, 3.000000, 0.300000) vs (0.000000, 3.000000, 0.300000)
+    [3] Vel: 10.000000 vs 10.000000, diff=0
+    [3] Energy: 69.711360 vs 69.711360, diff=0
+    [3] HeartArc: 90.199260 vs 90.199260
+    [4] Pos: (0.000000, 3.000000, 0.400000) vs (0.000000, 3.000000, 0.400000)
+    [4] Vel: 10.000000 vs 10.000000, diff=0
+    [4] Energy: 69.711360 vs 69.711360, diff=0
+    [4] HeartArc: 90.299260 vs 90.299260
+    [5] Pos: (0.000000, 3.000000, 0.500000) vs (0.000000, 3.000000, 0.500000)
+    [5] Vel: 10.000000 vs 10.000000, diff=0
+    [5] Energy: 69.711360 vs 69.711360, diff=0
+    [5] HeartArc: 90.399250 vs 90.399250
+    [6] Pos: (0.000000, 3.000000, 0.600000) vs (0.000000, 3.000000, 0.600000)
+    [6] Vel: 10.000000 vs 10.000000, diff=0
+    [6] Energy: 69.711360 vs 69.711360, diff=0
+    [6] HeartArc: 90.499250 vs 90.499250
+    [7] Pos: (0.000000, 3.000000, 0.700000) vs (0.000000, 3.000000, 0.700000)
+    [7] Vel: 10.000000 vs 10.000000, diff=0
+    [7] Energy: 69.711360 vs 69.711360, diff=0
+    [7] HeartArc: 90.599250 vs 90.599250
+    [8] Pos: (0.000000, 3.000000, 0.800000) vs (0.000000, 3.000000, 0.800000)
+    [8] Vel: 10.000000 vs 10.000000, diff=0
+    [8] Energy: 69.711360 vs 69.711360, diff=0
+    [8] HeartArc: 90.699250 vs 90.699250
+    [9] Pos: (0.000000, 3.000000, 0.900000) vs (0.000000, 3.000000, 0.900000)
+    [9] Vel: 10.000000 vs 10.000000, diff=0
+    [9] Energy: 69.711360 vs 69.711360, diff=0
+    [9] HeartArc: 90.799250 vs 90.799250
+    [10] Pos: (0.000000, 3.000000, 1.000000) vs (0.000000, 3.000000, 1.000000)
+    [10] Vel: 10.000000 vs 10.000000, diff=0
+    [10] Energy: 69.711360 vs 69.711360, diff=0
+    [10] HeartArc: 90.899250 vs 90.899250
+    [11] Pos: (0.000000, 3.000000, 1.100000) vs (0.000000, 3.000000, 1.100000)
+    [11] Vel: 10.000000 vs 10.000000, diff=0
+    [11] Energy: 69.711360 vs 69.711360, diff=0
+    [11] HeartArc: 90.999240 vs 90.999240
+    [12] Pos: (0.000000, 3.000000, 1.200000) vs (0.000000, 3.000000, 1.200000)
+    [12] Vel: 10.000000 vs 10.000000, diff=0
+    [12] Energy: 69.711360 vs 69.711360, diff=0
+    [12] HeartArc: 91.099240 vs 91.099240
+    [13] Pos: (0.000000, 3.000000, 1.300000) vs (0.000000, 3.000000, 1.300000)
+    [13] Vel: 10.000000 vs 10.000000, diff=0
+    [13] Energy: 69.711360 vs 69.711360, diff=0
+    [13] HeartArc: 91.199240 vs 91.199240
+    [14] Pos: (0.000000, 3.000000, 1.400000) vs (0.000000, 3.000000, 1.400000)
+    [14] Vel: 10.000000 vs 10.000000, diff=0
+    [14] Energy: 69.711360 vs 69.711360, diff=0
+    [14] HeartArc: 91.299240 vs 91.299240
+    [15] Pos: (0.000000, 3.000000, 1.500000) vs (0.000000, 3.000000, 1.500000)
+    [15] Vel: 10.000000 vs 10.000000, diff=0
+    [15] Energy: 69.711360 vs 69.711360, diff=0
+    [15] HeartArc: 91.399240 vs 91.399240
+    [16] Pos: (0.000000, 3.000000, 1.600000) vs (0.000000, 3.000000, 1.600000)
+    [16] Vel: 10.000000 vs 10.000000, diff=0
+    [16] Energy: 69.711360 vs 69.711360, diff=0
+    [16] HeartArc: 91.499240 vs 91.499240
+    [17] Pos: (0.000000, 3.000000, 1.699999) vs (0.000000, 3.000000, 1.699999)
+    [17] Vel: 10.000000 vs 10.000000, diff=0
+    [17] Energy: 69.711360 vs 69.711360, diff=0
+    [17] HeartArc: 91.599240 vs 91.599240
+    [18] Pos: (0.000000, 3.000000, 1.799999) vs (0.000000, 3.000000, 1.799999)
+    [18] Vel: 10.000000 vs 10.000000, diff=0
+    [18] Energy: 69.711360 vs 69.711360, diff=0
+    [18] HeartArc: 91.699230 vs 91.699230
+    [19] Pos: (0.000000, 3.000000, 1.899999) vs (0.000000, 3.000000, 1.899999)
+    [19] Vel: 10.000000 vs 10.000000, diff=0
+    [19] Energy: 69.711360 vs 69.711360, diff=0
+    [19] HeartArc: 91.799230 vs 91.799230
+=== SAMPLE POINTS ===
+    [50] Pos: (0.000000, 3.000000, 5.000001) vs (0.000000, 3.000000, 5.000001)
+    [50] Vel: 10.000000 vs 10.000000, diff=0
+    [50] Energy: 69.711360 vs 69.711360, diff=0
+    [50] HeartArc: 94.899190 vs 94.899190
+Checking GeometricSection nodeId=1: 250 points (gold expects 250, gold duration=2.5 Time, cumulative offset=1261, afterBridge=False)
+=== DRIFT ANALYSIS (offset=1261) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (0.000000, 3.000000, 0.000000) vs (0.000000, 3.000000, 0.000000)
+    [0] Vel: 0.100000 vs 0.100000, diff=0
+    [0] Energy: 19.716370 vs 19.716370, diff=0
+    [0] HeartArc: 0.000000 vs 0.000000
+    [1] Pos: (0.000000, 3.000000, -0.001019) vs (0.000000, 3.000000, -0.001019)
+    [1] Vel: 0.101921 vs 0.101921, diff=0
+    [1] Energy: 19.716560 vs 19.716560, diff=0
+    [1] HeartArc: 0.001019 vs 0.001019
+    [2] Pos: (0.000000, 3.000000, -0.002096) vs (0.000000, 3.000000, -0.002096)
+    [2] Vel: 0.107674 vs 0.107674, diff=0
+    [2] Energy: 19.717160 vs 19.717160, diff=0
+    [2] HeartArc: 0.002096 vs 0.002096
+    [3] Pos: (0.000000, 3.000000, -0.003268) vs (0.000000, 3.000000, -0.003268)
+    [3] Vel: 0.117248 vs 0.117248, diff=0
+    [3] Energy: 19.718240 vs 19.718240, diff=0
+    [3] HeartArc: 0.003268 vs 0.003268
+    [4] Pos: (0.000000, 3.000000, -0.004575) vs (0.000000, 3.000000, -0.004575)
+    [4] Vel: 0.130628 vs 0.130628, diff=0
+    [4] Energy: 19.719900 vs 19.719900, diff=0
+    [4] HeartArc: 0.004575 vs 0.004575
+    [5] Pos: (0.000000, 3.000000, -0.006053) vs (0.000000, 3.000000, -0.006053)
+    [5] Vel: 0.147805 vs 0.147805, diff=0
+    [5] Energy: 19.722290 vs 19.722290, diff=0
+    [5] HeartArc: 0.006053 vs 0.006053
+    [6] Pos: (0.000000, 3.000000, -0.007740) vs (0.000000, 3.000000, -0.007740)
+    [6] Vel: 0.168759 vs 0.168759, diff=0
+    [6] Energy: 19.725610 vs 19.725610, diff=0
+    [6] HeartArc: 0.007740 vs 0.007740
+    [7] Pos: (0.000000, 3.000000, -0.009675) vs (0.000000, 3.000000, -0.009675)
+    [7] Vel: 0.193479 vs 0.193479, diff=0
+    [7] Energy: 19.730080 vs 19.730080, diff=0
+    [7] HeartArc: 0.009675 vs 0.009675
+    [8] Pos: (0.000000, 3.000000, -0.011895) vs (0.000000, 3.000000, -0.011895)
+    [8] Vel: 0.221948 vs 0.221948, diff=0
+    [8] Energy: 19.736000 vs 19.736000, diff=0
+    [8] HeartArc: 0.011895 vs 0.011895
+    [9] Pos: (0.000000, 3.000000, -0.014436) vs (0.000000, 3.000000, -0.014436)
+    [9] Vel: 0.254151 vs 0.254151, diff=0
+    [9] Energy: 19.743660 vs 19.743660, diff=0
+    [9] HeartArc: 0.014436 vs 0.014436
+    [10] Pos: (0.000000, 3.000000, -0.017337) vs (0.000000, 3.000000, -0.017337)
+    [10] Vel: 0.290072 vs 0.290072, diff=0
+    [10] Energy: 19.753440 vs 19.753440, diff=0
+    [10] HeartArc: 0.017337 vs 0.017337
+    [11] Pos: (0.000000, 3.000000, -0.020634) vs (0.000000, 3.000000, -0.020634)
+    [11] Vel: 0.329695 vs 0.329695, diff=0
+    [11] Energy: 19.765720 vs 19.765720, diff=0
+    [11] HeartArc: 0.020634 vs 0.020634
+    [12] Pos: (0.000000, 3.000000, -0.024364) vs (0.000000, 3.000000, -0.024364)
+    [12] Vel: 0.373001 vs 0.373001, diff=0
+    [12] Energy: 19.780930 vs 19.780930, diff=0
+    [12] HeartArc: 0.024364 vs 0.024364
+    [13] Pos: (0.000000, 3.000000, -0.028564) vs (0.000000, 3.000000, -0.028564)
+    [13] Vel: 0.419973 vs 0.419973, diff=0
+    [13] Energy: 19.799550 vs 19.799550, diff=0
+    [13] HeartArc: 0.028564 vs 0.028564
+    [14] Pos: (0.000000, 3.000000, -0.033269) vs (0.000000, 3.000000, -0.033269)
+    [14] Vel: 0.470593 vs 0.470593, diff=0
+    [14] Energy: 19.822100 vs 19.822100, diff=0
+    [14] HeartArc: 0.033269 vs 0.033269
+    [15] Pos: (0.000000, 3.000000, -0.038518) vs (0.000000, 3.000000, -0.038518)
+    [15] Vel: 0.524841 vs 0.524841, diff=0
+    [15] Energy: 19.849100 vs 19.849100, diff=0
+    [15] HeartArc: 0.038518 vs 0.038518
+    [16] Pos: (0.000000, 3.000000, -0.044345) vs (0.000000, 3.000000, -0.044345)
+    [16] Vel: 0.582699 vs 0.582699, diff=0
+    [16] Energy: 19.881140 vs 19.881140, diff=0
+    [16] HeartArc: 0.044345 vs 0.044345
+    [17] Pos: (0.000000, 3.000000, -0.050786) vs (0.000000, 3.000000, -0.050786)
+    [17] Vel: 0.644146 vs 0.644146, diff=0
+    [17] Energy: 19.918830 vs 19.918830, diff=0
+    [17] HeartArc: 0.050786 vs 0.050786
+    [18] Pos: (0.000000, 3.000000, -0.057878) vs (0.000000, 3.000000, -0.057878)
+    [18] Vel: 0.709162 vs 0.709162, diff=0
+    [18] Energy: 19.962820 vs 19.962820, diff=0
+    [18] HeartArc: 0.057878 vs 0.057878
+    [19] Pos: (0.000000, 3.000000, -0.065655) vs (0.000000, 3.000000, -0.065655)
+    [19] Vel: 0.777724 vs 0.777724, diff=0
+    [19] Energy: 20.013790 vs 20.013790, diff=0
+    [19] HeartArc: 0.065655 vs 0.065655
+=== SAMPLE POINTS ===
+    [50] Pos: (0.000000, 3.000000, -0.828643) vs (0.000000, 3.000000, -0.828643)
+    [50] Vel: 4.519876 vs 4.519876, diff=0
+    [50] Energy: 29.926010 vs 29.926010, diff=0
+    [50] HeartArc: 0.828643 vs 0.828643
+    [100] Pos: (0.000000, 3.000000, -5.631693) vs (0.000000, 3.000000, -5.631693)
+    [100] Vel: 15.050000 vs 15.050000, diff=0
+    [100] Energy: 132.962600 vs 132.962600, diff=0
+    [100] HeartArc: 5.631693 vs 5.631693
+    [200] Pos: (0.000000, 3.000000, -30.249510) vs (0.000000, 3.000000, -30.249510)
+    [200] Vel: 30.000000 vs 30.000000, diff=0
+    [200] Energy: 469.711400 vs 469.711400, diff=0
+    [200] HeartArc: 30.249510 vs 30.249510
+Checking CopyPathSection nodeId=3386626208: 152 points (gold expects 152, gold duration=0 , cumulative offset=1511, afterBridge=False)
+CopyPathSection 3386626208: endpoints match (actual=152 pts, gold=152 pts)
+Checking CopyPathSection nodeId=4257997777: 762 points (gold expects 762, gold duration=0 , cumulative offset=1663, afterBridge=False)
+CopyPathSection 4257997777: endpoints match (actual=762 pts, gold=762 pts)
+Checking CopyPathSection nodeId=4267673592: 317 points (gold expects 317, gold duration=0 , cumulative offset=2425, afterBridge=False)
+CopyPathSection 4267673592: endpoints match (actual=317 pts, gold=317 pts)
+Checking CopyPathSection nodeId=2161712148: 431 points (gold expects 431, gold duration=0 , cumulative offset=2742, afterBridge=False)
+CopyPathSection 2161712148: endpoints match (actual=431 pts, gold=431 pts)
+Verified 9 sections (total 3173 cumulative points)
 ]]></output>
           </test-case>
-          <test-case id="1348" name="Veloci_ForceSection1_MatchesGoldData" fullname="Tests.ForceNodeTests.Veloci_ForceSection1_MatchesGoldData" methodname="Veloci_ForceSection1_MatchesGoldData" classname="Tests.ForceNodeTests" runstate="Runnable" seed="835683074" result="Passed" start-time="2026-01-09 20:01:59Z" end-time="2026-01-09 20:01:59Z" duration="0.144887" asserts="0">
+          <test-case id="1190" name="Switch_LoadAndEvaluate_EndpointsMatch" fullname="Tests.CoasterGoldTests.Switch_LoadAndEvaluate_EndpointsMatch" methodname="Switch_LoadAndEvaluate_EndpointsMatch" classname="Tests.CoasterGoldTests" runstate="Runnable" seed="973758877" result="Passed" start-time="2026-01-09 20:20:10Z" end-time="2026-01-09 20:20:10Z" duration="0.026898" asserts="0">
             <properties>
               <property name="retryIteration" value="0" />
               <property name="repeatIteration" value="0" />
             </properties>
-            <output><![CDATA[=== DRIFT ANALYSIS (offset=0) ===
+            <output><![CDATA[ForceSection 95447995: endpoints match (actual=240 pts, gold=240 pts)
+ForceSection 2263683009: endpoints match (actual=180 pts, gold=180 pts)
+GeometricSection 3399729608: endpoints match (actual=100 pts, gold=100 pts)
+GeometricSection 4047254207: endpoints match (actual=294 pts, gold=294 pts)
+GeometricSection 1701814688: endpoints match (actual=200 pts, gold=200 pts)
+CopyPathSection 4255949925: endpoints match (actual=309 pts, gold=309 pts)
+CopyPathSection 4000197215: endpoints match (actual=51 pts, gold=51 pts)
+]]></output>
+          </test-case>
+          <test-case id="1187" name="Veloci_LoadAndEvaluate_MatchesGoldData" fullname="Tests.CoasterGoldTests.Veloci_LoadAndEvaluate_MatchesGoldData" methodname="Veloci_LoadAndEvaluate_MatchesGoldData" classname="Tests.CoasterGoldTests" runstate="Runnable" seed="302401925" result="Passed" start-time="2026-01-09 20:20:10Z" end-time="2026-01-09 20:20:10Z" duration="0.316330" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+            <output><![CDATA[=== COASTER DIAGNOSTICS ===
+Graph: 12 nodes, 11 edges
+=== ALL NODES IN GRAPH ===
+=== SCALARS DUMP (36 entries) ===
+  Scalar[2561] = 7.4000
+  Scalar[1025] = 0.0000
+  Scalar[2562] = 120.0000
+  Scalar[1026] = 0.0000
+  Scalar[2563] = 180.0000
+  Scalar[1027] = 0.0000
+  Scalar[2564] = 0.0000
+  Scalar[1028] = 0.1000
+  Scalar[2565] = 0.0000
+  Scalar[1029] = 1.1000
+  Scalar[1030] = 0.0210
+  Scalar[1031] = 0.0000
+  Scalar[532454324227] = 0.3000
+  Scalar[532454324226] = 0.3000
+  Scalar[2296] = 5.5000
+  Scalar[1784] = 3.8000
+  Scalar[760] = 34.6897
+  Scalar[769] = 0.0000
+  Scalar[2818] = 0.5000
+  Scalar[770] = 0.0000
+  Scalar[2819] = 0.7000
+  Scalar[771] = 0.0000
+  Scalar[772] = 0.1000
+  Scalar[773] = 1.1000
+  Scalar[774] = 0.0210
+  Scalar[775] = 0.0000
+  Scalar[532454324483] = -0.0017
+  Scalar[532454324482] = 0.0000
+  Scalar[532454324481] = 0.0000
+  Scalar[532454324487] = 0.0000
+  Scalar[532454324486] = 0.0210
+  Scalar[532454324485] = 1.1000
+  Scalar[532454324484] = 0.1000
+  Scalar[1528] = 1.6000
+  Scalar[2552] = 1.3000
+  Scalar[504] = 30.9596
+  [0] id=2 type=Force dur=34.68966 no-vec no-vel
+  [1] id=1 type=Force dur=30.95956 no-vec no-vel
+  [2] id=6 type=Geometric dur=3.8 no-vec no-vel
+  [3] id=8 type=Geometric dur=5.5 no-vec no-vel
+  [4] id=9 type=Geometric dur=1.3 no-vec no-vel
+  [5] id=5 type=Geometric dur=1.6 no-vec no-vel
+  [6] id=4 type=Anchor no-dur no-vec vel-port=667519473-no-scalar
+  [7] id=3 type=Anchor no-dur no-vec vel-port=2057235817-no-scalar
+  [8] id=2079899705 type=Anchor no-dur no-vec vel-port=3959481351-no-scalar
+  [9] id=11 type=Bridge no-dur no-vec no-vel
+  [10] id=2079899704 type=Bridge no-dur no-vec no-vel
+  [11] id=10 type=Curved no-dur no-vec no-vel
+=== EDGES (11) ===
+  Edge: node 11 (port=3553041791) -> node 2079899704 (port=594452232)
+  Edge: node 6 (port=4053381257) -> node 11 (port=2944132454)
+  Edge: node 2 (port=3671866213) -> node 6 (port=2243358393)
+  Edge: node 4 (port=1644188596) -> node 9 (port=1920192974)
+  Edge: node 9 (port=1058314443) -> node 10 (port=1310029185)
+  Edge: node 2079899705 (port=4192049486) -> node 11 (port=2577384215)
+  Edge: node 8 (port=3418176116) -> node 1 (port=3024968844)
+  Edge: node 3 (port=1882629193) -> node 2079899704 (port=2099545353)
+  Edge: node 10 (port=1302094873) -> node 8 (port=2698141108)
+  Edge: node 1 (port=2730186815) -> node 5 (port=4149458549)
+  Edge: node 5 (port=2533126286) -> node 2 (port=2591469851)
+=== GOLD FIRST SECTION INPUT ANCHOR ===
+  vel=35.0000 frictionOrig=832.5955 dir=(0.992,0.001,-0.125)
+Checking ForceSection nodeId=2: 3468 points (gold expects 3468, gold duration=34.68966 Time, cumulative offset=0, afterBridge=False)
+=== DRIFT ANALYSIS (offset=0) ===
 First divergence at index -1
-Max drift 0.046541214 at index 3094
+Max drift 0 at index 0
 === FIRST 20 POINTS ===
-    [0] Pos: (52.337920, 3.000000, 15.083350) vs (52.337920, 3.000000, 15.083350)
+    [0] Pos: (52.924160, 3.993341, 61.888640) vs (52.924160, 3.993341, 61.888640)
+    [0] Vel: 35.000000 vs 35.000000, diff=0
+    [0] Energy: 641.947900 vs 641.947900, diff=0
+    [0] HeartArc: 815.166200 vs 815.166200
+    [1] Pos: (53.271390, 3.993827, 61.844730) vs (53.271390, 3.993827, 61.844730)
+    [1] Vel: 34.995370 vs 34.995370, diff=0
+    [1] Energy: 641.939400 vs 641.939400, diff=0
+    [1] HeartArc: 815.516200 vs 815.516200
+    [2] Pos: (53.618570, 3.994315, 61.800820) vs (53.618570, 3.994315, 61.800820)
+    [2] Vel: 34.992920 vs 34.992920, diff=0
+    [2] Energy: 641.930800 vs 641.930800, diff=0
+    [2] HeartArc: 815.866100 vs 815.866100
+    [3] Pos: (53.965710, 3.994809, 61.756910) vs (53.965710, 3.994809, 61.756910)
+    [3] Vel: 34.990480 vs 34.990480, diff=0
+    [3] Energy: 641.922300 vs 641.922300, diff=0
+    [3] HeartArc: 816.216000 vs 816.216000
+    [4] Pos: (54.312800, 3.995314, 61.713010) vs (54.312800, 3.995314, 61.713010)
+    [4] Vel: 34.988040 vs 34.988040, diff=0
+    [4] Energy: 641.913800 vs 641.913800, diff=0
+    [4] HeartArc: 816.565900 vs 816.565900
+    [5] Pos: (54.659840, 3.995837, 61.669120) vs (54.659840, 3.995837, 61.669120)
+    [5] Vel: 34.985580 vs 34.985580, diff=0
+    [5] Energy: 641.905200 vs 641.905200, diff=0
+    [5] HeartArc: 816.915600 vs 816.915600
+    [6] Pos: (55.006840, 3.996387, 61.625230) vs (55.006840, 3.996387, 61.625230)
+    [6] Vel: 34.983130 vs 34.983130, diff=0
+    [6] Energy: 641.896700 vs 641.896700, diff=0
+    [6] HeartArc: 817.265400 vs 817.265400
+    [7] Pos: (55.353770, 3.996974, 61.581350) vs (55.353770, 3.996974, 61.581350)
+    [7] Vel: 34.980660 vs 34.980660, diff=0
+    [7] Energy: 641.888100 vs 641.888100, diff=0
+    [7] HeartArc: 817.615100 vs 817.615100
+    [8] Pos: (55.700640, 3.997609, 61.537480) vs (55.700640, 3.997609, 61.537480)
+    [8] Vel: 34.978180 vs 34.978180, diff=0
+    [8] Energy: 641.879600 vs 641.879600, diff=0
+    [8] HeartArc: 817.964700 vs 817.964700
+    [9] Pos: (56.047440, 3.998306, 61.493610) vs (56.047440, 3.998306, 61.493610)
+    [9] Vel: 34.975680 vs 34.975680, diff=0
+    [9] Energy: 641.871000 vs 641.871000, diff=0
+    [9] HeartArc: 818.314200 vs 818.314200
+    [10] Pos: (56.394170, 3.999080, 61.449750) vs (56.394170, 3.999080, 61.449750)
+    [10] Vel: 34.973160 vs 34.973160, diff=0
+    [10] Energy: 641.862500 vs 641.862500, diff=0
+    [10] HeartArc: 818.663700 vs 818.663700
+    [11] Pos: (56.740810, 3.999945, 61.405900) vs (56.740810, 3.999945, 61.405900)
+    [11] Vel: 34.970610 vs 34.970610, diff=0
+    [11] Energy: 641.853900 vs 641.853900, diff=0
+    [11] HeartArc: 819.013100 vs 819.013100
+    [12] Pos: (57.087380, 4.000921, 61.362060) vs (57.087380, 4.000921, 61.362060)
+    [12] Vel: 34.968030 vs 34.968030, diff=0
+    [12] Energy: 641.845400 vs 641.845400, diff=0
+    [12] HeartArc: 819.362400 vs 819.362400
+    [13] Pos: (57.433860, 4.002026, 61.318230) vs (57.433860, 4.002026, 61.318230)
+    [13] Vel: 34.965420 vs 34.965420, diff=0
+    [13] Energy: 641.836900 vs 641.836900, diff=0
+    [13] HeartArc: 819.711700 vs 819.711700
+    [14] Pos: (57.780250, 4.003278, 61.274410) vs (57.780250, 4.003278, 61.274410)
+    [14] Vel: 34.962760 vs 34.962760, diff=0
+    [14] Energy: 641.828300 vs 641.828300, diff=0
+    [14] HeartArc: 820.060900 vs 820.060900
+    [15] Pos: (58.126540, 4.004701, 61.230610) vs (58.126540, 4.004701, 61.230610)
+    [15] Vel: 34.960060 vs 34.960060, diff=0
+    [15] Energy: 641.819800 vs 641.819800, diff=0
+    [15] HeartArc: 820.409900 vs 820.409900
+    [16] Pos: (58.472740, 4.006316, 61.186810) vs (58.472740, 4.006316, 61.186810)
+    [16] Vel: 34.957300 vs 34.957300, diff=0
+    [16] Energy: 641.811200 vs 641.811200, diff=0
+    [16] HeartArc: 820.758900 vs 820.758900
+    [17] Pos: (58.818830, 4.008146, 61.143030) vs (58.818830, 4.008146, 61.143030)
+    [17] Vel: 34.954480 vs 34.954480, diff=0
+    [17] Energy: 641.802700 vs 641.802700, diff=0
+    [17] HeartArc: 821.107700 vs 821.107700
+    [18] Pos: (59.164810, 4.010216, 61.099260) vs (59.164810, 4.010216, 61.099260)
+    [18] Vel: 34.951600 vs 34.951600, diff=0
+    [18] Energy: 641.794100 vs 641.794100, diff=0
+    [18] HeartArc: 821.456500 vs 821.456500
+    [19] Pos: (59.510680, 4.012551, 61.055510) vs (59.510680, 4.012551, 61.055510)
+    [19] Vel: 34.948640 vs 34.948640, diff=0
+    [19] Energy: 641.785600 vs 641.785600, diff=0
+    [19] HeartArc: 821.805100 vs 821.805100
+=== SAMPLE POINTS ===
+    [50] Pos: (70.150370, 4.387981, 59.710330) vs (70.150370, 4.387981, 59.710330)
+    [50] Vel: 34.770720 vs 34.770720, diff=0
+    [50] Energy: 641.522500 vs 641.522500, diff=0
+    [50] HeartArc: 832.538300 vs 832.538300
+    [100] Pos: (86.471190, 7.860425, 57.702060) vs (86.471190, 7.860425, 57.702060)
+    [100] Vel: 33.643010 vs 33.643010, diff=0
+    [100] Energy: 641.117700 vs 641.117700, diff=0
+    [100] HeartArc: 849.400400 vs 849.400400
+    [200] Pos: (109.337800, 26.396300, 56.157310) vs (109.337800, 26.396300, 56.157310)
+    [200] Vel: 27.295830 vs 27.295830, diff=0
+    [200] Energy: 640.518900 vs 640.518900, diff=0
+    [200] HeartArc: 879.530600 vs 879.530600
+    [500] Pos: (96.822380, 57.405590, 62.155740) vs (96.822380, 57.405590, 62.155740)
+    [500] Vel: 10.884590 vs 10.884590, diff=0
+    [500] Energy: 640.212800 vs 640.212800, diff=0
+    [500] HeartArc: 925.627800 vs 925.627800
+    [1000] Pos: (10.587270, 26.134820, 79.528460) vs (10.587270, 26.134820, 79.528460)
+    [1000] Vel: 25.462170 vs 25.462170, diff=0
+    [1000] Energy: 637.951000 vs 637.951000, diff=0
+    [1000] HeartArc: 1057.760000 vs 1057.760000
+    [1500] Pos: (-83.711350, 9.105687, 37.414470) vs (-83.711350, 9.105687, 37.414470)
+    [1500] Vel: 30.777070 vs 30.777070, diff=0
+    [1500] Energy: 635.713900 vs 635.713900, diff=0
+    [1500] HeartArc: 1192.737000 vs 1192.737000
+Checking ForceSection nodeId=1: 3095 points (gold expects 3095, gold duration=30.95956 Time, cumulative offset=3468, afterBridge=False)
+=== DRIFT ANALYSIS (offset=3468) ===
+First divergence at index -1
+Max drift 0 at index 0
+=== FIRST 20 POINTS ===
+    [0] Pos: (52.337780, 3.000000, 15.083280) vs (52.337780, 3.000000, 15.083280)
     [0] Vel: 30.000000 vs 30.000000, diff=0
     [0] Energy: 469.711400 vs 469.711400, diff=0
-    [0] HeartArc: 65.609370 vs 65.609370
-    [1] Pos: (52.597400, 3.000000, 15.233910) vs (52.597400, 3.000000, 15.233910)
+    [0] HeartArc: 65.609160 vs 65.609160
+    [1] Pos: (52.597270, 3.000000, 15.233830) vs (52.597270, 3.000000, 15.233830)
     [1] Vel: 29.995700 vs 29.995700, diff=0
     [1] Energy: 469.706000 vs 469.706000, diff=0
-    [1] HeartArc: 65.909370 vs 65.909370
-    [2] Pos: (52.856860, 2.999998, 15.384450) vs (52.856860, 2.999998, 15.384450)
+    [1] HeartArc: 65.909160 vs 65.909160
+    [2] Pos: (52.856720, 2.999998, 15.384370) vs (52.856720, 2.999998, 15.384370)
     [2] Vel: 29.993460 vs 29.993460, diff=0
     [2] Energy: 469.700600 vs 469.700600, diff=0
-    [2] HeartArc: 66.209340 vs 66.209340
-    [3] Pos: (53.116310, 2.999993, 15.534980) vs (53.116310, 2.999993, 15.534980)
+    [2] HeartArc: 66.209130 vs 66.209130
+    [3] Pos: (53.116170, 2.999993, 15.534900) vs (53.116170, 2.999993, 15.534900)
     [3] Vel: 29.991220 vs 29.991220, diff=0
     [3] Energy: 469.695200 vs 469.695200, diff=0
-    [3] HeartArc: 66.509280 vs 66.509280
-    [4] Pos: (53.375740, 2.999982, 15.685500) vs (53.375740, 2.999982, 15.685500)
+    [3] HeartArc: 66.509080 vs 66.509080
+    [4] Pos: (53.375610, 2.999982, 15.685430) vs (53.375610, 2.999982, 15.685430)
     [4] Vel: 29.988990 vs 29.988990, diff=0
     [4] Energy: 469.689800 vs 469.689800, diff=0
-    [4] HeartArc: 66.809230 vs 66.809230
-    [5] Pos: (53.635170, 2.999961, 15.836030) vs (53.635170, 2.999961, 15.836030)
+    [4] HeartArc: 66.809020 vs 66.809020
+    [5] Pos: (53.635040, 2.999961, 15.835950) vs (53.635040, 2.999961, 15.835950)
     [5] Vel: 29.986760 vs 29.986760, diff=0
     [5] Energy: 469.684400 vs 469.684400, diff=0
-    [5] HeartArc: 67.109160 vs 67.109160
-    [6] Pos: (53.894600, 2.999925, 15.986550) vs (53.894600, 2.999925, 15.986550)
+    [5] HeartArc: 67.108960 vs 67.108960
+    [6] Pos: (53.894470, 2.999925, 15.986470) vs (53.894470, 2.999925, 15.986470)
     [6] Vel: 29.984530 vs 29.984530, diff=0
     [6] Energy: 469.679000 vs 469.679000, diff=0
-    [6] HeartArc: 67.409100 vs 67.409100
-    [7] Pos: (54.154030, 2.999869, 16.137070) vs (54.154030, 2.999869, 16.137070)
+    [6] HeartArc: 67.408890 vs 67.408890
+    [7] Pos: (54.153890, 2.999869, 16.136990) vs (54.153890, 2.999869, 16.136990)
     [7] Vel: 29.982310 vs 29.982310, diff=0
     [7] Energy: 469.673600 vs 469.673600, diff=0
-    [7] HeartArc: 67.709030 vs 67.709030
-    [8] Pos: (54.413460, 2.999786, 16.287590) vs (54.413460, 2.999786, 16.287590)
+    [7] HeartArc: 67.708820 vs 67.708820
+    [8] Pos: (54.413320, 2.999786, 16.287510) vs (54.413320, 2.999786, 16.287510)
     [8] Vel: 29.980090 vs 29.980090, diff=0
     [8] Energy: 469.668200 vs 469.668200, diff=0
-    [8] HeartArc: 68.008960 vs 68.008960
-    [9] Pos: (54.672890, 2.999669, 16.438120) vs (54.672890, 2.999669, 16.438120)
+    [8] HeartArc: 68.008750 vs 68.008750
+    [9] Pos: (54.672750, 2.999669, 16.438040) vs (54.672750, 2.999669, 16.438040)
     [9] Vel: 29.977890 vs 29.977890, diff=0
     [9] Energy: 469.662800 vs 469.662800, diff=0
-    [9] HeartArc: 68.308900 vs 68.308900
-    [10] Pos: (54.932330, 2.999511, 16.588650) vs (54.932330, 2.999511, 16.588650)
+    [9] HeartArc: 68.308690 vs 68.308690
+    [10] Pos: (54.932190, 2.999511, 16.588570) vs (54.932190, 2.999511, 16.588570)
     [10] Vel: 29.975700 vs 29.975700, diff=0
     [10] Energy: 469.657300 vs 469.657300, diff=0
-    [10] HeartArc: 68.608840 vs 68.608840
-    [11] Pos: (55.191770, 2.999302, 16.739180) vs (55.191770, 2.999302, 16.739180)
+    [10] HeartArc: 68.608630 vs 68.608630
+    [11] Pos: (55.191640, 2.999302, 16.739110) vs (55.191640, 2.999302, 16.739110)
     [11] Vel: 29.973530 vs 29.973530, diff=0
     [11] Energy: 469.651900 vs 469.651900, diff=0
-    [11] HeartArc: 68.908800 vs 68.908800
-    [12] Pos: (55.451230, 2.999033, 16.889720) vs (55.451230, 2.999033, 16.889720)
+    [11] HeartArc: 68.908580 vs 68.908580
+    [12] Pos: (55.451090, 2.999033, 16.889650) vs (55.451090, 2.999033, 16.889650)
     [12] Vel: 29.971380 vs 29.971380, diff=0
     [12] Energy: 469.646600 vs 469.646600, diff=0
-    [12] HeartArc: 69.208760 vs 69.208760
-    [13] Pos: (55.710700, 2.998696, 17.040280) vs (55.710700, 2.998696, 17.040280)
+    [12] HeartArc: 69.208550 vs 69.208550
+    [13] Pos: (55.710560, 2.998696, 17.040200) vs (55.710560, 2.998696, 17.040200)
     [13] Vel: 29.969250 vs 29.969250, diff=0
     [13] Energy: 469.641200 vs 469.641200, diff=0
-    [13] HeartArc: 69.508740 vs 69.508740
-    [14] Pos: (55.970180, 2.998279, 17.190840) vs (55.970180, 2.998280, 17.190840)
+    [13] HeartArc: 69.508530 vs 69.508530
+    [14] Pos: (55.970050, 2.998279, 17.190760) vs (55.970050, 2.998279, 17.190760)
     [14] Vel: 29.967150 vs 29.967150, diff=0
     [14] Energy: 469.635800 vs 469.635800, diff=0
-    [14] HeartArc: 69.808750 vs 69.808750
-    [15] Pos: (56.229680, 2.997772, 17.341420) vs (56.229680, 2.997772, 17.341420)
+    [14] HeartArc: 69.808530 vs 69.808530
+    [15] Pos: (56.229550, 2.997772, 17.341340) vs (56.229550, 2.997772, 17.341340)
     [15] Vel: 29.965080 vs 29.965080, diff=0
     [15] Energy: 469.630500 vs 469.630500, diff=0
-    [15] HeartArc: 70.108760 vs 70.108760
-    [16] Pos: (56.489200, 2.997164, 17.492000) vs (56.489200, 2.997164, 17.492000)
+    [15] HeartArc: 70.108550 vs 70.108550
+    [16] Pos: (56.489070, 2.997164, 17.491930) vs (56.489070, 2.997164, 17.491930)
     [16] Vel: 29.963040 vs 29.963040, diff=0
     [16] Energy: 469.625100 vs 469.625100, diff=0
-    [16] HeartArc: 70.408810 vs 70.408810
-    [17] Pos: (56.748740, 2.996441, 17.642610) vs (56.748740, 2.996441, 17.642610)
+    [16] HeartArc: 70.408600 vs 70.408600
+    [17] Pos: (56.748600, 2.996441, 17.642530) vs (56.748600, 2.996441, 17.642530)
     [17] Vel: 29.961030 vs 29.961030, diff=0
     [17] Energy: 469.619700 vs 469.619700, diff=0
-    [17] HeartArc: 70.708890 vs 70.708890
-    [18] Pos: (57.008300, 2.995594, 17.793220) vs (57.008300, 2.995593, 17.793220)
+    [17] HeartArc: 70.708670 vs 70.708670
+    [18] Pos: (57.008160, 2.995593, 17.793150) vs (57.008160, 2.995593, 17.793150)
     [18] Vel: 29.959070 vs 29.959070, diff=0
     [18] Energy: 469.614300 vs 469.614300, diff=0
-    [18] HeartArc: 71.008980 vs 71.008980
-    [19] Pos: (57.267880, 2.994607, 17.943860) vs (57.267880, 2.994607, 17.943860)
+    [18] HeartArc: 71.008770 vs 71.008770
+    [19] Pos: (57.267740, 2.994607, 17.943780) vs (57.267740, 2.994607, 17.943780)
     [19] Vel: 29.957150 vs 29.957150, diff=0
     [19] Energy: 469.609000 vs 469.609000, diff=0
-    [19] HeartArc: 71.309100 vs 71.309100
+    [19] HeartArc: 71.308880 vs 71.308880
 === SAMPLE POINTS ===
-    [50] Pos: (65.325040, 2.821276, 22.627900) vs (65.325040, 2.821275, 22.627910)
+    [50] Pos: (65.324910, 2.821275, 22.627820) vs (65.324910, 2.821275, 22.627820)
     [50] Vel: 29.943220 vs 29.943220, diff=0
     [50] Energy: 469.442500 vs 469.442500, diff=0
-    [50] HeartArc: 80.631010 vs 80.631010
-    [100] Pos: (78.192090, 1.907235, 30.287900) vs (78.192090, 1.907233, 30.287900)
+    [50] HeartArc: 80.630810 vs 80.630810
+    [100] Pos: (78.191950, 1.907234, 30.287810) vs (78.191950, 1.907234, 30.287810)
     [100] Vel: 30.123810 vs 30.123810, diff=0
     [100] Energy: 469.171700 vs 469.171700, diff=0
-    [100] HeartArc: 95.634840 vs 95.634840
-    [200] Pos: (98.736080, 10.397920, 46.277050) vs (98.736070, 10.397930, 46.277050)
-    [200] Vel: 26.880880 vs 26.880870, diff=3.8147E-06
+    [100] HeartArc: 95.634630 vs 95.634630
+    [200] Pos: (98.735950, 10.397920, 46.276960) vs (98.735950, 10.397920, 46.276960)
+    [200] Vel: 26.880870 vs 26.880870, diff=0
     [200] Energy: 468.675300 vs 468.675300, diff=0
-    [200] HeartArc: 123.864200 vs 123.864200
-    [500] Pos: (74.561150, 20.578390, 42.257220) vs (74.561090, 20.578240, 42.257380)
-    [500] Vel: 22.292610 vs 22.292680, diff=6.86646E-05
+    [200] HeartArc: 123.864000 vs 123.864000
+    [500] Pos: (74.561070, 20.578410, 42.257220) vs (74.561070, 20.578410, 42.257220)
+    [500] Vel: 22.292590 vs 22.292590, diff=0
     [500] Energy: 468.214600 vs 468.214600, diff=0
-    [500] HeartArc: 178.301200 vs 178.301400
-    [1000] Pos: (-45.216130, 8.749951, 14.948710) vs (-45.215650, 8.750026, 14.945770)
-    [1000] Vel: 25.945540 vs 25.945510, diff=3.05176E-05
-    [1000] Energy: 466.247000 vs 466.247000, diff=3.05176E-05
-    [1000] HeartArc: 311.101500 vs 311.101600
-    [1500] Pos: (-50.196620, 9.422834, 21.239420) vs (-50.196300, 9.422368, 21.235710)
-    [1500] Vel: 24.792660 vs 24.792840, diff=0.000179291
-    [1500] Energy: 465.141600 vs 465.141600, diff=3.05176E-05
-    [1500] HeartArc: 415.368400 vs 415.368800
-]]></output>
-          </test-case>
-          <test-case id="1349" name="Veloci_ForceSection2_MatchesGoldData" fullname="Tests.ForceNodeTests.Veloci_ForceSection2_MatchesGoldData" methodname="Veloci_ForceSection2_MatchesGoldData" classname="Tests.ForceNodeTests" runstate="Runnable" seed="889386973" result="Passed" start-time="2026-01-09 20:01:59Z" end-time="2026-01-09 20:01:59Z" duration="0.137126" asserts="0">
-            <properties>
-              <property name="retryIteration" value="0" />
-              <property name="repeatIteration" value="0" />
-            </properties>
-            <output><![CDATA[=== DRIFT ANALYSIS (offset=0) ===
-First divergence at index -1
-Max drift 0.195041656 at index 1474
-=== FIRST 20 POINTS ===
-    [0] Pos: (52.942740, 3.918789, 61.930760) vs (52.942740, 3.918789, 61.930760)
-    [0] Vel: 35.000000 vs 35.000000, diff=0
-    [0] Energy: 641.218700 vs 641.218700, diff=0
-    [0] HeartArc: 815.231300 vs 815.231300
-    [1] Pos: (53.289990, 3.919090, 61.887000) vs (53.289990, 3.919090, 61.887000)
-    [1] Vel: 34.995470 vs 34.995470, diff=0
-    [1] Energy: 641.210100 vs 641.210100, diff=0
-    [1] HeartArc: 815.581300 vs 815.581300
-    [2] Pos: (53.637190, 3.919393, 61.843250) vs (53.637190, 3.919393, 61.843250)
-    [2] Vel: 34.993080 vs 34.993080, diff=0
-    [2] Energy: 641.201600 vs 641.201600, diff=0
-    [2] HeartArc: 815.931200 vs 815.931200
-    [3] Pos: (53.984360, 3.919702, 61.799510) vs (53.984360, 3.919702, 61.799510)
-    [3] Vel: 34.990690 vs 34.990690, diff=0
-    [3] Energy: 641.193100 vs 641.193100, diff=0
-    [3] HeartArc: 816.281100 vs 816.281100
-    [4] Pos: (54.331470, 3.920022, 61.755770) vs (54.331470, 3.920022, 61.755770)
-    [4] Vel: 34.988300 vs 34.988300, diff=0
-    [4] Energy: 641.184500 vs 641.184500, diff=0
-    [4] HeartArc: 816.631000 vs 816.631000
-    [5] Pos: (54.678540, 3.920361, 61.712030) vs (54.678540, 3.920360, 61.712030)
-    [5] Vel: 34.985900 vs 34.985900, diff=0
-    [5] Energy: 641.176000 vs 641.176000, diff=0
-    [5] HeartArc: 816.980800 vs 816.980800
-    [6] Pos: (55.025560, 3.920726, 61.668310) vs (55.025560, 3.920725, 61.668310)
-    [6] Vel: 34.983490 vs 34.983490, diff=0
-    [6] Energy: 641.167400 vs 641.167400, diff=0
-    [6] HeartArc: 817.330600 vs 817.330600
-    [7] Pos: (55.372520, 3.921128, 61.624590) vs (55.372520, 3.921127, 61.624590)
-    [7] Vel: 34.981080 vs 34.981080, diff=0
-    [7] Energy: 641.158900 vs 641.158900, diff=0
-    [7] HeartArc: 817.680300 vs 817.680300
-    [8] Pos: (55.719410, 3.921578, 61.580880) vs (55.719410, 3.921577, 61.580880)
-    [8] Vel: 34.978650 vs 34.978650, diff=0
-    [8] Energy: 641.150300 vs 641.150300, diff=0
-    [8] HeartArc: 818.029900 vs 818.029900
-    [9] Pos: (56.066230, 3.922090, 61.537170) vs (56.066230, 3.922089, 61.537170)
-    [9] Vel: 34.976200 vs 34.976200, diff=0
-    [9] Energy: 641.141800 vs 641.141800, diff=0
-    [9] HeartArc: 818.379500 vs 818.379500
-    [10] Pos: (56.412990, 3.922678, 61.493480) vs (56.412990, 3.922678, 61.493480)
-    [10] Vel: 34.973730 vs 34.973730, diff=0
-    [10] Energy: 641.133200 vs 641.133200, diff=0
-    [10] HeartArc: 818.728900 vs 818.728900
-    [11] Pos: (56.759660, 3.923359, 61.449790) vs (56.759660, 3.923359, 61.449790)
-    [11] Vel: 34.971240 vs 34.971240, diff=0
-    [11] Energy: 641.124700 vs 641.124700, diff=0
-    [11] HeartArc: 819.078400 vs 819.078400
-    [12] Pos: (57.106250, 3.924150, 61.406110) vs (57.106250, 3.924150, 61.406120)
-    [12] Vel: 34.968710 vs 34.968710, diff=0
-    [12] Energy: 641.116100 vs 641.116100, diff=0
-    [12] HeartArc: 819.427700 vs 819.427700
-    [13] Pos: (57.452760, 3.925070, 61.362450) vs (57.452760, 3.925070, 61.362450)
-    [13] Vel: 34.966150 vs 34.966150, diff=0
-    [13] Energy: 641.107600 vs 641.107600, diff=0
-    [13] HeartArc: 819.776900 vs 819.776900
-    [14] Pos: (57.799180, 3.926138, 61.318790) vs (57.799180, 3.926137, 61.318800)
-    [14] Vel: 34.963540 vs 34.963540, diff=0
-    [14] Energy: 641.099100 vs 641.099100, diff=0
-    [14] HeartArc: 820.126100 vs 820.126100
-    [15] Pos: (58.145510, 3.927376, 61.275150) vs (58.145510, 3.927375, 61.275160)
-    [15] Vel: 34.960890 vs 34.960890, diff=0
-    [15] Energy: 641.090500 vs 641.090500, diff=0
-    [15] HeartArc: 820.475200 vs 820.475200
-    [16] Pos: (58.491730, 3.928806, 61.231520) vs (58.491730, 3.928805, 61.231530)
-    [16] Vel: 34.958180 vs 34.958190, diff=3.8147E-06
-    [16] Energy: 641.082000 vs 641.082000, diff=0
-    [16] HeartArc: 820.824100 vs 820.824100
-    [17] Pos: (58.837860, 3.930451, 61.187900) vs (58.837860, 3.930450, 61.187910)
-    [17] Vel: 34.955420 vs 34.955420, diff=0
-    [17] Energy: 641.073400 vs 641.073400, diff=0
-    [17] HeartArc: 821.173000 vs 821.173000
-    [18] Pos: (59.183870, 3.932337, 61.144290) vs (59.183870, 3.932336, 61.144300)
-    [18] Vel: 34.952590 vs 34.952590, diff=0
-    [18] Energy: 641.064900 vs 641.064900, diff=0
-    [18] HeartArc: 821.521700 vs 821.521700
-    [19] Pos: (59.529770, 3.934488, 61.100700) vs (59.529770, 3.934487, 61.100710)
-    [19] Vel: 34.949680 vs 34.949680, diff=0
-    [19] Energy: 641.056300 vs 641.056300, diff=0
-    [19] HeartArc: 821.870400 vs 821.870400
-=== SAMPLE POINTS ===
-    [50] Pos: (70.170920, 4.304242, 59.760860) vs (70.170910, 4.304243, 59.760860)
-    [50] Vel: 34.773370 vs 34.773370, diff=0
-    [50] Energy: 640.793100 vs 640.793100, diff=0
-    [50] HeartArc: 832.604200 vs 832.604200
-    [100] Pos: (86.496860, 7.767994, 57.762430) vs (86.496860, 7.767997, 57.762290)
-    [100] Vel: 33.648310 vs 33.648310, diff=0
-    [100] Energy: 640.388200 vs 640.388200, diff=0
-    [100] HeartArc: 849.468000 vs 849.468000
-    [200] Pos: (109.385100, 26.292750, 56.238030) vs (109.384900, 26.292850, 56.236460)
-    [200] Vel: 27.306500 vs 27.306470, diff=3.05176E-05
-    [200] Energy: 639.789000 vs 639.789000, diff=0
-    [200] HeartArc: 879.606700 vs 879.606600
-    [500] Pos: (96.950700, 57.361580, 62.258200) vs (96.946690, 57.361100, 62.244510)
-    [500] Vel: 10.857910 vs 10.858240, diff=0.000336647
-    [500] Energy: 639.482200 vs 639.482200, diff=6.10352E-05
-    [500] HeartArc: 925.704800 vs 925.704900
-    [1000] Pos: (10.920220, 26.253520, 79.891210) vs (10.903640, 26.251470, 79.803460)
-    [1000] Vel: 25.389560 vs 25.390370, diff=0.000806809
-    [1000] Energy: 637.229400 vs 637.229400, diff=0
-    [1000] HeartArc: 1057.652000 vs 1057.652000
-    [1500] Pos: (-83.109250, 9.440763, 38.304730) vs (-83.088810, 9.440844, 38.110550)
-    [1500] Vel: 30.650720 vs 30.650680, diff=4.76837E-05
-    [1500] Energy: 635.013300 vs 635.013200, diff=6.10352E-05
-    [1500] HeartArc: 1192.156000 vs 1192.161000
+    [500] HeartArc: 178.301100 vs 178.301100
+    [1000] Pos: (-45.216260, 8.749998, 14.949130) vs (-45.216260, 8.749998, 14.949130)
+    [1000] Vel: 25.945530 vs 25.945530, diff=0
+    [1000] Energy: 466.247000 vs 466.247000, diff=0
+    [1000] HeartArc: 311.101300 vs 311.101300
+    [1500] Pos: (-50.196630, 9.422683, 21.239920) vs (-50.196630, 9.422683, 21.239920)
+    [1500] Vel: 24.792720 vs 24.792720, diff=0
+    [1500] Energy: 465.141600 vs 465.141600, diff=0
+    [1500] HeartArc: 415.368300 vs 415.368300
+Checking GeometricSection nodeId=6: 380 points (gold expects 380, gold duration=3.8 Time, cumulative offset=6563, afterBridge=False)
+GeometricSection 6: high-offset endpoint matches (actual=380 pts)
+Checking GeometricSection nodeId=8: 550 points (gold expects 550, gold duration=5.5 Time, cumulative offset=6943, afterBridge=False)
+GeometricSection 8: high-offset endpoint matches (actual=550 pts)
+Checking GeometricSection nodeId=9: 130 points (gold expects 130, gold duration=1.3 Time, cumulative offset=7493, afterBridge=False)
+GeometricSection 9: high-offset endpoint matches (actual=130 pts)
+Checking GeometricSection nodeId=5: 160 points (gold expects 160, gold duration=1.6 Time, cumulative offset=7623, afterBridge=False)
+GeometricSection 5: high-offset endpoint matches (actual=160 pts)
+Skipping Bridge nodeId=11: legacy .kex format doesn't store target anchor data
+Skipping Bridge nodeId=2079899704: legacy .kex format doesn't store target anchor data
+Checking CurvedSection nodeId=10: 674 points (gold expects 674, gold duration=0 , cumulative offset=8437, afterBridge=True)
+CurvedSection 10: endpoints match (actual=674 pts, gold=674 pts)
+Verified 7 sections (total 9111 cumulative points)
 Saving results to: C:/Users/dylan/AppData/LocalLow/IndividualKex/KexEdit\TestResults.xml
 ]]></output>
           </test-case>
