@@ -721,13 +721,9 @@ namespace KexEdit.Track {
             float friction = GetScalar(in doc.Scalars, nodeId, AnchorPorts.Friction, DEFAULT_FRICTION);
             float resistance = GetScalar(in doc.Scalars, nodeId, AnchorPorts.Resistance, DEFAULT_RESISTANCE);
 
-            Frame frame = Frame.FromEuler(pitch, yaw, roll);
-            float centerY = frame.SpinePosition(position, heart * 0.9f).y;
-            float energy = 0.5f * velocity * velocity + KexEdit.Sim.Sim.G * centerY;
-
             AnchorNode.Build(
                 in position, pitch, yaw, roll,
-                velocity, energy,
+                velocity,
                 heart, friction, resistance,
                 out Point anchor
             );
@@ -1120,7 +1116,6 @@ namespace KexEdit.Track {
                 normal: math.normalizesafe(math.lerp(p0.Normal, p1.Normal, t)),
                 lateral: math.normalizesafe(math.lerp(p0.Lateral, p1.Lateral, t)),
                 velocity: math.lerp(p0.Velocity, p1.Velocity, t),
-                energy: math.lerp(p0.Energy, p1.Energy, t),
                 normalForce: math.lerp(p0.NormalForce, p1.NormalForce, t),
                 lateralForce: math.lerp(p0.LateralForce, p1.LateralForce, t),
                 heartArc: math.lerp(p0.HeartArc, p1.HeartArc, t),

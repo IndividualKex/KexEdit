@@ -19,7 +19,7 @@ namespace KexEdit.Sim.Nodes.Anchor {
         [BurstCompile]
         public static void Build(
             in float3 position, float pitch, float yaw, float roll,
-            float velocity, float energy,
+            float velocity,
             float heartOffset, float friction, float resistance,
             out Point result
         ) {
@@ -30,7 +30,6 @@ namespace KexEdit.Sim.Nodes.Anchor {
                 normal: frame.Normal,
                 lateral: frame.Lateral,
                 velocity: velocity,
-                energy: energy,
                 normalForce: 1f,
                 lateralForce: 0f,
                 heartArc: 0f,

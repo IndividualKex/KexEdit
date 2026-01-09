@@ -14,7 +14,6 @@ namespace KexEdit.Legacy {
                 normal: p.Normal,
                 lateral: p.Lateral,
                 velocity: p.Velocity,
-                energy: p.Energy,
                 normalForce: p.NormalForce,
                 lateralForce: p.LateralForce,
                 heartArc: p.HeartArc,
@@ -65,7 +64,7 @@ namespace KexEdit.Legacy {
                 Normal = p.Normal,
                 Roll = roll,
                 Velocity = p.Velocity,
-                Energy = p.Energy,
+                Energy = 0f, // Energy no longer used in modern system
                 NormalForce = p.NormalForce,
                 LateralForce = p.LateralForce,
                 SpineAdvance = distanceFromLast,
@@ -96,7 +95,7 @@ namespace KexEdit.Legacy {
                 Normal = p.Normal,
                 Roll = roll,
                 Velocity = p.Velocity,
-                Energy = p.Energy,
+                Energy = 0f, // Energy no longer used in modern system
                 NormalForce = p.NormalForce,
                 LateralForce = p.LateralForce,
                 SpineAdvance = 0f,
@@ -127,7 +126,7 @@ namespace KexEdit.Legacy {
                 Normal = s.Normal,
                 Roll = roll,
                 Velocity = s.Velocity,
-                Energy = s.Energy,
+                Energy = 0f, // Energy no longer used in modern system
                 NormalForce = s.NormalForce,
                 LateralForce = s.LateralForce,
                 SpineAdvance = prev.SpineAdvance,

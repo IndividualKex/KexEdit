@@ -147,7 +147,6 @@ namespace Tests {
             AssertFloat3Match(burst.Lateral, rust.Lateral, "Lateral", index, tolerance);
 
             AssertScalarMatch(burst.Velocity, rust.Velocity, "Velocity", index, tolerance);
-            AssertScalarMatch(burst.Energy, rust.Energy, "Energy", index, tolerance);
             AssertScalarMatch(burst.NormalForce, rust.NormalForce, "NormalForce", index, tolerance);
             AssertScalarMatch(burst.LateralForce, rust.LateralForce, "LateralForce", index, tolerance);
             AssertScalarMatch(burst.HeartArc, rust.HeartArc, "HeartArc", index, tolerance);

@@ -142,7 +142,6 @@ namespace KexEdit.UI.NodeGraph {
                 normal: pointData.Normal,
                 lateral: pointData.Lateral,
                 velocity: pointData.Velocity,
-                energy: pointData.Energy,
                 normalForce: pointData.NormalForce,
                 lateralForce: pointData.LateralForce,
                 heartArc: pointData.HeartArc,
@@ -172,11 +171,10 @@ namespace KexEdit.UI.NodeGraph {
             float resistance = coaster.Scalars.TryGetValue(DocumentAggregate.InputKey(nodeId, AnchorPorts.Resistance), out var r) ? r : 2e-5f;
 
             // Build anchor for ECS component (used by UI/visualization)
-            float energy = 0.5f * velocity * velocity + 9.80665f * position.y;
             AnchorNodeBuilder.Build(
                 in position,
                 pitch, yaw, roll,  // Already in radians
-                velocity, energy,
+                velocity,
                 heart, friction, resistance,
                 out CorePoint anchor
             );
@@ -189,7 +187,7 @@ namespace KexEdit.UI.NodeGraph {
                 Lateral = anchor.Lateral,
                 Roll = math.degrees(roll),
                 Velocity = anchor.Velocity,
-                Energy = anchor.Energy,
+                Energy = 0f,
                 NormalForce = anchor.NormalForce,
                 LateralForce = anchor.LateralForce,
                 HeartArc = anchor.HeartArc,

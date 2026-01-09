@@ -89,7 +89,6 @@ namespace Tests {
             maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.y - expected.heartPosition.y));
             maxDrift = math.max(maxDrift, math.abs(actual.HeartPosition.z - expected.heartPosition.z));
             maxDrift = math.max(maxDrift, math.abs(actual.Velocity - expected.velocity));
-            maxDrift = math.max(maxDrift, math.abs(actual.Energy - expected.energy));
             return maxDrift;
         }
 
@@ -97,7 +96,6 @@ namespace Tests {
             var marker = ComputeDrift(actual, expected) > BASE_TOLERANCE + TOLERANCE_PER_STEP * (cumulativeOffset + index) ? ">>> " : "    ";
             UnityEngine.Debug.Log($"{marker}[{index}] Pos: ({actual.HeartPosition.x:F6}, {actual.HeartPosition.y:F6}, {actual.HeartPosition.z:F6}) vs ({expected.heartPosition.x:F6}, {expected.heartPosition.y:F6}, {expected.heartPosition.z:F6})");
             UnityEngine.Debug.Log($"{marker}[{index}] Vel: {actual.Velocity:F6} vs {expected.velocity:F6}, diff={math.abs(actual.Velocity - expected.velocity):G6}");
-            UnityEngine.Debug.Log($"{marker}[{index}] Energy: {actual.Energy:F6} vs {expected.energy:F6}, diff={math.abs(actual.Energy - expected.energy):G6}");
             UnityEngine.Debug.Log($"{marker}[{index}] HeartArc: {actual.HeartArc:F6} vs {expected.heartArc:F6}");
         }
 
@@ -129,7 +127,6 @@ namespace Tests {
             AssertFloat3(actual.Normal, expected.normal, "Normal", index, tolerance);
 
             AssertFloat(actual.Velocity, expected.velocity, "Velocity", index, tolerance);
-            AssertFloat(actual.Energy, expected.energy, "Energy", index, tolerance);
 
             AssertFloat(actual.NormalForce, expected.normalForce, "NormalForce", index, tolerance);
             AssertFloat(actual.LateralForce, expected.lateralForce, "LateralForce", index, tolerance);

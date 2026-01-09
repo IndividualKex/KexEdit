@@ -45,7 +45,6 @@ namespace Tests {
                 normal: math.normalize(new float3(0, -1, 0)),
                 lateral: math.normalize(new float3(1, 0, 0)),
                 velocity: 25f,
-                energy: 500f,
                 normalForce: 1.5f,
                 lateralForce: 0.3f,
                 heartArc: 100f,
@@ -58,7 +57,6 @@ namespace Tests {
             Assert.AreEqual(2f, point.HeartPosition.y, TOLERANCE);
             Assert.AreEqual(3f, point.HeartPosition.z, TOLERANCE);
             Assert.AreEqual(25f, point.Velocity, TOLERANCE);
-            Assert.AreEqual(500f, point.Energy, TOLERANCE);
             Assert.AreEqual(1.5f, point.NormalForce, TOLERANCE);
             Assert.AreEqual(0.3f, point.LateralForce, TOLERANCE);
             Assert.AreEqual(100f, point.HeartArc, TOLERANCE);
@@ -73,7 +71,6 @@ namespace Tests {
                 normal: math.normalize(new float3(0, -1, 0)),
                 lateral: math.normalize(new float3(1, 0, 0)),
                 velocity: 30f,
-                energy: 600f,
                 normalForce: 2.0f,
                 lateralForce: 0.5f,
                 heartArc: 150f,
@@ -86,7 +83,6 @@ namespace Tests {
             Assert.AreEqual(10f, point.HeartPosition.y, TOLERANCE);
             Assert.AreEqual(-20f, point.HeartPosition.z, TOLERANCE);
             Assert.AreEqual(30f, point.Velocity, TOLERANCE);
-            Assert.AreEqual(600f, point.Energy, TOLERANCE);
             Assert.AreEqual(0.3f, point.HeartAdvance, TOLERANCE);
             Assert.AreEqual(20f, point.FrictionOrigin, TOLERANCE);
         }

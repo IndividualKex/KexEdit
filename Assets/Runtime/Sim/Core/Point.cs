@@ -9,7 +9,6 @@ namespace KexEdit.Sim {
         public readonly float3 Normal;
         public readonly float3 Lateral;
         public readonly float Velocity;
-        public readonly float Energy;
         public readonly float NormalForce;
         public readonly float LateralForce;
         public readonly float HeartArc;
@@ -27,7 +26,6 @@ namespace KexEdit.Sim {
             in float3 normal,
             in float3 lateral,
             float velocity,
-            float energy,
             float normalForce,
             float lateralForce,
             float heartArc,
@@ -44,7 +42,6 @@ namespace KexEdit.Sim {
             Normal = normal;
             Lateral = lateral;
             Velocity = velocity;
-            Energy = energy;
             NormalForce = normalForce;
             LateralForce = lateralForce;
             HeartArc = heartArc;
@@ -71,8 +68,6 @@ namespace KexEdit.Sim {
             float resistance = 0f
         ) {
             Frame frame = Frame.FromDirectionAndRoll(direction, roll);
-            float3 spinePos = frame.SpinePosition(heartPosition, heartOffset);
-            float energy = 0.5f * velocity * velocity + Sim.G * spinePos.y;
 
             return new Point(
                 heartPosition: heartPosition,
@@ -80,7 +75,6 @@ namespace KexEdit.Sim {
                 normal: frame.Normal,
                 lateral: frame.Lateral,
                 velocity: velocity,
-                energy: energy,
                 normalForce: 1f,
                 lateralForce: 0f,
                 heartArc: 0f,
@@ -107,25 +101,16 @@ namespace KexEdit.Sim {
         public Point WithFrictionOrigin(float newOrigin) {
             return new Point(
                 HeartPosition, Direction, Normal, Lateral,
-                Velocity, Energy, NormalForce, LateralForce,
+                Velocity, NormalForce, LateralForce,
                 HeartArc, SpineArc, HeartAdvance,
                 newOrigin, RollSpeed, HeartOffset, Friction, Resistance
-            );
-        }
-
-        public Point WithVelocityAndEnergy(float newVelocity, float newEnergy, float newFrictionOrigin) {
-            return new Point(
-                HeartPosition, Direction, Normal, Lateral,
-                newVelocity, newEnergy, NormalForce, LateralForce,
-                HeartArc, SpineArc, HeartAdvance,
-                newFrictionOrigin, RollSpeed, HeartOffset, Friction, Resistance
             );
         }
 
         public Point WithForces(float newNormalForce, float newLateralForce) {
             return new Point(
                 HeartPosition, Direction, Normal, Lateral,
-                Velocity, Energy, newNormalForce, newLateralForce,
+                Velocity, newNormalForce, newLateralForce,
                 HeartArc, SpineArc, HeartAdvance,
                 FrictionOrigin, RollSpeed, HeartOffset, Friction, Resistance
             );
@@ -133,12 +118,9 @@ namespace KexEdit.Sim {
 
         public Point WithVelocity(float newVelocity, float heartOffset, float friction, bool resetFriction) {
             float newFrictionOrigin = resetFriction ? SpineArc : FrictionOrigin;
-            float centerY = SpinePosition(heartOffset * 0.9f).y;
-            float frictionDistance = SpineArc - newFrictionOrigin;
-            float newEnergy = Sim.ComputeTotalEnergy(newVelocity, centerY, frictionDistance, friction);
             return new Point(
                 HeartPosition, Direction, Normal, Lateral,
-                newVelocity, newEnergy, NormalForce, LateralForce,
+                newVelocity, NormalForce, LateralForce,
                 HeartArc, SpineArc, HeartAdvance,
                 newFrictionOrigin, RollSpeed, HeartOffset, Friction, Resistance
             );

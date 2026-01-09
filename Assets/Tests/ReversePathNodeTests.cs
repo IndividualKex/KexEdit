@@ -92,7 +92,6 @@ namespace Tests {
                 normal: new float3(0f, 1f, 0f),
                 heartPosition: new float3(0f, 0f, index * 10f),
                 velocity: 10f,
-                energy: 100f,
                 normalForce: 1f,
                 lateralForce: 0.1f,
                 heartArc: index * 10f,

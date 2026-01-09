@@ -275,16 +275,18 @@ namespace KexEdit.Sim.Nodes.Geometric {
             float newHeartArc = prev.HeartArc + heartAdvance;
             float newSpineArc = prev.SpineArc + spineAdvance;
 
-            float newEnergy = prev.Energy;
+            // Use delta-based velocity update for numerical stability
             float newVelocity = prev.Velocity;
-
             if (!driven) {
-                float centerY = (currHeartPosition + 0.9f * heartOffsetVal * currNormal).y;
-                float frictionDistance = newSpineArc - prev.FrictionOrigin;
-                Sim.UpdateEnergy(
-                    prev.Energy, prev.Velocity, centerY,
-                    frictionDistance, frictionVal, resistanceVal,
-                    out newEnergy, out newVelocity
+                float prevCenterY = (prevHeartPosition + 0.9f * heartOffsetVal * prev.Normal).y;
+                float currCenterY = (currHeartPosition + 0.9f * heartOffsetVal * currNormal).y;
+                float deltaY = currCenterY - prevCenterY;
+                newVelocity = Sim.UpdateVelocity(
+                    prev.Velocity,
+                    deltaY,
+                    spineAdvance,
+                    frictionVal,
+                    resistanceVal
                 );
             }
 
@@ -298,7 +300,6 @@ namespace KexEdit.Sim.Nodes.Geometric {
                 normal: currNormal,
                 lateral: currLateral,
                 velocity: newVelocity,
-                energy: newEnergy,
                 normalForce: forces.Normal,
                 lateralForce: forces.Lateral,
                 heartArc: newHeartArc,

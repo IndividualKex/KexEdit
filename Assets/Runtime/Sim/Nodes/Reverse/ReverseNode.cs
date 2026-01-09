@@ -16,7 +16,6 @@ namespace KexEdit.Sim.Nodes.Reverse {
                 normal: anchor.Normal,
                 lateral: -anchor.Lateral,
                 velocity: anchor.Velocity,
-                energy: anchor.Energy,
                 normalForce: anchor.NormalForce,
                 lateralForce: anchor.LateralForce,
                 heartArc: anchor.HeartArc,

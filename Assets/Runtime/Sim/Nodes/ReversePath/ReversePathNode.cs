@@ -31,7 +31,6 @@ namespace KexEdit.Sim.Nodes.ReversePath {
                     normal: p.Normal,
                     lateral: -p.Lateral,
                     velocity: p.Velocity,
-                    energy: p.Energy,
                     normalForce: p.NormalForce,
                     lateralForce: -p.LateralForce,
                     heartArc: heartArc,

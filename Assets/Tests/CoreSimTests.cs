@@ -85,129 +85,86 @@ namespace Tests {
         }
 
         [Test]
-        public void ComputeTotalEnergy_AtRest_OnlyPotential() {
-            float velocity = 0f;
-            float centerY = 10f;
-            float frictionDistance = 0f;
-            float friction = 0f;
-
-            float energy = Sim.ComputeTotalEnergy(velocity, centerY, frictionDistance, friction);
-            float expectedPE = Sim.G * centerY;
-
-            Assert.AreEqual(expectedPE, energy, TOLERANCE, "At rest, energy = potential energy");
-        }
-
-        [Test]
-        public void ComputeTotalEnergy_Moving_IncludesKinetic() {
-            float velocity = 10f;
-            float centerY = 0f;
-            float frictionDistance = 0f;
-            float friction = 0f;
-
-            float energy = Sim.ComputeTotalEnergy(velocity, centerY, frictionDistance, friction);
-            float expectedKE = 0.5f * velocity * velocity;
-
-            Assert.AreEqual(expectedKE, energy, TOLERANCE, "At ground level, energy = kinetic energy");
-        }
-
-        [Test]
-        public void ComputeTotalEnergy_WithFriction_AddsFrictionTerm() {
-            float velocity = 10f;
-            float centerY = 5f;
-            float frictionDistance = 100f;
-            float friction = 0.02f;
-
-            float energy = Sim.ComputeTotalEnergy(velocity, centerY, frictionDistance, friction);
-            float expectedKE = 0.5f * velocity * velocity;
-            float expectedPE = Sim.G * centerY;
-            float expectedFriction = Sim.G * frictionDistance * friction;
-
-            Assert.AreEqual(expectedKE + expectedPE + expectedFriction, energy, TOLERANCE);
-        }
-
-        [Test]
-        public void UpdateEnergy_WithResistance_EnergyDecreases() {
-            float prevEnergy = 500f;
+        public void UpdateVelocity_WithResistance_VelocityDecreases() {
             float prevVelocity = 20f;
-            float centerY = 0f;
-            float frictionDistance = 0f;
+            float deltaY = 0f;
+            float deltaDistance = 1f;
             float friction = 0f;
             float resistance = 0.001f;
 
-            Sim.UpdateEnergy(prevEnergy, prevVelocity, centerY, frictionDistance, friction, resistance,
-                out float newEnergy, out _);
+            float newVelocity = Sim.UpdateVelocity(prevVelocity, deltaY, deltaDistance, friction, resistance);
 
-            Assert.Less(newEnergy, prevEnergy, "Energy should decrease with resistance");
-
-            Sim.UpdateEnergy(prevEnergy, prevVelocity, centerY, frictionDistance, friction, 0f,
-                out float energyNoResistance, out float velocityNoResistance);
-            Sim.UpdateEnergy(prevEnergy, prevVelocity, centerY, frictionDistance, friction, resistance,
-                out float energyWithResistance, out float velocityWithResistance);
-
-            Assert.Less(velocityWithResistance, velocityNoResistance, "Resistance should reduce velocity");
+            Assert.Less(newVelocity, prevVelocity, "Velocity should decrease with resistance");
         }
 
         [Test]
-        public void UpdateEnergy_ZeroResistance_ConservesEnergy() {
-            float prevEnergy = 500f;
+        public void UpdateVelocity_ZeroResistance_ConservesVelocity() {
             float prevVelocity = 20f;
-            float centerY = 0f;
-            float frictionDistance = 0f;
+            float deltaY = 0f;
+            float deltaDistance = 0f;
             float friction = 0f;
             float resistance = 0f;
 
-            Sim.UpdateEnergy(prevEnergy, prevVelocity, centerY, frictionDistance, friction, resistance,
-                out float newEnergy, out float newVelocity);
+            float newVelocity = Sim.UpdateVelocity(prevVelocity, deltaY, deltaDistance, friction, resistance);
 
-            Assert.AreEqual(prevEnergy, newEnergy, TOLERANCE, "Energy should be conserved with zero resistance");
+            Assert.AreEqual(prevVelocity, newVelocity, TOLERANCE, "Velocity should be conserved with zero resistance and no height change");
         }
 
         [Test]
-        public void UpdateEnergy_HigherAltitude_LowerVelocity() {
-            float energy = 500f;
-            float velocity = 20f;
-            float lowCenterY = 0f;
-            float highCenterY = 10f;
+        public void UpdateVelocity_GoingUp_VelocityDecreases() {
+            float prevVelocity = 20f;
+            float deltaY = 1f;  // Going up by 1 meter
+            float deltaDistance = 0f;
+            float friction = 0f;
             float resistance = 0f;
 
-            Sim.UpdateEnergy(energy, velocity, lowCenterY, 0f, 0f, resistance, out _, out float velocityLow);
-            Sim.UpdateEnergy(energy, velocity, highCenterY, 0f, 0f, resistance, out _, out float velocityHigh);
+            float newVelocity = Sim.UpdateVelocity(prevVelocity, deltaY, deltaDistance, friction, resistance);
 
-            Assert.Greater(velocityLow, velocityHigh, "Higher altitude should yield lower velocity for same energy");
+            Assert.Less(newVelocity, prevVelocity, "Velocity should decrease when going up");
         }
 
         [Test]
-        public void UpdateEnergy_InsufficientEnergy_VelocityBecomesZero() {
-            float prevEnergy = 50f;
+        public void UpdateVelocity_GoingDown_VelocityIncreases() {
+            float prevVelocity = 20f;
+            float deltaY = -1f;  // Going down by 1 meter
+            float deltaDistance = 0f;
+            float friction = 0f;
+            float resistance = 0f;
+
+            float newVelocity = Sim.UpdateVelocity(prevVelocity, deltaY, deltaDistance, friction, resistance);
+
+            Assert.Greater(newVelocity, prevVelocity, "Velocity should increase when going down");
+        }
+
+        [Test]
+        public void UpdateVelocity_InsufficientEnergy_VelocityBecomesZero() {
             float prevVelocity = 5f;
-            float centerY = 100f;
-            float frictionDistance = 0f;
+            float deltaY = 100f;  // Going way up
+            float deltaDistance = 0f;
             float friction = 0f;
             float resistance = 0f;
 
-            Sim.UpdateEnergy(prevEnergy, prevVelocity, centerY, frictionDistance, friction, resistance,
-                out float newEnergy, out float newVelocity);
+            float newVelocity = Sim.UpdateVelocity(prevVelocity, deltaY, deltaDistance, friction, resistance);
 
-            Assert.AreEqual(0f, newVelocity, TOLERANCE, "Velocity should clamp to 0 when energy insufficient");
+            Assert.AreEqual(0f, newVelocity, TOLERANCE, "Velocity should clamp to 0 when going too high");
         }
 
         [Test]
-        public void UpdateEnergy_VelocityCubedResistance() {
-            float prevEnergy = 1000f;
+        public void UpdateVelocity_VelocityCubedResistance() {
             float slowVelocity = 5f;
             float fastVelocity = 20f;
+            float deltaY = 0f;
+            float deltaDistance = 1f;
+            float friction = 0f;
             float resistance = 0.001f;
 
-            Sim.UpdateEnergy(prevEnergy, slowVelocity, 0f, 0f, 0f, resistance, out float slowEnergy, out _);
-            Sim.UpdateEnergy(prevEnergy, fastVelocity, 0f, 0f, 0f, resistance, out float fastEnergy, out _);
+            float slowResult = Sim.UpdateVelocity(slowVelocity, deltaY, deltaDistance, friction, resistance);
+            float fastResult = Sim.UpdateVelocity(fastVelocity, deltaY, deltaDistance, friction, resistance);
 
-            float slowLoss = prevEnergy - slowEnergy;
-            float fastLoss = prevEnergy - fastEnergy;
+            float slowLoss = slowVelocity - slowResult;
+            float fastLoss = fastVelocity - fastResult;
 
-            Assert.Greater(fastLoss, slowLoss, "Higher velocity should lose more energy");
-            float expectedRatio = (fastVelocity * fastVelocity * fastVelocity) / (slowVelocity * slowVelocity * slowVelocity);
-            float actualRatio = fastLoss / slowLoss;
-            Assert.AreEqual(expectedRatio, actualRatio, 2f, "Energy loss should roughly scale with v^3");
+            Assert.Greater(fastLoss, slowLoss, "Higher velocity should lose more velocity");
         }
     }
 }

@@ -69,7 +69,6 @@ namespace Tests {
                 normal: new float3(p.normal.x, p.normal.y, p.normal.z),
                 heartPosition: new float3(p.heartPosition.x, p.heartPosition.y, p.heartPosition.z),
                 velocity: p.velocity,
-                energy: p.energy,
                 normalForce: p.normalForce,
                 lateralForce: p.lateralForce,
                 heartArc: p.heartArc,

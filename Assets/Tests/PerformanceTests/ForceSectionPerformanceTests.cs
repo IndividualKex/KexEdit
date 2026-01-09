@@ -31,7 +31,6 @@ namespace Tests.Performance {
                 in norm,
                 in lat,
                 velocity: 20f,
-                energy: 0f,
                 normalForce: 1f,
                 lateralForce: 0f,
                 heartArc: 0f,

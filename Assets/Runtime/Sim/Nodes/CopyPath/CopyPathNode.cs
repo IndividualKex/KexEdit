@@ -122,18 +122,22 @@ namespace KexEdit.Sim.Nodes.CopyPath {
                 float heartArc = prev.HeartArc + heartAdvance;
                 float spineArc = prev.SpineArc + spineAdvance;
 
-                float centerY = currFrame.SpinePosition(position, heartOffsetVal * 0.9f).y;
-                float frictionDistance = spineArc - prev.FrictionOrigin;
-
-                float newEnergy, newVelocity;
+                // Use delta-based velocity update for numerical stability
+                float newVelocity;
                 if (driven) {
                     newVelocity = KeyframeEvaluator.Evaluate(in drivenVelocity, t, prev.Velocity);
-                    float prevCenterY = prev.Frame.SpinePosition(prev.HeartPosition, prevHeartOffset * 0.9f).y;
-                    newEnergy = 0.5f * newVelocity * newVelocity + Sim.G * prevCenterY;
                 }
                 else {
-                    Sim.UpdateEnergy(prev.Energy, prev.Velocity, centerY, frictionDistance, frictionVal, resistanceVal,
-                        out newEnergy, out newVelocity);
+                    float prevCenterY = prev.Frame.SpinePosition(prev.HeartPosition, prevHeartOffset * 0.9f).y;
+                    float currCenterY = currFrame.SpinePosition(position, heartOffsetVal * 0.9f).y;
+                    float deltaY = currCenterY - prevCenterY;
+                    newVelocity = Sim.UpdateVelocity(
+                        prev.Velocity,
+                        deltaY,
+                        spineAdvance,
+                        frictionVal,
+                        resistanceVal
+                    );
                 }
 
                 ComputeForceVector(in prev, in currFrame, in position, heartAdvance, newVelocity, out float3 forceVec);
@@ -146,7 +150,6 @@ namespace KexEdit.Sim.Nodes.CopyPath {
                     normal: normal,
                     lateral: lateral,
                     velocity: newVelocity,
-                    energy: newEnergy,
                     normalForce: normalForce,
                     lateralForce: lateralForce,
                     heartArc: heartArc,

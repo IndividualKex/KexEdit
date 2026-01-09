@@ -62,13 +62,13 @@ namespace KexEdit.Legacy {
             if (points.Length == 0) return 17;
             if (points.Length == 1) {
                 var point = points[0];
-                return math.hash(new float4(point.Velocity(), point.Energy(), point.Friction(), 1));
+                return math.hash(new float4(point.Velocity(), point.NormalForce(), point.Friction(), 1));
             }
 
             var first = points[0];
             var last = points[^1];
-            uint firstHash = math.hash(new float4(first.Velocity(), first.Energy(), first.Friction(), (uint)points.Length));
-            uint lastHash = math.hash(new float4(last.Velocity(), last.Energy(), last.Friction(), firstHash));
+            uint firstHash = math.hash(new float4(first.Velocity(), first.NormalForce(), first.Friction(), (uint)points.Length));
+            uint lastHash = math.hash(new float4(last.Velocity(), last.NormalForce(), last.Friction(), firstHash));
             return lastHash;
         }
     }

@@ -22,25 +22,23 @@ namespace KexEdit.Sim {
             return (rad + THREE_PI) % TWO_PI - math.PI;
         }
 
+        /// <summary>
+        /// Update velocity using delta-based formulation (numerically stable).
+        /// Uses change in Y position rather than absolute energy to avoid
+        /// catastrophic cancellation when subtracting large similar numbers.
+        /// </summary>
         [BurstCompile]
-        public static float ComputeTotalEnergy(float velocity, float centerY, float frictionDistance, float friction) {
-            return 0.5f * velocity * velocity + G * centerY + G * frictionDistance * friction;
-        }
-
-        [BurstCompile]
-        public static void UpdateEnergy(
-            float prevEnergy,
+        public static float UpdateVelocity(
             float prevVelocity,
-            float centerY,
-            float frictionDistance,
+            float deltaY,
+            float deltaDistance,
             float friction,
-            float resistance,
-            out float newEnergy,
-            out float newVelocity
+            float resistance
         ) {
-            float pe = G * (centerY + frictionDistance * friction);
-            newEnergy = prevEnergy - prevVelocity * prevVelocity * prevVelocity * resistance * DT;
-            newVelocity = math.sqrt(2f * math.max(0f, newEnergy - pe));
+            float deltaPE = G * deltaY + G * friction * deltaDistance;
+            float dragLoss = prevVelocity * prevVelocity * prevVelocity * resistance * DT;
+            float vSquared = prevVelocity * prevVelocity - 2f * deltaPE - 2f * dragLoss;
+            return math.sqrt(math.max(0f, vSquared));
         }
     }
 }

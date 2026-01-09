@@ -9,7 +9,6 @@ namespace KexEdit.Native.RustCore {
         public RustFloat3 Normal;
         public RustFloat3 Lateral;
         public float Velocity;
-        public float Energy;
         public float NormalForce;
         public float LateralForce;
         public float HeartArc;
@@ -28,7 +27,6 @@ namespace KexEdit.Native.RustCore {
                 Normal = RustFloat3.FromUnity(point.Normal),
                 Lateral = RustFloat3.FromUnity(point.Lateral),
                 Velocity = point.Velocity,
-                Energy = point.Energy,
                 NormalForce = point.NormalForce,
                 LateralForce = point.LateralForce,
                 HeartArc = point.HeartArc,
@@ -49,7 +47,6 @@ namespace KexEdit.Native.RustCore {
                 normal: Normal.ToUnity(),
                 lateral: Lateral.ToUnity(),
                 velocity: Velocity,
-                energy: Energy,
                 normalForce: NormalForce,
                 lateralForce: LateralForce,
                 heartArc: HeartArc,

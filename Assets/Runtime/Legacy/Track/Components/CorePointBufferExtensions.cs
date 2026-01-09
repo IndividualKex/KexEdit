@@ -16,7 +16,6 @@ namespace KexEdit.Legacy {
         }
 
         public static float Velocity(this in CorePointBuffer p) => p.Point.Velocity;
-        public static float Energy(this in CorePointBuffer p) => p.Point.Energy;
         public static float NormalForce(this in CorePointBuffer p) => p.Point.NormalForce;
         public static float LateralForce(this in CorePointBuffer p) => p.Point.LateralForce;
         public static float RollSpeed(this in CorePointBuffer p) => p.Point.RollSpeed;
@@ -74,7 +73,7 @@ namespace KexEdit.Legacy {
                 Normal = p.Point.Normal,
                 Roll = p.Roll(),
                 Velocity = p.Point.Velocity,
-                Energy = p.Point.Energy,
+                Energy = 0f, // Energy no longer used in modern system
                 NormalForce = p.Point.NormalForce,
                 LateralForce = p.Point.LateralForce,
                 SpineAdvance = p.DistanceFromLast,

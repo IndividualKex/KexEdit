@@ -91,7 +91,7 @@ public class SimFollowerLogicTests {
                 direction: new float3(0f, 0f, 1f),
                 normal: new float3(0f, 1f, 0f),
                 lateral: new float3(1f, 0f, 0f),
-                velocity: 10f, energy: 0f, normalForce: 0f, lateralForce: 0f,
+                velocity: 10f, normalForce: 0f, lateralForce: 0f,
                 heartArc: i, spineArc: i, heartAdvance: i, frictionOrigin: 0f
             ));
         }
@@ -127,7 +127,7 @@ public class SimFollowerLogicTests {
                     direction: new float3(0f, 0f, 1f),
                     normal: new float3(0f, 1f, 0f),
                     lateral: new float3(1f, 0f, 0f),
-                    velocity: 10f, energy: 0f, normalForce: 0f, lateralForce: 0f,
+                    velocity: 10f, normalForce: 0f, lateralForce: 0f,
                     heartArc: i, spineArc: i, heartAdvance: i, frictionOrigin: 0f
                 ));
             }
@@ -168,7 +168,7 @@ public class SimFollowerLogicTests {
                 direction: new float3(0f, 0f, -1f),
                 normal: new float3(0f, 1f, 0f),
                 lateral: new float3(-1f, 0f, 0f),
-                velocity: 10f, energy: 0f, normalForce: 0f, lateralForce: 0f,
+                velocity: 10f, normalForce: 0f, lateralForce: 0f,
                 heartArc: i, spineArc: i, heartAdvance: i, frictionOrigin: 0f
             ));
         }

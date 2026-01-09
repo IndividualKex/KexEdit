@@ -51,13 +51,12 @@ namespace Tests {
         }
 
         [Test]
-        public void Build_PreservesVelocityAndEnergy() {
+        public void Build_PreservesVelocity() {
             Point anchor = CreateTestPoint();
 
             ReverseNode.Build(in anchor, out Point result);
 
             Assert.AreEqual(anchor.Velocity, result.Velocity, 1e-5f);
-            Assert.AreEqual(anchor.Energy, result.Energy, 1e-5f);
         }
 
         [Test]
@@ -76,7 +75,6 @@ namespace Tests {
                 normal: new float3(0f, 1f, 0f),
                 lateral: new float3(1f, 0f, 0f),
                 velocity: 10f,
-                energy: 100f,
                 normalForce: 1.5f,
                 lateralForce: 0.5f,
                 heartArc: 50f,
