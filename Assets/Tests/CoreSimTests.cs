@@ -26,7 +26,7 @@ namespace Tests {
 
         [Test]
         public void Constants_MinVelocity() {
-            Assert.AreEqual(1e-3f, Sim.MIN_VELOCITY, TOLERANCE);
+            Assert.AreEqual(0.1f, Sim.MIN_VELOCITY, TOLERANCE);
         }
 
         [Test]

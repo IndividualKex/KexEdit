@@ -12,8 +12,8 @@ namespace KexEdit.Sim.Nodes.Force {
 
     [BurstCompile]
     public static class ForceNode {
-        private const float MIN_VELOCITY = 1e-3f;
         private const int MAX_ITERATIONS = 1_000_000;
+        private const float MAX_ANGLE_RATE = 0.5f;
 
         [BurstCompile]
         private static void StepByForces(in Frame prev, float normalForce, float lateralForce, float velocity, float spineAdvance, out Frame result) {
@@ -24,23 +24,22 @@ namespace KexEdit.Sim.Nodes.Force {
             float estimatedVelocity = math.abs(spineAdvance) < Sim.EPSILON
                 ? velocity
                 : spineAdvance * Sim.HZ;
-            if (math.abs(estimatedVelocity) < Sim.EPSILON) estimatedVelocity = Sim.EPSILON;
-            float safeVelocity = math.abs(velocity) < Sim.EPSILON ? Sim.EPSILON : velocity;
 
-            float3 newDirection = math.normalize(math.mul(
-                math.mul(
-                    quaternion.AxisAngle(prev.Lateral, normalAccel / estimatedVelocity / Sim.HZ),
-                    quaternion.AxisAngle(prev.Normal, -lateralAccel / safeVelocity / Sim.HZ)
-                ),
-                prev.Direction
-            ));
-            float3 newLateral = math.normalize(math.mul(
-                quaternion.AxisAngle(prev.Normal, -lateralAccel / safeVelocity / Sim.HZ),
-                prev.Lateral
-            ));
+            float safeEstimated = math.max(math.abs(estimatedVelocity), Sim.MIN_VELOCITY);
+            float safeVelocity = math.max(math.abs(velocity), Sim.MIN_VELOCITY);
+
+            float normalAngle = math.clamp(normalAccel / safeEstimated / Sim.HZ, -MAX_ANGLE_RATE, MAX_ANGLE_RATE);
+            float lateralAngle = math.clamp(-lateralAccel / safeVelocity / Sim.HZ, -MAX_ANGLE_RATE, MAX_ANGLE_RATE);
+
+            quaternion qNormal = quaternion.AxisAngle(prev.Lateral, normalAngle);
+            quaternion qLateral = quaternion.AxisAngle(prev.Normal, lateralAngle);
+            quaternion combined = math.mul(qNormal, qLateral);
+
+            float3 newDirection = math.normalize(math.mul(combined, prev.Direction));
+            float3 newLateral = math.normalize(math.mul(qLateral, prev.Lateral));
             float3 newNormal = math.normalize(math.cross(newDirection, newLateral));
 
-            result = new Frame(newDirection, newNormal, newLateral);
+            result = new Frame(newDirection, newNormal, newLateral).Reorthonormalize();
         }
 
         [BurstCompile]
@@ -189,14 +188,14 @@ namespace KexEdit.Sim.Nodes.Force {
 
                 if (driven) {
                     float velocity = KeyframeEvaluator.Evaluate(in drivenVelocity, t, prev.Velocity);
-                    if (velocity < MIN_VELOCITY) {
+                    if (velocity < Sim.MIN_VELOCITY) {
                         break;
                     }
                     prev = prev.WithVelocity(velocity, heartOffsetVal, frictionVal, true);
                 }
-                else if (prev.Velocity < MIN_VELOCITY) {
+                else if (prev.Velocity < Sim.MIN_VELOCITY) {
                     if (prev.Frame.Pitch < 0f) {
-                        prev = prev.WithVelocity(MIN_VELOCITY, heartOffsetVal, frictionVal, true);
+                        prev = prev.WithVelocity(Sim.MIN_VELOCITY, heartOffsetVal, frictionVal, true);
                     }
                     else {
                         break;
@@ -256,14 +255,14 @@ namespace KexEdit.Sim.Nodes.Force {
 
                 if (driven) {
                     float velocity = KeyframeEvaluator.Evaluate(in drivenVelocity, d, prev.Velocity);
-                    if (velocity < MIN_VELOCITY) {
+                    if (velocity < Sim.MIN_VELOCITY) {
                         break;
                     }
                     prev = prev.WithVelocity(velocity, heartOffsetVal, frictionVal, true);
                 }
-                else if (prev.Velocity < MIN_VELOCITY) {
+                else if (prev.Velocity < Sim.MIN_VELOCITY) {
                     if (prev.Frame.Pitch < 0f) {
-                        prev = prev.WithVelocity(MIN_VELOCITY, heartOffsetVal, frictionVal, true);
+                        prev = prev.WithVelocity(Sim.MIN_VELOCITY, heartOffsetVal, frictionVal, true);
                     }
                     else {
                         break;

@@ -25,6 +25,13 @@ namespace KexEdit.Sim {
 
         public float Yaw => math.atan2(-Direction.x, -Direction.z);
 
+        public Frame Reorthonormalize() {
+            float3 dir = math.normalize(Direction);
+            float3 lat = math.normalize(Lateral - dir * math.dot(dir, Lateral));
+            float3 norm = math.normalize(math.cross(dir, lat));
+            return new Frame(dir, norm, lat);
+        }
+
         public static Frame FromDirectionAndRoll(in float3 direction, float roll) {
             float3 dir = math.normalize(direction);
             float yaw = math.atan2(-dir.x, -dir.z);
@@ -49,7 +56,7 @@ namespace KexEdit.Sim {
             quaternion rollQuat = quaternion.AxisAngle(Direction, -deltaRoll);
             float3 newLateral = math.normalize(math.mul(rollQuat, Lateral));
             float3 newNormal = math.normalize(math.cross(Direction, newLateral));
-            return new Frame(Direction, newNormal, newLateral);
+            return new Frame(Direction, newNormal, newLateral).Reorthonormalize();
         }
 
         public Frame RotateAround(in float3 axis, float angle) {
@@ -68,7 +75,7 @@ namespace KexEdit.Sim {
             float3 newDirection = math.normalize(math.mul(pitchQuat, Direction));
             float3 newLateral = math.normalize(math.mul(pitchQuat, Lateral));
             float3 newNormal = math.normalize(math.cross(newDirection, newLateral));
-            return new Frame(newDirection, newNormal, newLateral);
+            return new Frame(newDirection, newNormal, newLateral).Reorthonormalize();
         }
 
         public Frame WithYaw(float deltaYaw) {
@@ -76,7 +83,7 @@ namespace KexEdit.Sim {
             float3 newDirection = math.normalize(math.mul(yawQuat, Direction));
             float3 newLateral = math.normalize(math.mul(yawQuat, Lateral));
             float3 newNormal = math.normalize(math.cross(newDirection, newLateral));
-            return new Frame(newDirection, newNormal, newLateral);
+            return new Frame(newDirection, newNormal, newLateral).Reorthonormalize();
         }
 
         public float3 SpinePosition(in float3 heartPosition, float offset) => heartPosition + Normal * offset;
