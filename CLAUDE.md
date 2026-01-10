@@ -68,6 +68,26 @@ cargo test -p kexedit-sim              # Rust tests
 - **Single source of truth** — No duplicate state
 - **Fail fast** — Expose bugs immediately
 
+## Migration Status
+
+**Rust Backend (submodule: `rust-backend/`)** — Standalone library, ready for external use.
+
+| Component | Status |
+|-----------|--------|
+| Sim core (FVD physics) | Rust parity |
+| Graph core (DAG) | Rust parity |
+| All 8 node types | Rust parity |
+| Track building | Rust parity |
+| Spline generation | Rust parity |
+
+**Pending Migration:**
+- Trains (traversal, car positioning)
+- Persistence (full .kex format)
+- Rendering
+
+**Legacy Code (`Assets/Runtime/Legacy/`):**
+Unity ECS wrapper code. Gradually being superseded by Rust backend via FFI.
+
 ## Security
 
 - Validate external inputs only
