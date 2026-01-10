@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using KexEdit.Document;
+using KexEdit.Graph;
+using KexEdit.Graph.Typed;
 using KexEdit.Legacy;
 using KexEdit.Sim;
 using NUnit.Framework;
@@ -84,7 +86,7 @@ namespace Tests {
                 var trackSection = track.Sections[sectionIndex];
                 var sectionPoints = track.Points.AsArray().GetSubArray(trackSection.StartIndex, trackSection.Length);
 
-                var goldSection = BuildGoldSection(nodeId, nodeType, i, doc, sectionPoints);
+                var goldSection = BuildGoldSection(nodeId, nodeType, i, doc, track, sectionPoints);
                 data.sections.Add(goldSection);
             }
 
@@ -117,14 +119,14 @@ namespace Tests {
         }
 
         private GoldSection BuildGoldSection(uint nodeId, uint nodeType, int graphIndex,
-                                             in DocumentAggregate doc, NativeArray<Point> points) {
+                                             in DocumentAggregate doc, in KexEdit.Track.Track track, NativeArray<Point> points) {
             float2 nodePos = doc.Graph.NodePositions[graphIndex];
 
             var section = new GoldSection {
                 nodeId = nodeId,
                 nodeType = GetNodeTypeName((SchemaNodeType)nodeType),
                 position = new GoldVec2 { x = nodePos.x, y = nodePos.y },
-                inputs = BuildGoldInputs(nodeId, (SchemaNodeType)nodeType, doc, points),
+                inputs = BuildGoldInputs(nodeId, (SchemaNodeType)nodeType, doc, track, points),
                 outputs = BuildGoldOutputs(points)
             };
 
@@ -143,7 +145,7 @@ namespace Tests {
         }
 
         private GoldInputs BuildGoldInputs(uint nodeId, SchemaNodeType nodeType, in DocumentAggregate doc,
-                                           NativeArray<Point> points) {
+                                           in KexEdit.Track.Track track, NativeArray<Point> points) {
             var inputs = new GoldInputs();
 
             // Anchor point (first point of section)
@@ -172,9 +174,9 @@ namespace Tests {
             inputs.propertyOverrides.friction = doc.Flags.TryGetValue(overrideFrictionKey, out int fr) && fr == 1;
             inputs.propertyOverrides.resistance = doc.Flags.TryGetValue(overrideResistanceKey, out int r) && r == 1;
 
-            // Check for DrivenVelocity keyframes as proxy for fixedVelocity
-            inputs.propertyOverrides.fixedVelocity =
-                doc.Keyframes.TryGet(nodeId, PropertyId.DrivenVelocity, out _);
+            // Check for Driven flag (not keyframes presence)
+            ulong drivenKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Driven);
+            inputs.propertyOverrides.driven = doc.Flags.TryGetValue(drivenKey, out int drivenVal) && drivenVal == 1;
 
             // Steering flag
             ulong steeringKey = DocumentAggregate.InputKey(nodeId, NodeMeta.Steering);
@@ -188,15 +190,113 @@ namespace Tests {
                 inputs.curveData = BuildCurveData(nodeId, doc);
             }
 
+            // Bridge-specific inputs
+            if (nodeType == SchemaNodeType.Bridge) {
+                // Target anchor comes from the connected Target input port (port 1)
+                inputs.targetAnchor = BuildBridgeTarget(nodeId, doc, track);
+
+                // BridgePorts: OutWeight = 2, InWeight = 3
+                inputs.outWeight = GetScalar(doc.Scalars, nodeId, 2, 0.3f);
+                inputs.inWeight = GetScalar(doc.Scalars, nodeId, 3, 0.3f);
+            }
+
+            // CopyPath-specific inputs
+            if (nodeType == SchemaNodeType.CopyPath) {
+                // CopyPathPorts: Start = 2, End = 3
+                inputs.start = GetScalar(doc.Scalars, nodeId, 2, 0f);
+                inputs.end = GetScalar(doc.Scalars, nodeId, 3, -1f);
+
+                // sourcePath comes from the Path input (port 1), which connects to another section's output
+                inputs.sourcePath = BuildCopyPathSource(nodeId, doc, track);
+            }
+
             return inputs;
         }
 
         private GoldCurveData BuildCurveData(uint nodeId, in DocumentAggregate doc) {
-            // Look up curve data from document scalars
-            // These would be stored with specific input indices for curved nodes
-            var curveData = new GoldCurveData();
-            // Default values if not found
-            return curveData;
+            // Curved port indices from CurvedPorts
+            const int RadiusPort = 1;
+            const int ArcPort = 2;
+            const int AxisPort = 3;
+            const int LeadInPort = 4;
+            const int LeadOutPort = 5;
+
+            return new GoldCurveData {
+                radius = GetScalar(doc.Scalars, nodeId, RadiusPort, 10f),
+                arc = GetScalar(doc.Scalars, nodeId, ArcPort, 90f),
+                axis = GetScalar(doc.Scalars, nodeId, AxisPort, 0f),
+                leadIn = GetScalar(doc.Scalars, nodeId, LeadInPort, 0f),
+                leadOut = GetScalar(doc.Scalars, nodeId, LeadOutPort, 0f)
+            };
+        }
+
+        private float GetScalar(NativeHashMap<ulong, float> scalars, uint nodeId, int inputIndex, float defaultValue) {
+            ulong key = DocumentAggregate.InputKey(nodeId, inputIndex);
+            return scalars.TryGetValue(key, out float value) ? value : defaultValue;
+        }
+
+        private GoldPointData BuildBridgeTarget(uint nodeId, in DocumentAggregate doc, in KexEdit.Track.Track track) {
+            // Bridge Target input is Anchor type, localIndex 1 (second anchor-type port)
+            if (!doc.Graph.TryGetInputBySpec(nodeId, PortDataType.Anchor, 1, out uint targetPortId)) {
+                return null;
+            }
+
+            // Find the edge that targets this port
+            for (int i = 0; i < doc.Graph.EdgeIds.Length; i++) {
+                if (doc.Graph.EdgeTargets[i] != targetPortId) continue;
+
+                uint sourcePortId = doc.Graph.EdgeSources[i];
+                if (!doc.Graph.TryGetPortIndex(sourcePortId, out int portIndex)) continue;
+
+                uint sourceNodeId = doc.Graph.PortOwners[portIndex];
+
+                // Get the source section's first point from the track
+                if (track.NodeToSection.TryGetValue(sourceNodeId, out int sectionIndex)) {
+                    var sourceSection = track.Sections[sectionIndex];
+                    if (sourceSection.Length > 0) {
+                        var firstPoint = track.Points[sourceSection.StartIndex];
+                        return PointToGoldPointData(firstPoint);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private List<GoldPointData> BuildCopyPathSource(uint nodeId, in DocumentAggregate doc, in KexEdit.Track.Track track) {
+            // Get input ports by index - Path is at index 1 (CopyPathPorts.Path = 1)
+            doc.Graph.GetInputPorts(nodeId, out var inputPorts, Allocator.Temp);
+            if (inputPorts.Length < 2) {
+                inputPorts.Dispose();
+                return new List<GoldPointData>();
+            }
+
+            uint pathPortId = inputPorts[1]; // Path input is at index 1
+            inputPorts.Dispose();
+
+            // Find the edge that targets this port
+            for (int i = 0; i < doc.Graph.EdgeIds.Length; i++) {
+                if (doc.Graph.EdgeTargets[i] != pathPortId) continue;
+
+                uint sourcePortId = doc.Graph.EdgeSources[i];
+                if (!doc.Graph.TryGetPortIndex(sourcePortId, out int portIndex)) continue;
+
+                uint sourceNodeId = doc.Graph.PortOwners[portIndex];
+
+                // Get the source section's points from the track
+                if (track.NodeToSection.TryGetValue(sourceNodeId, out int sectionIndex)) {
+                    var sourceSection = track.Sections[sectionIndex];
+                    var sourcePoints = track.Points.AsArray().GetSubArray(sourceSection.StartIndex, sourceSection.Length);
+
+                    var result = new List<GoldPointData>(sourcePoints.Length);
+                    for (int k = 0; k < sourcePoints.Length; k++) {
+                        result.Add(PointToGoldPointData(sourcePoints[k]));
+                    }
+                    return result;
+                }
+            }
+
+            return new List<GoldPointData>();
         }
 
         private GoldKeyframes BuildGoldKeyframes(uint nodeId, in DocumentAggregate doc) {
@@ -206,7 +306,7 @@ namespace Tests {
                 lateralForce = GetKeyframeList(nodeId, PropertyId.LateralForce, doc),
                 pitchSpeed = GetKeyframeList(nodeId, PropertyId.PitchSpeed, doc),
                 yawSpeed = GetKeyframeList(nodeId, PropertyId.YawSpeed, doc),
-                fixedVelocity = GetKeyframeList(nodeId, PropertyId.DrivenVelocity, doc),
+                drivenVelocity = GetKeyframeList(nodeId, PropertyId.DrivenVelocity, doc),
                 heart = GetKeyframeList(nodeId, PropertyId.HeartOffset, doc),
                 friction = GetKeyframeList(nodeId, PropertyId.Friction, doc),
                 resistance = GetKeyframeList(nodeId, PropertyId.Resistance, doc)

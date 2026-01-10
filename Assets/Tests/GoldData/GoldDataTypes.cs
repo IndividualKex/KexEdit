@@ -71,7 +71,7 @@ namespace Tests {
 
     [Serializable]
     public class GoldPropertyOverrides {
-        public bool fixedVelocity;
+        public bool driven;
         public bool heart;
         public bool friction;
         public bool resistance;
@@ -84,7 +84,7 @@ namespace Tests {
         public List<GoldKeyframe> lateralForce;
         public List<GoldKeyframe> pitchSpeed;
         public List<GoldKeyframe> yawSpeed;
-        public List<GoldKeyframe> fixedVelocity;
+        public List<GoldKeyframe> drivenVelocity;
         public List<GoldKeyframe> heart;
         public List<GoldKeyframe> friction;
         public List<GoldKeyframe> resistance;

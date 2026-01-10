@@ -1,7 +1,7 @@
 ﻿{
     "metadata": {
         "sourceFile": "switch",
-        "exportedAt": "2026-01-10T01:30:30.1226590Z",
+        "exportedAt": "2026-01-10T03:09:19.5951054Z",
         "kexEditVersion": "0.12.0"
     },
     "graph": {
@@ -75,7 +75,7 @@
                     "value": 2.4000000953674318
                 },
                 "propertyOverrides": {
-                    "fixedVelocity": false,
+                    "driven": false,
                     "heart": false,
                     "friction": false,
                     "resistance": false
@@ -192,7 +192,7 @@
                     "lateralForce": [],
                     "pitchSpeed": [],
                     "yawSpeed": [],
-                    "fixedVelocity": [],
+                    "drivenVelocity": [],
                     "heart": [],
                     "friction": [],
                     "resistance": []
@@ -11113,7 +11113,7 @@
                     "value": 1.8000000715255738
                 },
                 "propertyOverrides": {
-                    "fixedVelocity": false,
+                    "driven": false,
                     "heart": false,
                     "friction": false,
                     "resistance": false
@@ -11182,7 +11182,7 @@
                     "lateralForce": [],
                     "pitchSpeed": [],
                     "yawSpeed": [],
-                    "fixedVelocity": [],
+                    "drivenVelocity": [],
                     "heart": [],
                     "friction": [],
                     "resistance": []
@@ -19403,7 +19403,7 @@
                     "value": 1.0
                 },
                 "propertyOverrides": {
-                    "fixedVelocity": true,
+                    "driven": true,
                     "heart": false,
                     "friction": false,
                     "resistance": false
@@ -19472,7 +19472,7 @@
                         }
                     ],
                     "yawSpeed": [],
-                    "fixedVelocity": [
+                    "drivenVelocity": [
                         {
                             "id": 2410477364,
                             "time": 0.0,
@@ -24106,7 +24106,7 @@
                     "value": 3.799999952316284
                 },
                 "propertyOverrides": {
-                    "fixedVelocity": false,
+                    "driven": false,
                     "heart": false,
                     "friction": false,
                     "resistance": false
@@ -24150,7 +24150,7 @@
                         }
                     ],
                     "yawSpeed": [],
-                    "fixedVelocity": [],
+                    "drivenVelocity": [],
                     "heart": [],
                     "friction": [],
                     "resistance": []
@@ -37501,7 +37501,7 @@
                     "value": 2.0
                 },
                 "propertyOverrides": {
-                    "fixedVelocity": true,
+                    "driven": true,
                     "heart": false,
                     "friction": false,
                     "resistance": false
@@ -37520,7 +37520,7 @@
                     "lateralForce": [],
                     "pitchSpeed": [],
                     "yawSpeed": [],
-                    "fixedVelocity": [
+                    "drivenVelocity": [
                         {
                             "id": 1007639284,
                             "time": 0.0,
@@ -46666,7 +46666,7 @@
                     "value": 0.0
                 },
                 "propertyOverrides": {
-                    "fixedVelocity": false,
+                    "driven": false,
                     "heart": false,
                     "friction": false,
                     "resistance": false
@@ -46685,14 +46685,14 @@
                     "lateralForce": [],
                     "pitchSpeed": [],
                     "yawSpeed": [],
-                    "fixedVelocity": [],
+                    "drivenVelocity": [],
                     "heart": [],
                     "friction": [],
                     "resistance": []
                 },
                 "sourcePath": [],
                 "start": 0.0,
-                "end": 0.0,
+                "end": -1.0,
                 "targetAnchor": {
                     "heartPosition": {
                         "x": 0.0,
@@ -60711,7 +60711,7 @@
                     "value": 0.0
                 },
                 "propertyOverrides": {
-                    "fixedVelocity": false,
+                    "driven": false,
                     "heart": false,
                     "friction": false,
                     "resistance": false
@@ -60730,14 +60730,14 @@
                     "lateralForce": [],
                     "pitchSpeed": [],
                     "yawSpeed": [],
-                    "fixedVelocity": [],
+                    "drivenVelocity": [],
                     "heart": [],
                     "friction": [],
                     "resistance": []
                 },
                 "sourcePath": [],
                 "start": 0.0,
-                "end": 0.0,
+                "end": 0.47999998927116396,
                 "targetAnchor": {
                     "heartPosition": {
                         "x": 0.0,

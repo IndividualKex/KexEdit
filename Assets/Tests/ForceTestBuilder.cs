@@ -48,11 +48,11 @@ namespace Tests {
             return new ForceTestData {
                 Anchor = anchor,
                 Config = config,
-                FixedVelocity = section.inputs.propertyOverrides?.fixedVelocity ?? false,
+                FixedVelocity = section.inputs.propertyOverrides?.driven ?? false,
                 RollSpeed = ToKeyframeArray(section.inputs.keyframes?.rollSpeed, allocator),
                 NormalForce = ToKeyframeArray(section.inputs.keyframes?.normalForce, allocator),
                 LateralForce = ToKeyframeArray(section.inputs.keyframes?.lateralForce, allocator),
-                FixedVelocityKeyframes = ToKeyframeArray(section.inputs.keyframes?.fixedVelocity, allocator),
+                FixedVelocityKeyframes = ToKeyframeArray(section.inputs.keyframes?.drivenVelocity, allocator),
                 HeartOffset = ToKeyframeArray(section.inputs.keyframes?.heart, allocator),
                 Friction = ToKeyframeArray(section.inputs.keyframes?.friction, allocator),
                 Resistance = ToKeyframeArray(section.inputs.keyframes?.resistance, allocator),
