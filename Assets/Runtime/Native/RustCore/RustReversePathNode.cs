@@ -6,13 +6,13 @@ using CorePoint = KexEdit.Sim.Point;
 namespace KexEdit.Native.RustCore {
     public static class RustReversePathNode {
         private const string DLL_NAME = "kexedit_core";
-        private const int MAX_POINTS = 1_000_000;
+        private const int INITIAL_CAPACITY = 4096;
 
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
         private static unsafe extern int kexedit_reverse_path_build(
-            RustPoint* source_path,
+            CorePoint* source_path,
             nuint source_path_len,
-            RustPoint* out_points,
+            CorePoint* out_points,
             nuint* out_len,
             nuint max_len
         );
@@ -23,34 +23,44 @@ namespace KexEdit.Native.RustCore {
         ) {
             result.Clear();
 
-            var sourcePathRust = new NativeArray<RustPoint>(sourcePath.Length, Allocator.Temp);
-            for (int i = 0; i < sourcePath.Length; i++) {
-                sourcePathRust[i] = RustPoint.FromCore(sourcePath[i]);
+            if (result.Capacity < INITIAL_CAPACITY) {
+                result.Capacity = INITIAL_CAPACITY;
             }
 
-            var outPoints = new NativeArray<RustPoint>(MAX_POINTS, Allocator.Temp);
             nuint outLen = 0;
 
+            // Direct pointer to source path (zero-copy)
+            CorePoint* sourcePathPtr = sourcePath.Length > 0 ? (CorePoint*)sourcePath.GetUnsafeReadOnlyPtr() : null;
+
             int returnCode = kexedit_reverse_path_build(
-                (RustPoint*)sourcePathRust.GetUnsafePtr(),
-                (nuint)sourcePathRust.Length,
-                (RustPoint*)outPoints.GetUnsafePtr(),
+                sourcePathPtr,
+                (nuint)sourcePath.Length,
+                (CorePoint*)result.GetUnsafePtr(),
                 &outLen,
-                (nuint)MAX_POINTS
+                (nuint)result.Capacity
             );
 
-            sourcePathRust.Dispose();
+            if (returnCode == -3) {
+                int requiredCapacity = result.Capacity * 2;
+                while (requiredCapacity < 1_000_000) {
+                    result.Capacity = requiredCapacity;
+                    returnCode = kexedit_reverse_path_build(
+                        sourcePathPtr,
+                        (nuint)sourcePath.Length,
+                        (CorePoint*)result.GetUnsafePtr(),
+                        &outLen,
+                        (nuint)result.Capacity
+                    );
+                    if (returnCode != -3) break;
+                    requiredCapacity *= 2;
+                }
+            }
 
             if (returnCode != 0) {
-                outPoints.Dispose();
                 return returnCode;
             }
 
-            for (int i = 0; i < (int)outLen; i++) {
-                result.Add(outPoints[i].ToCore());
-            }
-
-            outPoints.Dispose();
+            result.ResizeUninitialized((int)outLen);
             return 0;
         }
     }

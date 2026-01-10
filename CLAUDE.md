@@ -47,6 +47,8 @@ cargo test -p kexedit-sim              # Rust tests
 ./build-rust.sh                        # Build FFI DLL
 ```
 
+**Test Results**: After running tests, check `test-results.xml` (summary) and `test-log.txt` (details) instead of re-running. Do not re-run tests immediately after running them.
+
 ## Entry Points
 
 | Entry | Path |

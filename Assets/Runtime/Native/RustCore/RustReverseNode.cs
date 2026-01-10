@@ -7,21 +7,21 @@ namespace KexEdit.Native.RustCore {
 
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
         private static unsafe extern int kexedit_reverse_build(
-            RustPoint* anchor,
-            RustPoint* out_point
+            CorePoint* anchor,
+            CorePoint* out_point
         );
 
         public static unsafe int Build(
             in CorePoint anchor,
             out CorePoint result
         ) {
-            var rustAnchor = RustPoint.FromCore(anchor);
-            RustPoint rustOut;
+            CorePoint outPoint;
 
-            int returnCode = kexedit_reverse_build(&rustAnchor, &rustOut);
-
-            result = rustOut.ToCore();
-            return returnCode;
+            fixed (CorePoint* anchorPtr = &anchor) {
+                int returnCode = kexedit_reverse_build(anchorPtr, &outPoint);
+                result = outPoint;
+                return returnCode;
+            }
         }
     }
 }

@@ -8,7 +8,7 @@ namespace KexEdit.Native.RustCore {
 
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
         private static unsafe extern int kexedit_anchor_build(
-            RustFloat3* position,
+            float3* position,
             float pitch,
             float yaw,
             float roll,
@@ -16,7 +16,7 @@ namespace KexEdit.Native.RustCore {
             float heart_offset,
             float friction,
             float resistance,
-            RustPoint* out_point
+            CorePoint* out_point
         );
 
         public static unsafe int Build(
@@ -30,23 +30,24 @@ namespace KexEdit.Native.RustCore {
             float resistance,
             out CorePoint result
         ) {
-            var rustPos = RustFloat3.FromUnity(position);
-            RustPoint rustOut;
+            CorePoint outPoint;
 
-            int returnCode = kexedit_anchor_build(
-                &rustPos,
-                pitch,
-                yaw,
-                roll,
-                velocity,
-                heartOffset,
-                friction,
-                resistance,
-                &rustOut
-            );
+            fixed (float3* posPtr = &position) {
+                int returnCode = kexedit_anchor_build(
+                    posPtr,
+                    pitch,
+                    yaw,
+                    roll,
+                    velocity,
+                    heartOffset,
+                    friction,
+                    resistance,
+                    &outPoint
+                );
 
-            result = rustOut.ToCore();
-            return returnCode;
+                result = outPoint;
+                return returnCode;
+            }
         }
     }
 }
