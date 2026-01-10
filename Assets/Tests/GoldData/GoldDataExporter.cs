@@ -19,9 +19,6 @@ namespace Tests {
     public class GoldDataExporter {
         private const string VERSION = "0.12.0";
         private const int MAX_POINTS_PER_SECTION = 50000;
-        private const float MAX_VELOCITY = 500f;  // m/s - safety limit
-        private const float MIN_VELOCITY_THRESHOLD = 0.2f;  // Stop if velocity stays below this
-        private const int MAX_LOW_VELOCITY_POINTS = 100;  // Max consecutive low velocity points
 
         [Test]
         [TestCase("shuttle")]
@@ -240,37 +237,16 @@ namespace Tests {
         }
 
         private GoldOutputs BuildGoldOutputs(NativeArray<Point> points) {
-            // Cap points to prevent runaway sections from generating massive files
             int cappedLength = math.min(points.Length, MAX_POINTS_PER_SECTION);
 
             var outputs = new GoldOutputs {
-                pointCount = 0,  // Will be updated at end
+                pointCount = 0,
                 totalLength = 0f,
                 points = new List<GoldPointData>()
             };
 
-            int lowVelocityCount = 0;
             for (int i = 0; i < cappedLength; i++) {
-                var pt = points[i];
-
-                // Safety check for extreme velocities
-                if (pt.Velocity > MAX_VELOCITY) {
-                    Debug.LogWarning($"Gold export: Stopping at point {i} due to extreme velocity {pt.Velocity:F1} m/s");
-                    break;
-                }
-
-                // Check for prolonged low velocity (coaster nearly stopped)
-                if (pt.Velocity <= MIN_VELOCITY_THRESHOLD) {
-                    lowVelocityCount++;
-                    if (lowVelocityCount > MAX_LOW_VELOCITY_POINTS) {
-                        Debug.LogWarning($"Gold export: Stopping at point {i} after {MAX_LOW_VELOCITY_POINTS} consecutive low velocity points");
-                        break;
-                    }
-                } else {
-                    lowVelocityCount = 0;
-                }
-
-                outputs.points.Add(PointToGoldPointData(pt));
+                outputs.points.Add(PointToGoldPointData(points[i]));
             }
 
             outputs.pointCount = outputs.points.Count;

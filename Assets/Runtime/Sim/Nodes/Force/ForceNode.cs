@@ -211,6 +211,10 @@ namespace KexEdit.Sim.Nodes.Force {
                 PhysicsParams physics = new(heartOffsetVal, frictionVal, resistanceVal, deltaRoll, driven);
                 Advance(in prev, targetNormalForce, targetLateralForce, in physics, rollSpeedVal, out Point curr);
 
+                if (curr.Velocity > Sim.MAX_VELOCITY) break;
+                float forceMag = math.sqrt(curr.NormalForce * curr.NormalForce + curr.LateralForce * curr.LateralForce);
+                if (forceMag > Sim.MAX_FORCE) break;
+
                 result.Add(curr);
                 state = curr;
                 prevHeartOffset = heartOffsetVal;
@@ -277,6 +281,10 @@ namespace KexEdit.Sim.Nodes.Force {
 
                 PhysicsParams physics = new(heartOffsetVal, frictionVal, resistanceVal, deltaRoll, driven);
                 Advance(in prev, targetNormalForce, targetLateralForce, in physics, rollSpeedVal, out Point curr);
+
+                if (curr.Velocity > Sim.MAX_VELOCITY) break;
+                float forceMag = math.sqrt(curr.NormalForce * curr.NormalForce + curr.LateralForce * curr.LateralForce);
+                if (forceMag > Sim.MAX_FORCE) break;
 
                 result.Add(curr);
                 state = curr;

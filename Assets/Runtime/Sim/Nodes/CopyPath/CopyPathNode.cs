@@ -162,6 +162,10 @@ namespace KexEdit.Sim.Nodes.CopyPath {
                     resistance: resistanceVal
                 );
 
+                if (state.Velocity > Sim.MAX_VELOCITY) break;
+                float forceMag = math.sqrt(normalForce * normalForce + lateralForce * lateralForce);
+                if (forceMag > Sim.MAX_FORCE) break;
+
                 result.Add(state);
                 prevHeartOffset = heartOffsetVal;
                 prevFriction = frictionVal;

@@ -10,6 +10,8 @@ namespace KexEdit.Sim {
         public const float DT = 1f / HZ;
         public const float EPSILON = 1.192092896e-07f;
         public const float MIN_VELOCITY = 0.1f;
+        public const float MAX_VELOCITY = 150f;
+        public const float MAX_FORC10f;
         public const float HEART_BASE = 1.1f;
         public const float FRICTION_BASE = 0.021f;
         public const float RESISTANCE_BASE = 2e-5f;

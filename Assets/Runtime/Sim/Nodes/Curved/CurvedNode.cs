@@ -112,6 +112,10 @@ namespace KexEdit.Sim.Nodes.Curved {
                     out Point curr
                 );
 
+                if (curr.Velocity > Sim.MAX_VELOCITY) break;
+                float forceMag = math.sqrt(curr.NormalForce * curr.NormalForce + curr.LateralForce * curr.LateralForce);
+                if (forceMag > Sim.MAX_FORCE) break;
+
                 result.Add(curr);
                 state = curr;
                 prevHeartOffset = heartOffsetVal;

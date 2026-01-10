@@ -15,9 +15,9 @@ using static KexEdit.Sim.Sim;
 using static KexEdit.UI.Extensions;
 using AnchorNodeBuilder = KexEdit.Sim.Nodes.Anchor.AnchorNode;
 using AnchorPorts = KexEdit.Sim.Nodes.Anchor.AnchorPorts;
-using DocumentAggregate = KexEdit.Document.Document;
 using CoreNodeType = KexEdit.Sim.Schema.NodeType;
 using CorePoint = KexEdit.Sim.Point;
+using DocumentAggregate = KexEdit.Document.Document;
 using LegacyCoaster = KexEdit.Legacy.Coaster;
 using NodeMeta = KexEdit.Document.NodeMeta;
 using PortDataType = KexEdit.Sim.Schema.PortDataType;
@@ -259,7 +259,7 @@ namespace KexEdit.UI.NodeGraph {
                         coaster.Scalars[key] = HEART_BASE;
                         break;
                     case PortType.Friction:
-                        coaster.Scalars[key] = FRICTION_BASE;
+                        coaster.Scalars[key] = MAX_FORCE;
                         break;
                     case PortType.Resistance:
                         coaster.Scalars[key] = RESISTANCE_BASE;

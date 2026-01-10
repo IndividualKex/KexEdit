@@ -54,7 +54,7 @@ namespace KexEdit.Legacy {
                 SpineArc = 0f,
                 FrictionOrigin = 0f,
                 HeartOffset = HEART_BASE,
-                Friction = FRICTION_BASE,
+                Friction = MAX_FORCE,
                 Resistance = RESISTANCE_BASE,
                 Facing = 1,
             };
