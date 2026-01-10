@@ -7,7 +7,7 @@ using KexEdit.Sim.Schema;
 using KexEdit.Sim.Nodes.Force;
 using Keyframe = KexEdit.Sim.Keyframe;
 
-#if USE_RUST_BACKEND_BACKEND_BACKEND
+#if USE_RUST_BACKEND
 using KexEdit.Native.RustCore;
 #else
 using Unity.Burst;
@@ -15,7 +15,7 @@ using Unity.Burst;
 
 namespace Tests.Performance {
     [Category("Performance")]
-#if !USE_RUST_BACKEND_BACKEND
+#if !USE_RUST_BACKEND
     [BurstCompile]
 #endif
     public class ForceSectionPerformanceTests {
@@ -64,7 +64,7 @@ namespace Tests.Performance {
             return keyframes;
         }
 
-#if USE_RUST_BACKEND_BACKEND
+#if USE_RUST_BACKEND
         [Test, Performance]
         public void RustBuildForceSection_SimpleTime() {
             Point anchor = CreateAnchorPoint();
@@ -379,7 +379,7 @@ namespace Tests.Performance {
 
         [Test]
         public void VerifyCompilationFlags() {
-#if USE_RUST_BACKEND_BACKEND
+#if USE_RUST_BACKEND
             Assert.Pass("Running with USE_RUST_BACKEND flag enabled. Rust performance tests are active. To test Burst performance, remove USE_RUST_BACKEND from Project Settings → Player → Scripting Define Symbols (ProjectSettings/ProjectSettings.asset)");
 #else
             Assert.Pass("Running with Burst compilation (USE_RUST_BACKEND not defined). Burst performance tests are active. To test Rust performance, add USE_RUST_BACKEND to Project Settings → Player → Scripting Define Symbols (ProjectSettings/ProjectSettings.asset)");

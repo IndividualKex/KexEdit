@@ -17,6 +17,9 @@ using KexEdit.Spline.Resampling;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
+#if USE_RUST_BACKEND
+using KexEdit.Native.RustCore;
+#endif
 
 namespace KexEdit.Track {
     public static class NodeFlag {
@@ -709,7 +712,9 @@ namespace KexEdit.Track {
             return false;
         }
 
+#if !USE_RUST_BACKEND
         [BurstCompile]
+#endif
         private static void EvaluateAnchorNode(in Document.Document doc, uint nodeId, ref NativeHashMap<uint, Point> outputAnchors) {
             ulong posKey = Document.Document.InputKey(nodeId, AnchorPorts.Position);
             float3 position = doc.Vectors.TryGetValue(posKey, out var pos) ? pos : float3.zero;
@@ -721,17 +726,28 @@ namespace KexEdit.Track {
             float friction = GetScalar(in doc.Scalars, nodeId, AnchorPorts.Friction, DEFAULT_FRICTION);
             float resistance = GetScalar(in doc.Scalars, nodeId, AnchorPorts.Resistance, DEFAULT_RESISTANCE);
 
+#if USE_RUST_BACKEND
+            RustAnchorNode.Build(
+                in position, pitch, yaw, roll,
+                velocity,
+                heart, friction, resistance,
+                out Point anchor
+            );
+#else
             AnchorNode.Build(
                 in position, pitch, yaw, roll,
                 velocity,
                 heart, friction, resistance,
                 out Point anchor
             );
+#endif
 
             outputAnchors[nodeId] = anchor;
         }
 
+#if !USE_RUST_BACKEND
         [BurstCompile]
+#endif
         private static void EvaluateForceNode(in Document.Document doc, uint nodeId, ref NativeHashMap<uint, NativeList<Point>> paths, ref NativeHashMap<uint, Point> outputAnchors, Allocator allocator) {
             if (!TryGetAnchor(in doc.Graph, in outputAnchors, nodeId, ForcePorts.Anchor, out Point inputAnchor)) {
                 return;
@@ -741,7 +757,6 @@ namespace KexEdit.Track {
             var durationType = GetFlag(in doc.Flags, nodeId, NodeMeta.DurationType) == 1
                 ? DurationType.Distance : DurationType.Time;
 
-            var config = new IterationConfig(duration, durationType);
             bool driven = GetFlag(in doc.Flags, nodeId, NodeMeta.Driven) == 1;
 
             GetKeyframes(in doc.Keyframes, nodeId, PropertyId.RollSpeed, out var rollSpeed);
@@ -754,6 +769,16 @@ namespace KexEdit.Track {
 
             var path = new NativeList<Point>(256, allocator);
 
+#if USE_RUST_BACKEND
+            RustForceNode.Build(
+                in inputAnchor, duration, (int)durationType, driven,
+                in rollSpeed, in normalForce, in lateralForce,
+                in drivenVelocity, in heartOffset, in friction, in resistance,
+                inputAnchor.HeartOffset, inputAnchor.Friction, inputAnchor.Resistance,
+                ref path
+            );
+#else
+            var config = new IterationConfig(duration, durationType);
             ForceNode.Build(
                 in inputAnchor, in config, driven,
                 in rollSpeed, in normalForce, in lateralForce,
@@ -761,6 +786,7 @@ namespace KexEdit.Track {
                 inputAnchor.HeartOffset, inputAnchor.Friction, inputAnchor.Resistance,
                 ref path
             );
+#endif
 
             if (path.Length > 0) {
                 outputAnchors[nodeId] = path[^1];
@@ -768,7 +794,9 @@ namespace KexEdit.Track {
             paths[nodeId] = path;
         }
 
+#if !USE_RUST_BACKEND
         [BurstCompile]
+#endif
         private static void EvaluateGeometricNode(in Document.Document doc, uint nodeId, ref NativeHashMap<uint, NativeList<Point>> paths, ref NativeHashMap<uint, Point> outputAnchors, Allocator allocator) {
             if (!TryGetAnchor(in doc.Graph, in outputAnchors, nodeId, GeometricPorts.Anchor, out Point inputAnchor)) {
                 return;
@@ -778,7 +806,6 @@ namespace KexEdit.Track {
             var durationType = GetFlag(in doc.Flags, nodeId, NodeMeta.DurationType) == 1
                 ? DurationType.Distance : DurationType.Time;
 
-            var config = new IterationConfig(duration, durationType);
             bool driven = GetFlag(in doc.Flags, nodeId, NodeMeta.Driven) == 1;
             bool steering = GetFlag(in doc.Flags, nodeId, NodeMeta.Steering) == 1;
 
@@ -792,6 +819,16 @@ namespace KexEdit.Track {
 
             var path = new NativeList<Point>(256, allocator);
 
+#if USE_RUST_BACKEND
+            RustGeometricNode.Build(
+                in inputAnchor, duration, (int)durationType, driven, steering,
+                in rollSpeed, in pitchSpeed, in yawSpeed,
+                in drivenVelocity, in heartOffset, in friction, in resistance,
+                inputAnchor.HeartOffset, inputAnchor.Friction, inputAnchor.Resistance,
+                ref path
+            );
+#else
+            var config = new IterationConfig(duration, durationType);
             GeometricNode.Build(
                 in inputAnchor, in config, driven, steering,
                 in rollSpeed, in pitchSpeed, in yawSpeed,
@@ -799,6 +836,7 @@ namespace KexEdit.Track {
                 inputAnchor.HeartOffset, inputAnchor.Friction, inputAnchor.Resistance,
                 ref path
             );
+#endif
 
             if (path.Length > 0) {
                 outputAnchors[nodeId] = path[^1];
@@ -806,7 +844,9 @@ namespace KexEdit.Track {
             paths[nodeId] = path;
         }
 
+#if !USE_RUST_BACKEND
         [BurstCompile]
+#endif
         private static void EvaluateCurvedNode(in Document.Document doc, uint nodeId, ref NativeHashMap<uint, NativeList<Point>> paths, ref NativeHashMap<uint, Point> outputAnchors, Allocator allocator) {
             if (!TryGetAnchor(in doc.Graph, in outputAnchors, nodeId, CurvedPorts.Anchor, out Point inputAnchor)) {
                 return;
@@ -828,12 +868,21 @@ namespace KexEdit.Track {
 
             var path = new NativeList<Point>(256, allocator);
 
+#if USE_RUST_BACKEND
+            RustCurvedNode.Build(
+                in inputAnchor, radius, arc, axis, leadIn, leadOut, driven,
+                in rollSpeed, in drivenVelocity, in heartOffset, in friction, in resistance,
+                inputAnchor.HeartOffset, inputAnchor.Friction, inputAnchor.Resistance,
+                ref path
+            );
+#else
             CurvedNode.Build(
                 in inputAnchor, radius, arc, axis, leadIn, leadOut, driven,
                 in rollSpeed, in drivenVelocity, in heartOffset, in friction, in resistance,
                 inputAnchor.HeartOffset, inputAnchor.Friction, inputAnchor.Resistance,
                 ref path
             );
+#endif
 
             if (path.Length > 0) {
                 outputAnchors[nodeId] = path[^1];
@@ -841,7 +890,9 @@ namespace KexEdit.Track {
             paths[nodeId] = path;
         }
 
+#if !USE_RUST_BACKEND
         [BurstCompile]
+#endif
         private static void EvaluateBridgeNode(in Document.Document doc, uint nodeId, ref NativeHashMap<uint, NativeList<Point>> paths, ref NativeHashMap<uint, Point> outputAnchors, Allocator allocator) {
             if (!TryGetAnchor(in doc.Graph, in outputAnchors, nodeId, BridgePorts.Anchor, out Point inputAnchor)) {
                 return;
@@ -862,12 +913,21 @@ namespace KexEdit.Track {
 
             var path = new NativeList<Point>(256, allocator);
 
+#if USE_RUST_BACKEND
+            RustBridgeNode.Build(
+                in inputAnchor, in targetAnchor, inWeight, outWeight, driven,
+                in drivenVelocity, in heartOffset, in friction, in resistance,
+                inputAnchor.HeartOffset, inputAnchor.Friction, inputAnchor.Resistance,
+                ref path
+            );
+#else
             BridgeNode.Build(
                 in inputAnchor, in targetAnchor, inWeight, outWeight, driven,
                 in drivenVelocity, in heartOffset, in friction, in resistance,
                 inputAnchor.HeartOffset, inputAnchor.Friction, inputAnchor.Resistance,
                 ref path
             );
+#endif
 
             if (path.Length > 0) {
                 outputAnchors[nodeId] = path[^1];
@@ -875,7 +935,9 @@ namespace KexEdit.Track {
             paths[nodeId] = path;
         }
 
+#if !USE_RUST_BACKEND
         [BurstCompile]
+#endif
         private static void EvaluateCopyPathNode(in Document.Document doc, uint nodeId, ref NativeHashMap<uint, NativeList<Point>> paths, ref NativeHashMap<uint, Point> outputAnchors, Allocator allocator) {
             if (!TryGetAnchor(in doc.Graph, in outputAnchors, nodeId, CopyPathPorts.Anchor, out Point inputAnchor)) {
                 return;
@@ -896,12 +958,21 @@ namespace KexEdit.Track {
 
             var path = new NativeList<Point>(256, allocator);
 
+#if USE_RUST_BACKEND
+            RustCopyPathNode.Build(
+                in inputAnchor, in sourcePath, start, end, driven,
+                in drivenVelocity, in heartOffset, in friction, in resistance,
+                inputAnchor.HeartOffset, inputAnchor.Friction, inputAnchor.Resistance,
+                ref path
+            );
+#else
             CopyPathNode.Build(
                 in inputAnchor, sourcePath.AsArray(), start, end, driven,
                 in drivenVelocity, in heartOffset, in friction, in resistance,
                 inputAnchor.HeartOffset, inputAnchor.Friction, inputAnchor.Resistance,
                 ref path
             );
+#endif
 
             if (path.Length > 0) {
                 outputAnchors[nodeId] = path[^1];
@@ -909,24 +980,36 @@ namespace KexEdit.Track {
             paths[nodeId] = path;
         }
 
+#if !USE_RUST_BACKEND
         [BurstCompile]
+#endif
         private static void EvaluateReverseNode(in Document.Document doc, uint nodeId, ref NativeHashMap<uint, Point> outputAnchors) {
             if (!TryGetAnchor(in doc.Graph, in outputAnchors, nodeId, ReversePorts.Anchor, out Point inputAnchor)) {
                 return;
             }
 
+#if USE_RUST_BACKEND
+            RustReverseNode.Build(in inputAnchor, out Point reversed);
+#else
             ReverseNode.Build(in inputAnchor, out Point reversed);
+#endif
             outputAnchors[nodeId] = reversed;
         }
 
+#if !USE_RUST_BACKEND
         [BurstCompile]
+#endif
         private static void EvaluateReversePathNode(in Document.Document doc, uint nodeId, ref NativeHashMap<uint, NativeList<Point>> paths, ref NativeHashMap<uint, Point> outputAnchors, Allocator allocator) {
             if (!TryGetPath(in doc.Graph, in paths, nodeId, ReversePathPorts.Path, out var sourcePath)) {
                 return;
             }
 
             var path = new NativeList<Point>(sourcePath.Length, allocator);
+#if USE_RUST_BACKEND
+            RustReversePathNode.Build(in sourcePath, ref path);
+#else
             ReversePathNode.Build(sourcePath.AsArray(), ref path);
+#endif
 
             if (path.Length > 0) {
                 outputAnchors[nodeId] = path[^1];

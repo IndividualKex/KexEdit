@@ -17,6 +17,7 @@
         "KexEdit.Sim.Nodes.ReversePath",
         "KexEdit.Spline",
         "KexEdit.Spline.Resampling",
+        "KexEdit.Native.RustCore",
         "Unity.Collections",
         "Unity.Mathematics",
         "Unity.Burst"
