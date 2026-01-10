@@ -8,7 +8,7 @@ using CorePoint = KexEdit.Sim.Point;
 
 namespace KexEdit.Track {
     public static class RustTrack {
-        private const string DLL_NAME = "kexedit_core";
+        private const string DLL_NAME = "kexengine";
         private const int INITIAL_POINTS_CAPACITY = 4096;
         private const int INITIAL_SECTIONS_CAPACITY = 256;
         private const int INITIAL_SPLINE_CAPACITY = 8192;
@@ -82,7 +82,7 @@ namespace KexEdit.Track {
         }
 
         [DllImport(DLL_NAME, CallingConvention = CallingConvention.Cdecl)]
-        private static unsafe extern int kexedit_track_build(
+        private static unsafe extern int kex_build(
             DocumentData* doc,
             float resolution,
             int defaultStyleIndex,
@@ -220,7 +220,7 @@ namespace KexEdit.Track {
                     SplineCount = &splineCount,
                 };
 
-                returnCode = kexedit_track_build(&docData, resolution, defaultStyleIndex, &output);
+                returnCode = kex_build(&docData, resolution, defaultStyleIndex, &output);
 
                 if (returnCode == -3) {
                     // Buffer overflow - grow buffers and retry

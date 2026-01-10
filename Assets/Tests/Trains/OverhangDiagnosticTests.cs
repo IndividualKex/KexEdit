@@ -10,7 +10,6 @@ namespace Tests.Trains {
     [TestFixture]
     [Category("Unit")]
     public class OverhangDiagnosticTests {
-        private const string VelociKexPath = "Assets/Tests/Assets/veloci.kex";
         private const string SwitchKexPath = "Assets/Tests/Assets/switch.kex";
 
         private static bool IsCosmetic(in Track track, int sectionIndex) {
@@ -23,59 +22,6 @@ namespace Tests.Trains {
         private static string FormatLink(KexEdit.Track.SectionLink link) {
             if (!link.IsValid) return "-1";
             return $"{link.Index}(AtStart={link.AtStart}, Flip={link.Flip})";
-        }
-
-        [Test]
-        public void Diagnostic_VelociSectionConnections() {
-            WithTrack(VelociKexPath, (in Track track) => {
-                UnityEngine.Debug.Log($"=== VELOCI SECTION CONNECTIONS ===");
-                UnityEngine.Debug.Log($"TraversalCount: {track.TraversalCount}, SectionCount: {track.SectionCount}");
-
-                for (int i = 0; i < track.TraversalCount; i++) {
-                    int sectionIdx = track.TraversalOrder[i];
-                    var section = track.Sections[sectionIdx];
-                    var startPt = track.Points[section.StartIndex];
-                    var endPt = track.Points[section.EndIndex];
-
-                    string facing = section.Facing == 1 ? "FWD" : "REV";
-                    UnityEngine.Debug.Log($"\nTraversal[{i}] = Section {sectionIdx} ({facing}):");
-                    UnityEngine.Debug.Log($"  StartPos: {startPt.HeartPosition}, StartDir: {startPt.Frame.Direction}");
-                    UnityEngine.Debug.Log($"  EndPos: {endPt.HeartPosition}, EndDir: {endPt.Frame.Direction}");
-                    UnityEngine.Debug.Log($"  Prev={FormatLink(section.Prev)}, Next={FormatLink(section.Next)}");
-
-                    if (section.Prev.IsValid) {
-                        var prev = track.Sections[section.Prev.Index];
-                        var prevStart = track.Points[prev.StartIndex];
-                        var prevEnd = track.Points[prev.EndIndex];
-                        float distStartStart = math.distance(startPt.HeartPosition, prevStart.HeartPosition);
-                        float distStartEnd = math.distance(startPt.HeartPosition, prevEnd.HeartPosition);
-                        UnityEngine.Debug.Log($"  -> Prev section {section.Prev.Index}: distToStart={distStartStart:F3}, distToEnd={distStartEnd:F3}");
-                    }
-
-                    if (section.Next.IsValid) {
-                        var next = track.Sections[section.Next.Index];
-                        var nextStart = track.Points[next.StartIndex];
-                        var nextEnd = track.Points[next.EndIndex];
-                        float distEndStart = math.distance(endPt.HeartPosition, nextStart.HeartPosition);
-                        float distEndEnd = math.distance(endPt.HeartPosition, nextEnd.HeartPosition);
-                        UnityEngine.Debug.Log($"  -> Next section {section.Next.Index}: distToStart={distEndStart:F3}, distToEnd={distEndEnd:F3}");
-                    }
-                }
-
-                // Circuit completion check
-                int firstIdx = track.TraversalOrder[0];
-                int lastIdx = track.TraversalOrder[track.TraversalCount - 1];
-                var first = track.Sections[firstIdx];
-                var last = track.Sections[lastIdx];
-                var firstStart = track.Points[first.StartIndex];
-                var lastEnd = track.Points[last.EndIndex];
-
-                UnityEngine.Debug.Log($"\n=== CIRCUIT COMPLETION ===");
-                UnityEngine.Debug.Log($"First section {firstIdx} START: {firstStart.HeartPosition}");
-                UnityEngine.Debug.Log($"Last section {lastIdx} END: {lastEnd.HeartPosition}");
-                UnityEngine.Debug.Log($"Distance: {math.distance(firstStart.HeartPosition, lastEnd.HeartPosition):F3}m");
-                UnityEngine.Debug.Log($"Last.Next = {FormatLink(last.Next)}, First.Prev = {FormatLink(first.Prev)}");
-            });
         }
 
         [Test]

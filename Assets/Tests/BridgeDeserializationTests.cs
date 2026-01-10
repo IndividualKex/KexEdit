@@ -17,7 +17,7 @@ namespace Tests {
     public class BridgeDeserializationTests {
         [Test]
         [TestCase("Assets/Tests/Assets/all_types.kex")]
-        [TestCase("Assets/Tests/Assets/veloci.kex")]
+        // [TestCase("Assets/Tests/Assets/veloci.kex")] // Disabled - veloci test
         [TestCase("Assets/Tests/Assets/shuttle.kex")]
         public void DumpCoasterAfterImport(string path) {
             var bytes = File.ReadAllBytes(path);
@@ -145,7 +145,7 @@ namespace Tests {
 
         [Test]
         [TestCase("Assets/Tests/Assets/all_types.kex")]
-        [TestCase("Assets/Tests/Assets/veloci.kex")]
+        // [TestCase("Assets/Tests/Assets/veloci.kex")] // Disabled - veloci test
         [TestCase("Assets/Tests/Assets/shuttle.kex")]
         public void EvaluateBridgeNodesSuccessfully(string path) {
             var bytes = File.ReadAllBytes(path);

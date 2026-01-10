@@ -15,12 +15,12 @@ Build and deploy the Rust FFI DLL for Unity integration.
 ./build-rust.sh
 
 # Or build manually
-cd rust-backend && cargo build --release -p kexedit-ffi
+cd rust-backend && cargo build --release
 ```
 
 ## Output
 
-The built library is copied to a location Unity can load. Check `build-rust.sh` for the exact destination path.
+The built library (`kexengine.dll` on Windows) is copied to `Assets/Runtime/Plugins/`.
 
 ## Troubleshooting
 
