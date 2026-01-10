@@ -38,6 +38,7 @@ RWStructuredBuffer<float4> _OutputData;
 
 uint _VertexCount;
 uint _SegmentCount;
+uint _SegmentStart;
 float _NominalLength;
 
 SplinePoint SampleSpline(float arc, SegmentBoundary seg) {
@@ -105,12 +106,13 @@ void DeformVertex(float3 localPos, float3 localNormal, SegmentBoundary seg,
 void DeformKernel(uint3 id : SV_DispatchThreadID) {
     uint globalIdx = id.x;
 
-    uint segmentIdx = globalIdx / _VertexCount;
+    uint localSegmentIdx = globalIdx / _VertexCount;
     uint vertexIdx = globalIdx % _VertexCount;
+    uint segmentIdx = _SegmentStart + localSegmentIdx;
 
-    if (segmentIdx >= _SegmentCount || vertexIdx >= _VertexCount) return;
+    if (localSegmentIdx >= _SegmentCount || vertexIdx >= _VertexCount) return;
 
-    SegmentBoundary seg = _Segments[segmentIdx];
+    SegmentBoundary seg = _Segments[localSegmentIdx];
     float3 localPos = _SourceVertices[vertexIdx];
     float3 localNormal = _SourceNormals[vertexIdx];
 
@@ -123,7 +125,7 @@ void DeformKernel(uint3 id : SV_DispatchThreadID) {
     float visualization = SampleVisualization(arc, seg);
     float highlight = _SectionHighlights[seg.SectionIndex];
 
-    uint outputIdx = segmentIdx * _VertexCount + vertexIdx;
+    uint outputIdx = segmentIdx * _VertexCount + vertexIdx;  // Uses global segmentIdx for correct output position
     _OutputVertices[outputIdx] = worldPos;
     _OutputNormals[outputIdx] = worldNormal;
     _OutputMask[outputIdx] = _SourceMask[vertexIdx];

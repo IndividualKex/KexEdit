@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<test-run id="2" testcasecount="2" result="Passed" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-01-10 00:52:45Z" end-time="2026-01-10 00:52:45Z" duration="0.0815669">
-  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3405" result="Passed" start-time="2026-01-10 00:52:45Z" end-time="2026-01-10 00:52:45Z" duration="0.081567" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+<test-run id="2" testcasecount="2" result="Passed" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-01-10 00:59:01Z" end-time="2026-01-10 00:59:01Z" duration="0.0946412">
+  <test-suite type="TestSuite" id="1000" name="KexEdit" fullname="KexEdit" runstate="Runnable" testcasecount="3405" result="Passed" start-time="2026-01-10 00:59:01Z" end-time="2026-01-10 00:59:01Z" duration="0.094641" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
     <properties>
       <property name="platform" value="EditMode" />
     </properties>
-    <test-suite type="Assembly" id="1620" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="540" result="Passed" start-time="2026-01-10 00:52:45Z" end-time="2026-01-10 00:52:45Z" duration="0.050908" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <test-suite type="Assembly" id="1620" name="Tests.dll" fullname="C:/Users/dylan/Documents/Games/KexEdit/Library/ScriptAssemblies/Tests.dll" runstate="Runnable" testcasecount="540" result="Passed" start-time="2026-01-10 00:59:01Z" end-time="2026-01-10 00:59:01Z" duration="0.057275" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
       <properties>
-        <property name="_PID" value="33532" />
+        <property name="_PID" value="31120" />
         <property name="_APPDOMAIN" value="Unity Child Domain" />
         <property name="platform" value="EditMode" />
         <property name="EditorOnly" value="True" />
       </properties>
-      <test-suite type="TestSuite" id="1630" name="Tests" fullname="Tests" runstate="Runnable" testcasecount="404" result="Passed" start-time="2026-01-10 00:52:45Z" end-time="2026-01-10 00:52:45Z" duration="0.047122" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-suite type="TestSuite" id="1630" name="Tests" fullname="Tests" runstate="Runnable" testcasecount="404" result="Passed" start-time="2026-01-10 00:59:01Z" end-time="2026-01-10 00:59:01Z" duration="0.052095" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
         <properties />
-        <test-suite type="TestFixture" id="1174" name="BridgeNodeLimitsTests" fullname="Tests.BridgeNodeLimitsTests" classname="Tests.BridgeNodeLimitsTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-01-10 00:52:45Z" end-time="2026-01-10 00:52:45Z" duration="0.042361" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-suite type="TestFixture" id="1174" name="BridgeNodeLimitsTests" fullname="Tests.BridgeNodeLimitsTests" classname="Tests.BridgeNodeLimitsTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-01-10 00:59:01Z" end-time="2026-01-10 00:59:01Z" duration="0.046733" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
           <properties>
             <property name="Category" value="Safety" />
           </properties>
-          <test-case id="1176" name="Bridge_NormalPath_ProducesReasonablePoints" fullname="Tests.BridgeNodeLimitsTests.Bridge_NormalPath_ProducesReasonablePoints" methodname="Bridge_NormalPath_ProducesReasonablePoints" classname="Tests.BridgeNodeLimitsTests" runstate="Runnable" seed="1774959307" result="Passed" start-time="2026-01-10 00:52:45Z" end-time="2026-01-10 00:52:45Z" duration="0.021437" asserts="0">
+          <test-case id="1176" name="Bridge_NormalPath_ProducesReasonablePoints" fullname="Tests.BridgeNodeLimitsTests.Bridge_NormalPath_ProducesReasonablePoints" methodname="Bridge_NormalPath_ProducesReasonablePoints" classname="Tests.BridgeNodeLimitsTests" runstate="Runnable" seed="1259403148" result="Passed" start-time="2026-01-10 00:59:01Z" end-time="2026-01-10 00:59:01Z" duration="0.024712" asserts="0">
             <properties>
               <property name="retryIteration" value="0" />
               <property name="repeatIteration" value="0" />
             </properties>
           </test-case>
-          <test-case id="1175" name="Bridge_VeryLongPath_CapsAtMaxPoints" fullname="Tests.BridgeNodeLimitsTests.Bridge_VeryLongPath_CapsAtMaxPoints" methodname="Bridge_VeryLongPath_CapsAtMaxPoints" classname="Tests.BridgeNodeLimitsTests" runstate="Runnable" seed="1537462775" result="Passed" start-time="2026-01-10 00:52:45Z" end-time="2026-01-10 00:52:45Z" duration="0.007703" asserts="0">
+          <test-case id="1175" name="Bridge_VeryLongPath_CapsAtMaxPoints" fullname="Tests.BridgeNodeLimitsTests.Bridge_VeryLongPath_CapsAtMaxPoints" methodname="Bridge_VeryLongPath_CapsAtMaxPoints" classname="Tests.BridgeNodeLimitsTests" runstate="Runnable" seed="1407083282" result="Passed" start-time="2026-01-10 00:59:01Z" end-time="2026-01-10 00:59:01Z" duration="0.007295" asserts="0">
             <properties>
               <property name="retryIteration" value="0" />
               <property name="repeatIteration" value="0" />

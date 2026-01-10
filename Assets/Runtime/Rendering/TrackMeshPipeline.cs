@@ -8,6 +8,10 @@ using UnityEngine.Rendering;
 
 namespace KexEdit.Rendering {
     public sealed class TrackMeshPipeline : IDisposable {
+        private const int MAX_THREAD_GROUPS = 65535;
+        private const int THREADS_PER_GROUP = 64;
+        private const int MAX_VERTS_PER_DISPATCH = MAX_THREAD_GROUPS * THREADS_PER_GROUP;
+
         private struct PieceBuffers {
             public ComputeBuffer SourceVertices;
             public ComputeBuffer SourceNormals;
@@ -178,13 +182,24 @@ namespace KexEdit.Rendering {
                 _computeShader.SetBuffer(_kernelId, "_OutputNormals", buffers.OutputNormals);
                 _computeShader.SetBuffer(_kernelId, "_OutputMask", buffers.OutputMask);
                 _computeShader.SetBuffer(_kernelId, "_OutputData", buffers.OutputData);
-                _computeShader.SetInt("_VertexCount", piece.VertexCount);
-                _computeShader.SetInt("_SegmentCount", segmentCount);
                 _computeShader.SetFloat("_NominalLength", piece.NominalLength);
 
-                int totalVerts = piece.VertexCount * segmentCount;
-                int threadGroups = (totalVerts + 63) / 64;
-                _computeShader.Dispatch(_kernelId, threadGroups, 1, 1);
+                // Batch dispatch to stay within thread group limits
+                int maxSegmentsPerBatch = MAX_VERTS_PER_DISPATCH / piece.VertexCount;
+                int batchSegmentStart = 0;
+
+                while (batchSegmentStart < segmentCount) {
+                    int batchSegmentCount = math.min(segmentCount - batchSegmentStart, maxSegmentsPerBatch);
+                    int batchVerts = piece.VertexCount * batchSegmentCount;
+                    int threadGroups = (batchVerts + THREADS_PER_GROUP - 1) / THREADS_PER_GROUP;
+
+                    _computeShader.SetInt("_VertexCount", piece.VertexCount);
+                    _computeShader.SetInt("_SegmentCount", batchSegmentCount);
+                    _computeShader.SetInt("_SegmentStart", batchSegmentStart);
+                    _computeShader.Dispatch(_kernelId, threadGroups, 1, 1);
+
+                    batchSegmentStart += batchSegmentCount;
+                }
 
                 segmentOffset += segmentCount;
 
