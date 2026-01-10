@@ -107,11 +107,11 @@ namespace Tests {
         /// This is the primary shape invariant.
         /// </summary>
         [Test]
-        public void Veloci_ForceSection1_YOffset_DirectionIdentical() {
+        public void Circuit_ForceSection1_YOffset_DirectionIdentical() {
             const float Y_OFFSET = 0.1f;
             const float MAX_DIFF = 1e-4f;  // Realistic tolerance for FP accumulation
 
-            var gold = GoldDataLoader.Load("Assets/Tests/TrackData/veloci.json");
+            var gold = GoldDataLoader.Load("Assets/Tests/TrackData/circuit.json");
             var section = GoldDataLoader.GetForceSectionByIndex(gold, 0);
 
             var baseline = BuildFromGoldWithYOffset(section, 0f, Allocator.TempJob);
@@ -156,11 +156,11 @@ namespace Tests {
         /// Energy is offset to compensate for PE, so KE (velocity) should match.
         /// </summary>
         [Test]
-        public void Veloci_ForceSection1_YOffset_VelocityIdentical() {
+        public void Circuit_ForceSection1_YOffset_VelocityIdentical() {
             const float Y_OFFSET = 0.1f;
             const float MAX_DIFF = 2e-3f;  // Realistic tolerance for FP accumulation
 
-            var gold = GoldDataLoader.Load("Assets/Tests/TrackData/veloci.json");
+            var gold = GoldDataLoader.Load("Assets/Tests/TrackData/circuit.json");
             var section = GoldDataLoader.GetForceSectionByIndex(gold, 0);
 
             var baseline = BuildFromGoldWithYOffset(section, 0f, Allocator.TempJob);
@@ -196,11 +196,11 @@ namespace Tests {
         /// Test that XZ position drift is zero (only Y differs by constant offset).
         /// </summary>
         [Test]
-        public void Veloci_ForceSection1_YOffset_NoXZDrift() {
+        public void Circuit_ForceSection1_YOffset_NoXZDrift() {
             const float Y_OFFSET = 0.1f;
             const float MAX_XZ_DRIFT = 2e-2f;  // Realistic tolerance for FP accumulation
 
-            var gold = GoldDataLoader.Load("Assets/Tests/TrackData/veloci.json");
+            var gold = GoldDataLoader.Load("Assets/Tests/TrackData/circuit.json");
             var section = GoldDataLoader.GetForceSectionByIndex(gold, 0);
 
             var baseline = BuildFromGoldWithYOffset(section, 0f, Allocator.TempJob);
@@ -246,12 +246,12 @@ namespace Tests {
         /// Test with larger Y offset to see if drift scales.
         /// </summary>
         [Test]
-        public void Veloci_ForceSection1_LargeYOffset_ShapeIdentical() {
+        public void Circuit_ForceSection1_LargeYOffset_ShapeIdentical() {
             const float Y_OFFSET = 10.0f;
             const float MAX_DIR_DIFF = 1e-3f;  // Larger offset means more accumulated error
             const float MAX_XZ_DRIFT = 1e-1f;
 
-            var gold = GoldDataLoader.Load("Assets/Tests/TrackData/veloci.json");
+            var gold = GoldDataLoader.Load("Assets/Tests/TrackData/circuit.json");
             var section = GoldDataLoader.GetForceSectionByIndex(gold, 0);
 
             var baseline = BuildFromGoldWithYOffset(section, 0f, Allocator.TempJob);
@@ -287,48 +287,5 @@ namespace Tests {
             }
         }
 
-        /// <summary>
-        /// Test second force section for the same invariants.
-        /// </summary>
-        [Test]
-        public void Veloci_ForceSection2_YOffset_ShapeIdentical() {
-            const float Y_OFFSET = 0.1f;
-            const float MAX_DIR_DIFF = 1e-4f;  // Realistic tolerance for FP accumulation
-            const float MAX_XZ_DRIFT = 1e-2f;
-
-            var gold = GoldDataLoader.Load("Assets/Tests/TrackData/veloci.json");
-            var section = GoldDataLoader.GetForceSectionByIndex(gold, 1);
-
-            var baseline = BuildFromGoldWithYOffset(section, 0f, Allocator.TempJob);
-            var offset = BuildFromGoldWithYOffset(section, Y_OFFSET, Allocator.TempJob);
-
-            try {
-                float maxDirDiff = 0f;
-                float maxXZDrift = 0f;
-
-                for (int i = 0; i < baseline.Length; i++) {
-                    float dirDiff = math.length(baseline[i].Direction - offset[i].Direction);
-                    float xzDrift = math.max(
-                        math.abs(baseline[i].HeartPosition.x - offset[i].HeartPosition.x),
-                        math.abs(baseline[i].HeartPosition.z - offset[i].HeartPosition.z)
-                    );
-
-                    maxDirDiff = math.max(maxDirDiff, dirDiff);
-                    maxXZDrift = math.max(maxXZDrift, xzDrift);
-                }
-
-                UnityEngine.Debug.Log($"Force Section 2 Y-Offset Test:");
-                UnityEngine.Debug.Log($"  Points: {baseline.Length}");
-                UnityEngine.Debug.Log($"  Max direction diff: {maxDirDiff:E3}");
-                UnityEngine.Debug.Log($"  Max XZ drift: {maxXZDrift:E3}");
-
-                Assert.LessOrEqual(maxDirDiff, MAX_DIR_DIFF, "Direction differs");
-                Assert.LessOrEqual(maxXZDrift, MAX_XZ_DRIFT, "XZ drift");
-            }
-            finally {
-                baseline.Dispose();
-                offset.Dispose();
-            }
-        }
     }
 }

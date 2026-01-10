@@ -88,6 +88,3 @@ crashlytics-build.properties
 
 # IDE
 .claude/settings.local.json
-
-# JSON data files
-*.json

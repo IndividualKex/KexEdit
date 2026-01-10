@@ -22,7 +22,7 @@ namespace Tests {
 
         [Test]
         [TestCase("shuttle")]
-        [TestCase("veloci")]
+        [TestCase("circuit")]
         [TestCase("all_types")]
         [TestCase("switch")]
         public void ExportGoldData(string name) {

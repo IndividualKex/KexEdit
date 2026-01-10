@@ -17,8 +17,8 @@ namespace Tests {
         }
 
         [Test]
-        public void Veloci_LoadAndEvaluate_MatchesGoldData() {
-            RunParityTest("veloci");
+        public void Circuit_LoadAndEvaluate_MatchesGoldData() {
+            RunParityTest("circuit");
         } 
 
         [Test]

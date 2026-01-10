@@ -20,7 +20,7 @@ namespace Tests.Trains {
     /// 3. After reverse (CopyPath REV) START -> Prev = cosmetic spike
     /// 4. End (final CopyPath REV) END -> Next = cosmetic extension (Geo REV)
     ///
-    /// VELOCI (2 scenarios):
+    /// CIRCUIT (2 scenarios):
     /// 5. End (last Bridge) END -> Next = first Geo (circuit completion)
     /// 6. Beginning (first Geo) START -> Prev = last Bridge (circuit completion)
     ///
@@ -41,7 +41,7 @@ namespace Tests.Trains {
     [Category("Unit")]
     public class SpatialContinuationTests {
         private const string ShuttleKexPath = "Assets/Tests/Assets/shuttle.kex";
-        private const string VelociKexPath = "Assets/Tests/Assets/veloci.kex";
+        private const string CircuitKexPath = "Assets/Tests/Assets/circuit.kex";
         private const string SwitchKexPath = "Assets/Tests/Assets/switch.kex";
         private const float FrameThreshold = 0.9f;
 
@@ -203,13 +203,13 @@ namespace Tests.Trains {
 
         #endregion
 
-        #region Veloci Tests
+        #region Circuit Tests
 
         [Test]
-        public void Veloci_Scenario5_CircuitCompletion_PositionsMatch() {
+        public void Circuit_Scenario5_CircuitCompletion_PositionsMatch() {
             // For circuits, last section END should connect to first section START
             // This test verifies the positions match for circuit completion
-            WithTrack(VelociKexPath, (in Track track) => {
+            WithTrack(CircuitKexPath, (in Track track) => {
                 int firstTraversalIdx = track.TraversalOrder[0];
                 int lastTraversalIdx = track.TraversalOrder[track.TraversalCount - 1];
 
@@ -229,10 +229,10 @@ namespace Tests.Trains {
         }
 
         [Test]
-        public void Veloci_Scenario6_CircuitCompletion_DirectionsAreAligned() {
+        public void Circuit_Scenario6_CircuitCompletion_DirectionsAreAligned() {
             // Circuit completion requires SAME direction (not opposite like cosmetic overhang)
             // This test verifies the directions align at the circuit junction
-            WithTrack(VelociKexPath, (in Track track) => {
+            WithTrack(CircuitKexPath, (in Track track) => {
                 int firstTraversalIdx = track.TraversalOrder[0];
                 int lastTraversalIdx = track.TraversalOrder[track.TraversalCount - 1];
                 var firstSection = track.Sections[firstTraversalIdx];
