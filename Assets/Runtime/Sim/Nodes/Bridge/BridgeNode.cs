@@ -14,6 +14,7 @@ namespace KexEdit.Sim.Nodes.Bridge {
     [BurstCompile]
     public static class BridgeNode {
         private const int MAX_ITERATIONS = 1_000_000;
+        private const int MAX_POINTS = 50_000;
 
         [BurstCompile]
         public static void Build(
@@ -61,6 +62,7 @@ namespace KexEdit.Sim.Nodes.Bridge {
 
             while (pathDistance < endDistance) {
                 if (iters++ > MAX_ITERATIONS) break;
+                if (result.Length >= MAX_POINTS) break;
 
                 Point prev = state;
                 float t = (result.Length - 1) / Sim.HZ;
