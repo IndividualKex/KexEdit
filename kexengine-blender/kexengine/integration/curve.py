@@ -17,7 +17,7 @@ from typing import Sequence
 import bpy
 from mathutils import Vector, Matrix
 
-from ..core.types import SplinePoint, Float3
+from ..core.types import Section, SplinePoint, Float3
 
 
 def unity_to_blender(v: Float3) -> Vector:
@@ -168,6 +168,85 @@ def _calculate_tilt(sp: SplinePoint) -> float:
     sin_tilt = default_right.dot(normal)
 
     return math.atan2(sin_tilt, cos_tilt)
+
+
+def create_track_from_sections(
+    spline_points: Sequence[SplinePoint],
+    sections: Sequence[Section],
+    name: str = "KexTrack",
+    collection: bpy.types.Collection | None = None,
+    handle_scale: float = 0.3,
+) -> bpy.types.Object:
+    """Create a Blender curve with separate splines per section.
+
+    This prevents false connections between discontinuous track segments
+    (e.g., shuttle coasters where the train reverses direction).
+
+    Args:
+        spline_points: Sequence of SplinePoints from kex_build output.
+        sections: Sequence of Sections defining point ranges.
+        name: Name for the curve object.
+        collection: Collection to link the object to.
+        handle_scale: Scale factor for handle length based on arc distance.
+
+    Returns:
+        The created curve object.
+    """
+    if not spline_points:
+        raise ValueError("No spline points provided")
+
+    # Create curve data
+    curve_data = bpy.data.curves.new(name=name, type='CURVE')
+    curve_data.dimensions = '3D'
+    curve_data.resolution_u = 12
+
+    # Create one spline per rendered section
+    for section in sections:
+        if not section.is_rendered():
+            continue
+
+        start = section.spline_start_index
+        end = section.spline_end_index
+        if start < 0 or end < 0 or start >= end:
+            continue
+
+        section_points = spline_points[start:end]
+        if len(section_points) < 2:
+            continue
+
+        spline = curve_data.splines.new(type='BEZIER')
+        spline.bezier_points.add(len(section_points) - 1)
+
+        for i, sp in enumerate(section_points):
+            bp = spline.bezier_points[i]
+            pos = unity_to_blender(sp.position)
+            direction = unity_to_blender(sp.direction)
+
+            # Calculate handle offset based on arc distance to neighbors
+            if i == 0:
+                arc_delta = section_points[1].arc - sp.arc if len(section_points) > 1 else 1.0
+            elif i == len(section_points) - 1:
+                arc_delta = sp.arc - section_points[i - 1].arc
+            else:
+                arc_delta = (section_points[i + 1].arc - section_points[i - 1].arc) / 2
+
+            handle_length = arc_delta * handle_scale
+
+            bp.co = pos
+            bp.handle_left_type = 'FREE'
+            bp.handle_right_type = 'FREE'
+            bp.handle_left = pos - direction * handle_length
+            bp.handle_right = pos + direction * handle_length
+            bp.tilt = _calculate_tilt(sp)
+
+    # Create object and link to scene
+    curve_obj = bpy.data.objects.new(name, curve_data)
+
+    if collection is None:
+        collection = bpy.context.scene.collection
+    collection.objects.link(curve_obj)
+
+    return curve_obj
 
 
 def update_track_curve(

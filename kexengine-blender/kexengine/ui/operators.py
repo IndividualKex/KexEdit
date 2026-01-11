@@ -7,7 +7,7 @@ from pathlib import Path
 import bpy
 
 from ..core.ffi import KexEngine, KexError, build_from_kexd, is_library_available
-from ..integration.curve import create_track_bezier
+from ..integration.curve import create_track_bezier, create_track_from_sections
 
 
 def _get_test_data_dir() -> Path:
@@ -51,8 +51,10 @@ class KEXENGINE_OT_generate_simple_track(bpy.types.Operator):
 
             result = engine.build(resolution=0.5)
 
-            curve_obj = create_track_bezier(
+            # Use section-aware curve creation for consistency
+            curve_obj = create_track_from_sections(
                 result.spline_points,
+                result.sections,
                 name="KexSimpleTrack",
             )
 
@@ -112,8 +114,10 @@ class KEXENGINE_OT_load_test_file(bpy.types.Operator):
 
             # Create curve with name based on file
             name = self.file_name.replace('_kexd', '').title()
-            curve_obj = create_track_bezier(
+            # Use section-aware curve creation to avoid false connections
+            curve_obj = create_track_from_sections(
                 result.spline_points,
+                result.sections,
                 name=f"Kex{name}Track",
             )
 
@@ -213,8 +217,10 @@ def _load_test_file(op, context, file_name: str, display_name: str):
         data = file_path.read_bytes()
         result = build_from_kexd(data, resolution=0.5)
 
-        curve_obj = create_track_bezier(
+        # Use section-aware curve creation to avoid false connections
+        curve_obj = create_track_from_sections(
             result.spline_points,
+            result.sections,
             name=f"Kex{display_name}Track",
         )
 
