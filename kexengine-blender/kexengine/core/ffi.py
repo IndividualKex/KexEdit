@@ -49,6 +49,28 @@ def _get_library_path() -> Path:
     return lib_dir / lib_name
 
 
+class KexDocumentCounts(ctypes.Structure):
+    """Document counts returned by kex_load_get_counts."""
+
+    _fields_ = [
+        ("node_count", ctypes.c_int32),
+        ("port_count", ctypes.c_int32),
+        ("edge_count", ctypes.c_int32),
+        ("scalar_count", ctypes.c_int32),
+        ("vector_count", ctypes.c_int32),
+        ("flag_count", ctypes.c_int32),
+        ("keyframe_count", ctypes.c_int32),
+        ("keyframe_range_count", ctypes.c_int32),
+        ("next_node_id", ctypes.c_uint32),
+        ("next_port_id", ctypes.c_uint32),
+        ("next_edge_id", ctypes.c_uint32),
+    ]
+
+
+# Opaque handle for loaded documents
+KexDocumentHandle = ctypes.c_void_p
+
+
 def _load_library() -> Optional[ctypes.CDLL]:
     """Load the kexengine shared library."""
     lib_path = _get_library_path()
@@ -67,6 +89,58 @@ def _load_library() -> Optional[ctypes.CDLL]:
             ctypes.POINTER(KexOutput),  # output
         ]
         lib.kex_build.restype = ctypes.c_int
+
+        # kex_load - load kexd data into a handle
+        lib.kex_load.argtypes = [
+            ctypes.POINTER(ctypes.c_uint8),  # data
+            ctypes.c_size_t,  # data_len
+        ]
+        lib.kex_load.restype = KexDocumentHandle
+
+        # kex_load_free - free a loaded handle
+        lib.kex_load_free.argtypes = [KexDocumentHandle]
+        lib.kex_load_free.restype = None
+
+        # kex_load_get_counts - get buffer sizes needed
+        lib.kex_load_get_counts.argtypes = [
+            KexDocumentHandle,
+            ctypes.POINTER(KexDocumentCounts),
+        ]
+        lib.kex_load_get_counts.restype = ctypes.c_int
+
+        # kex_load_copy_data - copy data into buffers
+        lib.kex_load_copy_data.argtypes = [
+            KexDocumentHandle,
+            # Graph - nodes
+            ctypes.POINTER(ctypes.c_uint32),  # node_ids
+            ctypes.POINTER(ctypes.c_uint32),  # node_types
+            ctypes.POINTER(ctypes.c_int32),  # node_input_counts
+            ctypes.POINTER(ctypes.c_int32),  # node_output_counts
+            # Graph - ports
+            ctypes.POINTER(ctypes.c_uint32),  # port_ids
+            ctypes.POINTER(ctypes.c_uint32),  # port_types
+            ctypes.POINTER(ctypes.c_uint32),  # port_owners
+            ctypes.POINTER(ctypes.c_uint8),  # port_is_input
+            # Graph - edges
+            ctypes.POINTER(ctypes.c_uint32),  # edge_ids
+            ctypes.POINTER(ctypes.c_uint32),  # edge_sources
+            ctypes.POINTER(ctypes.c_uint32),  # edge_targets
+            # Scalars
+            ctypes.POINTER(ctypes.c_uint64),  # scalar_keys
+            ctypes.POINTER(ctypes.c_float),  # scalar_values
+            # Vectors
+            ctypes.POINTER(ctypes.c_uint64),  # vector_keys
+            ctypes.POINTER(Float3),  # vector_values
+            # Flags
+            ctypes.POINTER(ctypes.c_uint64),  # flag_keys
+            ctypes.POINTER(ctypes.c_int32),  # flag_values
+            # Keyframes
+            ctypes.POINTER(Keyframe),  # keyframes
+            ctypes.POINTER(ctypes.c_uint64),  # keyframe_range_keys
+            ctypes.POINTER(ctypes.c_int32),  # keyframe_range_starts
+            ctypes.POINTER(ctypes.c_int32),  # keyframe_range_lengths
+        ]
+        lib.kex_load_copy_data.restype = ctypes.c_int
 
         return lib
     except OSError as e:
@@ -615,3 +689,152 @@ class KexEngine:
         self._keyframe_ranges.clear()
         self._node_anchor_output.clear()
         self._node_path_output.clear()
+
+    @classmethod
+    def from_kexd(cls, data: bytes) -> "KexEngine":
+        """Load a KexEngine from kexd binary data.
+
+        Args:
+            data: Raw bytes from a .kex file (kexd format)
+
+        Returns:
+            A KexEngine populated with the loaded document data
+
+        Raises:
+            KexError: If loading fails
+        """
+        lib = get_library()
+
+        # Load the data into a handle
+        data_arr = (ctypes.c_uint8 * len(data))(*data)
+        handle = lib.kex_load(
+            ctypes.cast(data_arr, ctypes.POINTER(ctypes.c_uint8)),
+            len(data),
+        )
+
+        if not handle:
+            raise KexError("Failed to load kexd data - invalid format or empty file")
+
+        try:
+            # Get counts
+            counts = KexDocumentCounts()
+            result = lib.kex_load_get_counts(handle, ctypes.byref(counts))
+            if result != 0:
+                raise KexError(f"Failed to get document counts: {result}")
+
+            # Allocate buffers
+            node_ids = (ctypes.c_uint32 * counts.node_count)()
+            node_types = (ctypes.c_uint32 * counts.node_count)()
+            node_input_counts = (ctypes.c_int32 * counts.node_count)()
+            node_output_counts = (ctypes.c_int32 * counts.node_count)()
+
+            port_ids = (ctypes.c_uint32 * counts.port_count)()
+            port_types = (ctypes.c_uint32 * counts.port_count)()
+            port_owners = (ctypes.c_uint32 * counts.port_count)()
+            port_is_input = (ctypes.c_uint8 * counts.port_count)()
+
+            edge_ids = (ctypes.c_uint32 * counts.edge_count)()
+            edge_sources = (ctypes.c_uint32 * counts.edge_count)()
+            edge_targets = (ctypes.c_uint32 * counts.edge_count)()
+
+            scalar_keys = (ctypes.c_uint64 * counts.scalar_count)()
+            scalar_values = (ctypes.c_float * counts.scalar_count)()
+
+            vector_keys = (ctypes.c_uint64 * counts.vector_count)()
+            vector_values = (Float3 * counts.vector_count)()
+
+            flag_keys = (ctypes.c_uint64 * counts.flag_count)()
+            flag_values = (ctypes.c_int32 * counts.flag_count)()
+
+            keyframes = (Keyframe * counts.keyframe_count)()
+            range_keys = (ctypes.c_uint64 * counts.keyframe_range_count)()
+            range_starts = (ctypes.c_int32 * counts.keyframe_range_count)()
+            range_lengths = (ctypes.c_int32 * counts.keyframe_range_count)()
+
+            # Copy data
+            result = lib.kex_load_copy_data(
+                handle,
+                ctypes.cast(node_ids, ctypes.POINTER(ctypes.c_uint32)),
+                ctypes.cast(node_types, ctypes.POINTER(ctypes.c_uint32)),
+                ctypes.cast(node_input_counts, ctypes.POINTER(ctypes.c_int32)),
+                ctypes.cast(node_output_counts, ctypes.POINTER(ctypes.c_int32)),
+                ctypes.cast(port_ids, ctypes.POINTER(ctypes.c_uint32)),
+                ctypes.cast(port_types, ctypes.POINTER(ctypes.c_uint32)),
+                ctypes.cast(port_owners, ctypes.POINTER(ctypes.c_uint32)),
+                ctypes.cast(port_is_input, ctypes.POINTER(ctypes.c_uint8)),
+                ctypes.cast(edge_ids, ctypes.POINTER(ctypes.c_uint32)),
+                ctypes.cast(edge_sources, ctypes.POINTER(ctypes.c_uint32)),
+                ctypes.cast(edge_targets, ctypes.POINTER(ctypes.c_uint32)),
+                ctypes.cast(scalar_keys, ctypes.POINTER(ctypes.c_uint64)),
+                ctypes.cast(scalar_values, ctypes.POINTER(ctypes.c_float)),
+                ctypes.cast(vector_keys, ctypes.POINTER(ctypes.c_uint64)),
+                ctypes.cast(vector_values, ctypes.POINTER(Float3)),
+                ctypes.cast(flag_keys, ctypes.POINTER(ctypes.c_uint64)),
+                ctypes.cast(flag_values, ctypes.POINTER(ctypes.c_int32)),
+                ctypes.cast(keyframes, ctypes.POINTER(Keyframe)),
+                ctypes.cast(range_keys, ctypes.POINTER(ctypes.c_uint64)),
+                ctypes.cast(range_starts, ctypes.POINTER(ctypes.c_int32)),
+                ctypes.cast(range_lengths, ctypes.POINTER(ctypes.c_int32)),
+            )
+            if result != 0:
+                raise KexError(f"Failed to copy document data: {result}")
+
+            # Create engine and populate
+            engine = cls()
+            engine._next_node_id = counts.next_node_id
+            engine._next_port_id = counts.next_port_id
+            engine._next_edge_id = counts.next_edge_id
+
+            engine._node_ids = list(node_ids)
+            engine._node_types = list(node_types)
+            engine._node_input_counts = list(node_input_counts)
+            engine._node_output_counts = list(node_output_counts)
+
+            engine._port_ids = list(port_ids)
+            engine._port_types = list(port_types)
+            engine._port_owners = list(port_owners)
+            engine._port_is_input = [bool(x) for x in port_is_input]
+
+            engine._edge_ids = list(edge_ids)
+            engine._edge_sources = list(edge_sources)
+            engine._edge_targets = list(edge_targets)
+
+            engine._scalars = {int(scalar_keys[i]): float(scalar_values[i])
+                              for i in range(counts.scalar_count)}
+            engine._vectors = {int(vector_keys[i]): vector_values[i].to_tuple()
+                              for i in range(counts.vector_count)}
+            engine._flags = {int(flag_keys[i]): int(flag_values[i])
+                            for i in range(counts.flag_count)}
+
+            engine._keyframes = list(keyframes)
+            engine._keyframe_ranges = {
+                int(range_keys[i]): (int(range_starts[i]), int(range_lengths[i]))
+                for i in range(counts.keyframe_range_count)
+            }
+
+            return engine
+
+        finally:
+            lib.kex_load_free(handle)
+
+
+def build_from_kexd(
+    data: bytes,
+    resolution: float = 0.5,
+    default_style_index: int = 0,
+) -> BuildResult:
+    """Load a kexd file and build the track in one call.
+
+    Args:
+        data: Raw bytes from a .kex file (kexd format)
+        resolution: Spline resolution in meters
+        default_style_index: Default track style
+
+    Returns:
+        BuildResult with track data
+
+    Raises:
+        KexError: If loading or building fails
+    """
+    engine = KexEngine.from_kexd(data)
+    return engine.build(resolution=resolution, default_style_index=default_style_index)

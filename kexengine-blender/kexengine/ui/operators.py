@@ -2,11 +2,24 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import bpy
 
-from ..core.ffi import KexEngine, KexError, is_library_available
-from ..core.types import Keyframe, InterpolationType
-from ..integration.curve import create_track_curve, create_track_bezier
+from ..core.ffi import KexEngine, KexError, build_from_kexd, is_library_available
+from ..integration.curve import create_track_bezier
+
+
+def _get_test_data_dir() -> Path:
+    """Get the kexengine test-data directory."""
+    # Try development location first (KexEdit repo)
+    dev_path = Path(r"C:\Users\dylan\Documents\Games\KexEdit\kexengine\test-data")
+    if dev_path.exists():
+        return dev_path
+
+    # Fall back to relative path (for bundled distribution)
+    addon_dir = Path(__file__).parent.parent.parent
+    return addon_dir.parent / "kexengine" / "test-data"
 
 
 class KEXENGINE_OT_generate_simple_track(bpy.types.Operator):
@@ -58,47 +71,59 @@ class KEXENGINE_OT_generate_simple_track(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-class KEXENGINE_OT_generate_test_track(bpy.types.Operator):
-    """Generate a test roller coaster track."""
+class KEXENGINE_OT_load_test_file(bpy.types.Operator):
+    """Load and build a test kexd file."""
 
-    bl_idname = "kexengine.generate_test_track"
-    bl_label = "Generate Test Track"
-    bl_description = "Generate a test track using kexengine"
+    bl_idname = "kexengine.load_test_file"
+    bl_label = "Load Test File"
+    bl_description = "Load a test kexd file and generate track"
     bl_options = {'REGISTER', 'UNDO'}
 
-    use_bezier: bpy.props.BoolProperty(
-        name="Use Bezier",
-        description="Create a Bezier curve instead of poly curve",
-        default=True,
+    file_name: bpy.props.EnumProperty(
+        name="File",
+        description="Test file to load",
+        items=[
+            ('shuttle_kexd', "Shuttle", "Shuttle coaster with rollback"),
+            ('circuit_kexd', "Circuit", "Complete circuit track"),
+            ('switch_kexd', "Switch", "Track with switch/branch"),
+            ('all_types_kexd', "All Types", "Track demonstrating all node types"),
+        ],
+        default='shuttle_kexd',
     )
 
     @classmethod
     def poll(cls, context):
         return is_library_available()
 
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
     def execute(self, context):
+        test_dir = _get_test_data_dir()
+        file_path = test_dir / f"{self.file_name}.kex"
+
+        if not file_path.exists():
+            self.report({'ERROR'}, f"Test file not found: {file_path}")
+            return {'CANCELLED'}
+
         try:
-            result = self._generate_track()
+            data = file_path.read_bytes()
+            result = build_from_kexd(data, resolution=0.5)
 
-            if self.use_bezier:
-                curve_obj = create_track_bezier(
-                    result.spline_points,
-                    name="KexTestTrack",
-                )
-            else:
-                curve_obj = create_track_curve(
-                    result.spline_points,
-                    name="KexTestTrack",
-                )
+            # Create curve with name based on file
+            name = self.file_name.replace('_kexd', '').title()
+            curve_obj = create_track_bezier(
+                result.spline_points,
+                name=f"Kex{name}Track",
+            )
 
-            # Select the new object
             bpy.ops.object.select_all(action='DESELECT')
             curve_obj.select_set(True)
             context.view_layer.objects.active = curve_obj
 
             self.report(
                 {'INFO'},
-                f"Generated track with {len(result.spline_points)} spline points"
+                f"Loaded {name}: {len(result.spline_points)} points, {len(result.sections)} sections"
             )
             return {'FINISHED'}
 
@@ -109,130 +134,116 @@ class KEXENGINE_OT_generate_test_track(bpy.types.Operator):
             self.report({'ERROR'}, f"Unexpected error: {e}")
             return {'CANCELLED'}
 
-    def _generate_track(self):
-        """Build a test track with hills and valleys (NormalForce variation)."""
-        engine = KexEngine()
 
-        # Create anchor at origin, elevated, pointing forward
-        anchor_id = engine.add_anchor(
-            position=(0.0, 10.0, 0.0),
-            pitch=0.0,
-            yaw=0.0,
-            roll=0.0,
-            velocity=15.0,
-        )
+# Individual operators for each test file (for direct button access)
+class KEXENGINE_OT_load_shuttle(bpy.types.Operator):
+    """Load the shuttle test track."""
 
-        # Create force node
-        force_id = engine.add_force(
-            anchor_id,
-            duration=8.0,
-        )
-
-        # Vary NormalForce to create hills and valleys
-        # >1G = pull down = valley, <1G = float up = hill, 0G = weightless airtime
-        engine.set_keyframes(
-            force_id,
-            property_id=1,  # NormalForce
-            keyframes=[
-                Keyframe.simple(0.0, 1.0),   # Level
-                Keyframe.simple(2.0, 2.0),   # Pull down (valley)
-                Keyframe.simple(4.0, 0.0),   # Airtime (hill crest)
-                Keyframe.simple(6.0, 1.5),   # Moderate pull
-                Keyframe.simple(8.0, 1.0),   # Level out
-            ],
-        )
-
-        return engine.build(resolution=0.5)
-
-
-class KEXENGINE_OT_generate_helix(bpy.types.Operator):
-    """Generate a helix test track."""
-
-    bl_idname = "kexengine.generate_helix"
-    bl_label = "Generate Helix"
-    bl_description = "Generate a helix track section"
+    bl_idname = "kexengine.load_shuttle"
+    bl_label = "Load Shuttle"
+    bl_description = "Load shuttle coaster with rollback"
     bl_options = {'REGISTER', 'UNDO'}
-
-    turns: bpy.props.FloatProperty(
-        name="Turns",
-        description="Number of helix turns",
-        default=2.0,
-        min=0.5,
-        max=10.0,
-    )
-
-    duration: bpy.props.FloatProperty(
-        name="Duration",
-        description="Time duration in seconds",
-        default=6.0,
-        min=1.0,
-        max=30.0,
-    )
 
     @classmethod
     def poll(cls, context):
         return is_library_available()
 
     def execute(self, context):
-        try:
-            result = self._generate_helix()
+        return _load_test_file(self, context, "shuttle_kexd", "Shuttle")
 
-            curve_obj = create_track_bezier(
-                result.spline_points,
-                name="KexHelix",
-            )
 
-            bpy.ops.object.select_all(action='DESELECT')
-            curve_obj.select_set(True)
-            context.view_layer.objects.active = curve_obj
+class KEXENGINE_OT_load_circuit(bpy.types.Operator):
+    """Load the circuit test track."""
 
-            self.report(
-                {'INFO'},
-                f"Generated helix with {len(result.spline_points)} points"
-            )
-            return {'FINISHED'}
+    bl_idname = "kexengine.load_circuit"
+    bl_label = "Load Circuit"
+    bl_description = "Load complete circuit track"
+    bl_options = {'REGISTER', 'UNDO'}
 
-        except KexError as e:
-            self.report({'ERROR'}, f"kexengine error: {e}")
-            return {'CANCELLED'}
+    @classmethod
+    def poll(cls, context):
+        return is_library_available()
 
-    def _generate_helix(self):
-        """Build a helix using constant yaw rate (Geometric node)."""
-        engine = KexEngine()
+    def execute(self, context):
+        return _load_test_file(self, context, "circuit_kexd", "Circuit")
 
-        anchor_id = engine.add_anchor(
-            position=(0.0, 10.0, 0.0),
-            pitch=-10.0,  # Slight downward pitch
-            yaw=0.0,
-            roll=0.0,
-            velocity=20.0,
+
+class KEXENGINE_OT_load_switch(bpy.types.Operator):
+    """Load the switch test track."""
+
+    bl_idname = "kexengine.load_switch"
+    bl_label = "Load Switch"
+    bl_description = "Load track with switch/branch"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return is_library_available()
+
+    def execute(self, context):
+        return _load_test_file(self, context, "switch_kexd", "Switch")
+
+
+class KEXENGINE_OT_load_all_types(bpy.types.Operator):
+    """Load the all-types test track."""
+
+    bl_idname = "kexengine.load_all_types"
+    bl_label = "Load All Types"
+    bl_description = "Load track demonstrating all node types"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return is_library_available()
+
+    def execute(self, context):
+        return _load_test_file(self, context, "all_types_kexd", "AllTypes")
+
+
+def _load_test_file(op, context, file_name: str, display_name: str):
+    """Helper to load a test file."""
+    test_dir = _get_test_data_dir()
+    file_path = test_dir / f"{file_name}.kex"
+
+    if not file_path.exists():
+        op.report({'ERROR'}, f"Test file not found: {file_path}")
+        return {'CANCELLED'}
+
+    try:
+        data = file_path.read_bytes()
+        result = build_from_kexd(data, resolution=0.5)
+
+        curve_obj = create_track_bezier(
+            result.spline_points,
+            name=f"Kex{display_name}Track",
         )
 
-        # Must use Geometric node for YawSpeed (Force nodes don't support it)
-        geo_id = engine.add_geometric(
-            anchor_id,
-            duration=self.duration,
-        )
+        bpy.ops.object.select_all(action='DESELECT')
+        curve_obj.select_set(True)
+        context.view_layer.objects.active = curve_obj
 
-        # Constant yaw rate creates helix
-        yaw_rate = (360.0 * self.turns) / self.duration
-        engine.set_keyframes(
-            geo_id,
-            property_id=4,  # YawSpeed
-            keyframes=[
-                Keyframe.linear(0.0, yaw_rate),
-                Keyframe.linear(self.duration, yaw_rate),
-            ],
+        op.report(
+            {'INFO'},
+            f"Loaded {display_name}: {len(result.spline_points)} points, {len(result.sections)} sections"
         )
+        return {'FINISHED'}
 
-        return engine.build(resolution=0.5)
+    except KexError as e:
+        op.report({'ERROR'}, f"kexengine error: {e}")
+        return {'CANCELLED'}
+    except Exception as e:
+        op.report({'ERROR'}, f"Unexpected error: {e}")
+        return {'CANCELLED'}
 
 
 # Registration
 classes = [
     KEXENGINE_OT_generate_simple_track,
-    KEXENGINE_OT_generate_test_track,
-    KEXENGINE_OT_generate_helix,
+    KEXENGINE_OT_load_test_file,
+    KEXENGINE_OT_load_shuttle,
+    KEXENGINE_OT_load_circuit,
+    KEXENGINE_OT_load_switch,
+    KEXENGINE_OT_load_all_types,
 ]
 
 

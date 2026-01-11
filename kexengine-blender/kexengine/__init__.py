@@ -9,16 +9,25 @@ from __future__ import annotations
 # Version info
 __version__ = "0.1.0"
 
+# Check if bpy is available (for conditional imports)
+try:
+    import bpy
+    _has_bpy = True
+except ImportError:
+    _has_bpy = False
+
 # Hot reload support
 if "core" in locals():
     import importlib
     core = importlib.reload(core)
-    integration = importlib.reload(integration)
-    ui = importlib.reload(ui)
+    if _has_bpy:
+        integration = importlib.reload(integration)
+        ui = importlib.reload(ui)
 else:
     from . import core
-    from . import integration
-    from . import ui
+    if _has_bpy:
+        from . import integration
+        from . import ui
 
 # Re-export core types for convenience
 from .core import (
@@ -62,16 +71,11 @@ bl_info = {
 
 def register():
     """Register Blender addon classes."""
-    try:
+    if _has_bpy:
         ui.register()
-    except (ImportError, AttributeError):
-        # Not running in Blender or bpy not available
-        pass
 
 
 def unregister():
     """Unregister Blender addon classes."""
-    try:
+    if _has_bpy:
         ui.unregister()
-    except (ImportError, AttributeError):
-        pass
