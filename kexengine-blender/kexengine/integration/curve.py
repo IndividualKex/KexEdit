@@ -6,7 +6,7 @@ Coordinate system conversion:
     Unity/kexengine (Y-up, left-handed):  X=right, Y=up, Z=forward
     Blender (Z-up, right-handed):         X=right, Y=forward, Z=up
 
-    Conversion: unity(x, y, z) → blender(x, -z, y)
+    Conversion: unity(x, y, z) → blender(x, z, y)
 """
 
 from __future__ import annotations
@@ -25,12 +25,12 @@ def unity_to_blender(v: Float3) -> Vector:
 
     Unity (Y-up, left-handed) → Blender (Z-up, right-handed)
     """
-    return Vector((v.x, -v.z, v.y))
+    return Vector((v.x, v.z, v.y))
 
 
 def unity_to_blender_tuple(x: float, y: float, z: float) -> tuple[float, float, float]:
     """Convert Unity/kexengine coordinates to Blender coordinates."""
-    return (x, -z, y)
+    return (x, z, y)
 
 
 def create_track_curve(
