@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(pytest:*)",
+      "Bash(cargo:*)",
+      "Read(./)",
+      "Edit(./kexengine/**)",
+      "Edit(./tests/**)",
+      "Edit(./scripts/**)"
+    ]
+  }
+}
