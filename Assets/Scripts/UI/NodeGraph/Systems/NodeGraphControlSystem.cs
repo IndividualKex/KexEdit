@@ -1762,7 +1762,7 @@ namespace KexEdit.UI.NodeGraph {
                 var offset = clipboardData.NodeOffsets[i];
                 var newPosition = pastePosition + offset;
 
-                KexdAdapter.BuildSerializedNode(
+                EcsAdapter.BuildSerializedNode(
                     in clipboardData.Coaster,
                     in emptyUiState,
                     i,

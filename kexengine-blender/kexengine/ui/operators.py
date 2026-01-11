@@ -110,47 +110,35 @@ class KEXENGINE_OT_generate_test_track(bpy.types.Operator):
             return {'CANCELLED'}
 
     def _generate_track(self):
-        """Build a test track with an anchor and force section."""
+        """Build a test track with hills and valleys (NormalForce variation)."""
         engine = KexEngine()
 
         # Create anchor at origin, elevated, pointing forward
         anchor_id = engine.add_anchor(
-            position=(0.0, 3.0, 0.0),
+            position=(0.0, 10.0, 0.0),
             pitch=0.0,
             yaw=0.0,
             roll=0.0,
             velocity=15.0,
         )
 
-        # Create force node with some animated roll
+        # Create force node
         force_id = engine.add_force(
             anchor_id,
             duration=8.0,
         )
 
-        # Add roll animation keyframes
-        engine.set_keyframes(
-            force_id,
-            property_id=0,  # RollSpeed
-            keyframes=[
-                Keyframe.simple(0.0, 0.0),
-                Keyframe.simple(2.0, 45.0),  # Roll right
-                Keyframe.simple(4.0, 0.0),
-                Keyframe.simple(6.0, -45.0),  # Roll left
-                Keyframe.simple(8.0, 0.0),
-            ],
-        )
-
-        # Add some vertical force variation
+        # Vary NormalForce to create hills and valleys
+        # >1G = pull down = valley, <1G = float up = hill, 0G = weightless airtime
         engine.set_keyframes(
             force_id,
             property_id=1,  # NormalForce
             keyframes=[
-                Keyframe.simple(0.0, 1.0),
-                Keyframe.simple(2.0, 0.5),  # Lighter
-                Keyframe.simple(4.0, 2.0),  # Heavier
-                Keyframe.simple(6.0, 0.0),  # Weightless
-                Keyframe.simple(8.0, 1.0),
+                Keyframe.simple(0.0, 1.0),   # Level
+                Keyframe.simple(2.0, 2.0),   # Pull down (valley)
+                Keyframe.simple(4.0, 0.0),   # Airtime (hill crest)
+                Keyframe.simple(6.0, 1.5),   # Moderate pull
+                Keyframe.simple(8.0, 1.0),   # Level out
             ],
         )
 
@@ -209,7 +197,7 @@ class KEXENGINE_OT_generate_helix(bpy.types.Operator):
             return {'CANCELLED'}
 
     def _generate_helix(self):
-        """Build a helix using constant lateral force."""
+        """Build a helix using constant yaw rate (Geometric node)."""
         engine = KexEngine()
 
         anchor_id = engine.add_anchor(
@@ -220,29 +208,20 @@ class KEXENGINE_OT_generate_helix(bpy.types.Operator):
             velocity=20.0,
         )
 
-        force_id = engine.add_force(
+        # Must use Geometric node for YawSpeed (Force nodes don't support it)
+        geo_id = engine.add_geometric(
             anchor_id,
             duration=self.duration,
         )
 
-        # Constant lateral force creates helix
+        # Constant yaw rate creates helix
         yaw_rate = (360.0 * self.turns) / self.duration
         engine.set_keyframes(
-            force_id,
+            geo_id,
             property_id=4,  # YawSpeed
             keyframes=[
                 Keyframe.linear(0.0, yaw_rate),
                 Keyframe.linear(self.duration, yaw_rate),
-            ],
-        )
-
-        # Maintain 1G normal force
-        engine.set_keyframes(
-            force_id,
-            property_id=1,  # NormalForce
-            keyframes=[
-                Keyframe.linear(0.0, 1.0),
-                Keyframe.linear(self.duration, 1.0),
             ],
         )
 

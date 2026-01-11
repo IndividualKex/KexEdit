@@ -245,7 +245,7 @@ namespace KexEdit.Legacy.Serialization {
                 Value = uiState
             });
 
-            KexdAdapter.ImportToEcs(
+            EcsAdapter.ImportToEcs(
                 in coasterAggregate,
                 in uiState,
                 coaster,
@@ -291,7 +291,7 @@ namespace KexEdit.Legacy.Serialization {
             EntityManager.SetComponentData(coaster, new UIStateData {
                 Value = uiState
             });
-            KexdAdapter.ImportToEcs(
+            EcsAdapter.ImportToEcs(
                 in coasterAggregate,
                 in uiState,
                 coaster,
@@ -470,7 +470,7 @@ namespace KexEdit.Legacy.Serialization {
                 _ => default,
             };
             CoreNodeType coreNodeType = LegacyToCoreNodeType(node.Type);
-            KexdAdapter.ExtractKeyframesForNode(
+            EcsAdapter.ExtractKeyframesForNode(
                 in coaster,
                 coreNodeType,
                 nodeId,

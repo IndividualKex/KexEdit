@@ -3,7 +3,7 @@ set -e
 
 echo "Building Rust library..."
 
-cd "$(dirname "$0")/rust-backend"
+cd "$(dirname "$0")/kexengine"
 
 cargo build --release
 
