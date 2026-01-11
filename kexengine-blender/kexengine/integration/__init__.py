@@ -1,6 +1,20 @@
 """Integration layer - Blender-aware adapters."""
 
-# Will contain:
-# - fcurve.py: F-Curve ↔ Keyframe conversion
-# - curve.py: SplinePoint → Blender Curve
-# - properties.py: PropertyGroup definitions
+# Hot reload support
+if "curve" in locals():
+    import importlib
+    curve = importlib.reload(curve)
+else:
+    from . import curve
+
+from .curve import (
+    create_track_curve,
+    create_track_bezier,
+    update_track_curve,
+)
+
+__all__ = [
+    "create_track_curve",
+    "create_track_bezier",
+    "update_track_curve",
+]

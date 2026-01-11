@@ -9,6 +9,17 @@ from __future__ import annotations
 # Version info
 __version__ = "0.1.0"
 
+# Hot reload support
+if "core" in locals():
+    import importlib
+    core = importlib.reload(core)
+    integration = importlib.reload(integration)
+    ui = importlib.reload(ui)
+else:
+    from . import core
+    from . import integration
+    from . import ui
+
 # Re-export core types for convenience
 from .core import (
     Float3,
@@ -35,33 +46,32 @@ __all__ = [
     "KexError",
 ]
 
-# Blender addon info (only used when loaded as addon)
+# Blender addon info (legacy system, also used for in-Blender display)
 bl_info = {
     "name": "kexengine",
     "author": "KexEdit",
     "version": (0, 1, 0),
-    "blender": (4, 0, 0),
+    "blender": (4, 2, 0),
     "location": "View3D > Sidebar > kexengine",
     "description": "Roller coaster track design using Force Vector Design",
     "category": "Object",
+    "doc_url": "",
+    "tracker_url": "",
 }
 
 
 def register():
     """Register Blender addon classes."""
-    # Import Blender modules only when registering
     try:
-        from . import ui
         ui.register()
-    except ImportError:
-        # Not running in Blender
+    except (ImportError, AttributeError):
+        # Not running in Blender or bpy not available
         pass
 
 
 def unregister():
     """Unregister Blender addon classes."""
     try:
-        from . import ui
         ui.unregister()
-    except ImportError:
+    except (ImportError, AttributeError):
         pass

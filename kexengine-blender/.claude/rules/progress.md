@@ -36,11 +36,11 @@ Step-by-step implementation tracking. Each phase builds on the previous.
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Create integration/curve.py | pending | Next step |
-| SplinePoint → Bezier curve conversion | pending | |
-| Orientation → tilt mapping | pending | |
-| Test operator: generate hardcoded track | pending | |
-| Verify curve appears in Blender | pending | |
+| Create integration/curve.py | done | create_track_curve, create_track_bezier |
+| SplinePoint → Bezier curve conversion | done | Handles computed from direction + arc delta |
+| Orientation → tilt mapping | done | Projects world up onto normal plane |
+| Test operator: generate hardcoded track | done | KEXENGINE_OT_generate_test_track |
+| Verify curve appears in Blender | pending | Requires manual testing |
 
 ## Phase 4: Basic Addon Structure
 
@@ -49,10 +49,10 @@ Step-by-step implementation tracking. Each phase builds on the previous.
 | Task | Status | Notes |
 |------|--------|-------|
 | Create __init__.py with bl_info | done | Created with addon structure |
-| Register/unregister functions | done | Placeholder in __init__.py |
-| Simple panel with "Generate Track" button | pending | |
-| Operator that runs full pipeline | pending | |
-| Test installation in Blender | pending | |
+| Register/unregister functions | done | Wired to ui module |
+| Simple panel with "Generate Track" button | done | KEXENGINE_PT_main in panels.py |
+| Operator that runs full pipeline | done | generate_test_track, generate_helix |
+| Test installation in Blender | pending | Requires manual testing |
 
 ## Phase 5: Property Integration
 

@@ -1,0 +1,43 @@
+# Blender Extension manifest for kexengine addon
+# See: https://docs.blender.org/manual/en/latest/extensions/getting_started.html
+
+schema_version = "1.0.0"
+
+id = "kexengine"
+name = "kexengine"
+version = "0.1.0"
+tagline = "Roller coaster track design using Force Vector Design"
+maintainer = "KexEdit <kexedit@example.com>"
+type = "add-on"
+
+# Blender version requirements
+blender_version_min = "4.2.0"
+
+# License
+license = ["SPDX:MIT"]
+
+# Platforms with pre-built native libraries
+platforms = ["windows-x64", "linux-x64", "macos-x64", "macos-arm64"]
+
+# Wheels/dependencies (none for now, we use ctypes)
+wheels = []
+
+# Tags for discovery
+tags = ["3D View", "Object"]
+
+# Permissions (required for loading native library)
+[permissions]
+files = "Load native kexengine physics library"
+
+# Build settings
+[build]
+paths_exclude_pattern = [
+    "__pycache__/",
+    "*.pyc",
+    ".git/",
+    ".gitignore",
+    "tests/",
+    "scripts/",
+    ".claude/",
+    "CLAUDE.md",
+]
