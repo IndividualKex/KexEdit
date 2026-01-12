@@ -1,4 +1,4 @@
-"""Blender operators for kexengine."""
+"""Blender operators for kexedit."""
 
 from __future__ import annotations
 
@@ -6,8 +6,71 @@ from pathlib import Path
 
 import bpy
 
+from ..core.coords import blender_to_kex_position, blender_to_kex_angles
 from ..core.ffi import KexEngine, KexError, build_from_kexd, is_library_available
-from ..integration.curve import create_track_bezier, create_track_from_sections
+from ..integration.curve import create_track_from_sections, update_track_from_sections
+
+
+def regenerate_track(curve_obj: bpy.types.Object) -> bool:
+    """Regenerate track geometry from stored properties.
+
+    Args:
+        curve_obj: The curve object with kex_settings attached.
+
+    Returns:
+        True if regeneration succeeded, False otherwise.
+    """
+    if not curve_obj.get("kex_is_track"):
+        return False
+
+    settings = curve_obj.kex_settings
+
+    try:
+        engine = KexEngine()
+
+        # Read anchor settings and convert from Blender to kexengine coordinates
+        anchor = settings.anchor
+        kex_position = blender_to_kex_position(*anchor.position)
+        kex_pitch, kex_yaw, kex_roll = blender_to_kex_angles(
+            anchor.pitch, anchor.yaw, anchor.roll
+        )
+
+        anchor_id = engine.add_anchor(
+            position=kex_position,
+            pitch=kex_pitch,
+            yaw=kex_yaw,
+            roll=kex_roll,
+            velocity=anchor.velocity,
+            heart_offset=anchor.heart_offset,
+            friction=anchor.friction,
+            resistance=anchor.resistance,
+        )
+
+        # Read force settings
+        force = settings.force
+        engine.add_force(
+            anchor_id,
+            duration=force.duration,
+        )
+
+        # Build
+        build = settings.build
+        result = engine.build(
+            resolution=build.resolution,
+        )
+
+        # Update curve geometry
+        update_track_from_sections(
+            curve_obj,
+            result.spline_points,
+            result.sections,
+        )
+
+        return True
+
+    except Exception as e:
+        print(f"kexengine regeneration error: {e}")
+        return False
 
 
 def _get_test_data_dir() -> Path:
@@ -22,10 +85,10 @@ def _get_test_data_dir() -> Path:
     return addon_dir.parent / "kexengine" / "test-data"
 
 
-class KEXENGINE_OT_generate_simple_track(bpy.types.Operator):
+class KEXEDIT_OT_generate_simple_track(bpy.types.Operator):
     """Generate a simple straight track with no animation."""
 
-    bl_idname = "kexengine.generate_simple_track"
+    bl_idname = "kexedit.generate_simple_track"
     bl_label = "Generate Simple Track"
     bl_description = "Generate a simple straight track section"
     bl_options = {'REGISTER', 'UNDO'}
@@ -36,20 +99,45 @@ class KEXENGINE_OT_generate_simple_track(bpy.types.Operator):
 
     def execute(self, context):
         try:
-            engine = KexEngine()
+            # Default values in Blender coordinates
+            # Blender: X=right, Y=forward, Z=up
+            # Position (0, 0, 3) means 3 meters up
+            blender_defaults = {
+                'position': (0.0, 0.0, 3.0),  # Blender coords: 3m up
+                'pitch': 0.0,
+                'yaw': 0.0,
+                'roll': 0.0,
+                'velocity': 10.0,
+                'heart_offset': 1.1,
+                'friction': 0.021,
+                'resistance': 2e-5,
+                'duration': 5.0,
+                'resolution': 0.5,
+            }
 
-            # Simple: anchor + force with no keyframes
-            anchor_id = engine.add_anchor(
-                position=(0.0, 3.0, 0.0),
-                pitch=0.0,
-                yaw=0.0,
-                roll=0.0,
-                velocity=10.0,
+            # Convert to kexengine coordinates for initial build
+            kex_position = blender_to_kex_position(*blender_defaults['position'])
+            kex_pitch, kex_yaw, kex_roll = blender_to_kex_angles(
+                blender_defaults['pitch'],
+                blender_defaults['yaw'],
+                blender_defaults['roll'],
             )
 
-            force_id = engine.add_force(anchor_id, duration=5.0)
+            engine = KexEngine()
 
-            result = engine.build(resolution=0.5)
+            anchor_id = engine.add_anchor(
+                position=kex_position,
+                pitch=kex_pitch,
+                yaw=kex_yaw,
+                roll=kex_roll,
+                velocity=blender_defaults['velocity'],
+                heart_offset=blender_defaults['heart_offset'],
+                friction=blender_defaults['friction'],
+                resistance=blender_defaults['resistance'],
+            )
+            engine.add_force(anchor_id, duration=blender_defaults['duration'])
+
+            result = engine.build(resolution=blender_defaults['resolution'])
 
             # Use section-aware curve creation for consistency
             curve_obj = create_track_from_sections(
@@ -57,6 +145,24 @@ class KEXENGINE_OT_generate_simple_track(bpy.types.Operator):
                 result.sections,
                 name="KexSimpleTrack",
             )
+
+            # Mark as kexengine track
+            curve_obj["kex_is_track"] = True
+
+            # Initialize PropertyGroup with Blender coordinate values
+            settings = curve_obj.kex_settings
+            settings.anchor.position = blender_defaults['position']
+            settings.anchor.pitch = blender_defaults['pitch']
+            settings.anchor.yaw = blender_defaults['yaw']
+            settings.anchor.roll = blender_defaults['roll']
+            settings.anchor.velocity = blender_defaults['velocity']
+            settings.anchor.heart_offset = blender_defaults['heart_offset']
+            settings.anchor.friction = blender_defaults['friction']
+            settings.anchor.resistance = blender_defaults['resistance']
+
+            settings.force.duration = blender_defaults['duration']
+
+            settings.build.resolution = blender_defaults['resolution']
 
             bpy.ops.object.select_all(action='DESELECT')
             curve_obj.select_set(True)
@@ -73,10 +179,10 @@ class KEXENGINE_OT_generate_simple_track(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-class KEXENGINE_OT_load_test_file(bpy.types.Operator):
+class KEXEDIT_OT_load_test_file(bpy.types.Operator):
     """Load and build a test kexd file."""
 
-    bl_idname = "kexengine.load_test_file"
+    bl_idname = "kexedit.load_test_file"
     bl_label = "Load Test File"
     bl_description = "Load a test kexd file and generate track"
     bl_options = {'REGISTER', 'UNDO'}
@@ -140,10 +246,10 @@ class KEXENGINE_OT_load_test_file(bpy.types.Operator):
 
 
 # Individual operators for each test file (for direct button access)
-class KEXENGINE_OT_load_shuttle(bpy.types.Operator):
+class KEXEDIT_OT_load_shuttle(bpy.types.Operator):
     """Load the shuttle test track."""
 
-    bl_idname = "kexengine.load_shuttle"
+    bl_idname = "kexedit.load_shuttle"
     bl_label = "Load Shuttle"
     bl_description = "Load shuttle coaster with rollback"
     bl_options = {'REGISTER', 'UNDO'}
@@ -156,10 +262,10 @@ class KEXENGINE_OT_load_shuttle(bpy.types.Operator):
         return _load_test_file(self, context, "shuttle_kexd", "Shuttle")
 
 
-class KEXENGINE_OT_load_circuit(bpy.types.Operator):
+class KEXEDIT_OT_load_circuit(bpy.types.Operator):
     """Load the circuit test track."""
 
-    bl_idname = "kexengine.load_circuit"
+    bl_idname = "kexedit.load_circuit"
     bl_label = "Load Circuit"
     bl_description = "Load complete circuit track"
     bl_options = {'REGISTER', 'UNDO'}
@@ -172,10 +278,10 @@ class KEXENGINE_OT_load_circuit(bpy.types.Operator):
         return _load_test_file(self, context, "circuit_kexd", "Circuit")
 
 
-class KEXENGINE_OT_load_switch(bpy.types.Operator):
+class KEXEDIT_OT_load_switch(bpy.types.Operator):
     """Load the switch test track."""
 
-    bl_idname = "kexengine.load_switch"
+    bl_idname = "kexedit.load_switch"
     bl_label = "Load Switch"
     bl_description = "Load track with switch/branch"
     bl_options = {'REGISTER', 'UNDO'}
@@ -188,10 +294,10 @@ class KEXENGINE_OT_load_switch(bpy.types.Operator):
         return _load_test_file(self, context, "switch_kexd", "Switch")
 
 
-class KEXENGINE_OT_load_all_types(bpy.types.Operator):
+class KEXEDIT_OT_load_all_types(bpy.types.Operator):
     """Load the all-types test track."""
 
-    bl_idname = "kexengine.load_all_types"
+    bl_idname = "kexedit.load_all_types"
     bl_label = "Load All Types"
     bl_description = "Load track demonstrating all node types"
     bl_options = {'REGISTER', 'UNDO'}
@@ -244,12 +350,12 @@ def _load_test_file(op, context, file_name: str, display_name: str):
 
 # Registration
 classes = [
-    KEXENGINE_OT_generate_simple_track,
-    KEXENGINE_OT_load_test_file,
-    KEXENGINE_OT_load_shuttle,
-    KEXENGINE_OT_load_circuit,
-    KEXENGINE_OT_load_switch,
-    KEXENGINE_OT_load_all_types,
+    KEXEDIT_OT_generate_simple_track,
+    KEXEDIT_OT_load_test_file,
+    KEXEDIT_OT_load_shuttle,
+    KEXEDIT_OT_load_circuit,
+    KEXEDIT_OT_load_switch,
+    KEXEDIT_OT_load_all_types,
 ]
 
 

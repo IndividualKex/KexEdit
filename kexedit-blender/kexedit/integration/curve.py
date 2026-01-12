@@ -1,12 +1,6 @@
 """Convert SplinePoints to Blender curves.
 
 This module bridges kexengine output to Blender's curve system.
-
-Coordinate system conversion:
-    Unity/kexengine (Y-up, left-handed):  X=right, Y=up, Z=forward
-    Blender (Z-up, right-handed):         X=right, Y=forward, Z=up
-
-    Conversion: unity(x, y, z) → blender(x, z, y)
 """
 
 from __future__ import annotations
@@ -15,22 +9,16 @@ import math
 from typing import Sequence
 
 import bpy
-from mathutils import Vector, Matrix
+from mathutils import Vector
 
+from ..core.coords import kex_to_blender_position, kex_to_blender_direction
 from ..core.types import Section, SplinePoint, Float3
 
 
-def unity_to_blender(v: Float3) -> Vector:
-    """Convert Unity/kexengine coordinates to Blender coordinates.
-
-    Unity (Y-up, left-handed) → Blender (Z-up, right-handed)
-    """
-    return Vector((v.x, v.z, v.y))
-
-
-def unity_to_blender_tuple(x: float, y: float, z: float) -> tuple[float, float, float]:
-    """Convert Unity/kexengine coordinates to Blender coordinates."""
-    return (x, z, y)
+def kex_to_blender_vector(v: Float3) -> Vector:
+    """Convert kexengine Float3 to Blender Vector."""
+    pos = kex_to_blender_position(v.x, v.y, v.z)
+    return Vector(pos)
 
 
 def create_track_curve(
@@ -65,7 +53,7 @@ def create_track_curve(
     for i, sp in enumerate(spline_points):
         point = spline.points[i]
         # Blender uses XYZW for NURBS/POLY points (W is weight)
-        pos = unity_to_blender(sp.position)
+        pos = kex_to_blender_vector(sp.position)
         point.co = (pos.x, pos.y, pos.z, 1.0)
         point.tilt = _calculate_tilt(sp)
 
@@ -111,8 +99,8 @@ def create_track_bezier(
     # Set point data
     for i, sp in enumerate(spline_points):
         bp = spline.bezier_points[i]
-        pos = unity_to_blender(sp.position)
-        direction = unity_to_blender(sp.direction)
+        pos = kex_to_blender_vector(sp.position)
+        direction = kex_to_blender_vector(sp.direction)
 
         # Calculate handle offset based on arc distance to neighbors
         if i == 0:
@@ -150,9 +138,9 @@ def _calculate_tilt(sp: SplinePoint) -> float:
 
     We compute the angle between that default and our actual normal.
     """
-    direction = unity_to_blender(sp.direction).normalized()
+    direction = kex_to_blender_vector(sp.direction).normalized()
     # Negate normal: kexengine normal points toward track, we want away from track
-    normal = -unity_to_blender(sp.normal).normalized()
+    normal = -kex_to_blender_vector(sp.normal).normalized()
 
     # Blender's default reference is world Z, or world Y if nearly vertical
     world_up = Vector((0, 0, 1))
@@ -219,8 +207,8 @@ def create_track_from_sections(
 
         for i, sp in enumerate(section_points):
             bp = spline.bezier_points[i]
-            pos = unity_to_blender(sp.position)
-            direction = unity_to_blender(sp.direction)
+            pos = kex_to_blender_vector(sp.position)
+            direction = kex_to_blender_vector(sp.direction)
 
             # Calculate handle offset based on arc distance to neighbors
             if i == 0:
@@ -277,6 +265,72 @@ def update_track_curve(
 
     for i, sp in enumerate(spline_points):
         point = spline.points[i]
-        pos = unity_to_blender(sp.position)
+        pos = kex_to_blender_vector(sp.position)
         point.co = (pos.x, pos.y, pos.z, 1.0)
         point.tilt = _calculate_tilt(sp)
+
+
+def update_track_from_sections(
+    curve_obj: bpy.types.Object,
+    spline_points: Sequence[SplinePoint],
+    sections: Sequence[Section],
+    handle_scale: float = 0.3,
+) -> None:
+    """Update an existing curve with new section-aware SplinePoints.
+
+    Preserves the object identity and custom properties but replaces geometry.
+
+    Args:
+        curve_obj: Existing curve object to update.
+        spline_points: New SplinePoints to set.
+        sections: Section definitions for spline boundaries.
+        handle_scale: Scale factor for Bezier handles.
+    """
+    if not spline_points:
+        return
+
+    curve_data = curve_obj.data
+    if not isinstance(curve_data, bpy.types.Curve):
+        raise TypeError(f"Object {curve_obj.name} is not a curve")
+
+    # Clear existing splines
+    curve_data.splines.clear()
+
+    # Recreate splines per section (same logic as create_track_from_sections)
+    for section in sections:
+        if not section.is_rendered():
+            continue
+
+        start = section.spline_start_index
+        end = section.spline_end_index
+        if start < 0 or end < 0 or start >= end:
+            continue
+
+        section_points = spline_points[start:end]
+        if len(section_points) < 2:
+            continue
+
+        spline = curve_data.splines.new(type='BEZIER')
+        spline.bezier_points.add(len(section_points) - 1)
+
+        for i, sp in enumerate(section_points):
+            bp = spline.bezier_points[i]
+            pos = kex_to_blender_vector(sp.position)
+            direction = kex_to_blender_vector(sp.direction)
+
+            # Calculate handle offset based on arc distance to neighbors
+            if i == 0:
+                arc_delta = section_points[1].arc - sp.arc if len(section_points) > 1 else 1.0
+            elif i == len(section_points) - 1:
+                arc_delta = sp.arc - section_points[i - 1].arc
+            else:
+                arc_delta = (section_points[i + 1].arc - section_points[i - 1].arc) / 2
+
+            handle_length = arc_delta * handle_scale
+
+            bp.co = pos
+            bp.handle_left_type = 'FREE'
+            bp.handle_right_type = 'FREE'
+            bp.handle_left = pos - direction * handle_length
+            bp.handle_right = pos + direction * handle_length
+            bp.tilt = _calculate_tilt(sp)

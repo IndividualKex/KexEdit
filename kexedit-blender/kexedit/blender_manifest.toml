@@ -1,10 +1,10 @@
-# Blender Extension manifest for kexengine addon
+# Blender Extension manifest for kexedit addon
 # See: https://docs.blender.org/manual/en/latest/extensions/getting_started.html
 
 schema_version = "1.0.0"
 
-id = "kexengine"
-name = "kexengine"
+id = "kexedit"
+name = "kexedit"
 version = "0.1.0"
 tagline = "Roller coaster track design using Force Vector Design"
 maintainer = "KexEdit <kexedit@example.com>"

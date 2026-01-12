@@ -83,7 +83,7 @@ Field names should match the Rust/C names for clarity.
 For operators:
 
 ```python
-class KEXENGINE_OT_generate_track(bpy.types.Operator):
+class KEXEDIT_OT_generate_track(bpy.types.Operator):
     bl_idname = "kexengine.generate_track"
     bl_label = "Generate Track"
     bl_options = {'REGISTER', 'UNDO'}

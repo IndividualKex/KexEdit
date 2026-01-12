@@ -1,6 +1,6 @@
-# kexengine-blender
+# kexedit-blender
 
-Blender addon for roller coaster design using kexengine (Rust FFI backend).
+Blender addon (kexedit) for roller coaster design using kexengine (Rust FFI backend).
 
 ## Architecture
 
@@ -30,15 +30,14 @@ Hexagonal/onion architecture with pure cores and domain-aware layers:
 ## Project Structure
 
 ```
-kexengine-blender/
-├── kexengine/              # Python package (the addon)
+kexedit-blender/
+├── kexedit/                # Python package (the addon)
 │   ├── __init__.py         # Blender addon entry point
 │   ├── core/               # Pure Python, no Blender imports
 │   │   ├── ffi.py          # ctypes bindings to kexengine
 │   │   ├── types.py        # Data structures (Keyframe, Point, etc.)
-│   │   └── document.py     # Document builder
+│   │   └── coords.py       # Coordinate system conversion
 │   ├── integration/        # Blender-aware adapters
-│   │   ├── fcurve.py       # F-Curve ↔ Keyframe conversion
 │   │   ├── curve.py        # SplinePoint → Blender Curve
 │   │   └── properties.py   # PropertyGroup definitions
 │   ├── ui/                 # Operators and panels
@@ -60,10 +59,10 @@ python -m pytest tests/
 cd ../kexengine && cargo build --release
 
 # Copy library to addon
-cp ../kexengine/target/release/kexengine.dll kexengine/lib/
+cp ../kexengine/target/release/kexengine.dll kexedit/lib/
 
 # Install addon (symlink for development)
-# Windows: mklink /D "%APPDATA%\Blender\4.0\scripts\addons\kexengine" "path\to\kexengine"
+# Windows: mklink /D "C:\BlenderExtensions\dev\kexedit" "path\to\kexedit"
 ```
 
 ## Code Rules

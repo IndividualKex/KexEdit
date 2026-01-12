@@ -12,15 +12,15 @@ from pathlib import Path
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from kexengine.core import (
+from kexedit.core import (
     Float3,
     Keyframe,
     InterpolationType,
     KexEngine,
     KexError,
 )
-from kexengine.core.ffi import is_library_available, _get_library_path
-from kexengine.core.types import NodeType, PortDataType, input_key
+from kexedit.core.ffi import is_library_available, _get_library_path
+from kexedit.core.types import NodeType, PortDataType, input_key
 
 
 def test_float3_creation():

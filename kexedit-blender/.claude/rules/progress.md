@@ -60,11 +60,14 @@ Step-by-step implementation tracking. Each phase builds on the previous.
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Create integration/properties.py | pending | |
-| PropertyGroup for track settings | pending | |
-| PropertyGroup for node parameters | pending | |
-| Update callback → regenerate track | pending | |
-| UI panel with property controls | pending | |
+| Create integration/properties.py | done | KexTrackSettings with anchor/force/build subgroups |
+| PropertyGroup for track settings | done | KexAnchorSettings, KexForceSettings, KexBuildSettings |
+| PropertyGroup for node parameters | done | Object-attached via kex_settings property |
+| Update callback → regenerate track | done | _on_track_property_update with loop prevention |
+| UI panel with property controls | done | Conditional subpanels in panels.py |
+| Add update_track_from_sections() | done | Section-aware curve update in curve.py |
+| Coordinate system conversion | done | core/coords.py with Blender↔kex transforms |
+| Coordinate conversion tests | done | tests/test_coords.py with round-trip verification |
 
 ## Phase 6: F-Curve Integration
 
