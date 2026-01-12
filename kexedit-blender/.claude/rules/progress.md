@@ -75,12 +75,19 @@ Step-by-step implementation tracking. Each phase builds on the previous.
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Create integration/fcurve.py | pending | |
-| Read F-Curve keyframes | pending | |
-| Convert to kexengine Keyframe format | pending | |
-| Handle interpolation types (Bezier, Linear) | pending | |
-| Tangent/weight conversion | pending | |
-| Test animated parameter | pending | |
+| Create integration/fcurve.py | done | F-Curve reading and Keyframe conversion |
+| Read F-Curve keyframes | done | extract_keyframes_for_node() function |
+| Convert to kexengine Keyframe format | done | read_fcurve_keyframes() with interpolation mapping |
+| Handle interpolation types (Bezier, Linear) | done | blender_to_kex_interpolation() maps CONSTANT/LINEAR/BEZIER |
+| Tangent/weight conversion | done | calculate_tangent_and_weight(), normalize_weight() |
+| Add animated force properties | done | roll_speed, normal_force, lateral_force in KexForceSettings |
+| Update regenerate_track() | done | Integrates F-Curve extraction, sets keyframes on force node |
+| UI panel for animated properties | done | Force panel shows FVD Animation section with Refresh button |
+| Blender 4.4+ layered actions | done | Supports new action.layers[].strips[].fcurves API |
+| Auto-refresh on keyframe edit | done | Depsgraph handler detects Action updates |
+| Frame-to-time mapping | done | 100 frames = 1 second of track progress |
+| Unit tests | done | tests/test_fcurve.py with 27 tests |
+| Test animated parameter | done | Verified in Blender |
 
 ## Phase 7: Custom Node Tree
 

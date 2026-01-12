@@ -8,7 +8,9 @@ import bpy
 
 from ..core.coords import blender_to_kex_position, blender_to_kex_angles
 from ..core.ffi import KexEngine, KexError, build_from_kexd, is_library_available
+from ..core.types import Keyframe
 from ..integration.curve import create_track_from_sections, update_track_from_sections
+from ..integration.fcurve import extract_keyframes_for_node, get_animated_property_names
 
 
 def regenerate_track(curve_obj: bpy.types.Object) -> bool:
@@ -48,10 +50,35 @@ def regenerate_track(curve_obj: bpy.types.Object) -> bool:
 
         # Read force settings
         force = settings.force
-        engine.add_force(
+        force_id = engine.add_force(
             anchor_id,
             duration=force.duration,
         )
+
+        # Check which properties are animated via F-Curves
+        try:
+            animated_props = get_animated_property_names(curve_obj)
+            keyframes_by_prop = extract_keyframes_for_node(curve_obj, force.duration)
+        except Exception:
+            animated_props = set()
+            keyframes_by_prop = {}
+
+        # Set keyframes - use F-Curves if animated, otherwise use base value
+        # Property IDs: 0=roll_speed, 1=normal_force, 2=lateral_force
+        if 'roll_speed' in animated_props and 0 in keyframes_by_prop:
+            engine.set_keyframes(force_id, 0, keyframes_by_prop[0])
+        else:
+            engine.set_keyframes(force_id, 0, [Keyframe.simple(0, force.roll_speed)])
+
+        if 'normal_force' in animated_props and 1 in keyframes_by_prop:
+            engine.set_keyframes(force_id, 1, keyframes_by_prop[1])
+        else:
+            engine.set_keyframes(force_id, 1, [Keyframe.simple(0, force.normal_force)])
+
+        if 'lateral_force' in animated_props and 2 in keyframes_by_prop:
+            engine.set_keyframes(force_id, 2, keyframes_by_prop[2])
+        else:
+            engine.set_keyframes(force_id, 2, [Keyframe.simple(0, force.lateral_force)])
 
         # Build
         build = settings.build
@@ -348,12 +375,43 @@ def _load_test_file(op, context, file_name: str, display_name: str):
         return {'CANCELLED'}
 
 
+class KEXEDIT_OT_refresh_track(bpy.types.Operator):
+    """Refresh track after editing F-Curves."""
+
+    bl_idname = "kexedit.refresh_track"
+    bl_label = "Refresh Track"
+    bl_description = "Regenerate track from current F-Curves"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return obj is not None and obj.get("kex_is_track")
+
+    def execute(self, context):
+        try:
+            obj = context.active_object
+            if regenerate_track(obj):
+                self.report({'INFO'}, "Track refreshed")
+                return {'FINISHED'}
+            else:
+                self.report({'ERROR'}, "Failed to refresh track")
+                return {'CANCELLED'}
+        except Exception as e:
+            self.report({'ERROR'}, f"Refresh error: {e}")
+            print(f"[kexedit] Refresh error: {e}")
+            import traceback
+            traceback.print_exc()
+            return {'CANCELLED'}
+
+
 # Registration
 classes = [
     KEXEDIT_OT_generate_simple_track,
     KEXEDIT_OT_load_test_file,
     KEXEDIT_OT_load_shuttle,
     KEXEDIT_OT_load_circuit,
+    KEXEDIT_OT_refresh_track,
     KEXEDIT_OT_load_switch,
     KEXEDIT_OT_load_all_types,
 ]

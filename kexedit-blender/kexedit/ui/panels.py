@@ -123,10 +123,29 @@ class KEXEDIT_PT_force_settings(bpy.types.Panel):
         settings = context.active_object.kex_settings.force
 
         layout.use_property_split = True
-        layout.use_property_decorate = False
+        layout.use_property_decorate = True  # Show keyframe decorators
 
         col = layout.column()
         col.prop(settings, "duration")
+
+        layout.separator()
+        layout.label(text="FVD Animation (100 frames = 1 sec)")
+
+        col = layout.column()
+        col.prop(settings, "roll_speed")
+        col.prop(settings, "normal_force")
+        col.prop(settings, "lateral_force")
+
+        # Show hint about keyframe range
+        box = layout.box()
+        box.scale_y = 0.8
+        duration = settings.duration
+        max_frame = int(duration * 100)
+        box.label(text=f"Keyframes: frame 0-{max_frame}", icon='INFO')
+
+        # Refresh button for after editing F-Curves
+        layout.separator()
+        layout.operator("kexedit.refresh_track", icon='FILE_REFRESH')
 
 
 class KEXEDIT_PT_build_settings(bpy.types.Panel):

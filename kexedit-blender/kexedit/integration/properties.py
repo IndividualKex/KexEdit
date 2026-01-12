@@ -124,6 +124,34 @@ class KexForceSettings(bpy.types.PropertyGroup):
         update=_on_track_property_update,
     )
 
+    # Animated FVD properties (base values when not animated via F-Curves)
+    roll_speed: FloatProperty(
+        name="Roll Speed",
+        description="Roll rate in degrees per second",
+        default=0.0,
+        soft_min=-180.0,
+        soft_max=180.0,
+        update=_on_track_property_update,
+    )
+
+    normal_force: FloatProperty(
+        name="Normal Force",
+        description="Normal force in G (1.0 = gravity)",
+        default=1.0,
+        soft_min=-5.0,
+        soft_max=10.0,
+        update=_on_track_property_update,
+    )
+
+    lateral_force: FloatProperty(
+        name="Lateral Force",
+        description="Lateral force in G (positive = right)",
+        default=0.0,
+        soft_min=-5.0,
+        soft_max=5.0,
+        update=_on_track_property_update,
+    )
+
 
 class KexBuildSettings(bpy.types.PropertyGroup):
     """Build parameters stored on the track object."""
