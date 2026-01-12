@@ -329,7 +329,7 @@ class KexEngine:
 
         Returns the node ID.
         """
-        # Anchor has 8 inputs (position, pitch, yaw, roll, velocity, heart, friction, resistance)
+        # Anchor has 8 inputs (position, roll, pitch, yaw, velocity, heart, friction, resistance)
         # and 1 output (Anchor)
         node_id = self._add_node(NodeType.ANCHOR, 8, 1)
 
@@ -342,11 +342,12 @@ class KexEngine:
         anchor_out = self._add_port(node_id, PortDataType.ANCHOR, 0, False)
         self._node_anchor_output[node_id] = anchor_out
 
-        # Set properties
+        # Set properties (indices must match Rust anchor_ports)
+        # Rust: POSITION=0, ROLL=1, PITCH=2, YAW=3
         self._set_vector(node_id, 0, position)
-        self._set_scalar(node_id, 1, pitch)
-        self._set_scalar(node_id, 2, yaw)
-        self._set_scalar(node_id, 3, roll)
+        self._set_scalar(node_id, 1, roll)
+        self._set_scalar(node_id, 2, pitch)
+        self._set_scalar(node_id, 3, yaw)
         self._set_scalar(node_id, 4, velocity)
         self._set_scalar(node_id, 5, heart_offset)
         self._set_scalar(node_id, 6, friction)

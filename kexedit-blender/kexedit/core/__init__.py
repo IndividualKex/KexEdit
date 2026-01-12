@@ -28,6 +28,8 @@ from .coords import (
     blender_to_kex_direction,
     kex_to_blender_angles,
     blender_to_kex_angles,
+    degrees_to_radians,
+    radians_to_degrees,
 )
 
 __all__ = [
@@ -47,4 +49,6 @@ __all__ = [
     "blender_to_kex_direction",
     "kex_to_blender_angles",
     "blender_to_kex_angles",
+    "degrees_to_radians",
+    "radians_to_degrees",
 ]

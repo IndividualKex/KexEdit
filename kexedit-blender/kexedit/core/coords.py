@@ -3,23 +3,36 @@
 kexengine (Unity conventions):
     - Y-up, left-handed
     - X = right, Y = up, Z = forward
+    - Angles in radians
 
 Blender:
     - Z-up, right-handed
     - X = right, Y = forward, Z = up
+    - Angles in degrees (UI convention)
 
 The position/vector conversion is symmetric (its own inverse):
     kex(x, y, z) <-> blender(x, z, y)
 
-Orientation angles need careful handling due to handedness difference.
+Angle conversion includes degrees <-> radians transformation.
 """
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .types import Float3
+
+
+def degrees_to_radians(deg: float) -> float:
+    """Convert degrees to radians."""
+    return deg * (math.pi / 180.0)
+
+
+def radians_to_degrees(rad: float) -> float:
+    """Convert radians to degrees."""
+    return rad * (180.0 / math.pi)
 
 
 def kex_to_blender_position(x: float, y: float, z: float) -> tuple[float, float, float]:
@@ -53,36 +66,38 @@ def blender_to_kex_direction(x: float, y: float, z: float) -> tuple[float, float
 def kex_to_blender_angles(
     pitch: float, yaw: float, roll: float
 ) -> tuple[float, float, float]:
-    """Convert Euler angles from kexengine to Blender conventions.
+    """Convert Euler angles from kexengine (radians) to Blender (degrees).
 
-    In kexengine (Unity, left-handed Y-up):
-        - Pitch: rotation around X axis (nose up/down)
-        - Yaw: rotation around Y axis (turn left/right)
-        - Roll: rotation around Z axis (bank left/right)
+    Args:
+        pitch: Pitch in radians (nose up/down)
+        yaw: Yaw in radians (turn left/right)
+        roll: Roll in radians (bank left/right)
 
-    In Blender (right-handed Z-up):
-        - The axes are remapped: kex Y -> blender Z, kex Z -> blender Y
-        - Handedness flip negates rotation direction around certain axes
-
-    Returns (pitch, yaw, roll) in Blender conventions.
+    Returns:
+        (pitch, yaw, roll) in degrees for Blender UI.
     """
-    # Axis remapping: kex rotations around Y become rotations around Z in Blender
-    # Handedness: left-handed to right-handed negates the rotation direction
-    #
-    # kex pitch (around X) -> blender pitch (around X), but sign flips due to handedness
-    # kex yaw (around Y/up) -> blender yaw (around Z/up), sign flips
-    # kex roll (around Z/forward) -> blender roll (around Y/forward), sign flips
-    return (-pitch, -roll, -yaw)
+    return (
+        radians_to_degrees(pitch),
+        radians_to_degrees(yaw),
+        radians_to_degrees(roll),
+    )
 
 
 def blender_to_kex_angles(
     pitch: float, yaw: float, roll: float
 ) -> tuple[float, float, float]:
-    """Convert Euler angles from Blender to kexengine conventions.
+    """Convert Euler angles from Blender (degrees) to kexengine (radians).
 
-    Inverse of kex_to_blender_angles.
+    Args:
+        pitch: Pitch in degrees (nose up/down)
+        yaw: Yaw in degrees (turn left/right)
+        roll: Roll in degrees (bank left/right)
 
-    Returns (pitch, yaw, roll) in kexengine conventions.
+    Returns:
+        (pitch, yaw, roll) in radians for kexengine.
     """
-    # Inverse transformation
-    return (-pitch, -roll, -yaw)
+    return (
+        degrees_to_radians(pitch),
+        degrees_to_radians(yaw),
+        degrees_to_radians(roll),
+    )

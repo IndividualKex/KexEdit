@@ -14,6 +14,8 @@ from kexedit.core.coords import (
     blender_to_kex_direction,
     kex_to_blender_angles,
     blender_to_kex_angles,
+    degrees_to_radians,
+    radians_to_degrees,
 )
 
 
@@ -84,7 +86,10 @@ class TestPositionConversion:
 
 
 class TestAngleConversion:
-    """Test Euler angle conversion between coordinate systems."""
+    """Test Euler angle conversion between coordinate systems.
+
+    kexengine uses radians, Blender UI uses degrees.
+    """
 
     def test_zero_angles_stay_zero(self):
         """Zero angles should remain zero after conversion."""
@@ -98,39 +103,60 @@ class TestAngleConversion:
 
     def test_angle_round_trip(self):
         """Round-trip angle conversion should return original value."""
-        original = (15.0, 30.0, 45.0)
+        # Start with radians (kex)
+        original_radians = (0.5, 1.0, 1.5)
+        blender_degrees = kex_to_blender_angles(*original_radians)
+        back_to_radians = blender_to_kex_angles(*blender_degrees)
+        assert back_to_radians == pytest.approx(original_radians, abs=1e-10)
 
-        # kex -> blender -> kex
-        blender = kex_to_blender_angles(*original)
-        back_to_kex = blender_to_kex_angles(*blender)
-        assert back_to_kex == pytest.approx(original, abs=1e-10)
+        # Start with degrees (blender)
+        original_degrees = (30.0, 45.0, 60.0)
+        kex_radians = blender_to_kex_angles(*original_degrees)
+        back_to_degrees = kex_to_blender_angles(*kex_radians)
+        assert back_to_degrees == pytest.approx(original_degrees, abs=1e-10)
 
-        # blender -> kex -> blender
-        kex = blender_to_kex_angles(*original)
-        back_to_blender = kex_to_blender_angles(*kex)
-        assert back_to_blender == pytest.approx(original, abs=1e-10)
+    def test_90_degrees_to_radians(self):
+        """90 degrees should convert to pi/2 radians."""
+        blender_angles = (90.0, 0.0, 0.0)
+        kex_angles = blender_to_kex_angles(*blender_angles)
+        assert kex_angles[0] == pytest.approx(math.pi / 2, abs=1e-10)
 
-    def test_pitch_conversion(self):
-        """Pitch (nose up/down) should convert with sign change."""
-        # Positive pitch in kex = nose up
-        kex_pitch = (30.0, 0.0, 0.0)
-        blender_angles = kex_to_blender_angles(*kex_pitch)
-        # Due to handedness flip, pitch sign changes
-        assert blender_angles[0] == -30.0
+    def test_pi_radians_to_degrees(self):
+        """pi radians should convert to 180 degrees."""
+        kex_angles = (math.pi, 0.0, 0.0)
+        blender_angles = kex_to_blender_angles(*kex_angles)
+        assert blender_angles[0] == pytest.approx(180.0, abs=1e-10)
 
-    def test_yaw_becomes_roll_axis(self):
-        """Kex yaw (around Y/up) becomes rotation around Blender Z/up."""
-        kex_yaw = (0.0, 45.0, 0.0)
-        blender_angles = kex_to_blender_angles(*kex_yaw)
-        # Yaw in kex becomes the third component in blender (around Z)
-        assert blender_angles[2] == -45.0
+    def test_common_angles(self):
+        """Test common angle conversions."""
+        # 45 degrees = pi/4 radians
+        assert blender_to_kex_angles(45.0, 0.0, 0.0)[0] == pytest.approx(math.pi / 4, abs=1e-10)
+        # 30 degrees = pi/6 radians
+        assert blender_to_kex_angles(30.0, 0.0, 0.0)[0] == pytest.approx(math.pi / 6, abs=1e-10)
+        # 60 degrees = pi/3 radians
+        assert blender_to_kex_angles(60.0, 0.0, 0.0)[0] == pytest.approx(math.pi / 3, abs=1e-10)
 
-    def test_roll_becomes_yaw_axis(self):
-        """Kex roll (around Z/forward) becomes rotation around Blender Y/forward."""
-        kex_roll = (0.0, 0.0, 60.0)
-        blender_angles = kex_to_blender_angles(*kex_roll)
-        # Roll in kex becomes the second component in blender (around Y)
-        assert blender_angles[1] == -60.0
+
+class TestDegreesRadians:
+    """Test the low-level degree/radian conversion functions."""
+
+    def test_degrees_to_radians(self):
+        assert degrees_to_radians(0.0) == 0.0
+        assert degrees_to_radians(90.0) == pytest.approx(math.pi / 2)
+        assert degrees_to_radians(180.0) == pytest.approx(math.pi)
+        assert degrees_to_radians(360.0) == pytest.approx(2 * math.pi)
+        assert degrees_to_radians(-90.0) == pytest.approx(-math.pi / 2)
+
+    def test_radians_to_degrees(self):
+        assert radians_to_degrees(0.0) == 0.0
+        assert radians_to_degrees(math.pi / 2) == pytest.approx(90.0)
+        assert radians_to_degrees(math.pi) == pytest.approx(180.0)
+        assert radians_to_degrees(2 * math.pi) == pytest.approx(360.0)
+        assert radians_to_degrees(-math.pi / 2) == pytest.approx(-90.0)
+
+    def test_round_trip(self):
+        for deg in [0.0, 30.0, 45.0, 90.0, 180.0, -45.0, 123.456]:
+            assert radians_to_degrees(degrees_to_radians(deg)) == pytest.approx(deg)
 
 
 class TestEdgeCases:
