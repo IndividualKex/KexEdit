@@ -11,7 +11,6 @@ mod math;
 mod physics_params;
 mod point;
 
-// Physics constants module - re-exported for backwards compatibility
 pub mod physics;
 
 pub use curvature::Curvature;

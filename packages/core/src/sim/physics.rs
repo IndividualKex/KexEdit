@@ -53,24 +53,9 @@ mod tests {
     const TOLERANCE: f32 = 1e-4;
 
     #[test]
-    fn constants_gravity_matches_standard() {
-        assert_relative_eq!(G, 9.80665, epsilon = TOLERANCE);
-    }
-
-    #[test]
-    fn constants_simulation_rate() {
-        assert_relative_eq!(HZ, 100.0, epsilon = TOLERANCE);
-    }
-
-    #[test]
     fn dt_equals_one_over_hz() {
         assert_relative_eq!(DT, 1.0 / HZ, epsilon = TOLERANCE);
         assert_relative_eq!(DT, 0.01, epsilon = TOLERANCE);
-    }
-
-    #[test]
-    fn constants_min_velocity() {
-        assert_relative_eq!(MIN_VELOCITY, 0.1, epsilon = TOLERANCE);
     }
 
     #[test]

@@ -490,14 +490,11 @@ fn is_better_match(dist: f32, is_cosmetic: bool, best_dist: f32, best_is_cosmeti
 }
 
 fn distance(a: crate::sim::Float3, b: crate::sim::Float3) -> f32 {
-    let dx = a.x - b.x;
-    let dy = a.y - b.y;
-    let dz = a.z - b.z;
-    (dx * dx + dy * dy + dz * dz).sqrt()
+    (a - b).magnitude()
 }
 
 fn dot(a: crate::sim::Float3, b: crate::sim::Float3) -> f32 {
-    a.x * b.x + a.y * b.y + a.z * b.z
+    a.dot(b)
 }
 
 #[cfg(test)]

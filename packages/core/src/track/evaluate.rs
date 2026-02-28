@@ -316,13 +316,8 @@ mod tests {
             edge_targets,
         );
 
-        // Set up scalars for duration (default 1.0)
         let mut scalars = HashMap::new();
-        // input_key format: (node_id as u64) << 32 | (port_index as u64)
-        fn input_key(node_id: u32, port_index: i32) -> u64 {
-            (node_id as u64) << 32 | (port_index as u64)
-        }
-        // Set duration for Geo nodes (port 1)
+        use crate::track::document::input_key;
         scalars.insert(input_key(1, 1), 1.0f32);
         scalars.insert(input_key(3, 1), 1.0f32);
         // Set CopyPath Start/End (ports 2 and 3)

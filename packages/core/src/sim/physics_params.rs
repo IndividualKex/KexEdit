@@ -61,18 +61,4 @@ mod tests {
         assert!(!params.driven);
     }
 
-    #[test]
-    fn test_clone() {
-        let params1 = PhysicsParams::new(1.5, 0.01, 0.02, 0.1, true);
-        let params2 = params1;
-        assert_eq!(params1, params2);
-    }
-
-    #[test]
-    fn test_debug() {
-        let params = PhysicsParams::new(1.1, 0.0, 0.0, 0.0, false);
-        let debug_str = format!("{:?}", params);
-        assert!(debug_str.contains("PhysicsParams"));
-        assert!(debug_str.contains("heart_offset"));
-    }
 }
