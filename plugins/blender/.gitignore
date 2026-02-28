@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+
+# Built native libraries (build with scripts/build_lib.sh)
+kexedit/lib/*.dll
+kexedit/lib/*.so
+kexedit/lib/*.dylib

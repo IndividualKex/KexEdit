@@ -1,0 +1,23 @@
+[package]
+name = "kexedit-core"
+authors = ["IndividualKex"]
+license = "MIT"
+version = "0.1.0"
+edition = "2021"
+description = "Force Vector Design physics simulation for roller coaster track generation"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "kexengine"
+
+[features]
+default = ["ffi"]
+ffi = []
+
+[dependencies]
+approx = "0.5"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true

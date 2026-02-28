@@ -1,0 +1,17 @@
+# Rust
+packages/core/target/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Native libraries (built from packages/core/)
+plugins/blender/kexedit/lib/*.dll
+plugins/blender/kexedit/lib/*.so
+plugins/blender/kexedit/lib/*.dylib
+
+# IDE
+.idea/
+.vscode/
+*.swp
