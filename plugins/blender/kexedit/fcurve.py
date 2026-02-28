@@ -187,18 +187,14 @@ def read_fcurve_keyframes(
                 co_tuple, handle_right_tuple, is_in=False
             )
 
-            # Normalize weights using frame intervals converted to time
-            frame_interval_in = abs(kp.co[0] - kp.handle_left[0]) if i > 0 else 0
-            frame_interval_out = abs(kp.handle_right[0] - kp.co[0]) if i < len(points) - 1 else 0
-
             prev_time = times[i - 1] if i > 0 else None
             next_time = times[i + 1] if i < len(points) - 1 else None
 
             in_weight = normalize_weight(
-                frame_interval_in, prev_time, time, next_time, is_in=True
+                in_weight_raw, prev_time, time, next_time, is_in=True
             )
             out_weight = normalize_weight(
-                frame_interval_out, prev_time, time, next_time, is_in=False
+                out_weight_raw, prev_time, time, next_time, is_in=False
             )
         else:
             in_tangent = 0.0

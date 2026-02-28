@@ -1,94 +1,13 @@
-"""Tests for F-Curve to kexengine Keyframe conversion.
-
-These tests cover the pure Python conversion functions that don't require Blender.
-The functions are copied here to allow testing without bpy imports.
-"""
-
 from __future__ import annotations
 
-from enum import IntEnum
-from typing import Optional
-
-
-# --- Copied from core/types.py ---
-
-class InterpolationType(IntEnum):
-    """Keyframe interpolation type matching Rust enum."""
-    CONSTANT = 0
-    LINEAR = 1
-    BEZIER = 2
-
-
-# --- Copied from integration/fcurve.py (pure functions only) ---
-
-PROPERTY_ID_MAP: dict[str, int] = {
-    'roll_speed': 0,
-    'normal_force': 1,
-    'lateral_force': 2,
-    'pitch_speed': 3,
-    'yaw_speed': 4,
-    'driven_velocity': 5,
-    'heart_offset': 6,
-    'friction': 7,
-    'resistance': 8,
-}
-
-
-def blender_to_kex_interpolation(blender_type: str) -> InterpolationType:
-    """Map Blender interpolation type to kexengine InterpolationType."""
-    mapping = {
-        'CONSTANT': InterpolationType.CONSTANT,
-        'LINEAR': InterpolationType.LINEAR,
-        'BEZIER': InterpolationType.BEZIER,
-    }
-    return mapping.get(blender_type, InterpolationType.BEZIER)
-
-
-def frame_to_time(frame: float) -> float:
-    """Convert Blender frame number to kexengine time. 100 frames = 1 second."""
-    return frame / 100.0
-
-
-def calculate_tangent_and_weight(
-    keyframe_co: tuple[float, float],
-    handle_co: tuple[float, float],
-    is_in: bool,
-) -> tuple[float, float]:
-    """Convert Blender handle position to tangent slope and raw weight."""
-    kx, ky = keyframe_co
-    hx, hy = handle_co
-
-    dx = hx - kx
-    dy = hy - ky
-
-    if abs(dx) < 1e-10:
-        tangent = 0.0
-    else:
-        tangent = dy / dx
-
-    raw_weight = abs(dx)
-    return tangent, raw_weight
-
-
-def normalize_weight(
-    raw_weight: float,
-    prev_time: Optional[float],
-    curr_time: float,
-    next_time: Optional[float],
-    is_in: bool,
-) -> float:
-    """Normalize handle weight relative to keyframe interval."""
-    if is_in and prev_time is not None:
-        interval = curr_time - prev_time
-    elif not is_in and next_time is not None:
-        interval = next_time - curr_time
-    else:
-        return 1.0 / 3.0
-
-    if interval < 1e-10:
-        return 1.0 / 3.0
-
-    return min(raw_weight / interval, 1.0)
+from kexedit.types import InterpolationType
+from kexedit.fcurve import (
+    PROPERTY_ID_MAP,
+    blender_to_kex_interpolation,
+    frame_to_time,
+    calculate_tangent_and_weight,
+    normalize_weight,
+)
 
 
 # --- Interpolation Mapping Tests ---
@@ -230,45 +149,3 @@ class TestPropertyIdMapping:
         assert len(ids) == len(set(ids))
 
 
-# --- Run standalone ---
-
-def run_tests():
-    """Simple test runner for standalone execution."""
-    import traceback
-
-    test_classes = [
-        TestInterpolationMapping,
-        TestFrameToTime,
-        TestTangentCalculation,
-        TestWeightNormalization,
-        TestPropertyIdMapping,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test_class in test_classes:
-        instance = test_class()
-        for method_name in dir(instance):
-            if method_name.startswith('test_'):
-                method = getattr(instance, method_name)
-                try:
-                    method()
-                    print(f"  PASS: {test_class.__name__}.{method_name}")
-                    passed += 1
-                except AssertionError as e:
-                    print(f"  FAIL: {test_class.__name__}.{method_name}")
-                    traceback.print_exc()
-                    failed += 1
-                except Exception as e:
-                    print(f"  ERROR: {test_class.__name__}.{method_name}: {e}")
-                    traceback.print_exc()
-                    failed += 1
-
-    print(f"\n{passed} passed, {failed} failed")
-    return failed == 0
-
-
-if __name__ == '__main__':
-    success = run_tests()
-    exit(0 if success else 1)

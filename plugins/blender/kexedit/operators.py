@@ -55,13 +55,8 @@ def regenerate_track(curve_obj: bpy.types.Object) -> bool:
             duration=force.duration,
         )
 
-        # Check which properties are animated via F-Curves
-        try:
-            animated_props = get_animated_property_names(curve_obj)
-            keyframes_by_prop = extract_keyframes_for_node(curve_obj, force.duration)
-        except Exception:
-            animated_props = set()
-            keyframes_by_prop = {}
+        animated_props = get_animated_property_names(curve_obj)
+        keyframes_by_prop = extract_keyframes_for_node(curve_obj, force.duration)
 
         # Set keyframes - use F-Curves if animated, otherwise use base value
         # Property IDs: 0=roll_speed, 1=normal_force, 2=lateral_force

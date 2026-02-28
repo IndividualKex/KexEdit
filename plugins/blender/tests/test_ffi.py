@@ -1,16 +1,6 @@
-"""Tests for kexengine FFI bindings.
-
-Run with: python -m pytest tests/test_ffi.py -v
-Or standalone: python tests/test_ffi.py
-"""
-
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
-# Add parent to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import pytest
 
 from kexedit import (
     Float3,
@@ -91,10 +81,8 @@ def test_library_available():
 
 
 def test_build_simple_track():
-    """Test building a simple track (requires library)."""
     if not is_library_available():
-        print("SKIP: Library not available")
-        return
+        pytest.skip("Library not available")
 
     engine = KexEngine()
 
@@ -124,10 +112,8 @@ def test_build_simple_track():
 
 
 def test_build_with_keyframes():
-    """Test building a track with keyframes (requires library)."""
     if not is_library_available():
-        print("SKIP: Library not available")
-        return
+        pytest.skip("Library not available")
 
     engine = KexEngine()
 
@@ -154,44 +140,3 @@ def test_build_with_keyframes():
         print(f"Normal force range: {min_force:.2f} to {max_force:.2f}")
 
 
-def main():
-    """Run tests manually."""
-    print("=== kexengine FFI Tests ===\n")
-
-    print("1. Float3 creation...")
-    test_float3_creation()
-    print("   OK\n")
-
-    print("2. Keyframe creation...")
-    test_keyframe_creation()
-    print("   OK\n")
-
-    print("3. Input key encoding...")
-    test_input_key_encoding()
-    print("   OK\n")
-
-    print("4. Engine node creation...")
-    test_engine_node_creation()
-    print("   OK\n")
-
-    print("5. Library path...")
-    test_library_path()
-    print("   OK\n")
-
-    print("6. Library availability...")
-    test_library_available()
-    print()
-
-    print("7. Build simple track...")
-    test_build_simple_track()
-    print()
-
-    print("8. Build with keyframes...")
-    test_build_with_keyframes()
-    print()
-
-    print("=== All tests passed ===")
-
-
-if __name__ == "__main__":
-    main()
