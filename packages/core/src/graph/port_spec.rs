@@ -38,16 +38,10 @@ impl PortSpec {
         ((self.data_type as u32) << 8) | (self.local_index as u32)
     }
 
-    /// Decode from u32
     pub fn from_encoded(encoded: u32) -> Self {
         let data_type_byte = (encoded >> 8) as u8;
-        let data_type = match data_type_byte {
-            0 => PortDataType::Scalar,
-            1 => PortDataType::Vector,
-            2 => PortDataType::Anchor,
-            3 => PortDataType::Path,
-            _ => PortDataType::Scalar,
-        };
+        let data_type =
+            PortDataType::from_u8(data_type_byte).unwrap_or(PortDataType::Scalar);
         Self {
             data_type,
             local_index: (encoded & 0xFF) as u8,

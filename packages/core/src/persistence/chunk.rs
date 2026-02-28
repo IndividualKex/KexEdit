@@ -173,10 +173,6 @@ impl ChunkWriter {
         self.buffer
     }
 
-    pub fn len(&self) -> usize {
-        self.buffer.len()
-    }
-
     pub fn begin_chunk(&mut self, chunk_type: [u8; 4], version: u32) {
         let start_pos = self.buffer.len();
         self.chunk_stack.push(start_pos);

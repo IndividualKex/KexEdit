@@ -36,7 +36,7 @@ impl Document {
     }
 
     /// Create a read-only view for graph evaluation.
-    pub fn as_view(&self) -> DocumentView {
+    pub fn as_view(&self) -> DocumentView<'_> {
         DocumentView::new(
             &self.graph,
             &self.scalars,

@@ -52,7 +52,6 @@ impl Default for Forces {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sim::Quaternion;
     use approx::assert_relative_eq;
 
     const TOLERANCE: f32 = 1e-4;
@@ -104,7 +103,7 @@ mod tests {
 
     #[test]
     fn compute_banked_curve_lateral_force_present() {
-        let prev = from_direction_and_roll(Float3::BACK, 0.3);
+        let prev = crate::sim::point::from_direction_and_roll(Float3::BACK, 0.3);
         let curr = prev.with_yaw(0.1);
         let curvature = Curvature::from_frames(curr, prev);
         let forces = Forces::compute(curvature, curr, 15.0, 0.15);
@@ -121,16 +120,4 @@ mod tests {
         let _ = Forces::compute(curvature, curr, 0.0, 0.0);
     }
 
-    fn from_direction_and_roll(direction: Float3, roll: f32) -> Frame {
-        let dir = direction.normalize();
-        let yaw = (-dir.x).atan2(-dir.z);
-
-        let yaw_quat = Quaternion::from_axis_angle(Float3::UP, yaw);
-        let lateral_base = yaw_quat.mul_vec(Float3::RIGHT);
-        let roll_quat = Quaternion::from_axis_angle(dir, -roll);
-        let lateral = roll_quat.mul_vec(lateral_base).normalize();
-        let normal = dir.cross(lateral).normalize();
-
-        Frame::new(dir, normal, lateral)
-    }
 }

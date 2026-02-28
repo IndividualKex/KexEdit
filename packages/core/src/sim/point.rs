@@ -186,7 +186,7 @@ impl Point {
     }
 }
 
-fn from_direction_and_roll(direction: Float3, roll: f32) -> Frame {
+pub(crate) fn from_direction_and_roll(direction: Float3, roll: f32) -> Frame {
     let dir = direction.normalize();
     let yaw = (-dir.x).atan2(-dir.z);
 

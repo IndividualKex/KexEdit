@@ -8,6 +8,7 @@ mod document;
 mod evaluate;
 mod result;
 mod section;
+mod spatial;
 mod spline;
 
 pub use dispatch::{
@@ -18,7 +19,8 @@ pub use document::{input_key, keyframe_key, DocumentView};
 pub use evaluate::evaluate_graph;
 pub use result::EvaluationResult;
 pub use section::{
-    build_sections, build_traversal_order, collect_sections, compute_continuations,
-    compute_spatial_continuations, Section, SectionLink,
+    build_sections, build_traversal_order, collect_sections, compute_continuations, Section,
+    SectionLink,
 };
+pub use spatial::compute_spatial_continuations;
 pub use spline::{interpolate_physics, resample, to_spline_point, SplinePoint};

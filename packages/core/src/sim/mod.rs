@@ -5,7 +5,6 @@
 mod curvature;
 mod forces;
 mod frame;
-mod frame_change;
 mod keyframe;
 mod math;
 mod physics_params;
@@ -16,7 +15,6 @@ pub mod physics;
 pub use curvature::Curvature;
 pub use forces::Forces;
 pub use frame::Frame;
-pub use frame_change::FrameChange;
 pub use keyframe::{evaluate, evaluate_segment, InterpolationType, Keyframe};
 pub use math::{Float3, Matrix3, Quaternion};
 pub use physics::{
