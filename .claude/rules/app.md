@@ -19,4 +19,4 @@ App is a Shallot Plugin. Follows Shallot conventions: dependencies, initialize/w
 
 ## UI
 
-`config.editorUI` pattern. Framework-agnostic: `(container, state) => cleanup`.
+`config.editorUI` pattern. Framework-agnostic: `(container, channel) => cleanup`.
