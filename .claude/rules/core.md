@@ -21,3 +21,5 @@ Each node type: file in `nodes/`, entry in `dispatch.rs`, port metadata via `*_p
 ## Testing
 
 Build minimal graphs programmatically, assert on output Points. No mocks. Cover: empty graph, single node, cycle detection, disconnected subgraphs. Property-based tests for sim math (roundtrips, invariants).
+
+`tests/trajectory_snapshot.rs` pins `evaluate_graph` + sections + splines per fixture as `.snap.json` siblings — the regression net for refactors that claim to preserve behavior. Regen with `UPDATE_SNAPSHOTS=1 cargo test --test trajectory_snapshot` only when the output change is intentional.
