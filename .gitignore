@@ -11,6 +11,18 @@ plugins/blender/kexedit/lib/*.dll
 plugins/blender/kexedit/lib/*.so
 plugins/blender/kexedit/lib/*.dylib
 
+# Node / frontend builds
+node_modules/
+dist/
+build/
+.vite/
+.svelte-kit/
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
 # IDE
 .idea/
 .vscode/
