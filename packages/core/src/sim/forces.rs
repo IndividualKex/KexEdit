@@ -16,27 +16,26 @@ impl Forces {
     }
 
     pub fn compute(curvature: Curvature, frame: Frame, velocity: f32, heart_advance: f32) -> Self {
-        if curvature.total_angle.abs() < physics::EPSILON {
-            return Self::new(
-                -Float3::UP.dot(frame.normal),
-                -Float3::UP.dot(frame.lateral),
-            );
-        }
-
-        let cos_roll = frame.roll().cos();
-        let sin_roll = frame.roll().sin();
-
-        let normal_angle = -curvature.delta_pitch * cos_roll
-            - curvature.yaw_scale * curvature.delta_yaw * sin_roll;
-        let lateral_angle =
-            curvature.delta_pitch * sin_roll - curvature.yaw_scale * curvature.delta_yaw * cos_roll;
-
-        let force_vec = Float3::UP
-            + frame.lateral * (velocity * physics::HZ * lateral_angle / physics::G)
-            + frame.normal
-                * (heart_advance * physics::HZ * physics::HZ * normal_angle / physics::G);
-
+        let force_vec = Self::force_vector(curvature, frame, velocity, heart_advance);
         Self::new(-force_vec.dot(frame.normal), -force_vec.dot(frame.lateral))
+    }
+
+    /// World-space force vector (gravity + centripetal contributions) producing
+    /// the body-frame normal/lateral G-forces. Shared by `compute` and by the
+    /// path-following nodes (Bridge, CopyPath) that need the raw vector.
+    pub fn force_vector(
+        curvature: Curvature,
+        frame: Frame,
+        velocity: f32,
+        heart_advance: f32,
+    ) -> Float3 {
+        if curvature.total_angle.abs() < physics::EPSILON {
+            return Float3::UP;
+        }
+        Float3::UP
+            + frame.lateral * (velocity * physics::HZ * curvature.lateral_angle / physics::G)
+            + frame.normal
+                * (heart_advance * physics::HZ * physics::HZ * curvature.normal_angle / physics::G)
     }
 
     pub const ONE_G: Self = Self::new(1.0, 0.0);

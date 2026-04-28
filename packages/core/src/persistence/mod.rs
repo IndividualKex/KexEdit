@@ -332,7 +332,7 @@ mod tests {
 
     #[test]
     fn truncated_data_returns_error() {
-        let result = deserialize(&[b'K', b'E', b'X']);
+        let result = deserialize(b"KEX");
         assert!(matches!(result, Err(PersistenceError::TruncatedData)));
     }
 

@@ -82,14 +82,14 @@ mod tests {
 
     #[test]
     fn input_key_encoding() {
-        assert_eq!(input_key(1, 0), (1 << 8) | 0);
+        assert_eq!(input_key(1, 0), 1 << 8);
         assert_eq!(input_key(100, 5), (100 << 8) | 5);
         assert_eq!(input_key(0xFFFF, 255), (0xFFFF << 8) | 255);
     }
 
     #[test]
     fn keyframe_key_encoding() {
-        assert_eq!(keyframe_key(1, 0), (1 << 8) | 0);
+        assert_eq!(keyframe_key(1, 0), 1 << 8);
         assert_eq!(keyframe_key(100, 5), (100 << 8) | 5);
     }
 

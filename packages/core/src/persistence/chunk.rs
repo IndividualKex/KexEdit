@@ -264,7 +264,7 @@ mod tests {
         writer.write_u32(12345);
         writer.write_i32(-9876);
         writer.write_u64(0xDEADBEEF);
-        writer.write_f32(3.14159);
+        writer.write_f32(std::f32::consts::PI);
         writer.write_float3(Float3::new(1.0, 2.0, 3.0));
 
         let data = writer.into_bytes();
@@ -275,7 +275,7 @@ mod tests {
         assert_eq!(reader.read_u32().unwrap(), 12345);
         assert_eq!(reader.read_i32().unwrap(), -9876);
         assert_eq!(reader.read_u64().unwrap(), 0xDEADBEEF);
-        assert!((reader.read_f32().unwrap() - 3.14159).abs() < 1e-5);
+        assert!((reader.read_f32().unwrap() - std::f32::consts::PI).abs() < 1e-5);
         let v = reader.read_float3().unwrap();
         assert!((v.x - 1.0).abs() < 1e-5);
         assert!((v.y - 2.0).abs() < 1e-5);

@@ -117,20 +117,6 @@ mod tests {
         let mut port_is_input = Vec::new();
         let mut next_port_id = 100u32;
 
-        // Track specific port IDs for edges
-        let anchor6_out;
-        let geo1_anchor_in;
-        let geo1_anchor_out;
-        let geo1_path_out;
-        let reverse7_anchor_in;
-        let reverse7_anchor_out;
-        let rpath14_path_in;
-        let rpath14_path_out;
-        let copypath8_anchor_in;
-        let copypath8_path_in;
-        let copypath8_anchor_out;
-        let geo3_anchor_in;
-
         // Node 6 (Anchor): 8 inputs (Position, Roll, Pitch, Yaw, Velocity, Heart, Friction, Resistance), 1 output (Anchor)
         for i in 0..8 {
             port_ids.push(next_port_id);
@@ -146,7 +132,7 @@ mod tests {
             port_is_input.push(true);
             next_port_id += 1;
         }
-        anchor6_out = next_port_id;
+        let anchor6_out = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
         port_owners.push(6);
@@ -154,7 +140,7 @@ mod tests {
         next_port_id += 1;
 
         // Node 1 (Geo): 2 inputs (Anchor, Duration), 2 outputs (Anchor, Path)
-        geo1_anchor_in = next_port_id;
+        let geo1_anchor_in = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
         port_owners.push(1);
@@ -167,14 +153,14 @@ mod tests {
         port_is_input.push(true);
         next_port_id += 1;
 
-        geo1_anchor_out = next_port_id;
+        let geo1_anchor_out = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
         port_owners.push(1);
         port_is_input.push(false);
         next_port_id += 1;
 
-        geo1_path_out = next_port_id;
+        let geo1_path_out = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Path, 0));
         port_owners.push(1);
@@ -182,14 +168,14 @@ mod tests {
         next_port_id += 1;
 
         // Node 7 (Reverse): 1 input (Anchor), 1 output (Anchor)
-        reverse7_anchor_in = next_port_id;
+        let reverse7_anchor_in = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
         port_owners.push(7);
         port_is_input.push(true);
         next_port_id += 1;
 
-        reverse7_anchor_out = next_port_id;
+        let reverse7_anchor_out = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
         port_owners.push(7);
@@ -197,14 +183,14 @@ mod tests {
         next_port_id += 1;
 
         // Node 14 (ReversePath): 1 input (Path), 1 output (Path)
-        rpath14_path_in = next_port_id;
+        let rpath14_path_in = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Path, 0));
         port_owners.push(14);
         port_is_input.push(true);
         next_port_id += 1;
 
-        rpath14_path_out = next_port_id;
+        let rpath14_path_out = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Path, 0));
         port_owners.push(14);
@@ -212,14 +198,14 @@ mod tests {
         next_port_id += 1;
 
         // Node 8 (CopyPath): 4 inputs (Anchor, Path, Start, End), 2 outputs (Anchor, Path)
-        copypath8_anchor_in = next_port_id;
+        let copypath8_anchor_in = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
         port_owners.push(8);
         port_is_input.push(true);
         next_port_id += 1;
 
-        copypath8_path_in = next_port_id;
+        let copypath8_path_in = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Path, 0));
         port_owners.push(8);
@@ -238,7 +224,7 @@ mod tests {
         port_is_input.push(true);
         next_port_id += 1;
 
-        copypath8_anchor_out = next_port_id;
+        let copypath8_anchor_out = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
         port_owners.push(8);
@@ -252,7 +238,7 @@ mod tests {
         next_port_id += 1;
 
         // Node 3 (Geo cosmetic): 2 inputs (Anchor, Duration), 2 outputs (Anchor, Path)
-        geo3_anchor_in = next_port_id;
+        let geo3_anchor_in = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
         port_owners.push(3);

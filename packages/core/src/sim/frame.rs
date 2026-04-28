@@ -98,6 +98,28 @@ impl Frame {
         heart_position + self.normal * offset
     }
 
+    /// World-frame rotation vector ω that takes `prev` to `self` (i.e., `axis * angle`).
+    ///
+    /// Derived from the antisymmetric part of the rotation matrix R that maps
+    /// prev's basis to self's basis: `2·sin(θ)·axis = Σ_b prev_b × self_b` over
+    /// the three basis vectors. The `asin` rescaling makes the formula exact
+    /// for arbitrary rotation magnitudes (not just small angles), and
+    /// singularity-free everywhere — unlike Euler `pitch`/`yaw` deltas which
+    /// blow up near pitch = ±π/2.
+    pub fn angular_delta_from(self, prev: Frame) -> Float3 {
+        let axial = (prev.direction.cross(self.direction)
+            + prev.normal.cross(self.normal)
+            + prev.lateral.cross(self.lateral))
+            * 0.5;
+        let sin_theta = axial.magnitude();
+        if sin_theta < f32::EPSILON {
+            return Float3::ZERO;
+        }
+        // Clamp guards against tiny FP overshoot above 1 from accumulated drift.
+        let theta = sin_theta.min(1.0).asin();
+        axial * (theta / sin_theta)
+    }
+
     pub const DEFAULT: Self = Self::new(Float3::BACK, Float3::DOWN, Float3::RIGHT);
 }
 

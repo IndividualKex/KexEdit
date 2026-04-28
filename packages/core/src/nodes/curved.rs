@@ -4,6 +4,14 @@ use crate::sim::{
 
 const MAX_ITERATIONS: usize = 1_000_000;
 
+/// Note on the `axis` parameter: the curve axis is `−body_normal·cos(axis°) +
+/// body_lateral·sin(axis°)`, i.e. expressed in the rider's body frame, not
+/// world frame. Banking the rider therefore tilts the entire turn axis — a
+/// pre-banked horizontal turn becomes a slanted helix, not a horizontal arc
+/// with a banked rider. This matches the openFVD reference (`seccurved.cpp`)
+/// and the broader FVD-family convention; if you want a true horizontal arc
+/// with arbitrary bank, build it from a Geometric node with explicit yaw
+/// rather than expecting `axis = 0` to track world UP.
 pub struct CurvedNode;
 
 impl CurvedNode {
