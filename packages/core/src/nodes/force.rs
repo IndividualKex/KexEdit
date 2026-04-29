@@ -1,9 +1,11 @@
-use crate::sim::{physics, Curvature, Forces, Frame, Keyframe, PhysicsParams, Point};
+use crate::sim::physics::{self, MAX_ANGLE_RATE, MAX_ITERATIONS};
+use crate::sim::{Curvature, Forces, Frame, Keyframe, PhysicsParams, Point};
 
 use super::{DurationType, IterationConfig};
 
-const MAX_ITERATIONS: usize = 1_000_000;
-const MAX_ANGLE_RATE: f32 = 0.5;
+pub mod ports {
+    pub const ANCHOR: u8 = 0;
+}
 
 fn step_by_forces(
     prev: &Frame,

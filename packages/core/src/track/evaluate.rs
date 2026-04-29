@@ -25,7 +25,7 @@ pub fn evaluate_graph(doc: &DocumentView) -> Option<EvaluationResult> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graph::Graph;
+    use crate::graph::{Graph, GraphBuilder, PortDataType};
     use crate::nodes::NodeType;
     use crate::sim::Float3;
     use std::collections::HashMap;
@@ -49,19 +49,7 @@ mod tests {
 
     #[test]
     fn evaluate_empty_graph() {
-        let graph = Graph::from_vecs(
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-            vec![],
-        );
+        let graph = Graph::new();
         let scalars = HashMap::new();
         let vectors = HashMap::new();
         let flags = HashMap::new();
@@ -73,251 +61,74 @@ mod tests {
         assert!(result.paths.is_empty());
     }
 
-    /// Anchor(6) -> Geo(1) -> Reverse(7) -> CopyPath(8) -> Geo_cosmetic(3)
-    ///                    \-> ReversePath(14) -^
+    /// Anchor → Geo → Reverse → CopyPath → Geo_cosmetic
+    ///              \→ ReversePath -^
     ///
     /// CopyPath needs:
     /// - Anchor from Reverse (which gets it from Geo)
     /// - Path from ReversePath (which gets it from Geo's path output)
     #[test]
     fn evaluate_cosmetic_copypath_chain() {
-        use crate::graph::PortDataType;
-        use crate::graph::PortSpec;
+        use crate::track::document::input_key;
 
-        let node_ids = vec![6, 1, 7, 14, 8, 3];
-        let node_types = vec![
-            NodeType::Anchor as u8,
-            NodeType::Geometric as u8,
-            NodeType::Reverse as u8,
-            NodeType::ReversePath as u8,
-            NodeType::CopyPath as u8,
-            NodeType::Geometric as u8,
-        ];
-        let node_input_counts = vec![8, 2, 1, 1, 4, 2];
-        let node_output_counts = vec![1, 2, 1, 1, 2, 2];
+        let mut b = GraphBuilder::new();
+        let scalar = PortDataType::Scalar;
+        let vector = PortDataType::Vector;
+        let anchor_t = PortDataType::Anchor;
+        let path_t = PortDataType::Path;
 
-        fn encode_port(data_type: PortDataType, local_index: u8) -> u32 {
-            PortSpec::new(data_type, local_index).to_encoded()
-        }
-
-        let mut port_ids = Vec::new();
-        let mut port_types = Vec::new();
-        let mut port_owners = Vec::new();
-        let mut port_is_input = Vec::new();
-        let mut next_port_id = 100u32;
-
-        // Node 6 (Anchor): 8 inputs, 1 output
-        for i in 0..8 {
-            port_ids.push(next_port_id);
-            port_types.push(encode_port(
-                if i == 0 {
-                    PortDataType::Vector
-                } else {
-                    PortDataType::Scalar
-                },
-                i as u8,
-            ));
-            port_owners.push(6);
-            port_is_input.push(true);
-            next_port_id += 1;
-        }
-        let anchor6_out = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Anchor, 0));
-        port_owners.push(6);
-        port_is_input.push(false);
-        next_port_id += 1;
-
-        // Node 1 (Geo): 2 inputs (Anchor, Duration), 2 outputs (Anchor, Path)
-        let geo1_anchor_in = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Anchor, 0));
-        port_owners.push(1);
-        port_is_input.push(true);
-        next_port_id += 1;
-
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Scalar, 0));
-        port_owners.push(1);
-        port_is_input.push(true);
-        next_port_id += 1;
-
-        let geo1_anchor_out = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Anchor, 0));
-        port_owners.push(1);
-        port_is_input.push(false);
-        next_port_id += 1;
-
-        let geo1_path_out = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Path, 0));
-        port_owners.push(1);
-        port_is_input.push(false);
-        next_port_id += 1;
-
-        // Node 7 (Reverse): 1 input, 1 output
-        let reverse7_anchor_in = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Anchor, 0));
-        port_owners.push(7);
-        port_is_input.push(true);
-        next_port_id += 1;
-
-        let reverse7_anchor_out = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Anchor, 0));
-        port_owners.push(7);
-        port_is_input.push(false);
-        next_port_id += 1;
-
-        // Node 14 (ReversePath): 1 input, 1 output
-        let rpath14_path_in = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Path, 0));
-        port_owners.push(14);
-        port_is_input.push(true);
-        next_port_id += 1;
-
-        let rpath14_path_out = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Path, 0));
-        port_owners.push(14);
-        port_is_input.push(false);
-        next_port_id += 1;
-
-        // Node 8 (CopyPath): 4 inputs, 2 outputs
-        let copypath8_anchor_in = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Anchor, 0));
-        port_owners.push(8);
-        port_is_input.push(true);
-        next_port_id += 1;
-
-        let copypath8_path_in = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Path, 0));
-        port_owners.push(8);
-        port_is_input.push(true);
-        next_port_id += 1;
-
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Scalar, 0));
-        port_owners.push(8);
-        port_is_input.push(true);
-        next_port_id += 1;
-
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Scalar, 1));
-        port_owners.push(8);
-        port_is_input.push(true);
-        next_port_id += 1;
-
-        let copypath8_anchor_out = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Anchor, 0));
-        port_owners.push(8);
-        port_is_input.push(false);
-        next_port_id += 1;
-
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Path, 0));
-        port_owners.push(8);
-        port_is_input.push(false);
-        next_port_id += 1;
-
-        // Node 3 (Geo cosmetic): 2 inputs, 2 outputs
-        let geo3_anchor_in = next_port_id;
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Anchor, 0));
-        port_owners.push(3);
-        port_is_input.push(true);
-        next_port_id += 1;
-
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Scalar, 0));
-        port_owners.push(3);
-        port_is_input.push(true);
-        next_port_id += 1;
-
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Anchor, 0));
-        port_owners.push(3);
-        port_is_input.push(false);
-        next_port_id += 1;
-
-        port_ids.push(next_port_id);
-        port_types.push(encode_port(PortDataType::Path, 0));
-        port_owners.push(3);
-        port_is_input.push(false);
-        let _ = next_port_id;
-
-        let edge_ids = vec![1, 2, 3, 4, 5, 6];
-        let edge_sources = vec![
-            anchor6_out,
-            geo1_anchor_out,
-            geo1_path_out,
-            reverse7_anchor_out,
-            rpath14_path_out,
-            copypath8_anchor_out,
-        ];
-        let edge_targets = vec![
-            geo1_anchor_in,
-            reverse7_anchor_in,
-            rpath14_path_in,
-            copypath8_anchor_in,
-            copypath8_path_in,
-            geo3_anchor_in,
-        ];
-
-        let graph = Graph::from_vecs(
-            node_ids,
-            node_types,
-            node_input_counts,
-            node_output_counts,
-            port_ids,
-            port_types,
-            port_owners,
-            port_is_input,
-            edge_ids,
-            edge_sources,
-            edge_targets,
+        let anchor = b.add_node(
+            NodeType::Anchor,
+            &[vector, scalar, scalar, scalar, scalar, scalar, scalar, scalar],
+            &[anchor_t],
         );
+        let geo = b.add_node(NodeType::Geometric, &[anchor_t, scalar], &[anchor_t, path_t]);
+        let reverse = b.add_node(NodeType::Reverse, &[anchor_t], &[anchor_t]);
+        let reverse_path = b.add_node(NodeType::ReversePath, &[path_t], &[path_t]);
+        let copy = b.add_node(
+            NodeType::CopyPath,
+            &[anchor_t, path_t, scalar, scalar],
+            &[anchor_t, path_t],
+        );
+        let geo_cosmetic = b.add_node(NodeType::Geometric, &[anchor_t, scalar], &[anchor_t, path_t]);
+
+        b.connect(anchor.output(0), geo.input(0));
+        b.connect(geo.output(0), reverse.input(0));
+        b.connect(geo.output(1), reverse_path.input(0));
+        b.connect(reverse.output(0), copy.input(0));
+        b.connect(reverse_path.output(0), copy.input(1));
+        b.connect(copy.output(0), geo_cosmetic.input(0));
+
+        let graph = b.build();
 
         let mut scalars = HashMap::new();
-        use crate::track::document::input_key;
-        scalars.insert(input_key(1, 1), 1.0f32);
-        scalars.insert(input_key(3, 1), 1.0f32);
-        scalars.insert(input_key(8, 2), 0.0f32); // Start = 0
-        scalars.insert(input_key(8, 3), 1.0f32); // End = 1
+        scalars.insert(input_key(geo.id, 1), 1.0f32);
+        scalars.insert(input_key(geo_cosmetic.id, 1), 1.0f32);
+        scalars.insert(input_key(copy.id, 2), 0.0f32);
+        scalars.insert(input_key(copy.id, 3), 1.0f32);
 
         let vectors = HashMap::new();
         let flags = HashMap::new();
         let keyframe_ranges = HashMap::new();
-
         let doc = make_empty_doc(&graph, &scalars, &vectors, &flags, &keyframe_ranges);
 
-        let result = evaluate_graph(&doc);
-        assert!(result.is_some(), "evaluate_graph should succeed");
-        let result = result.unwrap();
+        let result = evaluate_graph(&doc).expect("evaluate_graph");
 
-        assert!(result.anchors.contains_key(&6));
-        assert!(result.anchors.contains_key(&1));
-        assert!(result.paths.contains_key(&1));
-        assert!(result.anchors.contains_key(&7));
-        assert!(result.anchors.contains_key(&14));
-        assert!(result.paths.contains_key(&14));
+        assert!(result.anchors.contains_key(&anchor.id));
+        assert!(result.anchors.contains_key(&geo.id));
+        assert!(result.paths.contains_key(&geo.id));
+        assert!(result.anchors.contains_key(&reverse.id));
+        assert!(result.anchors.contains_key(&reverse_path.id));
+        assert!(result.paths.contains_key(&reverse_path.id));
         assert!(
-            result.anchors.contains_key(&8),
-            "CopyPath node 8 should produce an anchor. anchors: {:?}",
-            result.anchors.keys().collect::<Vec<_>>()
+            result.anchors.contains_key(&copy.id),
+            "CopyPath should produce an anchor"
         );
         assert!(
-            result.paths.contains_key(&8),
-            "CopyPath node 8 should produce a path. paths: {:?}",
-            result.paths.keys().collect::<Vec<_>>()
+            result.paths.contains_key(&copy.id),
+            "CopyPath should produce a path"
         );
-        assert!(result.anchors.contains_key(&3));
-        assert!(result.paths.contains_key(&3));
+        assert!(result.anchors.contains_key(&geo_cosmetic.id));
+        assert!(result.paths.contains_key(&geo_cosmetic.id));
     }
 }

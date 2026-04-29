@@ -1,60 +1,11 @@
-use crate::nodes::{DurationType, IterationConfig, NodeMeta, NodeType, PropertyId};
-use crate::sim::{Float3, Point};
+use crate::nodes::{
+    anchor, bridge, copy_path, curved, force, geometric, reverse, reverse_path, DurationType,
+    IterationConfig, NodeMeta, NodeType, PropertyId,
+};
+use crate::sim::{Float3, Keyframe, Point};
 
 use super::document::DocumentView;
 use super::result::EvaluationResult;
-
-// Per-node-type input port indices (ordinals within the node's input port list).
-
-pub mod anchor_ports {
-    pub const POSITION: u8 = 0;
-    pub const ROLL: u8 = 1;
-    pub const PITCH: u8 = 2;
-    pub const YAW: u8 = 3;
-    pub const VELOCITY: u8 = 4;
-    pub const HEART: u8 = 5;
-    pub const FRICTION: u8 = 6;
-    pub const RESISTANCE: u8 = 7;
-}
-
-pub mod force_ports {
-    pub const ANCHOR: u8 = 0;
-}
-
-pub mod geometric_ports {
-    pub const ANCHOR: u8 = 0;
-}
-
-pub mod curved_ports {
-    pub const ANCHOR: u8 = 0;
-    pub const RADIUS: u8 = 1;
-    pub const ARC: u8 = 2;
-    pub const AXIS: u8 = 3;
-    pub const LEAD_IN: u8 = 4;
-    pub const LEAD_OUT: u8 = 5;
-}
-
-pub mod bridge_ports {
-    pub const ANCHOR: u8 = 0;
-    pub const TARGET: u8 = 1;
-    pub const OUT_WEIGHT: u8 = 2;
-    pub const IN_WEIGHT: u8 = 3;
-}
-
-pub mod copy_path_ports {
-    pub const ANCHOR: u8 = 0;
-    pub const PATH: u8 = 1;
-    pub const START: u8 = 2;
-    pub const END: u8 = 3;
-}
-
-pub mod reverse_ports {
-    pub const ANCHOR: u8 = 0;
-}
-
-pub mod reverse_path_ports {
-    pub const PATH: u8 = 0;
-}
 
 /// Default physics constants
 pub const DEFAULT_VELOCITY: f32 = 10.0;
@@ -81,7 +32,10 @@ pub fn evaluate_node(
     }
 }
 
-/// Helper to get input anchor from connected predecessor node by port index.
+// ---------------------------------------------------------------------------
+// Shared helpers
+// ---------------------------------------------------------------------------
+
 fn try_get_anchor(
     doc: &DocumentView,
     result: &EvaluationResult,
@@ -89,24 +43,11 @@ fn try_get_anchor(
     input_index: usize,
 ) -> Option<Point> {
     let port_id = doc.graph.try_get_input(node_id, input_index)?;
-    get_anchor_from_port(doc, result, port_id)
-}
-
-fn get_anchor_from_port(
-    doc: &DocumentView,
-    result: &EvaluationResult,
-    port_id: u32,
-) -> Option<Point> {
-    for i in 0..doc.graph.edge_ids.len() {
-        if doc.graph.edge_targets[i] != port_id {
-            continue;
-        }
-        let source_port = doc.graph.edge_sources[i];
-        let port_idx = doc.graph.get_port_index(source_port)?;
-        let source_node = doc.graph.port_owners[port_idx];
-        return result.anchors.get(&source_node).copied();
-    }
-    None
+    let &ei = doc.graph.incoming_edge_indices_to_port(port_id).first()?;
+    let source_port = doc.graph.edge_sources[ei];
+    let port_idx = doc.graph.get_port_index(source_port)?;
+    let source_node = doc.graph.port_owners[port_idx];
+    result.anchors.get(&source_node).copied()
 }
 
 fn try_get_path<'a>(
@@ -116,273 +57,196 @@ fn try_get_path<'a>(
     input_index: usize,
 ) -> Option<&'a Vec<Point>> {
     let port_id = doc.graph.try_get_input(node_id, input_index)?;
-
-    for i in 0..doc.graph.edge_ids.len() {
-        if doc.graph.edge_targets[i] != port_id {
-            continue;
-        }
-        let source_port = doc.graph.edge_sources[i];
-        let port_idx = doc.graph.get_port_index(source_port)?;
-        let source_node = doc.graph.port_owners[port_idx];
-        return result.paths.get(&source_node);
-    }
-    None
+    let &ei = doc.graph.incoming_edge_indices_to_port(port_id).first()?;
+    let source_port = doc.graph.edge_sources[ei];
+    let port_idx = doc.graph.get_port_index(source_port)?;
+    let source_node = doc.graph.port_owners[port_idx];
+    result.paths.get(&source_node)
 }
 
-fn evaluate_anchor(doc: &DocumentView, node_id: u32, result: &mut EvaluationResult) {
-    let position = doc.get_vector(node_id, anchor_ports::POSITION, Float3::ZERO);
-    let roll = doc.get_scalar(node_id, anchor_ports::ROLL, 0.0);
-    let pitch = doc.get_scalar(node_id, anchor_ports::PITCH, 0.0);
-    let yaw = doc.get_scalar(node_id, anchor_ports::YAW, 0.0);
-    let velocity = doc.get_scalar(node_id, anchor_ports::VELOCITY, DEFAULT_VELOCITY);
-    let heart = doc.get_scalar(node_id, anchor_ports::HEART, DEFAULT_HEART_OFFSET);
-    let friction = doc.get_scalar(node_id, anchor_ports::FRICTION, DEFAULT_FRICTION);
-    let resistance = doc.get_scalar(node_id, anchor_ports::RESISTANCE, DEFAULT_RESISTANCE);
+/// Iteration config (duration + duration type) read from common metadata slots.
+fn read_iteration(doc: &DocumentView, node_id: u32) -> IterationConfig {
+    let duration = doc.get_meta_scalar(node_id, NodeMeta::Duration, 1.0);
+    let duration_type = if doc.get_meta_flag(node_id, NodeMeta::DurationType) == 1 {
+        DurationType::Distance
+    } else {
+        DurationType::Time
+    };
+    IterationConfig::new(duration, duration_type)
+}
 
-    let anchor = crate::nodes::anchor::build(
+fn driven(doc: &DocumentView, node_id: u32) -> bool {
+    doc.get_meta_flag(node_id, NodeMeta::Driven) == 1
+}
+
+fn keyframes<'a>(doc: &'a DocumentView, node_id: u32, prop: PropertyId) -> &'a [Keyframe] {
+    doc.get_keyframes(node_id, prop as u8)
+}
+
+/// Insert path output and the trailing anchor (if any) into the result.
+fn finalize(node_id: u32, path: Vec<Point>, result: &mut EvaluationResult) {
+    if let Some(last) = path.last() {
+        result.anchors.insert(node_id, *last);
+    }
+    result.paths.insert(node_id, path);
+}
+
+// ---------------------------------------------------------------------------
+// Per-node evaluators
+// ---------------------------------------------------------------------------
+
+fn evaluate_anchor(doc: &DocumentView, node_id: u32, result: &mut EvaluationResult) {
+    let position = doc.get_vector(node_id, anchor::ports::POSITION, Float3::ZERO);
+    let roll = doc.get_scalar(node_id, anchor::ports::ROLL, 0.0);
+    let pitch = doc.get_scalar(node_id, anchor::ports::PITCH, 0.0);
+    let yaw = doc.get_scalar(node_id, anchor::ports::YAW, 0.0);
+    let velocity = doc.get_scalar(node_id, anchor::ports::VELOCITY, DEFAULT_VELOCITY);
+    let heart = doc.get_scalar(node_id, anchor::ports::HEART, DEFAULT_HEART_OFFSET);
+    let friction = doc.get_scalar(node_id, anchor::ports::FRICTION, DEFAULT_FRICTION);
+    let resistance = doc.get_scalar(node_id, anchor::ports::RESISTANCE, DEFAULT_RESISTANCE);
+
+    let anchor = anchor::build(
         position, pitch, yaw, roll, velocity, heart, friction, resistance,
     );
-
     result.anchors.insert(node_id, anchor);
 }
 
 fn evaluate_force(doc: &DocumentView, node_id: u32, result: &mut EvaluationResult) {
-    let Some(input_anchor) = try_get_anchor(doc, result, node_id, force_ports::ANCHOR as usize)
-    else {
+    let Some(input) = try_get_anchor(doc, result, node_id, force::ports::ANCHOR as usize) else {
         return;
     };
 
-    let duration = doc.get_meta_scalar(node_id, NodeMeta::Duration, 1.0);
-    let duration_type = if doc.get_meta_flag(node_id, NodeMeta::DurationType) == 1 {
-        DurationType::Distance
-    } else {
-        DurationType::Time
-    };
-    let driven = doc.get_meta_flag(node_id, NodeMeta::Driven) == 1;
-
-    let roll_speed = doc.get_keyframes(node_id, PropertyId::RollSpeed as u8);
-    let normal_force = doc.get_keyframes(node_id, PropertyId::NormalForce as u8);
-    let lateral_force = doc.get_keyframes(node_id, PropertyId::LateralForce as u8);
-    let driven_velocity = doc.get_keyframes(node_id, PropertyId::DrivenVelocity as u8);
-    let heart_offset = doc.get_keyframes(node_id, PropertyId::HeartOffset as u8);
-    let friction = doc.get_keyframes(node_id, PropertyId::Friction as u8);
-    let resistance = doc.get_keyframes(node_id, PropertyId::Resistance as u8);
-
-    let config = IterationConfig::new(duration, duration_type);
-    let path = crate::nodes::force::build(
-        &input_anchor,
-        &config,
-        driven,
-        roll_speed,
-        normal_force,
-        lateral_force,
-        driven_velocity,
-        heart_offset,
-        friction,
-        resistance,
-        input_anchor.heart_offset,
-        input_anchor.friction,
-        input_anchor.resistance,
+    let path = force::build(
+        &input,
+        &read_iteration(doc, node_id),
+        driven(doc, node_id),
+        keyframes(doc, node_id, PropertyId::RollSpeed),
+        keyframes(doc, node_id, PropertyId::NormalForce),
+        keyframes(doc, node_id, PropertyId::LateralForce),
+        keyframes(doc, node_id, PropertyId::DrivenVelocity),
+        keyframes(doc, node_id, PropertyId::HeartOffset),
+        keyframes(doc, node_id, PropertyId::Friction),
+        keyframes(doc, node_id, PropertyId::Resistance),
+        input.heart_offset,
+        input.friction,
+        input.resistance,
     );
-
-    if let Some(last) = path.last() {
-        result.anchors.insert(node_id, *last);
-    }
-    result.paths.insert(node_id, path);
+    finalize(node_id, path, result);
 }
 
 fn evaluate_geometric(doc: &DocumentView, node_id: u32, result: &mut EvaluationResult) {
-    let Some(input_anchor) = try_get_anchor(doc, result, node_id, geometric_ports::ANCHOR as usize)
+    let Some(input) = try_get_anchor(doc, result, node_id, geometric::ports::ANCHOR as usize)
     else {
         return;
     };
-
-    let duration = doc.get_meta_scalar(node_id, NodeMeta::Duration, 1.0);
-    let duration_type = if doc.get_meta_flag(node_id, NodeMeta::DurationType) == 1 {
-        DurationType::Distance
-    } else {
-        DurationType::Time
-    };
-    let driven = doc.get_meta_flag(node_id, NodeMeta::Driven) == 1;
     let steering = doc.get_meta_flag(node_id, NodeMeta::Steering) == 1;
 
-    let roll_speed = doc.get_keyframes(node_id, PropertyId::RollSpeed as u8);
-    let pitch_speed = doc.get_keyframes(node_id, PropertyId::PitchSpeed as u8);
-    let yaw_speed = doc.get_keyframes(node_id, PropertyId::YawSpeed as u8);
-    let driven_velocity = doc.get_keyframes(node_id, PropertyId::DrivenVelocity as u8);
-    let heart_offset = doc.get_keyframes(node_id, PropertyId::HeartOffset as u8);
-    let friction = doc.get_keyframes(node_id, PropertyId::Friction as u8);
-    let resistance = doc.get_keyframes(node_id, PropertyId::Resistance as u8);
-
-    let config = IterationConfig::new(duration, duration_type);
-    let path = crate::nodes::geometric::build(
-        &input_anchor,
-        &config,
-        driven,
+    let path = geometric::build(
+        &input,
+        &read_iteration(doc, node_id),
+        driven(doc, node_id),
         steering,
-        roll_speed,
-        pitch_speed,
-        yaw_speed,
-        driven_velocity,
-        heart_offset,
-        friction,
-        resistance,
-        input_anchor.heart_offset,
-        input_anchor.friction,
-        input_anchor.resistance,
+        keyframes(doc, node_id, PropertyId::RollSpeed),
+        keyframes(doc, node_id, PropertyId::PitchSpeed),
+        keyframes(doc, node_id, PropertyId::YawSpeed),
+        keyframes(doc, node_id, PropertyId::DrivenVelocity),
+        keyframes(doc, node_id, PropertyId::HeartOffset),
+        keyframes(doc, node_id, PropertyId::Friction),
+        keyframes(doc, node_id, PropertyId::Resistance),
+        input.heart_offset,
+        input.friction,
+        input.resistance,
     );
-
-    if let Some(last) = path.last() {
-        result.anchors.insert(node_id, *last);
-    }
-    result.paths.insert(node_id, path);
+    finalize(node_id, path, result);
 }
 
 fn evaluate_curved(doc: &DocumentView, node_id: u32, result: &mut EvaluationResult) {
-    let Some(input_anchor) = try_get_anchor(doc, result, node_id, curved_ports::ANCHOR as usize)
-    else {
+    let Some(input) = try_get_anchor(doc, result, node_id, curved::ports::ANCHOR as usize) else {
         return;
     };
 
-    let radius = doc.get_scalar(node_id, curved_ports::RADIUS, 10.0);
-    let arc = doc.get_scalar(node_id, curved_ports::ARC, 90.0);
-    let axis = doc.get_scalar(node_id, curved_ports::AXIS, 0.0);
-    let lead_in = doc.get_scalar(node_id, curved_ports::LEAD_IN, 0.0);
-    let lead_out = doc.get_scalar(node_id, curved_ports::LEAD_OUT, 0.0);
-    let driven = doc.get_meta_flag(node_id, NodeMeta::Driven) == 1;
-
-    let roll_speed = doc.get_keyframes(node_id, PropertyId::RollSpeed as u8);
-    let driven_velocity = doc.get_keyframes(node_id, PropertyId::DrivenVelocity as u8);
-    let heart_offset = doc.get_keyframes(node_id, PropertyId::HeartOffset as u8);
-    let friction = doc.get_keyframes(node_id, PropertyId::Friction as u8);
-    let resistance = doc.get_keyframes(node_id, PropertyId::Resistance as u8);
-
-    let path = crate::nodes::curved::CurvedNode::build(
-        &input_anchor,
-        radius,
-        arc,
-        axis,
-        lead_in,
-        lead_out,
-        driven,
-        roll_speed,
-        driven_velocity,
-        heart_offset,
-        friction,
-        resistance,
-        input_anchor.heart_offset,
-        input_anchor.friction,
-        input_anchor.resistance,
+    let path = curved::CurvedNode::build(
+        &input,
+        doc.get_scalar(node_id, curved::ports::RADIUS, 10.0),
+        doc.get_scalar(node_id, curved::ports::ARC, 90.0),
+        doc.get_scalar(node_id, curved::ports::AXIS, 0.0),
+        doc.get_scalar(node_id, curved::ports::LEAD_IN, 0.0),
+        doc.get_scalar(node_id, curved::ports::LEAD_OUT, 0.0),
+        driven(doc, node_id),
+        keyframes(doc, node_id, PropertyId::RollSpeed),
+        keyframes(doc, node_id, PropertyId::DrivenVelocity),
+        keyframes(doc, node_id, PropertyId::HeartOffset),
+        keyframes(doc, node_id, PropertyId::Friction),
+        keyframes(doc, node_id, PropertyId::Resistance),
+        input.heart_offset,
+        input.friction,
+        input.resistance,
     );
-
-    if let Some(last) = path.last() {
-        result.anchors.insert(node_id, *last);
-    }
-    result.paths.insert(node_id, path);
+    finalize(node_id, path, result);
 }
 
 fn evaluate_bridge(doc: &DocumentView, node_id: u32, result: &mut EvaluationResult) {
-    let Some(input_anchor) = try_get_anchor(doc, result, node_id, bridge_ports::ANCHOR as usize)
-    else {
+    let Some(input) = try_get_anchor(doc, result, node_id, bridge::ports::ANCHOR as usize) else {
+        return;
+    };
+    let Some(target) = try_get_anchor(doc, result, node_id, bridge::ports::TARGET as usize) else {
         return;
     };
 
-    let Some(target_anchor) = try_get_anchor(doc, result, node_id, bridge_ports::TARGET as usize)
-    else {
-        return;
-    };
-
-    let in_weight = doc.get_scalar(node_id, bridge_ports::IN_WEIGHT, 0.5);
-    let out_weight = doc.get_scalar(node_id, bridge_ports::OUT_WEIGHT, 0.5);
-    let driven = doc.get_meta_flag(node_id, NodeMeta::Driven) == 1;
-
-    let driven_velocity = doc.get_keyframes(node_id, PropertyId::DrivenVelocity as u8);
-    let heart_offset = doc.get_keyframes(node_id, PropertyId::HeartOffset as u8);
-    let friction = doc.get_keyframes(node_id, PropertyId::Friction as u8);
-    let resistance = doc.get_keyframes(node_id, PropertyId::Resistance as u8);
-
-    let path = crate::nodes::bridge::BridgeNode::build(
-        &input_anchor,
-        &target_anchor,
-        in_weight,
-        out_weight,
-        driven,
-        driven_velocity,
-        heart_offset,
-        friction,
-        resistance,
-        input_anchor.heart_offset,
-        input_anchor.friction,
-        input_anchor.resistance,
+    let path = bridge::BridgeNode::build(
+        &input,
+        &target,
+        doc.get_scalar(node_id, bridge::ports::IN_WEIGHT, 0.5),
+        doc.get_scalar(node_id, bridge::ports::OUT_WEIGHT, 0.5),
+        driven(doc, node_id),
+        keyframes(doc, node_id, PropertyId::DrivenVelocity),
+        keyframes(doc, node_id, PropertyId::HeartOffset),
+        keyframes(doc, node_id, PropertyId::Friction),
+        keyframes(doc, node_id, PropertyId::Resistance),
+        input.heart_offset,
+        input.friction,
+        input.resistance,
     );
-
-    if let Some(last) = path.last() {
-        result.anchors.insert(node_id, *last);
-    }
-    result.paths.insert(node_id, path);
+    finalize(node_id, path, result);
 }
 
 fn evaluate_copy_path(doc: &DocumentView, node_id: u32, result: &mut EvaluationResult) {
-    let Some(input_anchor) = try_get_anchor(doc, result, node_id, copy_path_ports::ANCHOR as usize)
+    let Some(input) = try_get_anchor(doc, result, node_id, copy_path::ports::ANCHOR as usize)
     else {
         return;
     };
-
-    let Some(source_path) = try_get_path(doc, result, node_id, copy_path_ports::PATH as usize)
-    else {
+    let Some(source) = try_get_path(doc, result, node_id, copy_path::ports::PATH as usize) else {
         return;
     };
 
-    let start = doc.get_scalar(node_id, copy_path_ports::START, -1.0);
-    let end = doc.get_scalar(node_id, copy_path_ports::END, -1.0);
-    let driven = doc.get_meta_flag(node_id, NodeMeta::Driven) == 1;
-
-    let driven_velocity = doc.get_keyframes(node_id, PropertyId::DrivenVelocity as u8);
-    let heart_offset = doc.get_keyframes(node_id, PropertyId::HeartOffset as u8);
-    let friction = doc.get_keyframes(node_id, PropertyId::Friction as u8);
-    let resistance = doc.get_keyframes(node_id, PropertyId::Resistance as u8);
-
-    let path = crate::nodes::copy_path::CopyPathNode::build(
-        &input_anchor,
-        source_path,
-        start,
-        end,
-        driven,
-        driven_velocity,
-        heart_offset,
-        friction,
-        resistance,
-        input_anchor.heart_offset,
-        input_anchor.friction,
-        input_anchor.resistance,
+    let path = copy_path::CopyPathNode::build(
+        &input,
+        source,
+        doc.get_scalar(node_id, copy_path::ports::START, -1.0),
+        doc.get_scalar(node_id, copy_path::ports::END, -1.0),
+        driven(doc, node_id),
+        keyframes(doc, node_id, PropertyId::DrivenVelocity),
+        keyframes(doc, node_id, PropertyId::HeartOffset),
+        keyframes(doc, node_id, PropertyId::Friction),
+        keyframes(doc, node_id, PropertyId::Resistance),
+        input.heart_offset,
+        input.friction,
+        input.resistance,
     );
-
-    if let Some(last) = path.last() {
-        result.anchors.insert(node_id, *last);
-    }
-    result.paths.insert(node_id, path);
+    finalize(node_id, path, result);
 }
 
 fn evaluate_reverse(doc: &DocumentView, node_id: u32, result: &mut EvaluationResult) {
-    let Some(input_anchor) = try_get_anchor(doc, result, node_id, reverse_ports::ANCHOR as usize)
-    else {
+    let Some(input) = try_get_anchor(doc, result, node_id, reverse::ports::ANCHOR as usize) else {
         return;
     };
-
-    let reversed = crate::nodes::reverse::build(&input_anchor);
-    result.anchors.insert(node_id, reversed);
+    result.anchors.insert(node_id, reverse::build(&input));
 }
 
 fn evaluate_reverse_path(doc: &DocumentView, node_id: u32, result: &mut EvaluationResult) {
-    let Some(source_path) = try_get_path(doc, result, node_id, reverse_path_ports::PATH as usize)
+    let Some(source) = try_get_path(doc, result, node_id, reverse_path::ports::PATH as usize)
     else {
         return;
     };
-
-    let path = crate::nodes::reverse_path::build(source_path);
-
-    if let Some(last) = path.last() {
-        result.anchors.insert(node_id, *last);
-    }
-    result.paths.insert(node_id, path);
+    finalize(node_id, reverse_path::build(source), result);
 }

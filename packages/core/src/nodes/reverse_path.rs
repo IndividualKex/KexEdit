@@ -1,5 +1,9 @@
 use crate::sim::Point;
 
+pub mod ports {
+    pub const PATH: u8 = 0;
+}
+
 pub fn build(path: &[Point]) -> Vec<Point> {
     if path.is_empty() {
         return Vec::new();

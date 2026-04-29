@@ -1,8 +1,14 @@
-use crate::sim::{
-    evaluate, physics, Curvature, Float3, Forces, Frame, Keyframe, Point, Quaternion,
-};
+use crate::sim::physics::{self, MAX_ITERATIONS};
+use crate::sim::{evaluate, Curvature, Float3, Forces, Frame, Keyframe, Point, Quaternion};
 
-const MAX_ITERATIONS: usize = 1_000_000;
+pub mod ports {
+    pub const ANCHOR: u8 = 0;
+    pub const RADIUS: u8 = 1;
+    pub const ARC: u8 = 2;
+    pub const AXIS: u8 = 3;
+    pub const LEAD_IN: u8 = 4;
+    pub const LEAD_OUT: u8 = 5;
+}
 
 /// Note on the `axis` parameter: the curve axis is `−body_normal·cos(axis°) +
 /// body_lateral·sin(axis°)`, i.e. expressed in the rider's body frame, not

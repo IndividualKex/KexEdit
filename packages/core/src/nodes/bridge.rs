@@ -1,8 +1,14 @@
-use crate::sim::{evaluate, physics, Float3, Frame, Keyframe, Point, Quaternion};
+use crate::sim::physics::{self, MAX_ITERATIONS};
+use crate::sim::{evaluate, Float3, Frame, Keyframe, Point, Quaternion};
 
 use super::forces::compute_force_vector;
 
-const MAX_ITERATIONS: usize = 1_000_000;
+pub mod ports {
+    pub const ANCHOR: u8 = 0;
+    pub const TARGET: u8 = 1;
+    pub const OUT_WEIGHT: u8 = 2;
+    pub const IN_WEIGHT: u8 = 3;
+}
 
 pub struct BridgeNode;
 

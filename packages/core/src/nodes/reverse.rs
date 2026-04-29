@@ -1,5 +1,9 @@
 use crate::sim::Point;
 
+pub mod ports {
+    pub const ANCHOR: u8 = 0;
+}
+
 pub fn build(anchor: &Point) -> Point {
     Point::new(
         anchor.heart_position,

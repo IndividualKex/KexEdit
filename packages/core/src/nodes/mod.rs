@@ -14,7 +14,4 @@ pub mod geometric;
 pub mod reverse;
 pub mod reverse_path;
 
-pub use schema::{
-    DurationType, IterationConfig, NodeMeta, NodeSchema, NodeType, PortId, PropertyId,
-    PropertyIndex,
-};
+pub use schema::{DurationType, IterationConfig, NodeMeta, NodeType, PropertyId};

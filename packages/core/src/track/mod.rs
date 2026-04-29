@@ -10,10 +10,6 @@ mod section;
 mod spatial;
 mod spline;
 
-pub use dispatch::{
-    anchor_ports, bridge_ports, copy_path_ports, curved_ports, force_ports, geometric_ports,
-    reverse_path_ports, reverse_ports,
-};
 pub use document::{input_key, keyframe_key, DocumentView};
 pub use evaluate::evaluate_graph;
 pub use result::EvaluationResult;

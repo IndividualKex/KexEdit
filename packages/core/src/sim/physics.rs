@@ -6,7 +6,25 @@ pub const DT: f32 = 1.0 / HZ;
 pub const EPSILON: f32 = 1.192_093e-7;
 pub const MIN_VELOCITY: f32 = 0.1;
 pub const MAX_VELOCITY: f32 = 150.0;
+
+/// Force-magnitude bound (in g). Force/Geometric/Curved/CopyPath/Bridge stop
+/// integrating when the resultant rider-frame force exceeds this — protects
+/// against pathological keyframes that would explode the velocity update and
+/// produce non-physical splines.
 pub const MAX_FORCE: f32 = 10.0;
+
+/// Hard cap on integration iterations per node. With `HZ=100`, this is ~10000
+/// seconds of track at fixed timestep — far beyond any plausible coaster — so
+/// hitting it indicates a stalled inversion (e.g. duration-by-distance never
+/// advancing). Acts as a guard against infinite loops in the nodes.
+pub const MAX_ITERATIONS: usize = 1_000_000;
+
+/// Per-step rate cap for angular speeds derived from forces (radians/step).
+/// `Force` clamps `normal_accel/velocity/HZ` and `lateral_accel/velocity/HZ`
+/// to ±this. Empirically chosen: 0.5 rad/step at 100 Hz is 50 rad/s, well
+/// above any natural coaster turn rate, but bounded so transient infinities
+/// (zero-velocity edge cases) don't propagate.
+pub const MAX_ANGLE_RATE: f32 = 0.5;
 
 pub fn wrap_angle(rad: f32) -> f32 {
     if (-PI..=PI).contains(&rad) {

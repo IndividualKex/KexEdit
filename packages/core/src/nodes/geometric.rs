@@ -1,8 +1,11 @@
-use crate::sim::{physics, Curvature, Float3, Forces, Frame, Keyframe, Point};
+use crate::sim::physics::{self, MAX_ITERATIONS};
+use crate::sim::{Curvature, Float3, Forces, Frame, Keyframe, Point};
 
 use super::{DurationType, IterationConfig};
 
-const MAX_ITERATIONS: usize = 1_000_000;
+pub mod ports {
+    pub const ANCHOR: u8 = 0;
+}
 
 #[allow(clippy::too_many_arguments)]
 pub fn build(

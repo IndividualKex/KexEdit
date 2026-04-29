@@ -1,5 +1,16 @@
 use crate::sim::{Float3, Point, Quaternion};
 
+pub mod ports {
+    pub const POSITION: u8 = 0;
+    pub const ROLL: u8 = 1;
+    pub const PITCH: u8 = 2;
+    pub const YAW: u8 = 3;
+    pub const VELOCITY: u8 = 4;
+    pub const HEART: u8 = 5;
+    pub const FRICTION: u8 = 6;
+    pub const RESISTANCE: u8 = 7;
+}
+
 fn from_euler(pitch: f32, yaw: f32, roll: f32) -> (Float3, Float3, Float3) {
     let pitch_quat = Quaternion::from_axis_angle(Float3::RIGHT, pitch);
     let yaw_quat = Quaternion::from_axis_angle(Float3::UP, yaw);

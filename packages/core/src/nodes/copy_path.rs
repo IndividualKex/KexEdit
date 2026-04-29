@@ -1,8 +1,14 @@
-use crate::sim::{evaluate, physics, Frame, Keyframe, Matrix3, Point};
+use crate::sim::physics::{self, MAX_ITERATIONS};
+use crate::sim::{evaluate, Frame, Keyframe, Matrix3, Point};
 
 use super::forces::compute_force_vector;
 
-const MAX_ITERATIONS: usize = 1_000_000;
+pub mod ports {
+    pub const ANCHOR: u8 = 0;
+    pub const PATH: u8 = 1;
+    pub const START: u8 = 2;
+    pub const END: u8 = 3;
+}
 
 pub struct CopyPathNode;
 

@@ -119,70 +119,32 @@ impl Point {
         0.0,
     );
 
-    pub fn with_friction_origin(&self, new_origin: f32) -> Self {
-        Self::new(
-            self.heart_position,
-            self.direction,
-            self.normal,
-            self.lateral,
-            self.velocity,
-            self.normal_force,
-            self.lateral_force,
-            self.heart_arc,
-            self.spine_arc,
-            self.heart_advance,
-            new_origin,
-            self.roll_speed,
-            self.heart_offset,
-            self.friction,
-            self.resistance,
-        )
+    pub fn with_friction_origin(&self, friction_origin: f32) -> Self {
+        Self {
+            friction_origin,
+            ..*self
+        }
     }
 
-    pub fn with_forces(&self, new_normal_force: f32, new_lateral_force: f32) -> Self {
-        Self::new(
-            self.heart_position,
-            self.direction,
-            self.normal,
-            self.lateral,
-            self.velocity,
-            new_normal_force,
-            new_lateral_force,
-            self.heart_arc,
-            self.spine_arc,
-            self.heart_advance,
-            self.friction_origin,
-            self.roll_speed,
-            self.heart_offset,
-            self.friction,
-            self.resistance,
-        )
+    pub fn with_forces(&self, normal_force: f32, lateral_force: f32) -> Self {
+        Self {
+            normal_force,
+            lateral_force,
+            ..*self
+        }
     }
 
-    pub fn with_velocity(&self, new_velocity: f32, reset_friction: bool) -> Self {
-        let new_friction_origin = if reset_friction {
+    pub fn with_velocity(&self, velocity: f32, reset_friction: bool) -> Self {
+        let friction_origin = if reset_friction {
             self.spine_arc
         } else {
             self.friction_origin
         };
-
-        Self::new(
-            self.heart_position,
-            self.direction,
-            self.normal,
-            self.lateral,
-            new_velocity,
-            self.normal_force,
-            self.lateral_force,
-            self.heart_arc,
-            self.spine_arc,
-            self.heart_advance,
-            new_friction_origin,
-            self.roll_speed,
-            self.heart_offset,
-            self.friction,
-            self.resistance,
-        )
+        Self {
+            velocity,
+            friction_origin,
+            ..*self
+        }
     }
 }
 

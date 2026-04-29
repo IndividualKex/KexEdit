@@ -1,12 +1,12 @@
 use super::Graph;
-use std::collections::{HashSet, VecDeque};
+use std::collections::VecDeque;
 
 impl Graph {
     /// Find all nodes with no incoming edges (source/root nodes).
     pub fn find_source_nodes(&self) -> Vec<u32> {
         let mut result = Vec::new();
-        for &node_id in &self.node_ids {
-            if self.get_incoming_edges(node_id).is_empty() {
+        for (i, &node_id) in self.node_ids.iter().enumerate() {
+            if self.node_incoming_edge_indices(i).is_empty() {
                 result.push(node_id);
             }
         }
@@ -16,8 +16,8 @@ impl Graph {
     /// Find all nodes with no outgoing edges (sink/leaf nodes).
     pub fn find_sink_nodes(&self) -> Vec<u32> {
         let mut result = Vec::new();
-        for &node_id in &self.node_ids {
-            if self.get_outgoing_edges(node_id).is_empty() {
+        for (i, &node_id) in self.node_ids.iter().enumerate() {
+            if self.node_outgoing_edge_indices(i).is_empty() {
                 result.push(node_id);
             }
         }
@@ -27,23 +27,24 @@ impl Graph {
     /// Get all nodes directly connected downstream from this node.
     /// Returns unique node IDs (deduplicates multiple edges to same node).
     pub fn get_successor_nodes(&self, node_id: u32) -> Vec<u32> {
-        let edges = self.get_outgoing_edges(node_id);
-        if edges.is_empty() {
+        let Some(ni) = self.get_node_index(node_id) else {
             return Vec::new();
-        }
+        };
 
         let mut result = Vec::new();
-        let mut seen = HashSet::new();
-
-        for edge_id in edges {
-            if let Some(edge_idx) = self.edge_ids.iter().position(|&id| id == edge_id) {
-                let target_port_id = self.edge_targets[edge_idx];
-                if let Some(port_idx) = self.get_port_index(target_port_id) {
-                    let target_node_id = self.port_owners[port_idx];
-                    if seen.insert(target_node_id) {
-                        result.push(target_node_id);
-                    }
-                }
+        let mut last: Option<u32> = None;
+        for &ei in self.node_outgoing_edge_indices(ni) {
+            let target_port_id = self.edge_targets[ei];
+            let Some(pi) = self.get_port_index(target_port_id) else {
+                continue;
+            };
+            let target_node_id = self.port_owners[pi];
+            if last == Some(target_node_id) {
+                continue;
+            }
+            if !result.contains(&target_node_id) {
+                result.push(target_node_id);
+                last = Some(target_node_id);
             }
         }
         result
@@ -52,59 +53,62 @@ impl Graph {
     /// Get all nodes directly connected upstream to this node.
     /// Returns unique node IDs (deduplicates multiple edges from same node).
     pub fn get_predecessor_nodes(&self, node_id: u32) -> Vec<u32> {
-        let edges = self.get_incoming_edges(node_id);
-        if edges.is_empty() {
+        let Some(ni) = self.get_node_index(node_id) else {
             return Vec::new();
-        }
+        };
 
         let mut result = Vec::new();
-        let mut seen = HashSet::new();
-
-        for edge_id in edges {
-            if let Some(edge_idx) = self.edge_ids.iter().position(|&id| id == edge_id) {
-                let source_port_id = self.edge_sources[edge_idx];
-                if let Some(port_idx) = self.get_port_index(source_port_id) {
-                    let source_node_id = self.port_owners[port_idx];
-                    if seen.insert(source_node_id) {
-                        result.push(source_node_id);
-                    }
-                }
+        let mut last: Option<u32> = None;
+        for &ei in self.node_incoming_edge_indices(ni) {
+            let source_port_id = self.edge_sources[ei];
+            let Some(pi) = self.get_port_index(source_port_id) else {
+                continue;
+            };
+            let source_node_id = self.port_owners[pi];
+            if last == Some(source_node_id) {
+                continue;
+            }
+            if !result.contains(&source_node_id) {
+                result.push(source_node_id);
+                last = Some(source_node_id);
             }
         }
         result
     }
 
-    /// Topological sort using Kahn's algorithm (BFS).
-    /// Returns nodes in evaluation order.
+    /// Topological sort using Kahn's algorithm. O(V+E) via per-node in-degree counts.
     /// Returns None if the graph contains a cycle.
     pub fn topological_sort(&self) -> Option<Vec<u32>> {
-        let mut sorted = Vec::with_capacity(self.node_count());
-        let sources = self.find_source_nodes();
-        let mut queue: VecDeque<u32> = sources.into_iter().collect();
-        let mut visited = HashSet::with_capacity(self.node_count());
+        let n = self.node_count();
+        let mut in_degree: Vec<usize> = (0..n)
+            .map(|i| self.get_predecessor_nodes(self.node_ids[i]).len())
+            .collect();
 
-        while let Some(node_id) = queue.pop_front() {
-            if !visited.insert(node_id) {
-                continue;
+        let mut queue: VecDeque<usize> = VecDeque::new();
+        for (i, &deg) in in_degree.iter().enumerate() {
+            if deg == 0 {
+                queue.push_back(i);
             }
-            sorted.push(node_id);
+        }
 
-            for succ in self.get_successor_nodes(node_id) {
-                if visited.contains(&succ) {
+        let mut sorted = Vec::with_capacity(n);
+        while let Some(ni) = queue.pop_front() {
+            sorted.push(self.node_ids[ni]);
+
+            for succ_id in self.get_successor_nodes(self.node_ids[ni]) {
+                let Some(si) = self.get_node_index(succ_id) else {
                     continue;
-                }
-
-                let preds = self.get_predecessor_nodes(succ);
-                let all_pred_visited = preds.iter().all(|p| visited.contains(p));
-
-                if all_pred_visited {
-                    queue.push_back(succ);
+                };
+                if in_degree[si] > 0 {
+                    in_degree[si] -= 1;
+                    if in_degree[si] == 0 {
+                        queue.push_back(si);
+                    }
                 }
             }
         }
 
-        // If we haven't visited all nodes, there's a cycle
-        if sorted.len() == self.node_count() {
+        if sorted.len() == n {
             Some(sorted)
         } else {
             None

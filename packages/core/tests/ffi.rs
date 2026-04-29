@@ -1,23 +1,21 @@
 //! FFI integration tests.
 //!
-//! Verify the C ABI surface in `ffi/mod.rs` produces output identical to the
-//! direct Rust API for every fixture, and exercise the documented error paths
-//! (-1 null pointer, -3 buffer overflow, -4 cycle, invalid magic on load).
-//! Until we have these, FFI marshalling bugs only surface through the Blender
-//! plugin's pytest, which can't isolate them from plugin bugs.
+//! Verify the handle-based C ABI in `ffi/mod.rs` produces output identical to
+//! the direct Rust API for every fixture, exercises the documented error paths
+//! (-1 null, -3 overflow, -4 cycle), and round-trips through `kex_save`.
 
 #![cfg(feature = "ffi")]
 
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::ptr;
 
 use kexengine::ffi::{
-    kex_build, kex_load, kex_load_copy_data, kex_load_free, kex_load_get_counts, kex_save,
-    kex_save_size, KexDocument, KexDocumentCounts, KexOutput,
+    kex_build, kex_doc_free, kex_doc_get_counts, kex_doc_read_graph, kex_doc_read_keyframes,
+    kex_doc_read_properties, kex_load, kex_output_free, kex_output_get_counts,
+    kex_output_read_points, kex_output_read_sections, kex_output_read_spline,
+    kex_output_read_traversal, kex_save, kex_save_size, KexDoc, KexDocCounts, KexOutputCounts,
 };
-use kexengine::graph::{Graph, PortDataType, PortSpec};
-use kexengine::nodes::NodeType;
+use kexengine::graph::Graph;
 use kexengine::persistence::{self, Document};
 use kexengine::sim::{Float3, Keyframe, Point};
 use kexengine::track::{
@@ -27,9 +25,6 @@ use kexengine::track::{
 };
 
 const FIXTURES: &[&str] = &["circuit", "switch", "all_types", "shuttle"];
-
-/// Spline arc-length spacing. Matches `trajectory_snapshot.rs` so output tables
-/// have comparable size; build correctness is independent of resolution.
 const RESOLUTION: f32 = 1.0;
 
 // ---------------------------------------------------------------------------
@@ -45,119 +40,11 @@ fn fixture_document(name: &str) -> Document {
     persistence::deserialize(&fixture_bytes(name)).unwrap_or_else(|e| panic!("{name}: {e:?}"))
 }
 
-// ---------------------------------------------------------------------------
-// Document → KexDocument marshalling
-// ---------------------------------------------------------------------------
-
-/// Owns the converted-shape buffers (port_is_input as u8, hash-map keys/values
-/// split into parallel vectors) so the `KexDocument` produced by
-/// `as_kex_document` can borrow into stable memory.
-struct DocFfi {
-    port_is_input_u8: Vec<u8>,
-    scalar_keys: Vec<u64>,
-    scalar_values: Vec<f32>,
-    vector_keys: Vec<u64>,
-    vector_values: Vec<Float3>,
-    flag_keys: Vec<u64>,
-    flag_values: Vec<i32>,
-    keyframe_range_keys: Vec<u64>,
-    keyframe_range_starts: Vec<i32>,
-    keyframe_range_lengths: Vec<i32>,
-}
-
-impl DocFfi {
-    fn from_document(doc: &Document) -> Self {
-        let port_is_input_u8 = doc
-            .graph
-            .port_is_input
-            .iter()
-            .map(|&b| b as u8)
-            .collect();
-
-        let (scalar_keys, scalar_values) = unzip_map(&doc.scalars);
-        let (vector_keys, vector_values) = unzip_map(&doc.vectors);
-        let (flag_keys, flag_values) = unzip_map(&doc.flags);
-
-        let mut keyframe_range_keys = Vec::with_capacity(doc.keyframe_ranges.len());
-        let mut keyframe_range_starts = Vec::with_capacity(doc.keyframe_ranges.len());
-        let mut keyframe_range_lengths = Vec::with_capacity(doc.keyframe_ranges.len());
-        for (&k, &(start, length)) in &doc.keyframe_ranges {
-            keyframe_range_keys.push(k);
-            keyframe_range_starts.push(start as i32);
-            keyframe_range_lengths.push(length as i32);
-        }
-
-        Self {
-            port_is_input_u8,
-            scalar_keys,
-            scalar_values,
-            vector_keys,
-            vector_values,
-            flag_keys,
-            flag_values,
-            keyframe_range_keys,
-            keyframe_range_starts,
-            keyframe_range_lengths,
-        }
-    }
-
-    fn as_kex_document(&self, doc: &Document) -> KexDocument {
-        KexDocument {
-            node_ids: ptr_or_null(&doc.graph.node_ids),
-            node_count: doc.graph.node_ids.len(),
-            node_types: ptr_or_null(&doc.graph.node_types),
-            node_input_counts: ptr_or_null(&doc.graph.node_input_count),
-            node_output_counts: ptr_or_null(&doc.graph.node_output_count),
-
-            port_ids: ptr_or_null(&doc.graph.port_ids),
-            port_count: doc.graph.port_ids.len(),
-            port_types: ptr_or_null(&doc.graph.port_types),
-            port_owners: ptr_or_null(&doc.graph.port_owners),
-            port_is_input: ptr_or_null(&self.port_is_input_u8),
-
-            edge_ids: ptr_or_null(&doc.graph.edge_ids),
-            edge_count: doc.graph.edge_ids.len(),
-            edge_sources: ptr_or_null(&doc.graph.edge_sources),
-            edge_targets: ptr_or_null(&doc.graph.edge_targets),
-
-            scalar_keys: ptr_or_null(&self.scalar_keys),
-            scalar_values: ptr_or_null(&self.scalar_values),
-            scalar_count: self.scalar_keys.len(),
-
-            vector_keys: ptr_or_null(&self.vector_keys),
-            vector_values: ptr_or_null(&self.vector_values),
-            vector_count: self.vector_keys.len(),
-
-            flag_keys: ptr_or_null(&self.flag_keys),
-            flag_values: ptr_or_null(&self.flag_values),
-            flag_count: self.flag_keys.len(),
-
-            keyframes: ptr_or_null(&doc.keyframes),
-            keyframe_count: doc.keyframes.len(),
-            keyframe_range_keys: ptr_or_null(&self.keyframe_range_keys),
-            keyframe_range_starts: ptr_or_null(&self.keyframe_range_starts),
-            keyframe_range_lengths: ptr_or_null(&self.keyframe_range_lengths),
-            keyframe_range_count: self.keyframe_range_keys.len(),
-        }
-    }
-}
-
-fn ptr_or_null<T>(v: &[T]) -> *const T {
-    if v.is_empty() {
-        ptr::null()
-    } else {
-        v.as_ptr()
-    }
-}
-
-fn unzip_map<K: Copy, V: Copy>(map: &HashMap<K, V>) -> (Vec<K>, Vec<V>) {
-    let mut keys = Vec::with_capacity(map.len());
-    let mut values = Vec::with_capacity(map.len());
-    for (&k, &v) in map {
-        keys.push(k);
-        values.push(v);
-    }
-    (keys, values)
+unsafe fn load_handle(name: &str) -> KexDoc {
+    let bytes = fixture_bytes(name);
+    let h = kex_load(bytes.as_ptr(), bytes.len());
+    assert!(!h.is_null(), "{name}: kex_load returned null");
+    h
 }
 
 // ---------------------------------------------------------------------------
@@ -176,8 +63,7 @@ struct Built {
     roll_speeds: Vec<f32>,
 }
 
-/// Mirrors the body of `kex_build`. Mismatches between this and `build_via_ffi`
-/// reveal marshalling errors in the FFI layer.
+/// Mirrors the body of `kex_build` so divergences flag marshalling errors.
 fn build_direct(doc: &Document, resolution: f32) -> Built {
     let view = doc.as_view();
     let result = evaluate_graph(&view).expect("evaluate_graph");
@@ -194,7 +80,6 @@ fn build_direct(doc: &Document, resolution: f32) -> Built {
     let mut lateral_forces = Vec::new();
     let mut roll_speeds = Vec::new();
 
-    let mut spline_offset = 0usize;
     for section in sections.iter_mut() {
         if !section.is_valid() {
             continue;
@@ -203,8 +88,9 @@ fn build_direct(doc: &Document, resolution: f32) -> Built {
         let end = section.end_index as usize;
         let path_slice = &points[start..=end];
         let spline = resample(path_slice, resolution);
-        section.spline_start_index = spline_offset as i32;
-        section.spline_end_index = (spline_offset + spline.len() - 1) as i32;
+        let off = spline_points.len() as i32;
+        section.spline_start_index = off;
+        section.spline_end_index = off + spline.len() as i32 - 1;
         for sp in spline.iter() {
             spline_points.push(*sp);
             let (vel, nf, lf, rs) = interpolate_physics(path_slice, sp.arc);
@@ -213,7 +99,6 @@ fn build_direct(doc: &Document, resolution: f32) -> Built {
             lateral_forces.push(lf);
             roll_speeds.push(rs);
         }
-        spline_offset += spline.len();
     }
 
     Built {
@@ -229,61 +114,78 @@ fn build_direct(doc: &Document, resolution: f32) -> Built {
     }
 }
 
-fn build_via_ffi(doc: &Document, resolution: f32) -> Built {
-    let ffi = DocFfi::from_document(doc);
-    let kd = ffi.as_kex_document(doc);
+unsafe fn build_via_ffi(handle: KexDoc, resolution: f32) -> Built {
+    let mut err = 0i32;
+    let out = kex_build(handle, resolution, &mut err);
+    assert_eq!(err, 0, "kex_build error {}", err);
+    assert!(!out.is_null());
 
-    // Capacities sized for the existing fixtures with several × headroom.
-    // Buffer-overflow handling is exercised separately.
-    let mut points: Vec<Point> = vec![Point::DEFAULT; 100_000];
-    let mut sections: Vec<Section> = vec![Section::invalid(); 4_096];
-    let mut section_node_ids: Vec<u32> = vec![0; 4_096];
-    let mut traversal: Vec<i32> = vec![-1; 4_096];
-    let zero_v3 = Float3::ZERO;
-    let mut spline_points: Vec<SplinePoint> =
-        vec![SplinePoint::new(0.0, zero_v3, zero_v3, zero_v3, zero_v3); 200_000];
-    let mut velocities: Vec<f32> = vec![0.0; 200_000];
-    let mut normal_forces: Vec<f32> = vec![0.0; 200_000];
-    let mut lateral_forces: Vec<f32> = vec![0.0; 200_000];
-    let mut roll_speeds: Vec<f32> = vec![0.0; 200_000];
-
-    let mut points_count: usize = 0;
-    let mut sections_count: usize = 0;
-    let mut traversal_count: usize = 0;
-    let mut spline_count: usize = 0;
-
-    let mut output = KexOutput {
-        points: points.as_mut_ptr(),
-        points_capacity: points.len(),
-        sections: sections.as_mut_ptr(),
-        sections_capacity: sections.len(),
-        section_node_ids: section_node_ids.as_mut_ptr(),
-        traversal_order: traversal.as_mut_ptr(),
-        traversal_capacity: traversal.len(),
-        spline_points: spline_points.as_mut_ptr(),
-        spline_capacity: spline_points.len(),
-        spline_velocities: velocities.as_mut_ptr(),
-        spline_normal_forces: normal_forces.as_mut_ptr(),
-        spline_lateral_forces: lateral_forces.as_mut_ptr(),
-        spline_roll_speeds: roll_speeds.as_mut_ptr(),
-        points_count: &mut points_count,
-        sections_count: &mut sections_count,
-        traversal_count: &mut traversal_count,
-        spline_count: &mut spline_count,
+    let mut counts = KexOutputCounts {
+        points_count: 0,
+        sections_count: 0,
+        traversal_count: 0,
+        spline_count: 0,
     };
+    assert_eq!(kex_output_get_counts(out, &mut counts), 0);
 
-    let rc = unsafe { kex_build(&kd, resolution, &mut output) };
-    assert_eq!(rc, 0, "kex_build returned {}", rc);
+    let pc = counts.points_count.max(0) as usize;
+    let sc = counts.sections_count.max(0) as usize;
+    let tc = counts.traversal_count.max(0) as usize;
+    let xc = counts.spline_count.max(0) as usize;
 
-    points.truncate(points_count);
-    sections.truncate(sections_count);
-    section_node_ids.truncate(sections_count);
-    traversal.truncate(traversal_count);
-    spline_points.truncate(spline_count);
-    velocities.truncate(spline_count);
-    normal_forces.truncate(spline_count);
-    lateral_forces.truncate(spline_count);
-    roll_speeds.truncate(spline_count);
+    let mut points = vec![Point::DEFAULT; pc.max(1)];
+    assert_eq!(
+        kex_output_read_points(out, points.as_mut_ptr(), points.len()),
+        0
+    );
+    points.truncate(pc);
+
+    let mut sections = vec![Section::invalid(); sc.max(1)];
+    let mut section_node_ids = vec![0u32; sc.max(1)];
+    assert_eq!(
+        kex_output_read_sections(
+            out,
+            sections.as_mut_ptr(),
+            section_node_ids.as_mut_ptr(),
+            sc.max(1)
+        ),
+        0
+    );
+    sections.truncate(sc);
+    section_node_ids.truncate(sc);
+
+    let mut traversal = vec![-1i32; tc.max(1)];
+    assert_eq!(
+        kex_output_read_traversal(out, traversal.as_mut_ptr(), traversal.len()),
+        0
+    );
+    traversal.truncate(tc);
+
+    let zero = Float3::ZERO;
+    let mut spline_points = vec![SplinePoint::new(0.0, zero, zero, zero, zero); xc.max(1)];
+    let mut velocities = vec![0f32; xc.max(1)];
+    let mut normal_forces = vec![0f32; xc.max(1)];
+    let mut lateral_forces = vec![0f32; xc.max(1)];
+    let mut roll_speeds = vec![0f32; xc.max(1)];
+    assert_eq!(
+        kex_output_read_spline(
+            out,
+            spline_points.as_mut_ptr(),
+            velocities.as_mut_ptr(),
+            normal_forces.as_mut_ptr(),
+            lateral_forces.as_mut_ptr(),
+            roll_speeds.as_mut_ptr(),
+            xc.max(1)
+        ),
+        0
+    );
+    spline_points.truncate(xc);
+    velocities.truncate(xc);
+    normal_forces.truncate(xc);
+    lateral_forces.truncate(xc);
+    roll_speeds.truncate(xc);
+
+    kex_output_free(out);
 
     Built {
         points,
@@ -298,8 +200,6 @@ fn build_via_ffi(doc: &Document, resolution: f32) -> Built {
     }
 }
 
-/// Section lacks PartialEq. Compare each field exactly. f32 fields are
-/// produced by identical code paths in both routes, so bitwise equality holds.
 fn section_eq(a: &Section, b: &Section) -> bool {
     a.start_index == b.start_index
         && a.end_index == b.end_index
@@ -346,7 +246,7 @@ fn assert_built_equal(actual: &Built, expected: &Built, ctx: &str) {
 }
 
 // ---------------------------------------------------------------------------
-// Document equality (used for save/load round-trips)
+// Document equality
 // ---------------------------------------------------------------------------
 
 fn assert_doc_equal(a: &Document, b: &Document, ctx: &str) {
@@ -386,15 +286,8 @@ fn assert_doc_equal(a: &Document, b: &Document, ctx: &str) {
     assert_eq!(a.keyframe_ranges, b.keyframe_ranges, "{ctx}: keyframe_ranges");
 }
 
-// ---------------------------------------------------------------------------
-// Reconstruct a Document from kex_load_copy_data outputs
-// ---------------------------------------------------------------------------
-
-fn load_document_via_ffi(bytes: &[u8]) -> Document {
-    let handle = unsafe { kex_load(bytes.as_ptr(), bytes.len()) };
-    assert!(!handle.is_null(), "kex_load returned null");
-
-    let mut counts = KexDocumentCounts {
+unsafe fn read_doc_via_ffi(handle: KexDoc) -> Document {
+    let mut counts = KexDocCounts {
         node_count: 0,
         port_count: 0,
         edge_count: 0,
@@ -407,8 +300,7 @@ fn load_document_via_ffi(bytes: &[u8]) -> Document {
         next_port_id: 0,
         next_edge_id: 0,
     };
-    let rc = unsafe { kex_load_get_counts(handle, &mut counts) };
-    assert_eq!(rc, 0);
+    assert_eq!(kex_doc_get_counts(handle, &mut counts), 0);
 
     let nc = counts.node_count.max(0) as usize;
     let pc = counts.port_count.max(0) as usize;
@@ -430,19 +322,8 @@ fn load_document_via_ffi(bytes: &[u8]) -> Document {
     let mut edge_ids = vec![0u32; ec.max(1)];
     let mut edge_sources = vec![0u32; ec.max(1)];
     let mut edge_targets = vec![0u32; ec.max(1)];
-    let mut scalar_keys = vec![0u64; sc.max(1)];
-    let mut scalar_values = vec![0.0f32; sc.max(1)];
-    let mut vector_keys = vec![0u64; vc.max(1)];
-    let mut vector_values = vec![Float3::ZERO; vc.max(1)];
-    let mut flag_keys = vec![0u64; fc.max(1)];
-    let mut flag_values = vec![0i32; fc.max(1)];
-    let mut keyframes = vec![Keyframe::simple(0.0, 0.0); kf.max(1)];
-    let mut keyframe_range_keys = vec![0u64; kr.max(1)];
-    let mut keyframe_range_starts = vec![0i32; kr.max(1)];
-    let mut keyframe_range_lengths = vec![0i32; kr.max(1)];
-
-    let rc = unsafe {
-        kex_load_copy_data(
+    assert_eq!(
+        kex_doc_read_graph(
             handle,
             node_ids.as_mut_ptr(),
             node_types.as_mut_ptr(),
@@ -455,21 +336,43 @@ fn load_document_via_ffi(bytes: &[u8]) -> Document {
             edge_ids.as_mut_ptr(),
             edge_sources.as_mut_ptr(),
             edge_targets.as_mut_ptr(),
+        ),
+        0
+    );
+
+    let mut scalar_keys = vec![0u64; sc.max(1)];
+    let mut scalar_values = vec![0.0f32; sc.max(1)];
+    let mut vector_keys = vec![0u64; vc.max(1)];
+    let mut vector_values = vec![Float3::ZERO; vc.max(1)];
+    let mut flag_keys = vec![0u64; fc.max(1)];
+    let mut flag_values = vec![0i32; fc.max(1)];
+    assert_eq!(
+        kex_doc_read_properties(
+            handle,
             scalar_keys.as_mut_ptr(),
             scalar_values.as_mut_ptr(),
             vector_keys.as_mut_ptr(),
             vector_values.as_mut_ptr(),
             flag_keys.as_mut_ptr(),
             flag_values.as_mut_ptr(),
-            keyframes.as_mut_ptr(),
-            keyframe_range_keys.as_mut_ptr(),
-            keyframe_range_starts.as_mut_ptr(),
-            keyframe_range_lengths.as_mut_ptr(),
-        )
-    };
-    assert_eq!(rc, 0);
+        ),
+        0
+    );
 
-    unsafe { kex_load_free(handle) };
+    let mut keyframes = vec![Keyframe::simple(0.0, 0.0); kf.max(1)];
+    let mut range_keys = vec![0u64; kr.max(1)];
+    let mut range_starts = vec![0i32; kr.max(1)];
+    let mut range_lengths = vec![0i32; kr.max(1)];
+    assert_eq!(
+        kex_doc_read_keyframes(
+            handle,
+            keyframes.as_mut_ptr(),
+            range_keys.as_mut_ptr(),
+            range_starts.as_mut_ptr(),
+            range_lengths.as_mut_ptr(),
+        ),
+        0
+    );
 
     node_ids.truncate(nc);
     node_types.truncate(nc);
@@ -489,9 +392,9 @@ fn load_document_via_ffi(bytes: &[u8]) -> Document {
     flag_keys.truncate(fc);
     flag_values.truncate(fc);
     keyframes.truncate(kf);
-    keyframe_range_keys.truncate(kr);
-    keyframe_range_starts.truncate(kr);
-    keyframe_range_lengths.truncate(kr);
+    range_keys.truncate(kr);
+    range_starts.truncate(kr);
+    range_lengths.truncate(kr);
 
     let port_is_input: Vec<bool> = port_is_input_u8.into_iter().map(|b| b != 0).collect();
 
@@ -509,57 +412,45 @@ fn load_document_via_ffi(bytes: &[u8]) -> Document {
         edge_targets,
     );
 
-    let scalars = scalar_keys.into_iter().zip(scalar_values).collect();
-    let vectors = vector_keys.into_iter().zip(vector_values).collect();
-    let flags = flag_keys.into_iter().zip(flag_values).collect();
-
-    let keyframe_ranges = keyframe_range_keys
-        .into_iter()
-        .zip(
-            keyframe_range_starts
-                .into_iter()
-                .zip(keyframe_range_lengths),
-        )
-        .map(|(k, (s, l))| (k, (s as usize, l as usize)))
-        .collect();
-
     Document {
         graph,
-        scalars,
-        vectors,
-        flags,
+        scalars: scalar_keys.into_iter().zip(scalar_values).collect(),
+        vectors: vector_keys.into_iter().zip(vector_values).collect(),
+        flags: flag_keys.into_iter().zip(flag_values).collect(),
         keyframes,
-        keyframe_ranges,
+        keyframe_ranges: range_keys
+            .into_iter()
+            .zip(range_starts.into_iter().zip(range_lengths))
+            .map(|(k, (s, l))| (k, (s as usize, l as usize)))
+            .collect(),
         next_node_id: counts.next_node_id,
         next_port_id: counts.next_port_id,
         next_edge_id: counts.next_edge_id,
     }
 }
 
-fn save_document_via_ffi(doc: &Document) -> Vec<u8> {
-    let ffi = DocFfi::from_document(doc);
-    let kd = ffi.as_kex_document(doc);
-
-    let size = unsafe { kex_save_size(&kd) };
+unsafe fn save_via_ffi(handle: KexDoc) -> Vec<u8> {
+    let size = kex_save_size(handle);
     assert!(size > 0, "kex_save_size returned {}", size);
-
     let mut buf = vec![0u8; size as usize];
-    let mut written: usize = 0;
-    let rc = unsafe { kex_save(&kd, buf.as_mut_ptr(), buf.len(), &mut written) };
-    assert_eq!(rc, 0);
+    let mut written = 0usize;
+    assert_eq!(kex_save(handle, buf.as_mut_ptr(), buf.len(), &mut written), 0);
     assert_eq!(written, size as usize);
     buf
 }
 
 // ---------------------------------------------------------------------------
-// Tests: kex_build matches direct API for every fixture
+// Tests
 // ---------------------------------------------------------------------------
 
 fn check_build(name: &str) {
-    let doc = fixture_document(name);
-    let direct = build_direct(&doc, RESOLUTION);
-    let ffi = build_via_ffi(&doc, RESOLUTION);
-    assert_built_equal(&ffi, &direct, name);
+    unsafe {
+        let h = load_handle(name);
+        let direct = build_direct(&fixture_document(name), RESOLUTION);
+        let ffi = build_via_ffi(h, RESOLUTION);
+        assert_built_equal(&ffi, &direct, name);
+        kex_doc_free(h);
+    }
 }
 
 #[test]
@@ -582,15 +473,14 @@ fn build_shuttle_matches_direct() {
     check_build("shuttle");
 }
 
-// ---------------------------------------------------------------------------
-// Tests: kex_load + kex_load_get_counts + kex_load_copy_data round-trip
-// ---------------------------------------------------------------------------
-
 fn check_load(name: &str) {
-    let bytes = fixture_bytes(name);
-    let direct = persistence::deserialize(&bytes).expect(name);
-    let via_ffi = load_document_via_ffi(&bytes);
-    assert_doc_equal(&via_ffi, &direct, name);
+    unsafe {
+        let h = load_handle(name);
+        let direct = fixture_document(name);
+        let via_ffi = read_doc_via_ffi(h);
+        assert_doc_equal(&via_ffi, &direct, name);
+        kex_doc_free(h);
+    }
 }
 
 #[test]
@@ -613,15 +503,14 @@ fn load_shuttle_matches_direct() {
     check_load("shuttle");
 }
 
-// ---------------------------------------------------------------------------
-// Tests: kex_save_size + kex_save round-trip
-// ---------------------------------------------------------------------------
-
 fn check_save(name: &str) {
-    let original = fixture_document(name);
-    let bytes = save_document_via_ffi(&original);
-    let reloaded = persistence::deserialize(&bytes).expect("deserialize after kex_save");
-    assert_doc_equal(&reloaded, &original, name);
+    unsafe {
+        let h = load_handle(name);
+        let bytes = save_via_ffi(h);
+        let reloaded = persistence::deserialize(&bytes).expect("deserialize after kex_save");
+        assert_doc_equal(&reloaded, &fixture_document(name), name);
+        kex_doc_free(h);
+    }
 }
 
 #[test]
@@ -644,21 +533,21 @@ fn save_shuttle_round_trips() {
     check_save("shuttle");
 }
 
-// ---------------------------------------------------------------------------
-// Tests: full FFI round-trip (load → copy → save → equal)
-// ---------------------------------------------------------------------------
-
 #[test]
 fn full_ffi_round_trip_preserves_documents() {
-    for &name in FIXTURES {
-        let original_bytes = fixture_bytes(name);
-        let via_ffi = load_document_via_ffi(&original_bytes);
-        let resaved = save_document_via_ffi(&via_ffi);
-        let reloaded =
-            persistence::deserialize(&resaved).expect("deserialize after FFI round-trip");
-        let direct =
-            persistence::deserialize(&original_bytes).expect("deserialize original");
-        assert_doc_equal(&reloaded, &direct, name);
+    unsafe {
+        for &name in FIXTURES {
+            let h1 = load_handle(name);
+            let resaved = save_via_ffi(h1);
+            kex_doc_free(h1);
+
+            let h2 = kex_load(resaved.as_ptr(), resaved.len());
+            assert!(!h2.is_null());
+            let via_ffi = read_doc_via_ffi(h2);
+            kex_doc_free(h2);
+
+            assert_doc_equal(&via_ffi, &fixture_document(name), name);
+        }
     }
 }
 
@@ -669,20 +558,20 @@ fn full_ffi_round_trip_preserves_documents() {
 #[test]
 fn kex_load_rejects_invalid_magic() {
     let mut bytes = fixture_bytes("circuit");
-    bytes[0] = b'X'; // corrupt the magic
-    let handle = unsafe { kex_load(bytes.as_ptr(), bytes.len()) };
-    assert!(handle.is_null(), "kex_load should reject invalid magic");
+    bytes[0] = b'X';
+    let h = unsafe { kex_load(bytes.as_ptr(), bytes.len()) };
+    assert!(h.is_null());
 }
 
 #[test]
 fn kex_load_rejects_empty_buffer() {
-    let handle = unsafe { kex_load(ptr::null(), 0) };
-    assert!(handle.is_null());
+    let h = unsafe { kex_load(ptr::null(), 0) };
+    assert!(h.is_null());
 }
 
 #[test]
-fn kex_load_get_counts_returns_minus_one_for_null_handle() {
-    let mut counts = KexDocumentCounts {
+fn kex_doc_get_counts_rejects_null_handle() {
+    let mut counts = KexDocCounts {
         node_count: 0,
         port_count: 0,
         edge_count: 0,
@@ -695,115 +584,51 @@ fn kex_load_get_counts_returns_minus_one_for_null_handle() {
         next_port_id: 0,
         next_edge_id: 0,
     };
-    let rc = unsafe { kex_load_get_counts(ptr::null_mut(), &mut counts) };
-    assert_eq!(rc, -1);
+    assert_eq!(unsafe { kex_doc_get_counts(ptr::null_mut(), &mut counts) }, -1);
 }
 
 #[test]
 fn kex_save_reports_overflow_with_required_size() {
-    let doc = fixture_document("circuit");
-    let ffi = DocFfi::from_document(&doc);
-    let kd = ffi.as_kex_document(&doc);
+    unsafe {
+        let h = load_handle("circuit");
+        let required = kex_save_size(h);
+        assert!(required > 1);
 
-    let required = unsafe { kex_save_size(&kd) };
-    assert!(required > 1, "expected non-trivial document");
-
-    let mut tiny = [0u8; 1];
-    let mut written: usize = 0;
-    let rc = unsafe { kex_save(&kd, tiny.as_mut_ptr(), tiny.len(), &mut written) };
-    assert_eq!(rc, -3, "expected -3 buffer overflow, got {}", rc);
-    assert_eq!(
-        written, required as usize,
-        "kex_save should report the required size on overflow"
-    );
+        let mut tiny = [0u8; 1];
+        let mut written = 0usize;
+        let rc = kex_save(h, tiny.as_mut_ptr(), tiny.len(), &mut written);
+        assert_eq!(rc, -3);
+        assert_eq!(written, required as usize);
+        kex_doc_free(h);
+    }
 }
 
 #[test]
-fn kex_save_returns_minus_one_for_null_pointers() {
-    let doc = fixture_document("circuit");
-    let ffi = DocFfi::from_document(&doc);
-    let kd = ffi.as_kex_document(&doc);
-    let mut buf = [0u8; 16];
-    let mut written: usize = 0;
-
-    let rc = unsafe { kex_save(ptr::null(), buf.as_mut_ptr(), buf.len(), &mut written) };
-    assert_eq!(rc, -1);
-
-    let rc = unsafe { kex_save(&kd, ptr::null_mut(), buf.len(), &mut written) };
-    assert_eq!(rc, -1);
-
-    let rc = unsafe { kex_save(&kd, buf.as_mut_ptr(), buf.len(), ptr::null_mut()) };
-    assert_eq!(rc, -1);
+fn kex_save_rejects_null_pointers() {
+    unsafe {
+        let h = load_handle("circuit");
+        let mut buf = [0u8; 16];
+        let mut written = 0usize;
+        assert_eq!(kex_save(ptr::null_mut(), buf.as_mut_ptr(), buf.len(), &mut written), -1);
+        assert_eq!(kex_save(h, ptr::null_mut(), buf.len(), &mut written), -1);
+        assert_eq!(kex_save(h, buf.as_mut_ptr(), buf.len(), ptr::null_mut()), -1);
+        kex_doc_free(h);
+    }
 }
 
 #[test]
-fn kex_build_returns_minus_one_for_null_pointers() {
-    let mut output = empty_output();
-    let rc = unsafe { kex_build(ptr::null(), RESOLUTION, &mut output) };
-    assert_eq!(rc, -1);
-
-    let doc = fixture_document("circuit");
-    let ffi = DocFfi::from_document(&doc);
-    let kd = ffi.as_kex_document(&doc);
-    let rc = unsafe { kex_build(&kd, RESOLUTION, ptr::null_mut()) };
-    assert_eq!(rc, -1);
+fn kex_build_rejects_null_handle() {
+    let mut err = 0i32;
+    let out = unsafe { kex_build(ptr::null_mut(), RESOLUTION, &mut err) };
+    assert!(out.is_null());
+    assert_eq!(err, -1);
 }
 
 #[test]
-fn kex_build_returns_minus_three_when_points_buffer_too_small() {
-    let doc = fixture_document("circuit");
-    let ffi = DocFfi::from_document(&doc);
-    let kd = ffi.as_kex_document(&doc);
+fn kex_build_returns_null_on_cycle() {
+    use kexengine::graph::{PortDataType, PortSpec};
+    use kexengine::nodes::NodeType;
 
-    // Single-element output buffers — circuit has dozens of points, so this
-    // forces the capacity check to fire.
-    let mut points = [Point::DEFAULT; 1];
-    let mut sections = [Section::invalid(); 1];
-    let mut section_node_ids = [0u32; 1];
-    let mut traversal = [-1i32; 1];
-    let zero_v3 = Float3::ZERO;
-    let mut spline_points =
-        [SplinePoint::new(0.0, zero_v3, zero_v3, zero_v3, zero_v3); 1];
-    let mut velocities = [0f32; 1];
-    let mut normal_forces = [0f32; 1];
-    let mut lateral_forces = [0f32; 1];
-    let mut roll_speeds = [0f32; 1];
-
-    let mut points_count = 0usize;
-    let mut sections_count = 0usize;
-    let mut traversal_count = 0usize;
-    let mut spline_count = 0usize;
-
-    let mut output = KexOutput {
-        points: points.as_mut_ptr(),
-        points_capacity: points.len(),
-        sections: sections.as_mut_ptr(),
-        sections_capacity: sections.len(),
-        section_node_ids: section_node_ids.as_mut_ptr(),
-        traversal_order: traversal.as_mut_ptr(),
-        traversal_capacity: traversal.len(),
-        spline_points: spline_points.as_mut_ptr(),
-        spline_capacity: spline_points.len(),
-        spline_velocities: velocities.as_mut_ptr(),
-        spline_normal_forces: normal_forces.as_mut_ptr(),
-        spline_lateral_forces: lateral_forces.as_mut_ptr(),
-        spline_roll_speeds: roll_speeds.as_mut_ptr(),
-        points_count: &mut points_count,
-        sections_count: &mut sections_count,
-        traversal_count: &mut traversal_count,
-        spline_count: &mut spline_count,
-    };
-
-    let rc = unsafe { kex_build(&kd, RESOLUTION, &mut output) };
-    assert_eq!(rc, -3, "expected -3 buffer overflow, got {}", rc);
-}
-
-#[test]
-fn kex_build_returns_minus_four_for_cycle() {
-    // 2-node cycle: A.out -> B.in, B.out -> A.in. Same shape as the
-    // make_cycle_graph used in the graph traversal unit tests, marshalled
-    // through the FFI surface so the cycle detection path is exercised
-    // end-to-end.
     let graph = Graph::from_vecs(
         vec![1, 2],
         vec![NodeType::Force as u8, NodeType::Force as u8],
@@ -829,64 +654,42 @@ fn kex_build_returns_minus_four_for_cycle() {
     doc.next_port_id = 203;
     doc.next_edge_id = 303;
 
-    let ffi = DocFfi::from_document(&doc);
-    let kd = ffi.as_kex_document(&doc);
-
-    let mut output = empty_output();
-    let rc = unsafe { kex_build(&kd, RESOLUTION, &mut output) };
-    assert_eq!(rc, -4, "expected -4 cycle, got {}", rc);
+    let bytes = persistence::serialize(&doc);
+    unsafe {
+        let h = kex_load(bytes.as_ptr(), bytes.len());
+        assert!(!h.is_null());
+        let mut err = 0i32;
+        let out = kex_build(h, RESOLUTION, &mut err);
+        assert!(out.is_null());
+        assert_eq!(err, -4);
+        kex_doc_free(h);
+    }
 }
 
 #[test]
-fn kex_load_free_handles_null() {
-    // Documented contract: null is acceptable. Should not abort.
-    unsafe { kex_load_free(ptr::null_mut()) };
+fn kex_output_read_returns_minus_three_on_overflow() {
+    unsafe {
+        let h = load_handle("circuit");
+        let mut err = 0i32;
+        let out = kex_build(h, RESOLUTION, &mut err);
+        assert_eq!(err, 0);
+        assert!(!out.is_null());
+
+        let mut tiny_points = [Point::DEFAULT; 1];
+        let rc = kex_output_read_points(out, tiny_points.as_mut_ptr(), tiny_points.len());
+        assert_eq!(rc, -3);
+
+        kex_output_free(out);
+        kex_doc_free(h);
+    }
 }
 
-// ---------------------------------------------------------------------------
-// Output buffer scratch state
-// ---------------------------------------------------------------------------
+#[test]
+fn kex_doc_free_handles_null() {
+    unsafe { kex_doc_free(ptr::null_mut()) };
+}
 
-/// Output struct with valid (but trivial) buffer pointers. Used for error-path
-/// tests where we don't expect any writes.
-fn empty_output() -> KexOutput {
-    // `Box::leak` keeps these alive for the duration of the test process so
-    // the raw pointers in `KexOutput` stay valid even after this function
-    // returns. Acceptable in test code; would not be acceptable in production.
-    let points = Box::leak(Box::new([Point::DEFAULT; 1]));
-    let sections = Box::leak(Box::new([Section::invalid(); 1]));
-    let section_node_ids = Box::leak(Box::new([0u32; 1]));
-    let traversal = Box::leak(Box::new([-1i32; 1]));
-    let zero_v3 = Float3::ZERO;
-    let spline_points = Box::leak(Box::new([SplinePoint::new(
-        0.0, zero_v3, zero_v3, zero_v3, zero_v3,
-    ); 1]));
-    let velocities = Box::leak(Box::new([0f32; 1]));
-    let normal_forces = Box::leak(Box::new([0f32; 1]));
-    let lateral_forces = Box::leak(Box::new([0f32; 1]));
-    let roll_speeds = Box::leak(Box::new([0f32; 1]));
-    let points_count = Box::leak(Box::new(0usize));
-    let sections_count = Box::leak(Box::new(0usize));
-    let traversal_count = Box::leak(Box::new(0usize));
-    let spline_count = Box::leak(Box::new(0usize));
-
-    KexOutput {
-        points: points.as_mut_ptr(),
-        points_capacity: points.len(),
-        sections: sections.as_mut_ptr(),
-        sections_capacity: sections.len(),
-        section_node_ids: section_node_ids.as_mut_ptr(),
-        traversal_order: traversal.as_mut_ptr(),
-        traversal_capacity: traversal.len(),
-        spline_points: spline_points.as_mut_ptr(),
-        spline_capacity: spline_points.len(),
-        spline_velocities: velocities.as_mut_ptr(),
-        spline_normal_forces: normal_forces.as_mut_ptr(),
-        spline_lateral_forces: lateral_forces.as_mut_ptr(),
-        spline_roll_speeds: roll_speeds.as_mut_ptr(),
-        points_count,
-        sections_count,
-        traversal_count,
-        spline_count,
-    }
+#[test]
+fn kex_output_free_handles_null() {
+    unsafe { kex_output_free(ptr::null_mut()) };
 }

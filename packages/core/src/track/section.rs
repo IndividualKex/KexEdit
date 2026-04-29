@@ -267,12 +267,8 @@ fn find_next_section(
         .graph
         .try_get_output_by_spec(node_id, PortDataType::Anchor, 0)?;
 
-    for i in 0..doc.graph.edge_ids.len() {
-        if doc.graph.edge_sources[i] != output_port {
-            continue;
-        }
-
-        let target_port = doc.graph.edge_targets[i];
+    for &ei in doc.graph.outgoing_edge_indices_from_port(output_port) {
+        let target_port = doc.graph.edge_targets[ei];
         let target_port_idx = doc.graph.get_port_index(target_port)?;
         let target_node = doc.graph.port_owners[target_port_idx];
         let target_type = doc.graph.get_node_type(target_node)?;
