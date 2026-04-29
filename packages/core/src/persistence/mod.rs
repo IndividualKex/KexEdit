@@ -1,193 +1,264 @@
-//! Binary persistence for kexd format.
+//! Binary persistence for the `.kex` format.
 //!
-//! Provides serialize/deserialize for Document matching Unity's chunked binary format.
+//! # On-disk layout
+//!
+//! ```text
+//! [4 B] magic   = "KEX\0"
+//! [4 B] version = u32 little-endian (currently 1)
+//! repeat:
+//!     [4 B] tag      // ASCII chunk identifier
+//!     [4 B] length   // u32 little-endian, bytes that follow
+//!     [length B] payload
+//! ```
+//!
+//! Chunks are read sequentially. Unknown tags are skipped by length so the
+//! format can grow without breaking older readers. Version 1 defines two
+//! chunks: `GRPH` (graph topology) and `DATA` (input values + keyframes).
+//!
+//! All multi-byte integers and floats are little-endian.
 
-mod chunk;
 mod document;
-mod format;
-mod graph_codec;
 
-pub use chunk::{ChunkHeader, ChunkReader, ChunkWriter};
 pub use document::Document;
-pub use format::*;
 
-use crate::sim::{InterpolationType, Keyframe};
+use crate::graph::Graph;
+use crate::sim::{Float3, InterpolationType, Keyframe};
+use std::collections::HashMap;
+
+pub const MAGIC: [u8; 4] = *b"KEX\0";
+pub const VERSION: u32 = 1;
+
+const TAG_GRPH: [u8; 4] = *b"GRPH";
+const TAG_DATA: [u8; 4] = *b"DATA";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PersistenceError {
     InvalidMagic,
-    UnsupportedVersion { expected: u32, found: u32 },
+    UnsupportedVersion(u32),
     TruncatedData,
-    InvalidChunkType,
     CorruptedData,
 }
 
 impl std::fmt::Display for PersistenceError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PersistenceError::InvalidMagic => write!(f, "Invalid file magic (expected KEXD)"),
-            PersistenceError::UnsupportedVersion { expected, found } => {
-                write!(f, "Unsupported version: expected {expected}, found {found}")
-            }
-            PersistenceError::TruncatedData => write!(f, "Truncated data"),
-            PersistenceError::InvalidChunkType => write!(f, "Invalid chunk type"),
-            PersistenceError::CorruptedData => write!(f, "Corrupted data"),
+            Self::InvalidMagic => write!(f, "invalid magic (expected KEX)"),
+            Self::UnsupportedVersion(v) => write!(f, "unsupported version: {v}"),
+            Self::TruncatedData => write!(f, "truncated data"),
+            Self::CorruptedData => write!(f, "corrupted data"),
         }
     }
 }
 
 impl std::error::Error for PersistenceError {}
 
-/// Serialize document to KEXD binary format.
+/// Serialize a document to the `.kex` binary format.
 pub fn serialize(doc: &Document) -> Vec<u8> {
-    let mut writer = ChunkWriter::new();
-
-    // File header
-    for b in MAGIC {
-        writer.write_byte(b);
-    }
-    writer.write_u32(FILE_VERSION);
-
-    // CORE chunk
-    writer.begin_chunk(*b"CORE", CORE_VERSION);
-
-    // GRPH sub-chunk
-    writer.begin_chunk(*b"GRPH", GRAPH_VERSION);
-    graph_codec::write(
-        &mut writer,
-        &doc.graph,
-        (doc.next_node_id, doc.next_port_id, doc.next_edge_id),
-    );
-    writer.end_chunk();
-
-    // DATA sub-chunk
-    writer.begin_chunk(*b"DATA", DATA_VERSION);
-    write_keyframes(&mut writer, &doc.keyframes, &doc.keyframe_ranges);
-    writer.write_hashmap_u64_f32(&doc.scalars);
-    writer.write_hashmap_u64_float3(&doc.vectors);
-    writer.write_hashmap_u64_i32(&doc.flags);
-    writer.end_chunk();
-
-    writer.end_chunk(); // End CORE
-
-    writer.into_bytes()
+    let mut buf = Vec::with_capacity(1024);
+    buf.extend_from_slice(&MAGIC);
+    buf.extend_from_slice(&VERSION.to_le_bytes());
+    write_chunk(&mut buf, TAG_GRPH, |out| write_graph(out, doc));
+    write_chunk(&mut buf, TAG_DATA, |out| write_data(out, doc));
+    buf
 }
 
-/// Deserialize document from KEXD binary format.
+/// Deserialize a document from the `.kex` binary format.
 pub fn deserialize(data: &[u8]) -> Result<Document, PersistenceError> {
-    let mut reader = ChunkReader::new(data);
+    let mut r = Reader::new(data);
 
-    // Read and validate magic
-    if reader.remaining() < 8 {
-        return Err(PersistenceError::TruncatedData);
-    }
-
-    let mut magic = [0u8; 4];
-    for byte in &mut magic {
-        *byte = reader.read_byte()?;
-    }
+    let magic = r.read_bytes(4)?;
     if magic != MAGIC {
         return Err(PersistenceError::InvalidMagic);
     }
 
-    let _file_version = reader.read_u32()?;
+    let version = r.read_u32()?;
+    if version != VERSION {
+        return Err(PersistenceError::UnsupportedVersion(version));
+    }
 
     let mut doc = Document::new();
 
-    // Read chunks
-    while reader.has_data() {
-        let header = match reader.try_read_header() {
-            Ok(h) => h,
-            Err(_) => break,
+    while r.has_data() {
+        let tag = {
+            let mut t = [0u8; 4];
+            t.copy_from_slice(r.read_bytes(4)?);
+            t
         };
+        let length = r.read_u32()? as usize;
+        let payload = r.read_bytes(length)?;
 
-        if &header.chunk_type == b"CORE" {
-            read_core_chunk(&mut reader, &mut doc, &header)?;
-            break;
-        } else {
-            reader.skip_chunk(&header);
+        match tag {
+            TAG_GRPH => read_graph(payload, &mut doc)?,
+            TAG_DATA => read_data(payload, &mut doc)?,
+            _ => {} // unknown chunk, skip
         }
     }
 
     Ok(doc)
 }
 
-fn read_core_chunk(
-    reader: &mut ChunkReader,
-    doc: &mut Document,
-    core_header: &ChunkHeader,
-) -> Result<(), PersistenceError> {
-    let end_pos = reader.position() + core_header.length as usize;
+// ---------------------------------------------------------------------------
+// Chunk encoders
+// ---------------------------------------------------------------------------
 
-    while reader.position() < end_pos {
-        let sub_header = match reader.try_read_header() {
-            Ok(h) => h,
-            Err(_) => break,
-        };
+fn write_chunk<F: FnOnce(&mut Vec<u8>)>(buf: &mut Vec<u8>, tag: [u8; 4], body: F) {
+    buf.extend_from_slice(&tag);
+    let len_pos = buf.len();
+    buf.extend_from_slice(&[0u8; 4]); // length placeholder
+    let body_start = buf.len();
+    body(buf);
+    let body_len = (buf.len() - body_start) as u32;
+    buf[len_pos..len_pos + 4].copy_from_slice(&body_len.to_le_bytes());
+}
 
-        if &sub_header.chunk_type == b"GRPH" {
-            let (graph, next_node, next_port, next_edge) = graph_codec::read(reader)?;
-            doc.graph = graph;
-            doc.next_node_id = next_node;
-            doc.next_port_id = next_port;
-            doc.next_edge_id = next_edge;
-        } else if &sub_header.chunk_type == b"DATA" {
-            read_keyframes(reader, &mut doc.keyframes, &mut doc.keyframe_ranges)?;
-            doc.scalars = reader.read_hashmap_u64_f32()?;
-            doc.vectors = reader.read_hashmap_u64_float3()?;
-            doc.flags = reader.read_hashmap_u64_i32()?;
-        } else {
-            reader.skip_chunk(&sub_header);
-        }
+fn write_graph(buf: &mut Vec<u8>, doc: &Document) {
+    let g = &doc.graph;
+
+    write_u32(buf, g.node_ids.len() as u32);
+    for i in 0..g.node_ids.len() {
+        write_u32(buf, g.node_ids[i]);
+        buf.push(g.node_types[i]);
+        write_i32(buf, g.node_input_count[i]);
+        write_i32(buf, g.node_output_count[i]);
     }
 
+    write_u32(buf, g.port_ids.len() as u32);
+    for i in 0..g.port_ids.len() {
+        write_u32(buf, g.port_ids[i]);
+        write_u32(buf, g.port_types[i]);
+        write_u32(buf, g.port_owners[i]);
+        buf.push(if g.port_is_input[i] { 1 } else { 0 });
+    }
+
+    write_u32(buf, g.edge_ids.len() as u32);
+    for i in 0..g.edge_ids.len() {
+        write_u32(buf, g.edge_ids[i]);
+        write_u32(buf, g.edge_sources[i]);
+        write_u32(buf, g.edge_targets[i]);
+    }
+
+    write_u32(buf, doc.next_node_id);
+    write_u32(buf, doc.next_port_id);
+    write_u32(buf, doc.next_edge_id);
+}
+
+fn write_data(buf: &mut Vec<u8>, doc: &Document) {
+    write_u32(buf, doc.keyframes.len() as u32);
+    for kf in &doc.keyframes {
+        write_f32(buf, kf.time);
+        write_f32(buf, kf.value);
+        buf.push(interp_to_byte(kf.in_interpolation));
+        buf.push(interp_to_byte(kf.out_interpolation));
+        write_f32(buf, kf.in_tangent);
+        write_f32(buf, kf.out_tangent);
+        write_f32(buf, kf.in_weight);
+        write_f32(buf, kf.out_weight);
+    }
+
+    write_u32(buf, doc.keyframe_ranges.len() as u32);
+    for (&key, &(start, length)) in &doc.keyframe_ranges {
+        write_u64(buf, key);
+        write_u32(buf, start as u32);
+        write_u32(buf, length as u32);
+    }
+
+    write_u32(buf, doc.scalars.len() as u32);
+    for (&key, &value) in &doc.scalars {
+        write_u64(buf, key);
+        write_f32(buf, value);
+    }
+
+    write_u32(buf, doc.vectors.len() as u32);
+    for (&key, &v) in &doc.vectors {
+        write_u64(buf, key);
+        write_f32(buf, v.x);
+        write_f32(buf, v.y);
+        write_f32(buf, v.z);
+    }
+
+    write_u32(buf, doc.flags.len() as u32);
+    for (&key, &value) in &doc.flags {
+        write_u64(buf, key);
+        write_i32(buf, value);
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Chunk decoders
+// ---------------------------------------------------------------------------
+
+fn read_graph(payload: &[u8], doc: &mut Document) -> Result<(), PersistenceError> {
+    let mut r = Reader::new(payload);
+
+    let node_count = r.read_u32()? as usize;
+    let mut node_ids = Vec::with_capacity(node_count);
+    let mut node_types = Vec::with_capacity(node_count);
+    let mut node_input_count = Vec::with_capacity(node_count);
+    let mut node_output_count = Vec::with_capacity(node_count);
+    for _ in 0..node_count {
+        node_ids.push(r.read_u32()?);
+        node_types.push(r.read_u8()?);
+        node_input_count.push(r.read_i32()?);
+        node_output_count.push(r.read_i32()?);
+    }
+
+    let port_count = r.read_u32()? as usize;
+    let mut port_ids = Vec::with_capacity(port_count);
+    let mut port_types = Vec::with_capacity(port_count);
+    let mut port_owners = Vec::with_capacity(port_count);
+    let mut port_is_input = Vec::with_capacity(port_count);
+    for _ in 0..port_count {
+        port_ids.push(r.read_u32()?);
+        port_types.push(r.read_u32()?);
+        port_owners.push(r.read_u32()?);
+        port_is_input.push(r.read_u8()? != 0);
+    }
+
+    let edge_count = r.read_u32()? as usize;
+    let mut edge_ids = Vec::with_capacity(edge_count);
+    let mut edge_sources = Vec::with_capacity(edge_count);
+    let mut edge_targets = Vec::with_capacity(edge_count);
+    for _ in 0..edge_count {
+        edge_ids.push(r.read_u32()?);
+        edge_sources.push(r.read_u32()?);
+        edge_targets.push(r.read_u32()?);
+    }
+
+    doc.next_node_id = r.read_u32()?;
+    doc.next_port_id = r.read_u32()?;
+    doc.next_edge_id = r.read_u32()?;
+
+    doc.graph = Graph::from_vecs(
+        node_ids,
+        node_types,
+        node_input_count,
+        node_output_count,
+        port_ids,
+        port_types,
+        port_owners,
+        port_is_input,
+        edge_ids,
+        edge_sources,
+        edge_targets,
+    );
     Ok(())
 }
 
-fn write_keyframes(
-    writer: &mut ChunkWriter,
-    keyframes: &[Keyframe],
-    ranges: &std::collections::HashMap<u64, (usize, usize)>,
-) {
-    writer.write_i32(keyframes.len() as i32);
-    for kf in keyframes {
-        writer.write_f32(kf.time);
-        writer.write_f32(kf.value);
-        writer.write_byte(interp_to_byte(kf.in_interpolation));
-        writer.write_byte(interp_to_byte(kf.out_interpolation));
-        writer.write_f32(kf.in_tangent);
-        writer.write_f32(kf.out_tangent);
-        writer.write_f32(kf.in_weight);
-        writer.write_f32(kf.out_weight);
-    }
+fn read_data(payload: &[u8], doc: &mut Document) -> Result<(), PersistenceError> {
+    let mut r = Reader::new(payload);
 
-    writer.write_i32(ranges.len() as i32);
-    for (&key, &(start, length)) in ranges {
-        writer.write_u64(key);
-        writer.write_i32(start as i32);
-        writer.write_i32(length as i32);
-    }
-}
-
-fn read_keyframes(
-    reader: &mut ChunkReader,
-    keyframes: &mut Vec<Keyframe>,
-    ranges: &mut std::collections::HashMap<u64, (usize, usize)>,
-) -> Result<(), PersistenceError> {
-    let keyframe_count = reader.read_i32()? as usize;
-    keyframes.reserve(keyframe_count);
-
+    let keyframe_count = r.read_u32()? as usize;
+    doc.keyframes = Vec::with_capacity(keyframe_count);
     for _ in 0..keyframe_count {
-        let time = reader.read_f32()?;
-        let value = reader.read_f32()?;
-        let in_interp = byte_to_interp(reader.read_byte()?);
-        let out_interp = byte_to_interp(reader.read_byte()?);
-        let in_tangent = reader.read_f32()?;
-        let out_tangent = reader.read_f32()?;
-        let in_weight = reader.read_f32()?;
-        let out_weight = reader.read_f32()?;
-
-        keyframes.push(Keyframe::new(
+        let time = r.read_f32()?;
+        let value = r.read_f32()?;
+        let in_interp = byte_to_interp(r.read_u8()?);
+        let out_interp = byte_to_interp(r.read_u8()?);
+        let in_tangent = r.read_f32()?;
+        let out_tangent = r.read_f32()?;
+        let in_weight = r.read_f32()?;
+        let out_weight = r.read_f32()?;
+        doc.keyframes.push(Keyframe::new(
             time,
             value,
             in_interp,
@@ -199,27 +270,132 @@ fn read_keyframes(
         ));
     }
 
-    let range_count = reader.read_i32()? as usize;
+    let range_count = r.read_u32()? as usize;
+    doc.keyframe_ranges = HashMap::with_capacity(range_count);
     for _ in 0..range_count {
-        let key = reader.read_u64()?;
-        let start = reader.read_i32()? as usize;
-        let length = reader.read_i32()? as usize;
-        ranges.insert(key, (start, length));
+        let key = r.read_u64()?;
+        let start = r.read_u32()? as usize;
+        let length = r.read_u32()? as usize;
+        doc.keyframe_ranges.insert(key, (start, length));
+    }
+
+    let scalar_count = r.read_u32()? as usize;
+    doc.scalars = HashMap::with_capacity(scalar_count);
+    for _ in 0..scalar_count {
+        let key = r.read_u64()?;
+        let value = r.read_f32()?;
+        doc.scalars.insert(key, value);
+    }
+
+    let vector_count = r.read_u32()? as usize;
+    doc.vectors = HashMap::with_capacity(vector_count);
+    for _ in 0..vector_count {
+        let key = r.read_u64()?;
+        let v = Float3::new(r.read_f32()?, r.read_f32()?, r.read_f32()?);
+        doc.vectors.insert(key, v);
+    }
+
+    let flag_count = r.read_u32()? as usize;
+    doc.flags = HashMap::with_capacity(flag_count);
+    for _ in 0..flag_count {
+        let key = r.read_u64()?;
+        let value = r.read_i32()?;
+        doc.flags.insert(key, value);
     }
 
     Ok(())
 }
 
-fn interp_to_byte(interp: InterpolationType) -> u8 {
-    match interp {
+// ---------------------------------------------------------------------------
+// Primitives
+// ---------------------------------------------------------------------------
+
+fn write_u32(buf: &mut Vec<u8>, v: u32) {
+    buf.extend_from_slice(&v.to_le_bytes());
+}
+
+fn write_i32(buf: &mut Vec<u8>, v: i32) {
+    buf.extend_from_slice(&v.to_le_bytes());
+}
+
+fn write_u64(buf: &mut Vec<u8>, v: u64) {
+    buf.extend_from_slice(&v.to_le_bytes());
+}
+
+fn write_f32(buf: &mut Vec<u8>, v: f32) {
+    buf.extend_from_slice(&v.to_le_bytes());
+}
+
+struct Reader<'a> {
+    data: &'a [u8],
+    pos: usize,
+}
+
+impl<'a> Reader<'a> {
+    fn new(data: &'a [u8]) -> Self {
+        Self { data, pos: 0 }
+    }
+
+    fn has_data(&self) -> bool {
+        self.pos < self.data.len()
+    }
+
+    fn read_bytes(&mut self, n: usize) -> Result<&'a [u8], PersistenceError> {
+        if self.pos + n > self.data.len() {
+            return Err(PersistenceError::TruncatedData);
+        }
+        let s = &self.data[self.pos..self.pos + n];
+        self.pos += n;
+        Ok(s)
+    }
+
+    fn read_u8(&mut self) -> Result<u8, PersistenceError> {
+        Ok(self.read_bytes(1)?[0])
+    }
+
+    fn read_u32(&mut self) -> Result<u32, PersistenceError> {
+        let bytes: [u8; 4] = self
+            .read_bytes(4)?
+            .try_into()
+            .map_err(|_| PersistenceError::CorruptedData)?;
+        Ok(u32::from_le_bytes(bytes))
+    }
+
+    fn read_i32(&mut self) -> Result<i32, PersistenceError> {
+        let bytes: [u8; 4] = self
+            .read_bytes(4)?
+            .try_into()
+            .map_err(|_| PersistenceError::CorruptedData)?;
+        Ok(i32::from_le_bytes(bytes))
+    }
+
+    fn read_u64(&mut self) -> Result<u64, PersistenceError> {
+        let bytes: [u8; 8] = self
+            .read_bytes(8)?
+            .try_into()
+            .map_err(|_| PersistenceError::CorruptedData)?;
+        Ok(u64::from_le_bytes(bytes))
+    }
+
+    fn read_f32(&mut self) -> Result<f32, PersistenceError> {
+        let bytes: [u8; 4] = self
+            .read_bytes(4)?
+            .try_into()
+            .map_err(|_| PersistenceError::CorruptedData)?;
+        Ok(f32::from_le_bytes(bytes))
+    }
+}
+
+fn interp_to_byte(i: InterpolationType) -> u8 {
+    match i {
         InterpolationType::Constant => 0,
         InterpolationType::Linear => 1,
         InterpolationType::Bezier => 2,
     }
 }
 
-fn byte_to_interp(byte: u8) -> InterpolationType {
-    match byte {
+fn byte_to_interp(b: u8) -> InterpolationType {
+    match b {
         0 => InterpolationType::Constant,
         1 => InterpolationType::Linear,
         _ => InterpolationType::Bezier,
@@ -230,13 +406,14 @@ fn byte_to_interp(byte: u8) -> InterpolationType {
 mod tests {
     use super::*;
     use crate::graph::{Graph, PortDataType, PortSpec};
+    use crate::nodes::NodeType;
     use crate::sim::Float3;
     use crate::track::input_key;
 
     fn make_test_document() -> Document {
         let graph = Graph::from_vecs(
             vec![1, 2],
-            vec![7, 2], // Anchor, Force
+            vec![NodeType::Anchor as u8, NodeType::Force as u8],
             vec![0, 1],
             vec![1, 2],
             vec![101, 201, 202],
@@ -258,25 +435,23 @@ mod tests {
         doc.next_port_id = 203;
         doc.next_edge_id = 302;
 
-        // Add some data
-        doc.scalars.insert(input_key(2, 0), 5.0); // Duration
+        doc.scalars.insert(input_key(2, 0), 5.0);
         doc.vectors
             .insert(input_key(1, 0), Float3::new(0.0, 10.0, 0.0));
-        doc.flags.insert(input_key(2, 240), 1); // Duration type
+        doc.flags.insert(input_key(2, 240), 1);
 
-        // Add keyframes
         doc.keyframes.push(Keyframe::simple(0.0, 0.0));
         doc.keyframes.push(Keyframe::simple(1.0, 1.0));
-        doc.keyframe_ranges.insert(input_key(2, 1), (0, 2)); // RollSpeed
+        doc.keyframe_ranges.insert(input_key(2, 1), (0, 2));
 
         doc
     }
 
     #[test]
-    fn serialize_deserialize_empty_document() {
+    fn round_trip_empty_document() {
         let doc = Document::new();
-        let data = serialize(&doc);
-        let loaded = deserialize(&data).unwrap();
+        let bytes = serialize(&doc);
+        let loaded = deserialize(&bytes).unwrap();
 
         assert_eq!(loaded.graph.node_count(), 0);
         assert!(loaded.scalars.is_empty());
@@ -286,48 +461,51 @@ mod tests {
     }
 
     #[test]
-    fn serialize_deserialize_full_document() {
+    fn round_trip_full_document() {
         let original = make_test_document();
-        let data = serialize(&original);
-        let loaded = deserialize(&data).unwrap();
+        let bytes = serialize(&original);
+        let loaded = deserialize(&bytes).unwrap();
 
-        // Graph
         assert_eq!(loaded.graph.node_ids, original.graph.node_ids);
         assert_eq!(loaded.graph.node_types, original.graph.node_types);
         assert_eq!(loaded.graph.port_ids, original.graph.port_ids);
         assert_eq!(loaded.graph.edge_ids, original.graph.edge_ids);
 
-        // Next IDs
         assert_eq!(loaded.next_node_id, original.next_node_id);
         assert_eq!(loaded.next_port_id, original.next_port_id);
         assert_eq!(loaded.next_edge_id, original.next_edge_id);
 
-        // Data maps
         assert_eq!(loaded.scalars.len(), original.scalars.len());
         assert_eq!(loaded.vectors.len(), original.vectors.len());
         assert_eq!(loaded.flags.len(), original.flags.len());
-
-        // Keyframes
         assert_eq!(loaded.keyframes.len(), original.keyframes.len());
         assert_eq!(loaded.keyframe_ranges.len(), original.keyframe_ranges.len());
     }
 
     #[test]
     fn magic_bytes_correct() {
-        let doc = Document::new();
-        let data = serialize(&doc);
-
-        assert!(data.len() >= 4);
-        assert_eq!(&data[0..4], b"KEXD");
+        let bytes = serialize(&Document::new());
+        assert_eq!(&bytes[0..4], b"KEX\0");
     }
 
     #[test]
     fn invalid_magic_returns_error() {
-        let mut data = serialize(&Document::new());
-        data[0] = b'X'; // Corrupt magic
+        let mut bytes = serialize(&Document::new());
+        bytes[0] = b'X';
+        assert!(matches!(
+            deserialize(&bytes),
+            Err(PersistenceError::InvalidMagic)
+        ));
+    }
 
-        let result = deserialize(&data);
-        assert!(matches!(result, Err(PersistenceError::InvalidMagic)));
+    #[test]
+    fn unsupported_version_returns_error() {
+        let mut bytes = serialize(&Document::new());
+        bytes[4..8].copy_from_slice(&999u32.to_le_bytes());
+        assert!(matches!(
+            deserialize(&bytes),
+            Err(PersistenceError::UnsupportedVersion(999))
+        ));
     }
 
     #[test]
@@ -336,251 +514,111 @@ mod tests {
         assert!(matches!(result, Err(PersistenceError::TruncatedData)));
     }
 
-    // Round-trip tests for _kexd files
-    fn load_test_file(name: &str) -> Vec<u8> {
-        let path = format!("test-data/{}.kex", name);
-        std::fs::read(&path).unwrap_or_else(|e| panic!("Failed to load {}: {}", path, e))
+    #[test]
+    fn skips_unknown_chunks() {
+        let mut bytes = serialize(&make_test_document());
+
+        // Inject an unknown chunk before the existing ones by reconstructing
+        // the file with header + unknown + original chunks.
+        let original = bytes.split_off(8); // 8 = header size
+        let unknown_payload = b"future data";
+        bytes.extend_from_slice(b"FUTR");
+        bytes.extend_from_slice(&(unknown_payload.len() as u32).to_le_bytes());
+        bytes.extend_from_slice(unknown_payload);
+        bytes.extend_from_slice(&original);
+
+        let loaded = deserialize(&bytes).expect("unknown chunks should be skipped");
+        assert_eq!(loaded.graph.node_count(), 2);
     }
 
-    fn assert_documents_equal(original: &Document, restored: &Document, context: &str) {
-        // Graph structure
-        assert_eq!(
-            original.graph.node_ids, restored.graph.node_ids,
-            "{}: node_ids mismatch",
-            context
-        );
-        assert_eq!(
-            original.graph.node_types, restored.graph.node_types,
-            "{}: node_types mismatch",
-            context
-        );
-        assert_eq!(
-            original.graph.port_ids, restored.graph.port_ids,
-            "{}: port_ids mismatch",
-            context
-        );
-        assert_eq!(
-            original.graph.edge_ids, restored.graph.edge_ids,
-            "{}: edge_ids mismatch",
-            context
-        );
+    fn load_fixture(name: &str) -> Vec<u8> {
+        let path = format!("test-data/{name}.kex");
+        std::fs::read(&path).unwrap_or_else(|e| panic!("read {path}: {e}"))
+    }
 
-        // Next IDs
-        assert_eq!(
-            original.next_node_id, restored.next_node_id,
-            "{}: next_node_id mismatch",
-            context
-        );
-        assert_eq!(
-            original.next_port_id, restored.next_port_id,
-            "{}: next_port_id mismatch",
-            context
-        );
-        assert_eq!(
-            original.next_edge_id, restored.next_edge_id,
-            "{}: next_edge_id mismatch",
-            context
-        );
+    fn assert_documents_equal(a: &Document, b: &Document, ctx: &str) {
+        assert_eq!(a.graph.node_ids, b.graph.node_ids, "{ctx}: node_ids");
+        assert_eq!(a.graph.node_types, b.graph.node_types, "{ctx}: node_types");
+        assert_eq!(a.graph.port_ids, b.graph.port_ids, "{ctx}: port_ids");
+        assert_eq!(a.graph.edge_ids, b.graph.edge_ids, "{ctx}: edge_ids");
 
-        // Data maps
-        assert_eq!(
-            original.scalars.len(),
-            restored.scalars.len(),
-            "{}: scalars count mismatch",
-            context
-        );
-        for (key, value) in &original.scalars {
-            let restored_value = restored
+        assert_eq!(a.next_node_id, b.next_node_id, "{ctx}: next_node_id");
+        assert_eq!(a.next_port_id, b.next_port_id, "{ctx}: next_port_id");
+        assert_eq!(a.next_edge_id, b.next_edge_id, "{ctx}: next_edge_id");
+
+        assert_eq!(a.scalars.len(), b.scalars.len(), "{ctx}: scalars len");
+        for (k, v) in &a.scalars {
+            let r = b
                 .scalars
-                .get(key)
-                .unwrap_or_else(|| panic!("{}: scalar key {} not found", context, key));
-            assert!(
-                (value - restored_value).abs() < 1e-6,
-                "{}: scalar {} mismatch: {} vs {}",
-                context,
-                key,
-                value,
-                restored_value
-            );
+                .get(k)
+                .unwrap_or_else(|| panic!("{ctx}: missing scalar {k}"));
+            assert!((v - r).abs() < 1e-6, "{ctx}: scalar {k}");
         }
 
+        assert_eq!(a.vectors.len(), b.vectors.len(), "{ctx}: vectors len");
+        assert_eq!(a.flags.len(), b.flags.len(), "{ctx}: flags len");
+        assert_eq!(a.keyframes.len(), b.keyframes.len(), "{ctx}: keyframes len");
         assert_eq!(
-            original.vectors.len(),
-            restored.vectors.len(),
-            "{}: vectors count mismatch",
-            context
-        );
-        for (key, value) in &original.vectors {
-            let restored_value = restored
-                .vectors
-                .get(key)
-                .unwrap_or_else(|| panic!("{}: vector key {} not found", context, key));
-            assert!(
-                (value.x - restored_value.x).abs() < 1e-6,
-                "{}: vector {}.x mismatch",
-                context,
-                key
-            );
-            assert!(
-                (value.y - restored_value.y).abs() < 1e-6,
-                "{}: vector {}.y mismatch",
-                context,
-                key
-            );
-            assert!(
-                (value.z - restored_value.z).abs() < 1e-6,
-                "{}: vector {}.z mismatch",
-                context,
-                key
-            );
-        }
-
-        assert_eq!(
-            original.flags.len(),
-            restored.flags.len(),
-            "{}: flags count mismatch",
-            context
-        );
-        for (key, value) in &original.flags {
-            let restored_value = restored
-                .flags
-                .get(key)
-                .unwrap_or_else(|| panic!("{}: flag key {} not found", context, key));
-            assert_eq!(
-                value, restored_value,
-                "{}: flag {} mismatch",
-                context, key
-            );
-        }
-
-        // Keyframes
-        assert_eq!(
-            original.keyframes.len(),
-            restored.keyframes.len(),
-            "{}: keyframes count mismatch",
-            context
-        );
-        assert_eq!(
-            original.keyframe_ranges.len(),
-            restored.keyframe_ranges.len(),
-            "{}: keyframe_ranges count mismatch",
-            context
+            a.keyframe_ranges.len(),
+            b.keyframe_ranges.len(),
+            "{ctx}: ranges len"
         );
     }
 
-    #[test]
-    fn circuit_kexd_roundtrip() {
-        let data = load_test_file("circuit_kexd");
-        let original = deserialize(&data).expect("Failed to deserialize circuit_kexd");
-
-        let serialized = serialize(&original);
-        let restored = deserialize(&serialized).expect("Failed to deserialize round-tripped data");
-
-        assert_documents_equal(&original, &restored, "circuit_kexd");
+    fn fixture_round_trip(name: &str) {
+        let bytes = load_fixture(name);
+        let original = deserialize(&bytes).expect(name);
+        let reserialized = serialize(&original);
+        let restored = deserialize(&reserialized).expect("round trip");
+        assert_documents_equal(&original, &restored, name);
     }
 
-    #[test]
-    fn switch_kexd_roundtrip() {
-        let data = load_test_file("switch_kexd");
-        let original = deserialize(&data).expect("Failed to deserialize switch_kexd");
-
-        let serialized = serialize(&original);
-        let restored = deserialize(&serialized).expect("Failed to deserialize round-tripped data");
-
-        assert_documents_equal(&original, &restored, "switch_kexd");
-    }
-
-    #[test]
-    fn all_types_kexd_roundtrip() {
-        let data = load_test_file("all_types_kexd");
-        let original = deserialize(&data).expect("Failed to deserialize all_types_kexd");
-
-        let serialized = serialize(&original);
-        let restored = deserialize(&serialized).expect("Failed to deserialize round-tripped data");
-
-        assert_documents_equal(&original, &restored, "all_types_kexd");
-    }
-
-    #[test]
-    fn shuttle_kexd_roundtrip() {
-        let data = load_test_file("shuttle_kexd");
-        let original = deserialize(&data).expect("Failed to deserialize shuttle_kexd");
-
-        let serialized = serialize(&original);
-        let restored = deserialize(&serialized).expect("Failed to deserialize round-tripped data");
-
-        assert_documents_equal(&original, &restored, "shuttle_kexd");
-    }
-
-    #[test]
-    fn circuit_kexd_builds_track() {
+    fn fixture_builds_track(name: &str) {
         use crate::track::evaluate_graph;
-
-        let data = load_test_file("circuit_kexd");
-        let doc = deserialize(&data).expect("Failed to deserialize circuit_kexd");
-
-        let result = evaluate_graph(&doc.as_view()).expect("circuit_kexd evaluation failed");
-        assert!(
-            !result.paths.is_empty(),
-            "circuit_kexd should produce track paths"
-        );
-        assert!(
-            !result.anchors.is_empty(),
-            "circuit_kexd should have anchors"
-        );
+        let bytes = load_fixture(name);
+        let doc = deserialize(&bytes).expect(name);
+        let result = evaluate_graph(&doc.as_view()).expect("evaluation");
+        assert!(!result.paths.is_empty(), "{name}: expected paths");
+        assert!(!result.anchors.is_empty(), "{name}: expected anchors");
     }
 
     #[test]
-    fn switch_kexd_builds_track() {
-        use crate::track::evaluate_graph;
-
-        let data = load_test_file("switch_kexd");
-        let doc = deserialize(&data).expect("Failed to deserialize switch_kexd");
-
-        let result = evaluate_graph(&doc.as_view()).expect("switch_kexd evaluation failed");
-        assert!(
-            !result.paths.is_empty(),
-            "switch_kexd should produce track paths"
-        );
-        assert!(
-            !result.anchors.is_empty(),
-            "switch_kexd should have anchors"
-        );
+    fn circuit_round_trip() {
+        fixture_round_trip("circuit");
     }
 
     #[test]
-    fn all_types_kexd_builds_track() {
-        use crate::track::evaluate_graph;
-
-        let data = load_test_file("all_types_kexd");
-        let doc = deserialize(&data).expect("Failed to deserialize all_types_kexd");
-
-        let result = evaluate_graph(&doc.as_view()).expect("all_types_kexd evaluation failed");
-        assert!(
-            !result.paths.is_empty(),
-            "all_types_kexd should produce track paths"
-        );
-        assert!(
-            !result.anchors.is_empty(),
-            "all_types_kexd should have anchors"
-        );
+    fn switch_round_trip() {
+        fixture_round_trip("switch");
     }
 
     #[test]
-    fn shuttle_kexd_builds_track() {
-        use crate::track::evaluate_graph;
+    fn all_types_round_trip() {
+        fixture_round_trip("all_types");
+    }
 
-        let data = load_test_file("shuttle_kexd");
-        let doc = deserialize(&data).expect("Failed to deserialize shuttle_kexd");
+    #[test]
+    fn shuttle_round_trip() {
+        fixture_round_trip("shuttle");
+    }
 
-        let result = evaluate_graph(&doc.as_view()).expect("shuttle_kexd evaluation failed");
-        assert!(
-            !result.paths.is_empty(),
-            "shuttle_kexd should produce track paths"
-        );
-        assert!(
-            !result.anchors.is_empty(),
-            "shuttle_kexd should have anchors"
-        );
+    #[test]
+    fn circuit_builds_track() {
+        fixture_builds_track("circuit");
+    }
+
+    #[test]
+    fn switch_builds_track() {
+        fixture_builds_track("switch");
+    }
+
+    #[test]
+    fn all_types_builds_track() {
+        fixture_builds_track("all_types");
+    }
+
+    #[test]
+    fn shuttle_builds_track() {
+        fixture_builds_track("shuttle");
     }
 }

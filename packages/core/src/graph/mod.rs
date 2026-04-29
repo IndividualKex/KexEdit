@@ -1,20 +1,20 @@
 //! Directed Acyclic Graph (DAG) structure and traversal.
 //!
-//! This module provides a graph data structure optimized for node-based evaluation
-//! with Structure-of-Arrays (SoA) layout for efficient traversal.
+//! Structure-of-Arrays (SoA) layout for efficient node-based evaluation.
 
 mod port_spec;
 mod traversal;
 
 pub use port_spec::{PortDataType, PortSpec};
 
+use crate::nodes::NodeType;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct Graph {
     // Node SoA
     pub node_ids: Vec<u32>,
-    pub node_types: Vec<u32>,
+    pub node_types: Vec<u8>,
     pub node_input_count: Vec<i32>,
     pub node_output_count: Vec<i32>,
 
@@ -53,73 +53,11 @@ impl Graph {
         }
     }
 
-    /// Construct from raw pointers (FFI entry point).
-    ///
-    /// # Safety
-    /// All pointers must be valid and point to arrays of the specified lengths.
-    #[allow(clippy::too_many_arguments)]
-    pub unsafe fn from_arrays(
-        node_ids: *const u32,
-        node_types: *const u32,
-        node_input_count: *const i32,
-        node_output_count: *const i32,
-        node_count: usize,
-        port_ids: *const u32,
-        port_types: *const u32,
-        port_owners: *const u32,
-        port_is_input: *const bool,
-        port_count: usize,
-        edge_ids: *const u32,
-        edge_sources: *const u32,
-        edge_targets: *const u32,
-        edge_count: usize,
-    ) -> Self {
-        let node_ids = std::slice::from_raw_parts(node_ids, node_count).to_vec();
-        let node_types = std::slice::from_raw_parts(node_types, node_count).to_vec();
-        let node_input_count = std::slice::from_raw_parts(node_input_count, node_count).to_vec();
-        let node_output_count = std::slice::from_raw_parts(node_output_count, node_count).to_vec();
-
-        let port_ids = std::slice::from_raw_parts(port_ids, port_count).to_vec();
-        let port_types = std::slice::from_raw_parts(port_types, port_count).to_vec();
-        let port_owners = std::slice::from_raw_parts(port_owners, port_count).to_vec();
-        let port_is_input = std::slice::from_raw_parts(port_is_input, port_count).to_vec();
-
-        let edge_ids = std::slice::from_raw_parts(edge_ids, edge_count).to_vec();
-        let edge_sources = std::slice::from_raw_parts(edge_sources, edge_count).to_vec();
-        let edge_targets = std::slice::from_raw_parts(edge_targets, edge_count).to_vec();
-
-        let mut node_index = HashMap::with_capacity(node_count);
-        for (i, &id) in node_ids.iter().enumerate() {
-            node_index.insert(id, i);
-        }
-
-        let mut port_index = HashMap::with_capacity(port_count);
-        for (i, &id) in port_ids.iter().enumerate() {
-            port_index.insert(id, i);
-        }
-
-        Self {
-            node_ids,
-            node_types,
-            node_input_count,
-            node_output_count,
-            port_ids,
-            port_types,
-            port_owners,
-            port_is_input,
-            edge_ids,
-            edge_sources,
-            edge_targets,
-            node_index,
-            port_index,
-        }
-    }
-
     /// Construct from owned vectors.
     #[allow(clippy::too_many_arguments)]
     pub fn from_vecs(
         node_ids: Vec<u32>,
-        node_types: Vec<u32>,
+        node_types: Vec<u8>,
         node_input_count: Vec<i32>,
         node_output_count: Vec<i32>,
         port_ids: Vec<u32>,
@@ -175,8 +113,9 @@ impl Graph {
         self.node_index.get(&node_id).copied()
     }
 
-    pub fn get_node_type(&self, node_id: u32) -> Option<u32> {
-        self.get_node_index(node_id).map(|i| self.node_types[i])
+    pub fn get_node_type(&self, node_id: u32) -> Option<NodeType> {
+        let i = self.get_node_index(node_id)?;
+        NodeType::from_u8(self.node_types[i])
     }
 
     // --- Port lookup ---
@@ -224,8 +163,7 @@ impl Graph {
         self.get_output_ports(node_id).get(index).copied()
     }
 
-    /// Get input port by type specification.
-    /// Finds the nth port matching the data type.
+    /// Get input port by type specification. Finds the nth port matching the data type.
     pub fn try_get_input_by_spec(
         &self,
         node_id: u32,
@@ -249,8 +187,7 @@ impl Graph {
         None
     }
 
-    /// Get output port by type specification.
-    /// Finds the nth port matching the data type.
+    /// Get output port by type specification. Finds the nth port matching the data type.
     pub fn try_get_output_by_spec(
         &self,
         node_id: u32,
@@ -328,26 +265,24 @@ mod tests {
     use super::*;
 
     fn make_simple_graph() -> Graph {
-        // Simple graph: Node1 -> Node2
-        // Node1 (id=1, type=7/Anchor) has output port 101
-        // Node2 (id=2, type=2/Force) has input port 201, output port 202
-        // Edge 301 connects port 101 -> port 201
+        // Anchor (id=1) -> Force (id=2). Anchor outputs port 101; Force has input
+        // port 201 and output port 202. Edge 301 connects 101 -> 201.
         Graph::from_vecs(
-            vec![1, 2],          // node_ids
-            vec![7, 2],          // node_types (Anchor, Force)
-            vec![0, 1],          // node_input_count
-            vec![1, 2],          // node_output_count
-            vec![101, 201, 202], // port_ids
+            vec![1, 2],
+            vec![NodeType::Anchor as u8, NodeType::Force as u8],
+            vec![0, 1],
+            vec![1, 2],
+            vec![101, 201, 202],
             vec![
-                PortSpec::new(PortDataType::Anchor, 0).to_encoded(), // 101: Anchor output
-                PortSpec::new(PortDataType::Anchor, 0).to_encoded(), // 201: Anchor input
-                PortSpec::new(PortDataType::Path, 0).to_encoded(),   // 202: Path output
+                PortSpec::new(PortDataType::Anchor, 0).to_encoded(),
+                PortSpec::new(PortDataType::Anchor, 0).to_encoded(),
+                PortSpec::new(PortDataType::Path, 0).to_encoded(),
             ],
-            vec![1, 2, 2],            // port_owners
-            vec![false, true, false], // port_is_input
-            vec![301],                // edge_ids
-            vec![101],                // edge_sources
-            vec![201],                // edge_targets
+            vec![1, 2, 2],
+            vec![false, true, false],
+            vec![301],
+            vec![101],
+            vec![201],
         )
     }
 
@@ -370,8 +305,8 @@ mod tests {
     #[test]
     fn get_node_type_returns_correct_type() {
         let graph = make_simple_graph();
-        assert_eq!(graph.get_node_type(1), Some(7)); // Anchor
-        assert_eq!(graph.get_node_type(2), Some(2)); // Force
+        assert_eq!(graph.get_node_type(1), Some(NodeType::Anchor));
+        assert_eq!(graph.get_node_type(2), Some(NodeType::Force));
     }
 
     #[test]

@@ -6,7 +6,6 @@ use crate::track::DocumentView;
 use std::collections::HashMap;
 
 /// Owned document data for serialization/deserialization.
-/// Unlike `DocumentView`, this owns all data.
 #[derive(Debug, Clone)]
 pub struct Document {
     pub graph: Graph,

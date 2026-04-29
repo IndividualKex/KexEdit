@@ -51,7 +51,6 @@ pub enum PropertyId {
     HeartOffset = 6,
     Friction = 7,
     Resistance = 8,
-    TrackStyle = 9,
 }
 
 impl PropertyId {
@@ -66,7 +65,6 @@ impl PropertyId {
             6 => Some(PropertyId::HeartOffset),
             7 => Some(PropertyId::Friction),
             8 => Some(PropertyId::Resistance),
-            9 => Some(PropertyId::TrackStyle),
             _ => None,
         }
     }
@@ -86,10 +84,46 @@ pub enum NodeType {
 }
 
 impl NodeType {
-    const COUNT: usize = 8;
+    pub const COUNT: usize = 8;
 
     const fn as_index(self) -> usize {
         self as usize
+    }
+
+    pub const fn from_u8(value: u8) -> Option<Self> {
+        match value {
+            0 => Some(NodeType::Force),
+            1 => Some(NodeType::Geometric),
+            2 => Some(NodeType::Curved),
+            3 => Some(NodeType::CopyPath),
+            4 => Some(NodeType::Bridge),
+            5 => Some(NodeType::Anchor),
+            6 => Some(NodeType::Reverse),
+            7 => Some(NodeType::ReversePath),
+            _ => None,
+        }
+    }
+}
+
+/// Per-node metadata slot keys.
+///
+/// Stored in the same `(node_id << 8) | slot` map as port inputs, with values
+/// in the high range so they don't collide with port-index slots (0..=13).
+#[repr(u8)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum NodeMeta {
+    Duration = 240,
+    DurationType = 241,
+    Driven = 242,
+    Steering = 243,
+    Priority = 244,
+    Facing = 245,
+    Render = 246,
+}
+
+impl NodeMeta {
+    pub const fn as_u8(self) -> u8 {
+        self as u8
     }
 }
 
@@ -200,7 +234,7 @@ const OUTPUT_PORTS: [[u8; 2]; NodeType::COUNT] = [
     [PortId::Path as u8, INVALID_PORT],
 ];
 
-const PROPERTY_COUNTS: [usize; NodeType::COUNT] = [7, 7, 5, 4, 5, 0, 0, 0];
+const PROPERTY_COUNTS: [usize; NodeType::COUNT] = [7, 7, 5, 4, 4, 0, 0, 0];
 
 const PROPERTIES: [[u8; 7]; NodeType::COUNT] = [
     [
@@ -244,7 +278,7 @@ const PROPERTIES: [[u8; 7]; NodeType::COUNT] = [
         PropertyId::HeartOffset as u8,
         PropertyId::Friction as u8,
         PropertyId::Resistance as u8,
-        PropertyId::TrackStyle as u8,
+        INVALID_PROPERTY,
         INVALID_PROPERTY,
         INVALID_PROPERTY,
     ],

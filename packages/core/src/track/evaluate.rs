@@ -1,8 +1,8 @@
-use super::dispatch::{evaluate_node, map_csharp_node_type};
+use super::dispatch::evaluate_node;
 use super::document::DocumentView;
 use super::result::EvaluationResult;
 
-/// Evaluates all nodes in the graph in topological order.
+/// Evaluate all nodes in topological order.
 pub fn evaluate_graph(doc: &DocumentView) -> Option<EvaluationResult> {
     let node_count = doc.graph.node_count();
     if node_count == 0 {
@@ -13,14 +13,9 @@ pub fn evaluate_graph(doc: &DocumentView) -> Option<EvaluationResult> {
     let mut result = EvaluationResult::new(node_count);
 
     for &node_id in &sorted_nodes {
-        let Some(node_type_raw) = doc.graph.get_node_type(node_id) else {
+        let Some(node_type) = doc.graph.get_node_type(node_id) else {
             continue;
         };
-
-        let Some(node_type) = map_csharp_node_type(node_type_raw) else {
-            continue;
-        };
-
         evaluate_node(doc, node_id, node_type, &mut result);
     }
 
@@ -31,6 +26,7 @@ pub fn evaluate_graph(doc: &DocumentView) -> Option<EvaluationResult> {
 mod tests {
     use super::*;
     use crate::graph::Graph;
+    use crate::nodes::NodeType;
     use crate::sim::Float3;
     use std::collections::HashMap;
 
@@ -77,8 +73,7 @@ mod tests {
         assert!(result.paths.is_empty());
     }
 
-    /// Test that simulates the shuttle track cosmetic section chain:
-    /// Anchor(6) -> Geo(1) -> Reverse(7) -> CopyPath_cosmetic(8) -> Geo_cosmetic(3)
+    /// Anchor(6) -> Geo(1) -> Reverse(7) -> CopyPath(8) -> Geo_cosmetic(3)
     ///                    \-> ReversePath(14) -^
     ///
     /// CopyPath needs:
@@ -89,35 +84,29 @@ mod tests {
         use crate::graph::PortDataType;
         use crate::graph::PortSpec;
 
-        // C# node type values (from dispatch.rs map_csharp_node_type):
-        // Anchor=7, Geometric=3, Reverse=8, ReversePath=9, CopyPath=5
-
-        // Build a minimal graph that represents the cosmetic chain:
-        // Node 6: Anchor
-        // Node 1: Geometric (depends on Anchor)
-        // Node 7: Reverse (depends on Geo anchor)
-        // Node 14: ReversePath (depends on Geo path)
-        // Node 8: CopyPath cosmetic (depends on Reverse anchor + ReversePath path)
-        // Node 3: Geometric cosmetic (depends on CopyPath anchor)
-
         let node_ids = vec![6, 1, 7, 14, 8, 3];
-        let node_types = vec![7, 3, 8, 9, 5, 3]; // Anchor, Geo, Reverse, ReversePath, CopyPath, Geo
-        let node_input_counts = vec![8, 2, 1, 1, 4, 2]; // Schema input counts
-        let node_output_counts = vec![1, 2, 1, 1, 2, 2]; // Schema output counts
+        let node_types = vec![
+            NodeType::Anchor as u8,
+            NodeType::Geometric as u8,
+            NodeType::Reverse as u8,
+            NodeType::ReversePath as u8,
+            NodeType::CopyPath as u8,
+            NodeType::Geometric as u8,
+        ];
+        let node_input_counts = vec![8, 2, 1, 1, 4, 2];
+        let node_output_counts = vec![1, 2, 1, 1, 2, 2];
 
-        // Port spec encoding: (data_type << 8) | local_index
         fn encode_port(data_type: PortDataType, local_index: u8) -> u32 {
             PortSpec::new(data_type, local_index).to_encoded()
         }
 
-        // Ports - create them in node order, inputs then outputs per node
         let mut port_ids = Vec::new();
         let mut port_types = Vec::new();
         let mut port_owners = Vec::new();
         let mut port_is_input = Vec::new();
         let mut next_port_id = 100u32;
 
-        // Node 6 (Anchor): 8 inputs (Position, Roll, Pitch, Yaw, Velocity, Heart, Friction, Resistance), 1 output (Anchor)
+        // Node 6 (Anchor): 8 inputs, 1 output
         for i in 0..8 {
             port_ids.push(next_port_id);
             port_types.push(encode_port(
@@ -147,7 +136,7 @@ mod tests {
         port_is_input.push(true);
         next_port_id += 1;
 
-        port_ids.push(next_port_id); // Duration input
+        port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Scalar, 0));
         port_owners.push(1);
         port_is_input.push(true);
@@ -167,7 +156,7 @@ mod tests {
         port_is_input.push(false);
         next_port_id += 1;
 
-        // Node 7 (Reverse): 1 input (Anchor), 1 output (Anchor)
+        // Node 7 (Reverse): 1 input, 1 output
         let reverse7_anchor_in = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
@@ -182,7 +171,7 @@ mod tests {
         port_is_input.push(false);
         next_port_id += 1;
 
-        // Node 14 (ReversePath): 1 input (Path), 1 output (Path)
+        // Node 14 (ReversePath): 1 input, 1 output
         let rpath14_path_in = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Path, 0));
@@ -197,7 +186,7 @@ mod tests {
         port_is_input.push(false);
         next_port_id += 1;
 
-        // Node 8 (CopyPath): 4 inputs (Anchor, Path, Start, End), 2 outputs (Anchor, Path)
+        // Node 8 (CopyPath): 4 inputs, 2 outputs
         let copypath8_anchor_in = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
@@ -212,13 +201,13 @@ mod tests {
         port_is_input.push(true);
         next_port_id += 1;
 
-        port_ids.push(next_port_id); // Start input
+        port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Scalar, 0));
         port_owners.push(8);
         port_is_input.push(true);
         next_port_id += 1;
 
-        port_ids.push(next_port_id); // End input
+        port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Scalar, 1));
         port_owners.push(8);
         port_is_input.push(true);
@@ -231,13 +220,13 @@ mod tests {
         port_is_input.push(false);
         next_port_id += 1;
 
-        port_ids.push(next_port_id); // Path output
+        port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Path, 0));
         port_owners.push(8);
         port_is_input.push(false);
         next_port_id += 1;
 
-        // Node 3 (Geo cosmetic): 2 inputs (Anchor, Duration), 2 outputs (Anchor, Path)
+        // Node 3 (Geo cosmetic): 2 inputs, 2 outputs
         let geo3_anchor_in = next_port_id;
         port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
@@ -245,31 +234,24 @@ mod tests {
         port_is_input.push(true);
         next_port_id += 1;
 
-        port_ids.push(next_port_id); // Duration input
+        port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Scalar, 0));
         port_owners.push(3);
         port_is_input.push(true);
         next_port_id += 1;
 
-        port_ids.push(next_port_id); // Anchor output
+        port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Anchor, 0));
         port_owners.push(3);
         port_is_input.push(false);
         next_port_id += 1;
 
-        port_ids.push(next_port_id); // Path output
+        port_ids.push(next_port_id);
         port_types.push(encode_port(PortDataType::Path, 0));
         port_owners.push(3);
         port_is_input.push(false);
         let _ = next_port_id;
 
-        // Edges:
-        // 1. Anchor(6) -> Geo(1): anchor6_out -> geo1_anchor_in
-        // 2. Geo(1) -> Reverse(7): geo1_anchor_out -> reverse7_anchor_in
-        // 3. Geo(1) -> ReversePath(14): geo1_path_out -> rpath14_path_in
-        // 4. Reverse(7) -> CopyPath(8): reverse7_anchor_out -> copypath8_anchor_in
-        // 5. ReversePath(14) -> CopyPath(8): rpath14_path_out -> copypath8_path_in
-        // 6. CopyPath(8) -> Geo(3): copypath8_anchor_out -> geo3_anchor_in
         let edge_ids = vec![1, 2, 3, 4, 5, 6];
         let edge_sources = vec![
             anchor6_out,
@@ -306,7 +288,6 @@ mod tests {
         use crate::track::document::input_key;
         scalars.insert(input_key(1, 1), 1.0f32);
         scalars.insert(input_key(3, 1), 1.0f32);
-        // Set CopyPath Start/End (ports 2 and 3)
         scalars.insert(input_key(8, 2), 0.0f32); // Start = 0
         scalars.insert(input_key(8, 3), 1.0f32); // End = 1
 
@@ -316,45 +297,16 @@ mod tests {
 
         let doc = make_empty_doc(&graph, &scalars, &vectors, &flags, &keyframe_ranges);
 
-        // Evaluate the graph
         let result = evaluate_graph(&doc);
         assert!(result.is_some(), "evaluate_graph should succeed");
         let result = result.unwrap();
 
-        // Check that all nodes got evaluated
-        // Anchor node (6) should produce an anchor
-        assert!(
-            result.anchors.contains_key(&6),
-            "Anchor node 6 should produce an anchor"
-        );
-
-        // Geo node (1) should produce an anchor and a path
-        assert!(
-            result.anchors.contains_key(&1),
-            "Geo node 1 should produce an anchor"
-        );
-        assert!(
-            result.paths.contains_key(&1),
-            "Geo node 1 should produce a path"
-        );
-
-        // Reverse node (7) should produce an anchor (no path)
-        assert!(
-            result.anchors.contains_key(&7),
-            "Reverse node 7 should produce an anchor"
-        );
-
-        // ReversePath node (14) should produce an anchor and a path
-        assert!(
-            result.anchors.contains_key(&14),
-            "ReversePath node 14 should produce an anchor"
-        );
-        assert!(
-            result.paths.contains_key(&14),
-            "ReversePath node 14 should produce a path"
-        );
-
-        // CopyPath cosmetic (8) should produce an anchor and a path
+        assert!(result.anchors.contains_key(&6));
+        assert!(result.anchors.contains_key(&1));
+        assert!(result.paths.contains_key(&1));
+        assert!(result.anchors.contains_key(&7));
+        assert!(result.anchors.contains_key(&14));
+        assert!(result.paths.contains_key(&14));
         assert!(
             result.anchors.contains_key(&8),
             "CopyPath node 8 should produce an anchor. anchors: {:?}",
@@ -365,15 +317,7 @@ mod tests {
             "CopyPath node 8 should produce a path. paths: {:?}",
             result.paths.keys().collect::<Vec<_>>()
         );
-
-        // Geo cosmetic (3) should produce an anchor and a path
-        assert!(
-            result.anchors.contains_key(&3),
-            "Geo cosmetic node 3 should produce an anchor"
-        );
-        assert!(
-            result.paths.contains_key(&3),
-            "Geo cosmetic node 3 should produce a path"
-        );
+        assert!(result.anchors.contains_key(&3));
+        assert!(result.paths.contains_key(&3));
     }
 }

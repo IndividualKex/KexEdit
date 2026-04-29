@@ -22,27 +22,16 @@ use kexengine::track::{
 };
 use serde::Deserialize;
 
-const FIXTURES: &[&str] = &[
-    "circuit_kexd",
-    "switch_kexd",
-    "all_types_kexd",
-    "shuttle_kexd",
-];
+const FIXTURES: &[&str] = &["circuit", "switch", "all_types", "shuttle"];
 
 /// Arc-length spacing for spline resampling. Chosen as 1 m: typical track
 /// units, fine enough to expose interpolation drift, coarse enough to keep
 /// snapshot files manageable.
 const RESAMPLE_RESOLUTION: f32 = 1.0;
 
-/// Style index passed to `build_sections` for sections that don't override
-/// it. The FFI takes this from the caller, so 0 is just our test's choice;
-/// snapshots cover both the "default" and override paths since fixtures use
-/// both.
-const DEFAULT_STYLE_INDEX: u8 = 0;
-
 /// Schema marker. Bump when leaf array layouts change so old snapshots fail
 /// loudly instead of silently mis-mapping fields.
-const FORMAT_VERSION: &str = "1";
+const FORMAT_VERSION: &str = "2";
 
 /// Number of f32 fields in a Point leaf record (see `point_fields()`).
 const POINT_LEN: usize = 23;
@@ -115,11 +104,10 @@ const SECTION_FIELDS: &[&str] = &[
     "prev_flags",
     "spline_start_index",
     "spline_end_index",
-    "style_index",
 ];
-const SECTION_LEN: usize = 12;
+const SECTION_LEN: usize = 11;
 /// Indices into a section array that are integers (exact equality, not f32 tol).
-const SECTION_INT_IDX: &[usize] = &[0, 1, 4, 5, 6, 7, 8, 9, 10, 11];
+const SECTION_INT_IDX: &[usize] = &[0, 1, 4, 5, 6, 7, 8, 9, 10];
 
 const SPLINE_FIELDS: &[&str] = &[
     "arc",
@@ -183,7 +171,7 @@ fn build_snapshot(name: &str) -> TrajectorySnapshot {
     let (section_node_ids, node_to_section) =
         collect_sections(&sorted, view.graph, &result.paths);
     let (_section_points, mut sections) =
-        build_sections(&section_node_ids, &result.paths, &view, DEFAULT_STYLE_INDEX);
+        build_sections(&section_node_ids, &result.paths, &view);
     compute_continuations(&section_node_ids, &node_to_section, &mut sections, &view);
     let traversal_order = build_traversal_order(&section_node_ids, &sections, &view);
 
@@ -260,22 +248,22 @@ fn check_fixture(name: &str) {
 
 #[test]
 fn circuit_snapshot_matches() {
-    check_fixture("circuit_kexd");
+    check_fixture("circuit");
 }
 
 #[test]
 fn switch_snapshot_matches() {
-    check_fixture("switch_kexd");
+    check_fixture("switch");
 }
 
 #[test]
 fn all_types_snapshot_matches() {
-    check_fixture("all_types_kexd");
+    check_fixture("all_types");
 }
 
 #[test]
 fn shuttle_snapshot_matches() {
-    check_fixture("shuttle_kexd");
+    check_fixture("shuttle");
 }
 
 #[test]
@@ -364,7 +352,6 @@ fn section_to_array(s: &Section) -> Vec<f64> {
         s.prev.flags as f64,
         s.spline_start_index as f64,
         s.spline_end_index as f64,
-        s.style_index as f64,
     ];
     debug_assert_eq!(v.len(), SECTION_LEN);
     v

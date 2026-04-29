@@ -117,7 +117,7 @@ impl BridgeNode {
 
             let curr_frame = Frame::new(direction, normal, lateral);
             let curr_spine_pos = curr_frame.spine_position(position, heart_offset_val);
-            // Use current heart_offset_val for both (matches Unity)
+            // Both endpoints use the current heart_offset_val.
             let prev_spine_pos = prev
                 .frame()
                 .spine_position(prev.heart_position, heart_offset_val);

@@ -7,7 +7,7 @@ from pathlib import Path
 import bpy
 
 from .coords import blender_to_kex_position, blender_to_kex_angles
-from .ffi import KexEngine, KexError, build_from_kexd, is_library_available
+from .ffi import KexEngine, KexError, build_from_bytes, is_library_available
 from .types import Keyframe
 from .curve import create_track_from_sections, update_track_from_sections
 from .fcurve import extract_keyframes_for_node, get_animated_property_names
@@ -197,23 +197,23 @@ class KEXEDIT_OT_generate_simple_track(bpy.types.Operator):
 
 
 class KEXEDIT_OT_load_test_file(bpy.types.Operator):
-    """Load and build a test kexd file."""
+    """Load and build a test `.kex` file."""
 
     bl_idname = "kexedit.load_test_file"
     bl_label = "Load Test File"
-    bl_description = "Load a test kexd file and generate track"
+    bl_description = "Load a test .kex file and generate track"
     bl_options = {'REGISTER', 'UNDO'}
 
     file_name: bpy.props.EnumProperty(
         name="File",
         description="Test file to load",
         items=[
-            ('shuttle_kexd', "Shuttle", "Shuttle coaster with rollback"),
-            ('circuit_kexd', "Circuit", "Complete circuit track"),
-            ('switch_kexd', "Switch", "Track with switch/branch"),
-            ('all_types_kexd', "All Types", "Track demonstrating all node types"),
+            ('shuttle', "Shuttle", "Shuttle coaster with rollback"),
+            ('circuit', "Circuit", "Complete circuit track"),
+            ('switch', "Switch", "Track with switch/branch"),
+            ('all_types', "All Types", "Track demonstrating all node types"),
         ],
-        default='shuttle_kexd',
+        default='shuttle',
     )
 
     @classmethod
@@ -233,10 +233,9 @@ class KEXEDIT_OT_load_test_file(bpy.types.Operator):
 
         try:
             data = file_path.read_bytes()
-            result = build_from_kexd(data, resolution=0.5)
+            result = build_from_bytes(data, resolution=0.5)
 
-            # Create curve with name based on file
-            name = self.file_name.replace('_kexd', '').title()
+            name = self.file_name.title()
             # Use section-aware curve creation to avoid false connections
             curve_obj = create_track_from_sections(
                 result.spline_points,
@@ -276,7 +275,7 @@ class KEXEDIT_OT_load_shuttle(bpy.types.Operator):
         return is_library_available()
 
     def execute(self, context):
-        return _load_test_file(self, context, "shuttle_kexd", "Shuttle")
+        return _load_test_file(self, context, "shuttle", "Shuttle")
 
 
 class KEXEDIT_OT_load_circuit(bpy.types.Operator):
@@ -292,7 +291,7 @@ class KEXEDIT_OT_load_circuit(bpy.types.Operator):
         return is_library_available()
 
     def execute(self, context):
-        return _load_test_file(self, context, "circuit_kexd", "Circuit")
+        return _load_test_file(self, context, "circuit", "Circuit")
 
 
 class KEXEDIT_OT_load_switch(bpy.types.Operator):
@@ -308,7 +307,7 @@ class KEXEDIT_OT_load_switch(bpy.types.Operator):
         return is_library_available()
 
     def execute(self, context):
-        return _load_test_file(self, context, "switch_kexd", "Switch")
+        return _load_test_file(self, context, "switch", "Switch")
 
 
 class KEXEDIT_OT_load_all_types(bpy.types.Operator):
@@ -324,7 +323,7 @@ class KEXEDIT_OT_load_all_types(bpy.types.Operator):
         return is_library_available()
 
     def execute(self, context):
-        return _load_test_file(self, context, "all_types_kexd", "AllTypes")
+        return _load_test_file(self, context, "all_types", "AllTypes")
 
 
 def _load_test_file(op, context, file_name: str, display_name: str):
@@ -338,7 +337,7 @@ def _load_test_file(op, context, file_name: str, display_name: str):
 
     try:
         data = file_path.read_bytes()
-        result = build_from_kexd(data, resolution=0.5)
+        result = build_from_bytes(data, resolution=0.5)
 
         # Use section-aware curve creation to avoid false connections
         curve_obj = create_track_from_sections(

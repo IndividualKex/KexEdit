@@ -1,73 +1,59 @@
-use crate::nodes::{DurationType, IterationConfig, NodeType, PropertyId};
+use crate::nodes::{DurationType, IterationConfig, NodeMeta, NodeType, PropertyId};
 use crate::sim::{Float3, Point};
 
 use super::document::DocumentView;
 use super::result::EvaluationResult;
 
-// Port constants matching C# node definitions
+// Per-node-type input port indices (ordinals within the node's input port list).
 
 pub mod anchor_ports {
-    pub const POSITION: i32 = 0;
-    pub const ROLL: i32 = 1;
-    pub const PITCH: i32 = 2;
-    pub const YAW: i32 = 3;
-    pub const VELOCITY: i32 = 4;
-    pub const HEART: i32 = 5;
-    pub const FRICTION: i32 = 6;
-    pub const RESISTANCE: i32 = 7;
+    pub const POSITION: u8 = 0;
+    pub const ROLL: u8 = 1;
+    pub const PITCH: u8 = 2;
+    pub const YAW: u8 = 3;
+    pub const VELOCITY: u8 = 4;
+    pub const HEART: u8 = 5;
+    pub const FRICTION: u8 = 6;
+    pub const RESISTANCE: u8 = 7;
 }
 
 pub mod force_ports {
-    pub const ANCHOR: i32 = 0;
+    pub const ANCHOR: u8 = 0;
 }
 
 pub mod geometric_ports {
-    pub const ANCHOR: i32 = 0;
+    pub const ANCHOR: u8 = 0;
 }
 
 pub mod curved_ports {
-    pub const ANCHOR: i32 = 0;
-    pub const RADIUS: i32 = 1;
-    pub const ARC: i32 = 2;
-    pub const AXIS: i32 = 3;
-    pub const LEAD_IN: i32 = 4;
-    pub const LEAD_OUT: i32 = 5;
+    pub const ANCHOR: u8 = 0;
+    pub const RADIUS: u8 = 1;
+    pub const ARC: u8 = 2;
+    pub const AXIS: u8 = 3;
+    pub const LEAD_IN: u8 = 4;
+    pub const LEAD_OUT: u8 = 5;
 }
 
 pub mod bridge_ports {
-    pub const ANCHOR: i32 = 0;
-    pub const TARGET: i32 = 1;
-    pub const OUT_WEIGHT: i32 = 2;
-    pub const IN_WEIGHT: i32 = 3;
+    pub const ANCHOR: u8 = 0;
+    pub const TARGET: u8 = 1;
+    pub const OUT_WEIGHT: u8 = 2;
+    pub const IN_WEIGHT: u8 = 3;
 }
 
 pub mod copy_path_ports {
-    pub const ANCHOR: i32 = 0;
-    pub const PATH: i32 = 1;
-    pub const START: i32 = 2;
-    pub const END: i32 = 3;
+    pub const ANCHOR: u8 = 0;
+    pub const PATH: u8 = 1;
+    pub const START: u8 = 2;
+    pub const END: u8 = 3;
 }
 
 pub mod reverse_ports {
-    pub const ANCHOR: i32 = 0;
+    pub const ANCHOR: u8 = 0;
 }
 
 pub mod reverse_path_ports {
-    pub const PATH: i32 = 0;
-}
-
-/// NodeMeta constants matching C# Document.NodeMeta
-pub mod node_meta {
-    pub const DURATION: i32 = 248;
-    pub const DURATION_TYPE: i32 = 250;
-    pub const DRIVEN: i32 = 253;
-    pub const STEERING: i32 = 252;
-
-    // Section-related metadata
-    pub const PRIORITY: i32 = 249;
-    pub const FACING: i32 = 251; // 1 = forward (default), -1 = reversed
-    pub const RENDER: i32 = 254; // 0 = rendered (default), 1 = hidden
-    pub const OVERRIDE_TRACK_STYLE: i32 = 243;
+    pub const PATH: u8 = 0;
 }
 
 /// Default physics constants
@@ -75,23 +61,6 @@ pub const DEFAULT_VELOCITY: f32 = 10.0;
 pub const DEFAULT_HEART_OFFSET: f32 = 1.1;
 pub const DEFAULT_FRICTION: f32 = 0.021;
 pub const DEFAULT_RESISTANCE: f32 = 2e-5;
-
-/// Maps C# NodeType enum values to Rust NodeType.
-/// C#: Scalar=0, Vector=1, Force=2, Geometric=3, Curved=4, CopyPath=5, Bridge=6, Anchor=7, Reverse=8, ReversePath=9
-/// Rust: Force=0, Geometric=1, Curved=2, CopyPath=3, Bridge=4, Anchor=5, Reverse=6, ReversePath=7
-pub fn map_csharp_node_type(csharp_type: u32) -> Option<NodeType> {
-    match csharp_type {
-        2 => Some(NodeType::Force),
-        3 => Some(NodeType::Geometric),
-        4 => Some(NodeType::Curved),
-        5 => Some(NodeType::CopyPath),
-        6 => Some(NodeType::Bridge),
-        7 => Some(NodeType::Anchor),
-        8 => Some(NodeType::Reverse),
-        9 => Some(NodeType::ReversePath),
-        _ => None, // Scalar=0, Vector=1 are data nodes, not evaluated
-    }
-}
 
 /// Evaluates a single node and stores results in the EvaluationResult.
 pub fn evaluate_node(
@@ -113,7 +82,6 @@ pub fn evaluate_node(
 }
 
 /// Helper to get input anchor from connected predecessor node by port index.
-/// Traverses the graph edge from the node's input port to find the source node's anchor.
 fn try_get_anchor(
     doc: &DocumentView,
     result: &EvaluationResult,
@@ -124,13 +92,11 @@ fn try_get_anchor(
     get_anchor_from_port(doc, result, port_id)
 }
 
-/// Helper to get anchor from a specific port ID.
 fn get_anchor_from_port(
     doc: &DocumentView,
     result: &EvaluationResult,
     port_id: u32,
 ) -> Option<Point> {
-    // Find edge targeting this port
     for i in 0..doc.graph.edge_ids.len() {
         if doc.graph.edge_targets[i] != port_id {
             continue;
@@ -143,7 +109,6 @@ fn get_anchor_from_port(
     None
 }
 
-/// Helper to get input path from connected predecessor node.
 fn try_get_path<'a>(
     doc: &DocumentView,
     result: &'a EvaluationResult,
@@ -187,13 +152,13 @@ fn evaluate_force(doc: &DocumentView, node_id: u32, result: &mut EvaluationResul
         return;
     };
 
-    let duration = doc.get_scalar(node_id, node_meta::DURATION, 1.0);
-    let duration_type = if doc.get_flag(node_id, node_meta::DURATION_TYPE) == 1 {
+    let duration = doc.get_meta_scalar(node_id, NodeMeta::Duration, 1.0);
+    let duration_type = if doc.get_meta_flag(node_id, NodeMeta::DurationType) == 1 {
         DurationType::Distance
     } else {
         DurationType::Time
     };
-    let driven = doc.get_flag(node_id, node_meta::DRIVEN) == 1;
+    let driven = doc.get_meta_flag(node_id, NodeMeta::Driven) == 1;
 
     let roll_speed = doc.get_keyframes(node_id, PropertyId::RollSpeed as u8);
     let normal_force = doc.get_keyframes(node_id, PropertyId::NormalForce as u8);
@@ -232,14 +197,14 @@ fn evaluate_geometric(doc: &DocumentView, node_id: u32, result: &mut EvaluationR
         return;
     };
 
-    let duration = doc.get_scalar(node_id, node_meta::DURATION, 1.0);
-    let duration_type = if doc.get_flag(node_id, node_meta::DURATION_TYPE) == 1 {
+    let duration = doc.get_meta_scalar(node_id, NodeMeta::Duration, 1.0);
+    let duration_type = if doc.get_meta_flag(node_id, NodeMeta::DurationType) == 1 {
         DurationType::Distance
     } else {
         DurationType::Time
     };
-    let driven = doc.get_flag(node_id, node_meta::DRIVEN) == 1;
-    let steering = doc.get_flag(node_id, node_meta::STEERING) == 1;
+    let driven = doc.get_meta_flag(node_id, NodeMeta::Driven) == 1;
+    let steering = doc.get_meta_flag(node_id, NodeMeta::Steering) == 1;
 
     let roll_speed = doc.get_keyframes(node_id, PropertyId::RollSpeed as u8);
     let pitch_speed = doc.get_keyframes(node_id, PropertyId::PitchSpeed as u8);
@@ -284,7 +249,7 @@ fn evaluate_curved(doc: &DocumentView, node_id: u32, result: &mut EvaluationResu
     let axis = doc.get_scalar(node_id, curved_ports::AXIS, 0.0);
     let lead_in = doc.get_scalar(node_id, curved_ports::LEAD_IN, 0.0);
     let lead_out = doc.get_scalar(node_id, curved_ports::LEAD_OUT, 0.0);
-    let driven = doc.get_flag(node_id, node_meta::DRIVEN) == 1;
+    let driven = doc.get_meta_flag(node_id, NodeMeta::Driven) == 1;
 
     let roll_speed = doc.get_keyframes(node_id, PropertyId::RollSpeed as u8);
     let driven_velocity = doc.get_keyframes(node_id, PropertyId::DrivenVelocity as u8);
@@ -329,7 +294,7 @@ fn evaluate_bridge(doc: &DocumentView, node_id: u32, result: &mut EvaluationResu
 
     let in_weight = doc.get_scalar(node_id, bridge_ports::IN_WEIGHT, 0.5);
     let out_weight = doc.get_scalar(node_id, bridge_ports::OUT_WEIGHT, 0.5);
-    let driven = doc.get_flag(node_id, node_meta::DRIVEN) == 1;
+    let driven = doc.get_meta_flag(node_id, NodeMeta::Driven) == 1;
 
     let driven_velocity = doc.get_keyframes(node_id, PropertyId::DrivenVelocity as u8);
     let heart_offset = doc.get_keyframes(node_id, PropertyId::HeartOffset as u8);
@@ -370,7 +335,7 @@ fn evaluate_copy_path(doc: &DocumentView, node_id: u32, result: &mut EvaluationR
 
     let start = doc.get_scalar(node_id, copy_path_ports::START, -1.0);
     let end = doc.get_scalar(node_id, copy_path_ports::END, -1.0);
-    let driven = doc.get_flag(node_id, node_meta::DRIVEN) == 1;
+    let driven = doc.get_meta_flag(node_id, NodeMeta::Driven) == 1;
 
     let driven_velocity = doc.get_keyframes(node_id, PropertyId::DrivenVelocity as u8);
     let heart_offset = doc.get_keyframes(node_id, PropertyId::HeartOffset as u8);

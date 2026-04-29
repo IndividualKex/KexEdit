@@ -1,15 +1,15 @@
 use crate::graph::Graph;
+use crate::nodes::NodeMeta;
 use crate::sim::{Float3, Keyframe};
 use std::collections::HashMap;
 
-/// Key encoding for scalar/vector/flag lookups.
-/// Matches C# Document.InputKey: (nodeId << 8) | inputIndex
-pub fn input_key(node_id: u32, input_index: i32) -> u64 {
-    ((node_id as u64) << 8) | ((input_index as u8) as u64)
+/// Encode a node-slot key. `slot` is either a port-input ordinal (0..=N for
+/// the node's input ports) or a `NodeMeta` value (240..=247).
+pub fn input_key(node_id: u32, slot: u8) -> u64 {
+    ((node_id as u64) << 8) | (slot as u64)
 }
 
-/// Key encoding for keyframe lookups.
-/// Matches C# KeyframeStore.MakeKey: (nodeId << 8) | propertyId
+/// Encode a (node_id, property_id) keyframe-range key.
 pub fn keyframe_key(node_id: u32, property_id: u8) -> u64 {
     ((node_id as u64) << 8) | (property_id as u64)
 }
@@ -20,9 +20,9 @@ pub struct DocumentView<'a> {
     pub scalars: &'a HashMap<u64, f32>,
     pub vectors: &'a HashMap<u64, Float3>,
     pub flags: &'a HashMap<u64, i32>,
-    /// Flat keyframe storage
+    /// Flat keyframe storage.
     pub keyframes: &'a [Keyframe],
-    /// Maps (node_id << 8 | property_id) -> (start_index, length) in keyframes array
+    /// Maps `(node_id << 8) | property_id` -> `(start_index, length)` in `keyframes`.
     pub keyframe_ranges: &'a HashMap<u64, (usize, usize)>,
 }
 
@@ -45,19 +45,27 @@ impl<'a> DocumentView<'a> {
         }
     }
 
-    pub fn get_scalar(&self, node_id: u32, input_index: i32, default: f32) -> f32 {
-        let key = input_key(node_id, input_index);
+    pub fn get_scalar(&self, node_id: u32, slot: u8, default: f32) -> f32 {
+        let key = input_key(node_id, slot);
         self.scalars.get(&key).copied().unwrap_or(default)
     }
 
-    pub fn get_vector(&self, node_id: u32, input_index: i32, default: Float3) -> Float3 {
-        let key = input_key(node_id, input_index);
+    pub fn get_vector(&self, node_id: u32, slot: u8, default: Float3) -> Float3 {
+        let key = input_key(node_id, slot);
         self.vectors.get(&key).copied().unwrap_or(default)
     }
 
-    pub fn get_flag(&self, node_id: u32, property_index: i32) -> i32 {
-        let key = input_key(node_id, property_index);
+    pub fn get_flag(&self, node_id: u32, slot: u8) -> i32 {
+        let key = input_key(node_id, slot);
         self.flags.get(&key).copied().unwrap_or(0)
+    }
+
+    pub fn get_meta_scalar(&self, node_id: u32, meta: NodeMeta, default: f32) -> f32 {
+        self.get_scalar(node_id, meta.as_u8(), default)
+    }
+
+    pub fn get_meta_flag(&self, node_id: u32, meta: NodeMeta) -> i32 {
+        self.get_flag(node_id, meta.as_u8())
     }
 
     pub fn get_keyframes(&self, node_id: u32, property_id: u8) -> &[Keyframe] {
@@ -169,7 +177,7 @@ mod tests {
             Keyframe::simple(2.0, 2.0),
         ];
         let mut keyframe_ranges = HashMap::new();
-        keyframe_ranges.insert(keyframe_key(1, 0), (0, 2)); // First 2 keyframes
+        keyframe_ranges.insert(keyframe_key(1, 0), (0, 2));
 
         let doc = DocumentView::new(
             &graph,

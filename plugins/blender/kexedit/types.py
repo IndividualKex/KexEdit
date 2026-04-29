@@ -1,7 +1,7 @@
-"""Core data types matching kexengine Rust FFI structs.
+"""ctypes structures mirroring the kexengine FFI ABI.
 
-These are ctypes Structure definitions that match the C-compatible
-Rust structs exactly. Field order and sizes must match.
+Field order and sizes mirror the Rust `#[repr(C)]` structs in
+`packages/core/src/ffi/mod.rs`. Keep them in sync.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from typing import Sequence
 
 
 class Float3(ctypes.Structure):
-    """3D vector matching Rust Float3."""
+    """3D vector — mirrors Rust Float3."""
 
     _fields_ = [
         ("x", ctypes.c_float),
@@ -39,7 +39,7 @@ class Float3(ctypes.Structure):
 
 
 class InterpolationType(IntEnum):
-    """Keyframe interpolation type matching Rust enum."""
+    """Keyframe interpolation type — mirrors Rust enum."""
 
     CONSTANT = 0
     LINEAR = 1
@@ -47,7 +47,7 @@ class InterpolationType(IntEnum):
 
 
 class Keyframe(ctypes.Structure):
-    """Animation keyframe matching Rust Keyframe."""
+    """Animation keyframe — mirrors Rust Keyframe."""
 
     _fields_ = [
         ("time", ctypes.c_float),
@@ -96,7 +96,7 @@ class Keyframe(ctypes.Structure):
 
 
 class Point(ctypes.Structure):
-    """Track simulation point matching Rust Point."""
+    """Track simulation point — mirrors Rust Point."""
 
     _fields_ = [
         ("heart_position", Float3),
@@ -132,7 +132,7 @@ class Point(ctypes.Structure):
 
 
 class SplinePoint(ctypes.Structure):
-    """Resampled spline point matching Rust SplinePoint."""
+    """Resampled spline point — mirrors Rust SplinePoint."""
 
     _fields_ = [
         ("arc", ctypes.c_float),
@@ -150,7 +150,7 @@ class SplinePoint(ctypes.Structure):
 
 
 class SectionLink(ctypes.Structure):
-    """Link to another section matching Rust SectionLink."""
+    """Link to another section — mirrors Rust SectionLink."""
 
     FLAG_AT_START = 0x01
     FLAG_FLIP = 0x02
@@ -171,7 +171,7 @@ class SectionLink(ctypes.Structure):
 
 
 class Section(ctypes.Structure):
-    """Track section matching Rust Section."""
+    """Track section — mirrors Rust Section."""
 
     FLAG_REVERSED = 0x01
     FLAG_RENDERED = 0x02
@@ -186,7 +186,6 @@ class Section(ctypes.Structure):
         ("prev", SectionLink),
         ("spline_start_index", ctypes.c_int32),
         ("spline_end_index", ctypes.c_int32),
-        ("style_index", ctypes.c_uint8),
     ]
 
     def is_valid(self) -> bool:
@@ -206,13 +205,13 @@ class Section(ctypes.Structure):
 
 
 class KexDocument(ctypes.Structure):
-    """FFI input document matching Rust KexDocument."""
+    """FFI input document — mirrors Rust KexDocument."""
 
     _fields_ = [
         # Graph - nodes
         ("node_ids", ctypes.POINTER(ctypes.c_uint32)),
         ("node_count", ctypes.c_size_t),
-        ("node_types", ctypes.POINTER(ctypes.c_uint32)),
+        ("node_types", ctypes.POINTER(ctypes.c_uint8)),
         ("node_input_counts", ctypes.POINTER(ctypes.c_int32)),
         ("node_output_counts", ctypes.POINTER(ctypes.c_int32)),
         # Graph - ports
@@ -249,7 +248,7 @@ class KexDocument(ctypes.Structure):
 
 
 class KexOutput(ctypes.Structure):
-    """FFI output buffers matching Rust KexOutput."""
+    """FFI output buffers — mirrors Rust KexOutput."""
 
     _fields_ = [
         # Raw simulation points
@@ -277,26 +276,24 @@ class KexOutput(ctypes.Structure):
     ]
 
 
-# --- Node types (matching C# enum values used in kexengine) ---
+# --- Node types (Rust enum order; see packages/core/src/nodes/schema.rs) ---
 
 
 class NodeType(IntEnum):
-    """Node type IDs matching kexengine conventions."""
+    """Node type IDs — mirrors Rust `NodeType`."""
 
-    SCALAR = 0
-    VECTOR = 1
-    FORCE = 2
-    GEOMETRIC = 3
-    CURVED = 4
-    COPY_PATH = 5
-    BRIDGE = 6
-    ANCHOR = 7
-    REVERSE = 8
-    REVERSE_PATH = 9
+    FORCE = 0
+    GEOMETRIC = 1
+    CURVED = 2
+    COPY_PATH = 3
+    BRIDGE = 4
+    ANCHOR = 5
+    REVERSE = 6
+    REVERSE_PATH = 7
 
 
 class PortDataType(IntEnum):
-    """Port data types matching kexengine."""
+    """Port data types — mirrors Rust `PortDataType`."""
 
     SCALAR = 0
     VECTOR = 1
@@ -304,12 +301,28 @@ class PortDataType(IntEnum):
     PATH = 3
 
 
+class NodeMeta(IntEnum):
+    """Per-node metadata slots — mirrors Rust `NodeMeta`.
+
+    Stored in the same `(node_id << 8) | slot` map as port inputs, with
+    values in the high range so they don't collide with port indices.
+    """
+
+    DURATION = 240
+    DURATION_TYPE = 241
+    DRIVEN = 242
+    STEERING = 243
+    PRIORITY = 244
+    FACING = 245
+    RENDER = 246
+
+
 # --- Helper for encoding keys ---
 
 
-def input_key(node_id: int, input_index: int) -> int:
-    """Encode a node input key as (node_id << 8) | input_index."""
-    return (node_id << 8) | (input_index & 0xFF)
+def input_key(node_id: int, slot: int) -> int:
+    """Encode a `(node_id << 8) | slot` key. `slot` is a port index or NodeMeta."""
+    return (node_id << 8) | (slot & 0xFF)
 
 
 def port_spec(data_type: PortDataType, local_index: int) -> int:

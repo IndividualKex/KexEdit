@@ -121,12 +121,13 @@ impl Graph {
 mod tests {
     use super::*;
     use crate::graph::{PortDataType, PortSpec};
+    use crate::nodes::NodeType;
 
     fn make_linear_chain() -> Graph {
         // Linear chain: A -> B -> C
         Graph::from_vecs(
             vec![1, 2, 3],            // node_ids
-            vec![7, 2, 2],            // node_types
+            vec![NodeType::Anchor as u8, NodeType::Force as u8, NodeType::Force as u8],
             vec![0, 1, 1],            // node_input_count
             vec![1, 1, 0],            // node_output_count
             vec![101, 201, 202, 301], // port_ids
@@ -148,7 +149,12 @@ mod tests {
         // Diamond: A -> B, A -> C, B -> D, C -> D
         Graph::from_vecs(
             vec![1, 2, 3, 4], // node_ids: A, B, C, D
-            vec![7, 2, 2, 2], // node_types
+            vec![
+                NodeType::Anchor as u8,
+                NodeType::Force as u8,
+                NodeType::Force as u8,
+                NodeType::Force as u8,
+            ],
             vec![0, 1, 1, 2], // node_input_count
             vec![2, 1, 1, 0], // node_output_count
             vec![
@@ -179,7 +185,7 @@ mod tests {
         // Cycle: A -> B -> A (simple 2-node cycle)
         Graph::from_vecs(
             vec![1, 2],               // node_ids
-            vec![2, 2],               // node_types
+            vec![NodeType::Force as u8, NodeType::Force as u8],
             vec![1, 1],               // node_input_count
             vec![1, 1],               // node_output_count
             vec![101, 102, 201, 202], // port_ids

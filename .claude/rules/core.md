@@ -16,7 +16,7 @@ Graph uses parallel Vecs (positions, node types, properties stored as separate v
 
 ## Node dispatch
 
-Each node type: file in `nodes/`, entry in `dispatch.rs`, port metadata via `*_ports()`. New nodes follow exactly this pattern.
+Each node type: file in `nodes/`, entry in `dispatch.rs`, port indices in a `*_ports` module (`pub const POSITION: u8 = 0`), per-node-type metadata via the `NodeMeta` enum. New nodes follow this pattern.
 
 ## Testing
 

@@ -18,6 +18,7 @@ from .types import (
     Keyframe,
     KexDocument,
     KexOutput,
+    NodeMeta,
     NodeType,
     Point,
     PortDataType,
@@ -85,12 +86,11 @@ def _load_library() -> Optional[ctypes.CDLL]:
         lib.kex_build.argtypes = [
             ctypes.POINTER(KexDocument),  # doc
             ctypes.c_float,  # resolution
-            ctypes.c_int,  # default_style_index
             ctypes.POINTER(KexOutput),  # output
         ]
         lib.kex_build.restype = ctypes.c_int
 
-        # kex_load - load kexd data into a handle
+        # kex_load - load .kex bytes into an opaque handle
         lib.kex_load.argtypes = [
             ctypes.POINTER(ctypes.c_uint8),  # data
             ctypes.c_size_t,  # data_len
@@ -113,7 +113,7 @@ def _load_library() -> Optional[ctypes.CDLL]:
             KexDocumentHandle,
             # Graph - nodes
             ctypes.POINTER(ctypes.c_uint32),  # node_ids
-            ctypes.POINTER(ctypes.c_uint32),  # node_types
+            ctypes.POINTER(ctypes.c_uint8),  # node_types
             ctypes.POINTER(ctypes.c_int32),  # node_input_counts
             ctypes.POINTER(ctypes.c_int32),  # node_output_counts
             # Graph - ports
@@ -383,10 +383,10 @@ class KexEngine:
         if source_node in self._node_anchor_output:
             self._add_edge(self._node_anchor_output[source_node], anchor_in)
 
-        # Set properties (using meta indices from Document.cs)
-        self._set_scalar(node_id, 248, duration)  # Duration at meta index 248
-        self._set_scalar(node_id, 249, priority)  # Priority at meta index 249
-        self._set_flag(node_id, 254, 0 if rendered else 1)  # Render flag
+        # Per-node metadata (NodeMeta slots).
+        self._set_scalar(node_id, NodeMeta.DURATION, duration)
+        self._set_scalar(node_id, NodeMeta.PRIORITY, priority)
+        self._set_flag(node_id, NodeMeta.RENDER, 0 if rendered else 1)
 
         return node_id
 
@@ -418,10 +418,9 @@ class KexEngine:
         if source_node in self._node_anchor_output:
             self._add_edge(self._node_anchor_output[source_node], anchor_in)
 
-        # Set properties
-        self._set_scalar(node_id, 248, duration)
-        self._set_scalar(node_id, 249, priority)
-        self._set_flag(node_id, 254, 0 if rendered else 1)
+        self._set_scalar(node_id, NodeMeta.DURATION, duration)
+        self._set_scalar(node_id, NodeMeta.PRIORITY, priority)
+        self._set_flag(node_id, NodeMeta.RENDER, 0 if rendered else 1)
 
         return node_id
 
@@ -443,7 +442,6 @@ class KexEngine:
             6 = HeartOffset
             7 = Friction
             8 = Resistance
-            9 = TrackStyle
         """
         if not keyframes:
             return
@@ -458,7 +456,6 @@ class KexEngine:
     def build(
         self,
         resolution: float = 0.5,
-        default_style_index: int = 0,
         points_capacity: int = DEFAULT_POINTS_CAPACITY,
         sections_capacity: int = DEFAULT_SECTIONS_CAPACITY,
         traversal_capacity: int = DEFAULT_TRAVERSAL_CAPACITY,
@@ -515,7 +512,6 @@ class KexEngine:
         result_code = lib.kex_build(
             ctypes.byref(doc),
             ctypes.c_float(resolution),
-            ctypes.c_int(default_style_index),
             ctypes.byref(output),
         )
 
@@ -554,7 +550,7 @@ class KexEngine:
         """Build the KexDocument structure for FFI."""
         # Convert lists to ctypes arrays
         node_ids = (ctypes.c_uint32 * len(self._node_ids))(*self._node_ids)
-        node_types = (ctypes.c_uint32 * len(self._node_types))(*self._node_types)
+        node_types = (ctypes.c_uint8 * len(self._node_types))(*self._node_types)
         node_input_counts = (ctypes.c_int32 * len(self._node_input_counts))(
             *self._node_input_counts
         )
@@ -628,7 +624,7 @@ class KexEngine:
         return KexDocument(
             node_ids=ctypes.cast(node_ids, ctypes.POINTER(ctypes.c_uint32)),
             node_count=len(self._node_ids),
-            node_types=ctypes.cast(node_types, ctypes.POINTER(ctypes.c_uint32)),
+            node_types=ctypes.cast(node_types, ctypes.POINTER(ctypes.c_uint8)),
             node_input_counts=ctypes.cast(
                 node_input_counts, ctypes.POINTER(ctypes.c_int32)
             ),
@@ -692,21 +688,20 @@ class KexEngine:
         self._node_path_output.clear()
 
     @classmethod
-    def from_kexd(cls, data: bytes) -> "KexEngine":
-        """Load a KexEngine from kexd binary data.
+    def from_bytes(cls, data: bytes) -> "KexEngine":
+        """Load a KexEngine from `.kex` binary data.
 
         Args:
-            data: Raw bytes from a .kex file (kexd format)
+            data: Raw bytes from a `.kex` file.
 
         Returns:
-            A KexEngine populated with the loaded document data
+            A KexEngine populated with the loaded document.
 
         Raises:
-            KexError: If loading fails
+            KexError: If loading fails.
         """
         lib = get_library()
 
-        # Load the data into a handle
         data_arr = (ctypes.c_uint8 * len(data))(*data)
         handle = lib.kex_load(
             ctypes.cast(data_arr, ctypes.POINTER(ctypes.c_uint8)),
@@ -714,7 +709,7 @@ class KexEngine:
         )
 
         if not handle:
-            raise KexError("Failed to load kexd data - invalid format or empty file")
+            raise KexError("Failed to load .kex data — invalid format or empty file")
 
         try:
             # Get counts
@@ -725,7 +720,7 @@ class KexEngine:
 
             # Allocate buffers
             node_ids = (ctypes.c_uint32 * counts.node_count)()
-            node_types = (ctypes.c_uint32 * counts.node_count)()
+            node_types = (ctypes.c_uint8 * counts.node_count)()
             node_input_counts = (ctypes.c_int32 * counts.node_count)()
             node_output_counts = (ctypes.c_int32 * counts.node_count)()
 
@@ -756,7 +751,7 @@ class KexEngine:
             result = lib.kex_load_copy_data(
                 handle,
                 ctypes.cast(node_ids, ctypes.POINTER(ctypes.c_uint32)),
-                ctypes.cast(node_types, ctypes.POINTER(ctypes.c_uint32)),
+                ctypes.cast(node_types, ctypes.POINTER(ctypes.c_uint8)),
                 ctypes.cast(node_input_counts, ctypes.POINTER(ctypes.c_int32)),
                 ctypes.cast(node_output_counts, ctypes.POINTER(ctypes.c_int32)),
                 ctypes.cast(port_ids, ctypes.POINTER(ctypes.c_uint32)),
@@ -819,23 +814,18 @@ class KexEngine:
             lib.kex_load_free(handle)
 
 
-def build_from_kexd(
-    data: bytes,
-    resolution: float = 0.5,
-    default_style_index: int = 0,
-) -> BuildResult:
-    """Load a kexd file and build the track in one call.
+def build_from_bytes(data: bytes, resolution: float = 0.5) -> BuildResult:
+    """Load a `.kex` file and build the track in one call.
 
     Args:
-        data: Raw bytes from a .kex file (kexd format)
-        resolution: Spline resolution in meters
-        default_style_index: Default track style
+        data: Raw bytes from a `.kex` file.
+        resolution: Spline resolution in meters.
 
     Returns:
-        BuildResult with track data
+        BuildResult with track data.
 
     Raises:
-        KexError: If loading or building fails
+        KexError: If loading or building fails.
     """
-    engine = KexEngine.from_kexd(data)
-    return engine.build(resolution=resolution, default_style_index=default_style_index)
+    engine = KexEngine.from_bytes(data)
+    return engine.build(resolution=resolution)

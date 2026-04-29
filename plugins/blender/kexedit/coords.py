@@ -1,6 +1,6 @@
 """Coordinate system conversion between kexengine and Blender.
 
-kexengine (Unity conventions):
+kexengine:
     - Y-up, left-handed
     - X = right, Y = up, Z = forward
     - Angles in radians

@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
 use crate::graph::{Graph, PortDataType};
-use crate::nodes::PropertyId;
+use crate::nodes::{NodeMeta, NodeType};
 use crate::sim::Point;
 
-use super::dispatch::node_meta;
 use super::document::DocumentView;
 
 /// Link to another section with connection metadata.
@@ -60,7 +59,6 @@ pub struct Section {
     pub prev: SectionLink,
     pub spline_start_index: i32,
     pub spline_end_index: i32,
-    pub style_index: u8,
 }
 
 impl Section {
@@ -78,7 +76,6 @@ impl Section {
             prev: SectionLink::NONE,
             spline_start_index: -1,
             spline_end_index: -1,
-            style_index: 0,
         }
     }
 
@@ -109,17 +106,18 @@ impl Default for Section {
     }
 }
 
-// C# node types that produce sections
-const SECTION_PRODUCING_TYPES: [u32; 5] = [
-    2, // Force
-    3, // Geometric
-    4, // Curved
-    5, // CopyPath
-    6, // Bridge
-];
+fn produces_section(node_type: NodeType) -> bool {
+    matches!(
+        node_type,
+        NodeType::Force
+            | NodeType::Geometric
+            | NodeType::Curved
+            | NodeType::CopyPath
+            | NodeType::Bridge
+    )
+}
 
 /// Collect section-producing nodes from the topologically sorted list.
-/// Returns (section_nodes, node_to_section map).
 pub fn collect_sections(
     sorted: &[u32],
     graph: &Graph,
@@ -133,7 +131,7 @@ pub fn collect_sections(
             continue;
         };
 
-        if !SECTION_PRODUCING_TYPES.contains(&node_type) {
+        if !produces_section(node_type) {
             continue;
         }
 
@@ -150,12 +148,10 @@ pub fn collect_sections(
 }
 
 /// Build sections from section nodes, accumulating points.
-/// Returns (accumulated_points, sections).
 pub fn build_sections(
     section_nodes: &[u32],
     paths: &HashMap<u32, Vec<Point>>,
     doc: &DocumentView,
-    default_style_index: u8,
 ) -> (Vec<Point>, Vec<Section>) {
     let mut points = Vec::new();
     let mut sections = Vec::with_capacity(section_nodes.len());
@@ -175,22 +171,17 @@ pub fn build_sections(
         points.extend_from_slice(path);
         let end_index = points.len() as i32 - 1;
 
-        // Get flags from document
-        let facing = doc.get_flag(node_id, node_meta::FACING);
-        let render_hidden = doc.get_flag(node_id, node_meta::RENDER);
+        let facing = doc.get_meta_flag(node_id, NodeMeta::Facing);
+        let render_hidden = doc.get_meta_flag(node_id, NodeMeta::Render);
 
         let mut flags = 0u8;
         if facing < 0 {
             flags |= Section::FLAG_REVERSED;
         }
-        // Render = 0 means rendered, Render = 1 means hidden
-        // Default (missing flag, returns 0) is rendered
+        // Render = 0 (or unset) means rendered; Render = 1 means hidden.
         if render_hidden == 0 {
             flags |= Section::FLAG_RENDERED;
         }
-
-        // Get style index
-        let style_index = get_style_index(doc, node_id, default_style_index);
 
         let arc_start = path.first().map(|p| p.spine_arc).unwrap_or(0.0);
         let arc_end = path.last().map(|p| p.spine_arc).unwrap_or(0.0);
@@ -205,46 +196,27 @@ pub fn build_sections(
             prev: SectionLink::NONE,
             spline_start_index: -1,
             spline_end_index: -1,
-            style_index,
         });
     }
 
     (points, sections)
 }
 
-fn get_style_index(doc: &DocumentView, node_id: u32, default: u8) -> u8 {
-    let has_override = doc.get_flag(node_id, node_meta::OVERRIDE_TRACK_STYLE) != 0;
-    if !has_override {
-        return default;
-    }
-
-    let keyframes = doc.get_keyframes(node_id, PropertyId::TrackStyle as u8);
-    if keyframes.is_empty() {
-        return default;
-    }
-
-    keyframes[0].value.round().clamp(0.0, 255.0) as u8
-}
-
 /// Build traversal order by sorting sections by priority (descending).
-/// Only includes sections with priority >= 0 (cosmetic sections have priority < 0).
+/// Cosmetic sections (priority < 0) are excluded.
 pub fn build_traversal_order(
     section_nodes: &[u32],
     sections: &[Section],
     doc: &DocumentView,
 ) -> Vec<i32> {
-    // Collect candidates with their priorities
-    // C# reads priority from Scalars (floats), not Flags
     let mut candidates: Vec<(usize, i32)> = Vec::new();
 
     for (i, (&node_id, section)) in section_nodes.iter().zip(sections.iter()).enumerate() {
-        // Only include valid sections (matching C# behavior)
         if !section.is_valid() {
             continue;
         }
 
-        // Priority is stored as a scalar (float), default is 0
-        let priority = doc.get_scalar(node_id, node_meta::PRIORITY, 0.0) as i32;
+        let priority = doc.get_meta_scalar(node_id, NodeMeta::Priority, 0.0) as i32;
         if priority < 0 {
             continue;
         }
@@ -252,7 +224,7 @@ pub fn build_traversal_order(
         candidates.push((i, priority));
     }
 
-    // Insertion sort by priority (descending) - matches C# implementation
+    // Insertion sort by priority (descending).
     for i in 1..candidates.len() {
         let mut j = i;
         while j > 0 && candidates[j].1 > candidates[j - 1].1 {
@@ -279,9 +251,7 @@ pub fn compute_continuations(
         let node_id = section_nodes[i];
         if let Some(next_section_idx) = find_next_section(doc, node_id, node_to_section) {
             if sections[next_section_idx].is_rendered() {
-                // Link current section's end to next section's start
                 sections[i].next = SectionLink::new(next_section_idx as i32, true, false);
-                // Link next section's start back to current section's end
                 sections[next_section_idx].prev = SectionLink::new(i as i32, false, false);
             }
         }
@@ -293,12 +263,10 @@ fn find_next_section(
     node_id: u32,
     node_to_section: &HashMap<u32, usize>,
 ) -> Option<usize> {
-    // Get anchor output port
     let output_port = doc
         .graph
         .try_get_output_by_spec(node_id, PortDataType::Anchor, 0)?;
 
-    // Find edges from this port
     for i in 0..doc.graph.edge_ids.len() {
         if doc.graph.edge_sources[i] != output_port {
             continue;
@@ -309,18 +277,17 @@ fn find_next_section(
         let target_node = doc.graph.port_owners[target_port_idx];
         let target_type = doc.graph.get_node_type(target_node)?;
 
-        // Skip Reverse and ReversePath nodes (they don't propagate forward connections)
-        if target_type == 8 || target_type == 9 {
+        // Reverse / ReversePath don't propagate forward connections.
+        if matches!(target_type, NodeType::Reverse | NodeType::ReversePath) {
             continue;
         }
 
-        // If target is a section-producing node, return its index
         if let Some(&section_idx) = node_to_section.get(&target_node) {
             return Some(section_idx);
         }
 
-        // For Anchor nodes (7), recursively search forward
-        if target_type == 7 {
+        // Anchors pass through to whatever follows them.
+        if target_type == NodeType::Anchor {
             if let Some(idx) = find_next_section(doc, target_node, node_to_section) {
                 return Some(idx);
             }
@@ -381,10 +348,14 @@ mod tests {
     }
 
     fn make_test_graph() -> Graph {
-        // Graph: Anchor(1) -> Force(2) -> Geometric(3)
+        // Anchor(1) -> Force(2) -> Geometric(3)
         Graph::from_vecs(
             vec![1, 2, 3],
-            vec![7, 2, 3], // Anchor, Force, Geometric
+            vec![
+                NodeType::Anchor as u8,
+                NodeType::Force as u8,
+                NodeType::Geometric as u8,
+            ],
             vec![0, 1, 1],
             vec![1, 2, 1],
             vec![101, 102, 201, 202, 301],
@@ -426,7 +397,7 @@ mod tests {
     #[test]
     fn collect_sections_filters_correct_types() {
         let graph = make_test_graph();
-        let sorted = vec![1, 2, 3]; // Anchor, Force, Geometric
+        let sorted = vec![1, 2, 3];
 
         let mut paths = HashMap::new();
         paths.insert(
@@ -446,7 +417,6 @@ mod tests {
 
         let (section_nodes, node_to_section) = collect_sections(&sorted, &graph, &paths);
 
-        // Should include Force(2) and Geometric(3), not Anchor(1)
         assert_eq!(section_nodes.len(), 2);
         assert_eq!(section_nodes[0], 2);
         assert_eq!(section_nodes[1], 3);
@@ -461,7 +431,6 @@ mod tests {
         let sorted = vec![1, 2, 3];
 
         let mut paths = HashMap::new();
-        // Only include path for node 2, not node 3
         paths.insert(
             2,
             vec![
@@ -506,17 +475,15 @@ mod tests {
             keyframe_ranges: &HashMap::new(),
         };
 
-        let (points, sections) = build_sections(&section_nodes, &paths, &doc, 0);
+        let (points, sections) = build_sections(&section_nodes, &paths, &doc);
 
-        assert_eq!(points.len(), 5); // 2 + 3 points
+        assert_eq!(points.len(), 5);
         assert_eq!(sections.len(), 2);
 
-        // First section: indices 0-1
         assert_eq!(sections[0].start_index, 0);
         assert_eq!(sections[0].end_index, 1);
         assert_eq!(sections[0].length(), 2);
 
-        // Second section: indices 2-4
         assert_eq!(sections[1].start_index, 2);
         assert_eq!(sections[1].end_index, 4);
         assert_eq!(sections[1].length(), 3);
@@ -527,7 +494,6 @@ mod tests {
         let graph = make_test_graph();
 
         let mut paths = HashMap::new();
-        // Path with only 1 point
         paths.insert(
             2,
             vec![make_test_point(
@@ -547,7 +513,7 @@ mod tests {
             keyframe_ranges: &HashMap::new(),
         };
 
-        let (points, sections) = build_sections(&section_nodes, &paths, &doc, 0);
+        let (points, sections) = build_sections(&section_nodes, &paths, &doc);
 
         assert_eq!(points.len(), 0);
         assert_eq!(sections.len(), 1);
@@ -559,7 +525,6 @@ mod tests {
         let graph = make_test_graph();
         let section_nodes = vec![2, 3];
 
-        // Create sections (rendered status not checked, only priority)
         let sections = vec![
             Section {
                 start_index: 0,
@@ -575,15 +540,13 @@ mod tests {
             },
         ];
 
-        // Node 2 has priority 5, node 3 has priority 10
-        // Priority is stored in scalars (floats), not flags
         let mut scalars = HashMap::new();
         scalars.insert(
-            crate::track::document::input_key(2, node_meta::PRIORITY),
+            crate::track::document::input_key(2, NodeMeta::Priority.as_u8()),
             5.0,
         );
         scalars.insert(
-            crate::track::document::input_key(3, node_meta::PRIORITY),
+            crate::track::document::input_key(3, NodeMeta::Priority.as_u8()),
             10.0,
         );
 
@@ -597,8 +560,6 @@ mod tests {
         };
 
         let order = build_traversal_order(&section_nodes, &sections, &doc);
-
-        // Higher priority (10) should come first
         assert_eq!(order, vec![1, 0]);
     }
 
@@ -622,15 +583,13 @@ mod tests {
             },
         ];
 
-        // Node 2 has priority 5, node 3 has priority -1 (cosmetic)
-        // Priority is stored in scalars (floats), not flags
         let mut scalars = HashMap::new();
         scalars.insert(
-            crate::track::document::input_key(2, node_meta::PRIORITY),
+            crate::track::document::input_key(2, NodeMeta::Priority.as_u8()),
             5.0,
         );
         scalars.insert(
-            crate::track::document::input_key(3, node_meta::PRIORITY),
+            crate::track::document::input_key(3, NodeMeta::Priority.as_u8()),
             -1.0,
         );
 
@@ -644,9 +603,6 @@ mod tests {
         };
 
         let order = build_traversal_order(&section_nodes, &sections, &doc);
-
-        // Only section 0 has positive priority
         assert_eq!(order, vec![0]);
     }
-
 }

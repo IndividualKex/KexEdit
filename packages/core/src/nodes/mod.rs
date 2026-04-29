@@ -15,5 +15,6 @@ pub mod reverse;
 pub mod reverse_path;
 
 pub use schema::{
-    DurationType, IterationConfig, NodeSchema, NodeType, PortId, PropertyId, PropertyIndex,
+    DurationType, IterationConfig, NodeMeta, NodeSchema, NodeType, PortId, PropertyId,
+    PropertyIndex,
 };

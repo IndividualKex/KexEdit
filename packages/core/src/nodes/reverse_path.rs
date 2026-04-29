@@ -22,7 +22,7 @@ pub fn build(path: &[Point]) -> Vec<Point> {
                 total_heart_arc - p.heart_arc,
                 total_spine_arc - p.spine_arc,
                 p.heart_advance,
-                0.0, // Reset friction_origin like C#
+                0.0, // friction_origin resets at the reversed start
                 p.roll_speed,
                 p.heart_offset,
                 p.friction,

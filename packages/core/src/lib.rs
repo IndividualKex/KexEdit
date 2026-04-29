@@ -1,14 +1,15 @@
-//! KexEngine - Force Vector Design physics simulation for roller coaster track generation.
+//! KexEngine — Force Vector Design physics simulation for roller coaster track generation.
 //!
 //! # Architecture
 //!
 //! Layered modules with strict inward-only dependencies:
 //!
-//! - **sim**: Physics/math primitives (Float3, Frame, Point, Keyframe)
+//! - **sim**: physics/math primitives (Float3, Frame, Point, Keyframe)
 //! - **graph**: DAG structure and traversal
-//! - **nodes**: Node type implementations
-//! - **track**: Track evaluation, sections, splines
-//! - **ffi**: C FFI bindings
+//! - **nodes**: node type implementations
+//! - **track**: track evaluation, sections, splines
+//! - **persistence**: `.kex` binary format
+//! - **ffi**: C ABI bindings (feature-gated)
 //!
 //! # Usage
 //!
@@ -16,7 +17,8 @@
 //! use kexengine::{sim::Point, graph::Graph};
 //! ```
 //!
-//! For C/C#/Unity, link the cdylib and use `kex_*` FFI functions.
+//! For non-Rust consumers (Blender via ctypes, web/WASM), link against the
+//! cdylib and call the `kex_*` functions in the `ffi` module.
 
 pub mod graph;
 pub mod nodes;
@@ -27,6 +29,5 @@ pub mod track;
 #[cfg(feature = "ffi")]
 pub mod ffi;
 
-// Re-export commonly used types at crate root
 pub use graph::Graph;
 pub use sim::{Float3, Frame, Keyframe, Point, Quaternion};
