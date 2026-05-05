@@ -19,9 +19,6 @@ license = ["SPDX:MIT"]
 # Platforms with pre-built native libraries
 platforms = ["windows-x64", "linux-x64", "macos-x64", "macos-arm64"]
 
-# Wheels/dependencies (none for now, we use ctypes)
-wheels = []
-
 # Tags for discovery
 tags = ["3D View", "Object"]
 

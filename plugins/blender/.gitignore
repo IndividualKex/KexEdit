@@ -7,3 +7,6 @@ __pycache__/
 kexedit/lib/*.dll
 kexedit/lib/*.so
 kexedit/lib/*.dylib
+
+# Bundled test fixtures (mirrored from packages/core/test-data by build_lib.sh)
+kexedit/fixtures/*.kex

@@ -1,22 +1,23 @@
 """Development installation helper for Blender.
 
-Run this script from Blender's Python console or as a script to set up
-development symlinks. This allows live-editing of addon code.
+Symlinks the addon source into Blender's user extensions directory so edits
+are picked up live (after F3 -> "Reload Scripts" or a restart).
 
-Usage in Blender:
-    1. Open Blender
-    2. Go to Scripting workspace
-    3. Open this file and run it
-
-Or from command line:
-    blender --python scripts/dev_install.py
+Usage:
+    Inside Blender:   open this file in the Scripting workspace and run.
+    From CLI:         blender --python scripts/dev_install.py
+                      python scripts/dev_install.py    # symlink only
 """
+
+from __future__ import annotations
 
 import os
 import sys
 from pathlib import Path
 
-# Detect if running in Blender
+ADDON_ID = "kexedit"
+MIN_VERSION = (4, 2)
+
 try:
     import bpy
     IN_BLENDER = True
@@ -25,92 +26,107 @@ except ImportError:
 
 
 def get_addon_source_path() -> Path:
-    """Get the path to the kexengine addon source."""
-    # This script is in scripts/, addon is in kexengine/
-    return Path(__file__).parent.parent / "kexengine"
+    return Path(__file__).resolve().parent.parent / ADDON_ID
 
 
-def get_blender_addons_path() -> Path:
-    """Get Blender's user addons path."""
+def get_extensions_target() -> Path:
+    """Per-user extensions directory for the active Blender version."""
     if IN_BLENDER:
-        return Path(bpy.utils.user_resource('SCRIPTS')) / "addons"
+        return Path(bpy.utils.user_resource("EXTENSIONS")) / "user_default"
 
-    # Fallback for non-Blender environments
+    base = _user_blender_root()
+    version = _pick_blender_version(base)
+    if version is None:
+        raise RuntimeError(
+            f"No Blender {MIN_VERSION[0]}.{MIN_VERSION[1]}+ directory found under {base}. "
+            "Run from inside Blender, or install Blender 4.2+."
+        )
+    return base / version / "extensions" / "user_default"
+
+
+def _user_blender_root() -> Path:
     if sys.platform == "win32":
         appdata = os.environ.get("APPDATA", "")
-        return Path(appdata) / "Blender" / "5.0" / "scripts" / "addons"
-    elif sys.platform == "darwin":
-        return Path.home() / "Library" / "Application Support" / "Blender" / "5.0" / "scripts" / "addons"
-    else:
-        return Path.home() / ".config" / "blender" / "5.0" / "scripts" / "addons"
+        return Path(appdata) / "Blender Foundation" / "Blender"
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "Blender"
+    return Path.home() / ".config" / "blender"
 
 
-def create_symlink():
-    """Create symlink from Blender addons to source."""
+def _pick_blender_version(base: Path) -> str | None:
+    if not base.exists():
+        return None
+    candidates: list[tuple[tuple[int, int], str]] = []
+    for entry in base.iterdir():
+        if not entry.is_dir():
+            continue
+        parts = entry.name.split(".")
+        try:
+            major, minor = int(parts[0]), int(parts[1])
+        except (ValueError, IndexError):
+            continue
+        if (major, minor) >= MIN_VERSION:
+            candidates.append(((major, minor), entry.name))
+    if not candidates:
+        return None
+    candidates.sort()
+    return candidates[-1][1]
+
+
+def create_symlink() -> bool:
     source = get_addon_source_path()
-    target = get_blender_addons_path() / "kexengine"
+    target_dir = get_extensions_target()
+    target = target_dir / ADDON_ID
 
     print(f"Source: {source}")
     print(f"Target: {target}")
 
     if not source.exists():
-        print(f"ERROR: Source path does not exist: {source}")
+        print(f"ERROR: source does not exist: {source}")
         return False
 
-    # Create addons directory if needed
-    target.parent.mkdir(parents=True, exist_ok=True)
+    target_dir.mkdir(parents=True, exist_ok=True)
 
-    if target.exists():
-        if target.is_symlink():
-            print(f"Symlink already exists, removing...")
-            target.unlink()
-        else:
-            print(f"ERROR: {target} exists and is not a symlink")
-            print("Please remove it manually first")
-            return False
+    if target.is_symlink():
+        print("Removing existing symlink...")
+        target.unlink()
+    elif target.exists():
+        print(f"ERROR: {target} exists and is not a symlink. Remove it manually.")
+        return False
 
-    # Create symlink
     try:
         if sys.platform == "win32":
-            # Windows requires special handling
             import subprocess
             result = subprocess.run(
                 ["cmd", "/c", "mklink", "/D", str(target), str(source)],
                 capture_output=True,
-                text=True
+                text=True,
             )
             if result.returncode != 0:
-                print(f"mklink failed: {result.stderr}")
-                print("Try running as Administrator")
+                print(f"mklink failed: {result.stderr.strip()}")
+                print("Run an Administrator shell, or enable Windows Developer Mode.")
                 return False
         else:
-            target.symlink_to(source)
-
-        print(f"Created symlink: {target} -> {source}")
+            target.symlink_to(source, target_is_directory=True)
+        print(f"Linked {target} -> {source}")
         return True
-
     except OSError as e:
         print(f"Failed to create symlink: {e}")
-        if sys.platform == "win32":
-            print("On Windows, try running as Administrator")
         return False
 
 
-def main():
-    print("=== kexengine Development Install ===\n")
-
+def main() -> None:
+    print(f"=== {ADDON_ID} dev install ===\n")
     if create_symlink():
-        print("\nInstallation complete!")
-        print("\nNext steps:")
-        print("1. Open Blender")
-        print("2. Edit > Preferences > Add-ons")
-        print("3. Search for 'kexengine' and enable it")
-        print("4. Find the panel in View3D > Sidebar > kexengine")
-        print("\nTo reload after code changes:")
-        print("  - Press F3 and search 'Reload Scripts'")
-        print("  - Or restart Blender")
+        print("\nDone.")
+        print("\nNext:")
+        print("  1. Open Blender 4.2+")
+        print("  2. Edit > Preferences > Add-ons")
+        print(f"  3. Enable '{ADDON_ID}' (User repository)")
+        print("  4. View3D > N-panel > kexedit")
+        print("\nReload after edits: F3 -> 'Reload Scripts' (or restart Blender).")
     else:
-        print("\nInstallation failed. See errors above.")
+        print("\nFailed. See errors above.")
 
 
 if __name__ == "__main__":

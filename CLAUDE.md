@@ -26,9 +26,14 @@ sim is pure math (zero deps). Each layer only depends on layers to its left. FFI
 ## Build
 
 ```bash
-cd packages/core && cargo build --release --features ffi
-plugins/blender/scripts/build_lib.sh  # copies lib to addon
+plugins/blender/scripts/build_lib.sh           # host platform
+plugins/blender/scripts/build_lib.sh windows   # cross-compile DLL (mingw, runs from Linux/WSL)
+plugins/blender/scripts/build_lib.sh all       # host + Windows
 ```
+
+`build_lib.sh` builds the Rust crate and copies the artifact + `.kex` fixtures into `plugins/blender/kexedit/{lib,fixtures}/` (both gitignored — single source of truth lives in `packages/core/`).
+
+Set `KEXEDIT_DEV_INSTALL=path1[:path2]` to also rsync the addon dir to a Blender extensions location after building. Useful for syncing into a Windows-side Blender from WSL where cross-filesystem symlinks don't behave.
 
 ## Verify
 

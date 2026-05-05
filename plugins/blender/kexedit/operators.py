@@ -96,10 +96,8 @@ def regenerate_track(curve_obj: bpy.types.Object) -> bool:
 
 
 def _get_test_data_dir() -> Path:
-    """Get the core test-data directory."""
-    # plugins/blender/kexedit/operators.py -> packages/core/test-data
-    repo_root = Path(__file__).parent.parent.parent.parent
-    return repo_root / "packages" / "core" / "test-data"
+    """Bundled fixtures dir, populated by `scripts/build_lib.sh`."""
+    return Path(__file__).parent / "fixtures"
 
 
 class KEXEDIT_OT_generate_simple_track(bpy.types.Operator):
