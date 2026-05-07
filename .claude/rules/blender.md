@@ -1,6 +1,9 @@
-# Blender Plugin Rules
+---
+paths:
+    - "plugins/blender/**/*"
+---
 
-Applies to `plugins/blender/**`
+# Blender Plugin Rules
 
 ## Flat package
 

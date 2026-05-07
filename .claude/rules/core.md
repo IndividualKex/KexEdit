@@ -1,6 +1,9 @@
-# Core Rules
+---
+paths:
+    - "packages/core/**/*"
+---
 
-Applies to `packages/core/**`
+# Core Rules
 
 ## Layer discipline
 
