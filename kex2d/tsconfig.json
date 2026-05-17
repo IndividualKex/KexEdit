@@ -12,8 +12,8 @@
         "skipLibCheck": true,
         "noFallthroughCasesInSwitch": true,
         "noImplicitOverride": true,
-        "types": ["@webgpu/types", "vite/client"]
+        "types": ["bun", "@webgpu/types", "vite/client"]
     },
-    "include": ["src"],
+    "include": ["src", "tests"],
     "exclude": ["**/dist", "**/node_modules"]
 }
