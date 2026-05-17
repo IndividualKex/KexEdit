@@ -7,6 +7,7 @@ Roller coaster editor using Force Vector Design (FVD).
 - `packages/core/` — Rust crate. Physics simulation, node graph, binary format (.kex). Only runtime dep: `approx`
 - `plugins/blender/` — Blender 4.2+ addon. `kexedit/` is the addon package (name required by Blender). Flat: ffi.py, types.py, coords.py (no bpy), operators.py, panels.py, properties.py, curve.py, fcurve.py (bpy). Loads core via handle-based FFI (`kex_load` → `kex_build` → `kex_output_read_*`). Python-side `.kex` serializer in `ffi.py` mirrors the format in `packages/core/src/persistence/`
 - `app/` — placeholder for the Shallot-based web editor (not yet implemented)
+- `kex2d/` — 2D coaster solver prototype (Shallot + Svelte + canvas2D). Augmented-Lagrangian trajectory optimization exploration, parallel to `app/`. See `roadmap.md` "kex2d — 2D coaster solver prototype" + `scratch.md` "kex2d solver — reference + decisions"
 
 ## Architecture
 

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+        <title>kex2d</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            html,
+            body {
+                height: 100%;
+                background: #0e0d0c;
+                color: #f0ece8;
+                font-family: system-ui, -apple-system, sans-serif;
+                overflow: hidden;
+            }
+            #app {
+                position: fixed;
+                inset: 0;
+            }
+            [data-shallot-profile] {
+                display: none !important;
+            }
+            body[data-shallot-debug] [data-shallot-profile] {
+                display: block !important;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script type="module" src="./src/main.ts"></script>
+    </body>
+</html>

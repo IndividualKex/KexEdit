@@ -1,0 +1,25 @@
+{
+    "name": "kex2d",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "check": "bun run format && tsc && svelte-check && biome check",
+        "format": "biome check --write"
+    },
+    "dependencies": {
+        "@dylanebert/shallot": "^0.4.0",
+        "svelte": "^5.19.0"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.4.6",
+        "@sveltejs/vite-plugin-svelte": "^7.0.0",
+        "@webgpu/types": "^0.1.0",
+        "svelte-check": "^4.4.8",
+        "typescript": "^5.9.3",
+        "vite": "^8.0.0"
+    }
+}
