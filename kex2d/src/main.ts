@@ -3,9 +3,10 @@ import { ProfilePlugin } from "@dylanebert/shallot/extras";
 import { mount, unmount } from "svelte";
 import App from "./App.svelte";
 import { RenderPlugin } from "./render";
+import { TrackPlugin } from "./track";
 
 const { dispose } = await run({
-    plugins: [ProfilePlugin, RenderPlugin],
+    plugins: [ProfilePlugin, TrackPlugin, RenderPlugin],
     defaults: false,
 });
 

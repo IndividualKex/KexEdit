@@ -1,4 +1,5 @@
-import type { Plugin, System } from "@dylanebert/shallot";
+import type { Plugin, State, System } from "@dylanebert/shallot";
+import { Sample } from "./track";
 
 export interface Canvas2D {
     element: HTMLCanvasElement;
@@ -6,6 +7,20 @@ export interface Canvas2D {
 }
 
 export const Canvas2D: Canvas2D = {} as Canvas2D;
+
+const VIEW_HALF_X = 280;
+
+function viewTransform(canvas: HTMLCanvasElement): {
+    sx: number;
+    sy: number;
+    ox: number;
+    oy: number;
+} {
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    const sx = w / (2 * VIEW_HALF_X);
+    return { sx, sy: -sx, ox: w / 2, oy: h / 2 };
+}
 
 export function attachCanvas2D(element: HTMLCanvasElement): void {
     const ctx = element.getContext("2d");
@@ -62,7 +77,34 @@ const GridSystem: System = {
     },
 };
 
+const TrackDrawSystem: System = {
+    group: "draw",
+    update(state: State): void {
+        const { element: canvas, ctx } = Canvas2D;
+        if (!ctx) return;
+        const { sx, sy, ox, oy } = viewTransform(canvas);
+
+        ctx.strokeStyle = "#cce5ff";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        let first = true;
+        for (const eid of state.query([Sample])) {
+            const x = Sample.pos.x.get(eid);
+            const y = Sample.pos.y.get(eid);
+            const cx = ox + x * sx;
+            const cy = oy + y * sy;
+            if (first) {
+                ctx.moveTo(cx, cy);
+                first = false;
+            } else {
+                ctx.lineTo(cx, cy);
+            }
+        }
+        ctx.stroke();
+    },
+};
+
 export const RenderPlugin: Plugin = {
     name: "Render",
-    systems: [GridSystem],
+    systems: [GridSystem, TrackDrawSystem],
 };
